@@ -1,0 +1,121 @@
+@use "../variables" as *;
+
+// Keyframes
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes titleReveal {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes loaderPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.5);
+    opacity: 0.3;
+  }
+}
+
+@keyframes blobFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translate(50px, -50px) scale(1.1) rotate(90deg);
+  }
+  50% {
+    transform: translate(-30px, 30px) scale(0.95) rotate(180deg);
+  }
+  75% {
+    transform: translate(40px, 20px) scale(1.05) rotate(270deg);
+  }
+}
+
+@keyframes scrollBounce {
+  0%,
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(0.5);
+    opacity: 0.5;
+  }
+}
+
+// Анимация появления
+@mixin animate-fade-up($delay: 0s) {
+  animation: fadeUp $duration-animation $ease-out $delay forwards;
+  opacity: 0;
+}
+
+// Анимация заголовка
+@mixin animate-title-reveal {
+  animation: titleReveal $duration-animation $ease-out forwards;
+}
+
+// Float анимация
+@mixin animate-float {
+  animation: float $duration-float $ease-in-out infinite;
+}
+
+// Pulse анимация
+@mixin animate-pulse {
+  animation: pulse $duration-pulse $ease-in-out infinite;
+}
+
+// Reveal при скролле
+@mixin reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all $transition-smooth;
+
+  &.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

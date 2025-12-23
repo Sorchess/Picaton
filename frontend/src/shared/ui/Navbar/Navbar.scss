@@ -1,0 +1,104 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: $z-index-nav;
+  background: var(--color-glass-bg);
+  backdrop-filter: blur($blur-base);
+  border-bottom: 1px solid var(--color-glass-border);
+  transition: all 0.3s ease;
+
+  &__container {
+    @include container;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+    gap: $spacing-3xl;
+  }
+
+  &__logo {
+    font-family: $font-family-heading;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-extrabold;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    // Градиент для логотипа
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__menu {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__menu-item {
+    margin: 0;
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-md $spacing-lg;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    border-radius: $radius-lg;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: var(--color-text-primary);
+      background: var(--color-glass-bg-hover);
+    }
+
+    &--active {
+      color: var(--color-accent);
+      background: var(--color-glass-bg-hover);
+    }
+  }
+
+  &__link-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+  }
+
+  @include tablet {
+    &__menu {
+      display: none;
+    }
+  }
+
+  @include mobile {
+    &__container {
+      height: 64px;
+    }
+  }
+}

@@ -1,0 +1,232 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+// Keyframes для жидкой анимации
+@keyframes liquid-bounce-right {
+  0% {
+    transform: scaleX(1) scaleY(1);
+    border-radius: $radius-full;
+  }
+  15% {
+    transform: scaleX(1.15) scaleY(0.92);
+    border-radius: 35px 20px 20px 35px;
+  }
+  30% {
+    transform: scaleX(1.08) scaleY(0.95);
+    border-radius: 30px 25px 25px 30px;
+  }
+  50% {
+    transform: scaleX(0.92) scaleY(1.06);
+    border-radius: 25px 35px 35px 25px;
+  }
+  70% {
+    transform: scaleX(1.03) scaleY(0.98);
+    border-radius: 28px 32px 32px 28px;
+  }
+  85% {
+    transform: scaleX(0.98) scaleY(1.02);
+  }
+  100% {
+    transform: scaleX(1) scaleY(1);
+    border-radius: $radius-full;
+  }
+}
+
+@keyframes liquid-bounce-left {
+  0% {
+    transform: scaleX(1) scaleY(1);
+    border-radius: $radius-full;
+  }
+  15% {
+    transform: scaleX(1.15) scaleY(0.92);
+    border-radius: 20px 35px 35px 20px;
+  }
+  30% {
+    transform: scaleX(1.08) scaleY(0.95);
+    border-radius: 25px 30px 30px 25px;
+  }
+  50% {
+    transform: scaleX(0.92) scaleY(1.06);
+    border-radius: 35px 25px 25px 35px;
+  }
+  70% {
+    transform: scaleX(1.03) scaleY(0.98);
+    border-radius: 32px 28px 28px 32px;
+  }
+  85% {
+    transform: scaleX(0.98) scaleY(1.02);
+  }
+  100% {
+    transform: scaleX(1) scaleY(1);
+    border-radius: $radius-full;
+  }
+}
+
+@keyframes blob-wobble {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: scale(1.3, 0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(0.9, 1.15);
+    opacity: 0.4;
+  }
+  75% {
+    transform: scale(1.1, 0.95);
+    opacity: 0.35;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.switcher {
+  @include glass-simple;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: $radius-full;
+  padding: 4px;
+  gap: 2px;
+
+  // Размеры
+  &--sm {
+    padding: 3px;
+
+    .switcher__option {
+      padding: 8px 16px;
+      font-size: $font-size-xs;
+      gap: 6px;
+    }
+
+    .switcher__option-icon {
+      font-size: 14px;
+    }
+  }
+
+  &--md {
+    .switcher__option {
+      padding: 10px 20px;
+      font-size: $font-size-sm;
+      gap: 8px;
+    }
+
+    .switcher__option-icon {
+      font-size: 16px;
+    }
+  }
+
+  &--lg {
+    padding: 5px;
+
+    .switcher__option {
+      padding: 14px 28px;
+      font-size: $font-size-base;
+      gap: 10px;
+    }
+
+    .switcher__option-icon {
+      font-size: 20px;
+    }
+  }
+
+  &__indicator {
+    @include glass-simple;
+    position: absolute;
+    top: 4px;
+    height: calc(100% - 8px);
+    transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+      width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 20px -3px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    pointer-events: none;
+    overflow: hidden;
+
+
+    // Анимация при движении вправо
+    &--bounce-right {
+      animation: liquid-bounce-right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      &::after {
+        opacity: 1;
+        animation: ripple 0.6s ease-out;
+      }
+    }
+
+    // Анимация при движении влево
+    &--bounce-left {
+      animation: liquid-bounce-left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      &::after {
+        opacity: 1;
+        animation: ripple 0.6s ease-out;
+      }
+    }
+  }
+
+
+  &__option {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: $radius-full;
+    color: var(--color-text-secondary);
+    font-family: $font-family-primary;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+
+    &:hover:not(.switcher__option--active) {
+      color: var(--color-text-primary);
+    }
+
+    &--active {
+      color: var(--color-accent);
+
+      .switcher__option-icon {
+        transform: scale(1.15);
+      }
+    }
+  }
+
+  &__option-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    line-height: 1;
+
+    svg {
+      width: 1em;
+      height: 1em;
+    }
+  }
+
+  &__option-label {
+    line-height: 1;
+  }
+
+  // Hover эффект на контейнере
+  &:hover {
+    border-color: var(--color-glass-border-hover);
+    box-shadow: 0 8px 30px -10px rgba(0, 0, 0, 0.3);
+  }
+}

@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpertAI — Поиск экспертов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --text-muted: rgba(255, 255, 255, 0.4);
+            --accent: #ffffff;
+            --glow: rgba(255, 255, 255, 0.1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 60%, rgba(255, 255, 255, 0.02) 0%, transparent 40%);
+            animation: bgRotate 30s linear infinite;
+        }
+
+        @keyframes bgRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: blobFloat 20s ease-in-out infinite;
+        }
+
+        .blob-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -7s;
+        }
+
+        .blob-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes blobFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -50px) scale(1.1); }
+            50% { transform: translate(-30px, 30px) scale(0.9); }
+            75% { transform: translate(40px, 40px) scale(1.05); }
+        }
+
+        /* Liquid Glass Grid */
+        .liquid-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 100px 100px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(100px); }
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 15s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Glass Effect */
+        .glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 100px rgba(255, 255, 255, 0.03);
+        }
+
+        /* Liquid Glass Animation */
+        .liquid-glass {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 40%,
+                rgba(255, 255, 255, 0.03) 45%,
+                rgba(255, 255, 255, 0.05) 50%,
+                rgba(255, 255, 255, 0.03) 55%,
+                transparent 60%
+            );
+            animation: liquidShine 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes liquidShine {
+            0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--text-primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a.active {
+            color: var(--text-primary);
+        }
+
+        .nav-cta {
+            padding: 12px 28px;
+            background: var(--text-primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 50px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Page Container */
+        .page {
+            display: none;
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 40px 60px;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -0.03em;
+            animation: fadeInUp 0.8s ease 0.1s both;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, #fff 0%, #666 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Search Section */
+        .search-section {
+            max-width: 800px;
+            margin: 0 auto 60px;
+            padding: 0 40px;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 28px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 60px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-box:focus-within {
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 0 0 4px rgba(255, 255, 255, 0.05),
+                0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.5;
+        }
+
+        .search-input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-btn {
+            padding: 14px 32px;
+            background: var(--text-primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 50px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .ai-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* AI Tags */
+        .ai-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .ai-tag {
+            padding: 10px 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-tag:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
+        .ai-tag.active {
+            background: var(--text-primary);
+            color: var(--bg-dark);
+            border-color: var(--text-primary);
+        }
+
+        .tag-icon {
+            font-size: 1rem;
+        }
+
+        /* Stats Section */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto 80px;
+            padding: 0 40px;
+        }
+
+        .stat-card {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Experts Grid */
+        .experts-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px 80px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-tab {
+            padding: 10px 24px;
+            background: transparent;
+            border: 1px solid var(--border-glass);
+            border-radius: 50px;
+            color: var(--text-secondary);
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab:hover,
+        .filter-tab.active {
+            background: var(--text-primary);
+            color: var(--bg-dark);
+            border-color: var(--text-primary);
+        }
+
+        .experts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        /* Expert Card */
+        .expert-card {
+            padding: 28px;
+            cursor: pointer;
+        }
+
+        .expert-header {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .expert-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #333 0%, #111 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .expert-avatar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+
+        .expert-info {
+            flex: 1;
+        }
+
+        .expert-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .expert-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .verified-badge {
+            width: 16px;
+            height: 16px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: var(--bg-dark);
+        }
+
+        .expert-bio {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .expert-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .expert-tag {
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .expert-tag .ai-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-muted);
+        }
+
+        .expert-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .expert-meta {
+            display: flex;
+            gap: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .meta-item svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+        }
+
+        .expert-rate {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .rate-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* About Page */
+        .about-hero {
+            padding: 80px 40px;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .about-hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 24px;
+            letter-spacing: -0.03em;
+        }
+
+        .about-hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto 80px;
+            padding: 0 40px;
+        }
+
+        .feature-card {
+            padding: 40px;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-desc {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* AI Process Section */
+        .ai-process {
+            max-width: 1200px;
+            margin: 0 auto 80px;
+            padding: 0 40px;
+        }
+
+        .process-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 60px;
+        }
+
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            position: relative;
+        }
+
+        .process-steps::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--border-glass), var(--border-glass), transparent);
+        }
+
+        .process-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Team Section */
+        .team-section {
+            max-width: 1200px;
+            margin: 0 auto 80px;
+            padding: 0 40px;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .team-card {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .team-avatar {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #333 0%, #111 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .team-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .team-role {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            max-width: 800px;
+            margin: 0 auto 80px;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .cta-desc {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            padding: 16px 40px;
+            background: var(--text-primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 50px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            padding: 16px 40px;
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-glass);
+            border-radius: 50px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-glass);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Expert Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 40px;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 50%;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--text-primary);
+            color: var(--bg-dark);
+        }
+
+        .modal-header {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .modal-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #333 0%, #111 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .modal-info h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .modal-title {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .modal-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stars {
+            color: #fbbf24;
+        }
+
+        .modal-body {
+            margin-bottom: 30px;
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .modal-section h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .modal-section p {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+
+        .modal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 16px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .modal-footer button {
+            flex: 1;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 40px 40px;
+            border-top: 1px solid var(--border-glass);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+        }
+
+        .footer-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .footer-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .footer-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .process-steps {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 40px;
+            }
+
+            .process-steps::before {
+                display: none;
+            }
+
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                padding: 15px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 60px 20px 40px;
+            }
+
+            .search-section {
+                padding: 0 20px;
+            }
+
+            .search-box {
+                flex-direction: column;
+                border-radius: 24px;
+                padding: 16px;
+            }
+
+            .search-input {
+                width: 100%;
+                text-align: center;
+            }
+
+            .search-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .experts-section {
+                padding: 0 20px 60px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .experts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .process-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .slide-up {
+            animation: slideUp 0.8s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            animation: loadingBounce 1.4s ease-in-out infinite both;
+        }
+
+        .loading span:nth-child(1) { animation-delay: -0.32s; }
+        .loading span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes loadingBounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="logo">
+            <div class="logo-icon">E</div>
+            ExpertAI
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="active" data-page="home">Поиск</a></li>
+            <li><a href="#" data-page="about">О платформе</a></li>
+            <li><a href="#" data-page="experts">Эксперты</a></li>
+            <li><a href="#" data-page="pricing">Тарифы</a></li>
+        </ul>
+        <button class="nav-cta">Стать экспертом</button>
+    </nav>
+
+    <!-- Home Page -->
+    <div class="page active" id="home">
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                AI-тегирование в реальном времени
+            </div>
+            <h1>Найдите <span>идеального эксперта</span> для вашего проекта</h1>
+            <p>Умная платформа с AI-анализом компетенций. Находите специалистов по навыкам, опыту и рейтингу за считанные секунды.</p>
+        </section>
+
+        <!-- Search -->
+        <section class="search-section">
+            <div class="search-container">
+                <div class="search-box glass liquid-glass">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Поиск экспертов, навыков, технологий..." id="searchInput">
+                    <div class="ai-indicator">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                        AI
+                    </div>
+                    <button class="search-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        Найти
+                    </button>
+                </div>
+
+                <div class="ai-tags" id="aiTags">
+                    <div class="ai-tag active" data-tag="all">
+                        <span class="tag-icon">✨</span>
+                        Все эксперты
+                    </div>
+                    <div class="ai-tag" data-tag="ai">
+                        <span class="tag-icon">🤖</span>
+                        AI & ML
+                    </div>
+                    <div class="ai-tag" data-tag="web">
+                        <span class="tag-icon">🌐</span>
+                        Web Development
+                    </div>
+                    <div class="ai-tag" data-tag="design">
+                        <span class="tag-icon">🎨</span>
+                        UI/UX Design
+                    </div>
+                    <div class="ai-tag" data-tag="blockchain">
+                        <span class="tag-icon">⛓️</span>
+                        Blockchain
+                    </div>
+                    <div class="ai-tag" data-tag="data">
+                        <span class="tag-icon">📊</span>
+                        Data Science
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats">
+            <div class="stat-card glass liquid-glass">
+                <div class="stat-number">2,847</div>
+                <div class="stat-label">Экспертов</div>
+            </div>
+            <div class="stat-card glass liquid-glass">
+                <div class="stat-number">156</div>
+                <div class="stat-label">AI-категорий</div>
+            </div>
+            <div class="stat-card glass liquid-glass">
+                <div class="stat-number">12,450</div>
+                <div class="stat-label">Проектов</div>
+            </div>
+            <div class="stat-card glass liquid-glass">
+                <div class="stat-number">98%</div>
+                <div class="stat-label">Довольных клиентов</div>
+            </div>
+        </section>
+
+        <!-- Experts Grid -->
+        <section class="experts-section">
+            <div class="section-header">
+                <h2 class="section-title">Топ эксперты</h2>
+                <div class="filter-tabs">
+                    <button class="filter-tab active">Все</button>
+                    <button class="filter-tab">Новые</button>
+                    <button class="filter-tab">Топ рейтинг</button>
+                    <button class="filter-tab">Онлайн</button>
+                </div>
+            </div>
+            <div class="experts-grid" id="expertsGrid">
+                <!-- Experts will be loaded dynamically -->
+            </div>
+        </section>
+    </div>
+
+    <!-- About Page -->
+    <div class="page" id="about">
+        <section class="about-hero">
+            <h1>Будущее поиска экспертов</h1>
+            <p>ExpertAI использует передовые алгоритмы машинного обучения для анализа навыков, опыта и компетенций специалистов. Наша платформа помогает находить идеальных экспертов для любых задач.</p>
+        </section>
+
+        <section class="features-grid">
+            <div class="feature-card glass liquid-glass">
+                <div class="feature-icon">🧠</div>
+                <h3 class="feature-title">AI-тегирование</h3>
+                <p class="feature-desc">Автоматический анализ профилей и генерация релевантных тегов на основе опыта, проектов и навыков эксперта.</p>
+            </div>
+            <div class="feature-card glass liquid-glass">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Мгновенный поиск</h3>
+                <p class="feature-desc">Умный поиск с пониманием контекста. Находите экспертов по описанию задачи, а не только по ключевым словам.</p>
+            </div>
+            <div class="feature-card glass liquid-glass">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">Точное соответствие</h3>
+                <p class="feature-desc">Алгоритмы ML анализируют сотни параметров для подбора экспертов, максимально соответствующих вашим требованиям.</p>
+            </div>
+            <div class="feature-card glass liquid-glass">
+                <div class="feature-icon">🔒</div>
+                <h3 class="feature-title">Верификация</h3>
+                <p class="feature-desc">Многоуровневая проверка экспертов: подтверждение документов, тестирование навыков, проверка отзывов.</p>
+            </div>
+            <div class="feature-card glass liquid-glass">
+                <div class="feature-icon">📈</div>
+                <h3 class="feature-title">Аналитика</h3>
+                <p class="feature-desc">Детальная статистика по каждому эксперту: успешность проектов, время отклика, качество работы.</p>
+            </div>
+            <div class="feature-card glass liquid-glass">
+                <div class="feature-icon">🌍</div>
+                <h3 class="feature-title">Глобальная сеть</h3>
+                <p class="feature-desc">Доступ к экспертам из более чем 50 стран. Работайте с лучшими специалистами без географических ограничений.</p>
+            </div>
+        </section>
+
+        <section class="ai-process">
+            <h2 class="process-title">Как работает AI-тегирование</h2>
+            <div class="process-steps">
+                <div class="process-step">
+                    <div class="step-number glass">1</div>
+                    <h3 class="step-title">Сбор данных</h3>
+                    <p class="step-desc">AI анализирует профиль, резюме, портфолио и отзывы эксперта</p>
+                </div>
+                <div class="process-step">
+                    <div class="step-number glass">2</div>
+                    <h3 class="step-title">NLP-анализ</h3>
+                    <p class="step-desc">Обработка естественного языка для понимания навыков и опыта</p>
+                </div>
+                <div class="process-step">
+                    <div class="step-number glass">3</div>
+                    <h3 class="step-title">Генерация тегов</h3>
+                    <p class="step-desc">Создание релевантных тегов с оценкой уровня компетенции</p>
+                </div>
+                <div class="process-step">
+                    <div class="step-number glass">4</div>
+                    <h3 class="step-title">Индексация</h3>
+                    <p class="step-desc">Добавление в поисковый индекс для мгновенного поиска</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="team-section">
+            <h2 class="section-title" style="text-align: center; margin-bottom: 40px;">Наша команда</h2>
+            <div class="team-grid">
+                <div class="team-card glass liquid-glass">
+                    <div class="team-avatar">АК</div>
+                    <h3 class="team-name">Алексей Козлов</h3>
+                    <p class="team-role">CEO & Founder</p>
+                </div>
+                <div class="team-card glass liquid-glass">
+                    <div class="team-avatar">МС</div>
+                    <h3 class="team-name">Мария Смирнова</h3>
+                    <p class="team-role">CTO</p>
+                </div>
+                <div class="team-card glass liquid-glass">
+                    <div class="team-avatar">ДП</div>
+                    <h3 class="team-name">Дмитрий Петров</h3>
+                    <p class="team-role">Head of AI</p>
+                </div>
+                <div class="team-card glass liquid-glass">
+                    <div class="team-avatar">ЕВ</div>
+                    <h3 class="team-name">Елена Волкова</h3>
+                    <p class="team-role">Head of Design</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section glass liquid-glass">
+            <h2 class="cta-title">Готовы начать?</h2>
+            <p class="cta-desc">Присоединяйтесь к тысячам компаний, которые уже нашли идеальных экспертов</p>
+            <div class="cta-buttons">
+                <button class="btn-primary">Начать поиск</button>
+                <button class="btn-secondary">Стать экспертом</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Expert Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal glass liquid-glass" id="expertModal">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-header">
+                <div class="modal-avatar" id="modalAvatar">АИ</div>
+                <div class="modal-info">
+                    <h2 id="modalName">Имя эксперта</h2>
+                    <p class="modal-title" id="modalTitle">Специализация</p>
+                    <div class="modal-rating">
+                        <span class="stars">★★★★★</span>
+                        <span id="modalRating">5.0</span>
+                        <span style="color: var(--text-muted)">(<span id="modalReviews">0</span> отзывов)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>О себе</h3>
+                    <p id="modalBio">Описание эксперта...</p>
+                </div>
+                <div class="modal-section">
+                    <h3>AI-теги компетенций</h3>
+                    <div class="modal-tags" id="modalTags"></div>
+                </div>
+                <div class="modal-section">
+                    <h3>Статистика</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                        <div class="stat-card glass" style="padding: 20px;">
+                            <div class="stat-number" id="modalProjects" style="font-size: 1.8rem;">0</div>
+                            <div class="stat-label">Проектов</div>
+                        </div>
+                        <div class="stat-card glass" style="padding: 20px;">
+                            <div class="stat-number" id="modalSuccess" style="font-size: 1.8rem;">0%</div>
+                            <div class="stat-label">Успешных</div>
+                        </div>
+                        <div class="stat-card glass" style="padding: 20px;">
+                            <div class="stat-number" id="modalResponse" style="font-size: 1.8rem;">0ч</div>
+                            <div class="stat-label">Ответ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary">Написать</button>
+                <button class="btn-primary">Пригласить на проект</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div>
+                <div class="footer-brand">ExpertAI</div>
+                <p class="footer-desc">Умная платформа для поиска экспертов с AI-анализом компетенций. Находите лучших специалистов для ваших проектов.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Платформа</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Поиск экспертов</a></li>
+                    <li><a href="#">AI-тегирование</a></li>
+                    <li><a href="#">Категории</a></li>
+                    <li><a href="#">Тарифы</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Компания</h4>
+                <ul class="footer-links">
+                    <li><a href="#">О нас</a></li>
+                    <li><a href="#">Блог</a></li>
+                    <li><a href="#">Карьера</a></li>
+                    <li><a href="#">Контакты</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Поддержка</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Помощь</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">API</a></li>
+                    <li><a href="#">Статус</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-copy">© 2024 ExpertAI. Все права защищены.</p>
+            <div style="display: flex; gap: 24px;">
+                <a href="#" style="color: var(--text-muted); text-decoration: none;">Политика конфиденциальности</a>
+                <a href="#" style="color: var(--text-muted); text-decoration: none;">Условия использования</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mock Data for Experts
+        const experts = [
+            {
+                id: 1,
+                name: "Александр Иванов",
+                initials: "АИ",
+                title: "Senior ML Engineer",
+                verified: true,
+                bio: "10+ лет опыта в машинном обучении и NLP. Работал в Google, Яндекс. Специализация на больших языковых моделях и компьютерном зрении.",
+                tags: [
+                    { name: "Python", ai: true },
+                    { name: "TensorFlow", ai: true },
+                    { name: "PyTorch", ai: false },
+                    { name: "NLP", ai: true },
+                    { name: "Computer Vision", ai: true }
+                ],
+                rating: 4.9,
+                reviews: 127,
+                projects: 89,
+                successRate: 98,
+                responseTime: 2,
+                rate: 15000,
+                category: "ai",
+                online: true
+            },
+            {
+                id: 2,
+                name: "Мария Петрова",
+                initials: "МП",
+                title: "Product Designer",
+                verified: true,
+                bio: "Дизайнер с 8-летним опытом. Создаю продукты для стартапов и корпораций. Фокус на исследованиях и data-driven design.",
+                tags: [
+                    { name: "Figma", ai: true },
+                    { name: "UI/UX", ai: true },
+                    { name: "Design Systems", ai: true },
+                    { name: "Prototyping", ai: false }
+                ],
+                rating: 5.0,
+                reviews: 84,
+                projects: 156,
+                successRate: 100,
+                responseTime: 1,
+                rate: 12000,
+                category: "design",
+                online: true
+            },
+            {
+                id: 3,
+                name: "Дмитрий Сидоров",
+                initials: "ДС",
+                title: "Blockchain Developer",
+                verified: true,
+                bio: "Разработчик смарт-контрактов и DeFi протоколов. Аудит безопасности. Опыт работы с Ethereum, Solana, Polygon.",
+                tags: [
+                    { name: "Solidity", ai: true },
+                    { name: "Web3.js", ai: true },
+                    { name: "Smart Contracts", ai: true },
+                    { name: "DeFi", ai: true },
+                    { name: "Security Audit", ai: false }
+                ],
+                rating: 4.8,
+                reviews: 56,
+                projects: 42,
+                successRate: 95,
+                responseTime: 4,
+                rate: 20000,
+                category: "blockchain",
+                online: false
+            },
+            {
+                id: 4,
+                name: "Елена Козлова",
+                initials: "ЕК",
+                title: "Full-Stack Developer",
+                verified: true,
+                bio: "Full-stack разработчик с экспертизой в React, Node.js и облачных технологиях. Строю масштабируемые веб-приложения.",
+                tags: [
+                    { name: "React", ai: true },
+                    { name: "Node.js", ai: true },
+                    { name: "TypeScript", ai: true },
+                    { name: "AWS", ai: false },
+                    { name: "PostgreSQL", ai: true }
+                ],
+                rating: 4.9,
+                reviews: 203,
+                projects: 178,
+                successRate: 97,
+                responseTime: 3,
+                rate: 10000,
+                category: "web",
+                online: true
+            },
+            {
+                id: 5,
+                name: "Артём Новиков",
+                initials: "АН",
+                title: "Data Scientist",
+                verified: true,
+                bio: "Data Scientist с PhD в статистике. Специализация на предиктивной аналитике и визуализации данных.",
+                tags: [
+                    { name: "Python", ai: true },
+                    { name: "Pandas", ai: true },
+                    { name: "Scikit-learn", ai: true },
+                    { name: "Tableau", ai: false },
+                    { name: "Statistics", ai: true }
+                ],
+                rating: 4.7,
+                reviews: 91,
+                projects: 67,
+                successRate: 94,
+                responseTime: 5,
+                rate: 13000,
+                category: "data",
+                online: false
+            },
+            {
+                id: 6,
+                name: "София Михайлова",
+                initials: "СМ",
+                title: "AI Research Scientist",
+                verified: true,
+                bio: "Исследователь в области глубокого обучения. Публикации в NeurIPS, ICML. Консультирую стартапы по AI-стратегии.",
+                tags: [
+                    { name: "Deep Learning", ai: true },
+                    { name: "Research", ai: true },
+                    { name: "JAX", ai: true },
+                    { name: "Transformers", ai: true }
+                ],
+                rating: 5.0,
+                reviews: 34,
+                projects: 28,
+                successRate: 100,
+                responseTime: 8,
+                rate: 25000,
+                category: "ai",
+                online: true
+            },
+            {
+                id: 7,
+                name: "Игорь Волков",
+                initials: "ИВ",
+                title: "DevOps Engineer",
+                verified: false,
+                bio: "DevOps инженер с опытом построения CI/CD пайплайнов и Kubernetes кластеров для высоконагруженных систем.",
+                tags: [
+                    { name: "Kubernetes", ai: true },
+                    { name: "Docker", ai: true },
+                    { name: "Terraform", ai: true },
+                    { name: "GitLab CI", ai: false }
+                ],
+                rating: 4.6,
+                reviews: 78,
+                projects: 95,
+                successRate: 92,
+                responseTime: 2,
+                rate: 11000,
+                category: "web",
+                online: true
+            },
+            {
+                id: 8,
+                name: "Анна Белова",
+                initials: "АБ",
+                title: "Motion Designer",
+                verified: true,
+                bio: "Motion дизайнер с опытом работы в рекламных агентствах. Создаю анимации для брендов, приложений и видео.",
+                tags: [
+                    { name: "After Effects", ai: true },
+                    { name: "Lottie", ai: true },
+                    { name: "3D Animation", ai: true },
+                    { name: "Rive", ai: false }
+                ],
+                rating: 4.8,
+                reviews: 112,
+                projects: 134,
+                successRate: 96,
+                responseTime: 4,
+                rate: 9000,
+                category: "design",
+                online: false
+            },
+            {
+                id: 9,
+                name: "Павел Орлов",
+                initials: "ПО",
+                title: "Crypto Analyst",
+                verified: true,
+                bio: "Криптоаналитик с 6-летним опытом. Анализ рынка, оценка проектов, инвестиционные стратегии для институциональных клиентов.",
+                tags: [
+                    { name: "Crypto", ai: true },
+                    { name: "Market Analysis", ai: true },
+                    { name: "Tokenomics", ai: true },
+                    { name: "Research", ai: false }
+                ],
+                rating: 4.5,
+                reviews: 45,
+                projects: 38,
+                successRate: 89,
+                responseTime: 6,
+                rate: 18000,
+                category: "blockchain",
+                online: true
+            }
+        ];
+
+        // Create floating particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Render expert card
+        function renderExpertCard(expert) {
+            const tagsHtml = expert.tags.slice(0, 3).map(tag => `
+                <span class="expert-tag">
+                    ${tag.name}
+                    ${tag.ai ? '<span class="ai-badge">AI</span>' : ''}
+                </span>
+            `).join('');
+
+            return `
+                <article class="expert-card glass liquid-glass" data-expert-id="${expert.id}">
+                    <div class="expert-header">
+                        <div class="expert-avatar">${expert.initials}</div>
+                        <div class="expert-info">
+                            <h3 class="expert-name">${expert.name}</h3>
+                            <p class="expert-title">
+                                ${expert.title}
+                                ${expert.verified ? '<span class="verified-badge">✓</span>' : ''}
+                            </p>
+                        </div>
+                    </div>
+                    <p class="expert-bio">${expert.bio}</p>
+                    <div class="expert-tags">${tagsHtml}</div>
+                    <div class="expert-footer">
+                        <div class="expert-meta">
+                            <div class="meta-item">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                ${expert.rating}
+                            </div>
+                            <div class="meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                ${expert.reviews}
+                            </div>
+                            <div class="meta-item" style="color: ${expert.online ? '#4ade80' : 'var(--text-muted)'}">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="6"/>
+                                </svg>
+                                ${expert.online ? 'Online' : 'Offline'}
+                            </div>
+                        </div>
+                        <div class="expert-rate">
+                            ₽${expert.rate.toLocaleString()}
+                            <span class="rate-label">/час</span>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
+        // Render experts grid
+        function renderExperts(filter = 'all') {
+            const grid = document.getElementById('expertsGrid');
+            let filteredExperts = experts;
+
+            if (filter !== 'all') {
+                filteredExperts = experts.filter(e => e.category === filter);
+            }
+
+            grid.innerHTML = filteredExperts.map(renderExpertCard).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.expert-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const expertId = parseInt(card.dataset.expertId);
+                    openExpertModal(expertId);
+                });
+            });
+        }
+
+        // Open expert modal
+        function openExpertModal(expertId) {
+            const expert = experts.find(e => e.id === expertId);
+            if (!expert) return;
+
+            document.getElementById('modalAvatar').textContent = expert.initials;
+            document.getElementById('modalName').textContent = expert.name;
+            document.getElementById('modalTitle').textContent = expert.title;
+            document.getElementById('modalRating').textContent = expert.rating;
+            document.getElementById('modalReviews').textContent = expert.reviews;
+            document.getElementById('modalBio').textContent = expert.bio;
+            document.getElementById('modalProjects').textContent = expert.projects;
+            document.getElementById('modalSuccess').textContent = expert.successRate + '%';
+            document.getElementById('modalResponse').textContent = expert.responseTime + 'ч';
+
+            const tagsContainer = document.getElementById('modalTags');
+            tagsContainer.innerHTML = expert.tags.map(tag => `
+                <span class="expert-tag">
+                    ${tag.name}
+                    ${tag.ai ? '<span class="ai-badge">AI</span>' : ''}
+                </span>
+            `).join('');
+
+            document.getElementById('modalOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Navigation
+        function switchPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageName)?.classList.add('active');
+
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.page === pageName) {
+                    link.classList.add('active');
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Search functionality
+        function handleSearch(query) {
+            const grid = document.getElementById('expertsGrid');
+            query = query.toLowerCase().trim();
+
+            if (!query) {
+                renderExperts('all');
+                return;
+            }
+
+            const filtered = experts.filter(expert => {
+                return expert.name.toLowerCase().includes(query) ||
+                       expert.title.toLowerCase().includes(query) ||
+                       expert.bio.toLowerCase().includes(query) ||
+                       expert.tags.some(tag => tag.name.toLowerCase().includes(query));
+            });
+
+            grid.innerHTML = filtered.length 
+                ? filtered.map(renderExpertCard).join('') 
+                : '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Эксперты не найдены</p>';
+
+            // Re-add click handlers
+            document.querySelectorAll('.expert-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const expertId = parseInt(card.dataset.expertId);
+                    openExpertModal(expertId);
+                });
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            renderExperts();
+
+            // Navigation handlers
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    switchPage(link.dataset.page);
+                });
+            });
+
+            // AI Tags handlers
+            document.querySelectorAll('.ai-tag').forEach(tag => {
+                tag.addEventListener('click', () => {
+                    document.querySelectorAll('.ai-tag').forEach(t => t.classList.remove('active'));
+                    tag.classList.add('active');
+                    renderExperts(tag.dataset.tag);
+                });
+            });
+
+            // Search handler
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    handleSearch(e.target.value);
+                }, 300);
+            });
+
+            // Modal handlers
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+            document.getElementById('modalOverlay').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) closeModal();
+            });
+
+            // Filter tabs
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                });
+            });
+
+            // Escape key to close modal
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+        });
+    </script>
+</body>
+</html>

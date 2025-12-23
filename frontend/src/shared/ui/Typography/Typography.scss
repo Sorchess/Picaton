@@ -1,0 +1,73 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.typography {
+  margin: 0;
+
+  // Цвета
+  &--primary {
+    color: var(--color-text-primary);
+  }
+
+  &--secondary {
+    color: var(--color-text-secondary);
+  }
+
+  &--muted {
+    color: var(--color-text-muted);
+  }
+
+  &--inherit {
+    color: inherit;
+  }
+
+  // Градиент
+  &--gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  // Варианты
+  &--hero {
+    @include heading-hero;
+  }
+
+  &--h1 {
+    @include heading-section;
+  }
+
+  &--h2 {
+    font-family: $font-family-heading;
+    font-weight: $font-weight-extrabold;
+    font-size: $font-size-4xl;
+    letter-spacing: $letter-spacing-normal;
+  }
+
+  &--h3 {
+    @include heading-card;
+  }
+
+  &--h4 {
+    font-family: $font-family-heading;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-xl;
+  }
+
+  &--subtitle {
+    @include text-subtitle;
+  }
+
+  &--body {
+    @include text-body;
+  }
+
+  &--small {
+    @include text-small;
+  }
+
+  &--tag {
+    @include text-tag;
+  }
+}

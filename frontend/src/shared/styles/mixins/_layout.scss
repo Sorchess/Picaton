@@ -1,0 +1,76 @@
+@use "../variables" as *;
+
+// Медиа запросы
+@mixin mobile {
+  @media (max-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$breakpoint-lg + 1}) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: #{$breakpoint-xl}) {
+    @content;
+  }
+}
+
+// Контейнер
+@mixin container {
+  max-width: $container-max-width;
+  margin: 0 auto;
+  padding-left: $container-padding-desktop;
+  padding-right: $container-padding-desktop;
+
+  @include tablet {
+    padding-left: $container-padding-tablet;
+    padding-right: $container-padding-tablet;
+  }
+
+  @include mobile {
+    padding-left: $container-padding-mobile;
+    padding-right: $container-padding-mobile;
+  }
+}
+
+// Flex центрирование
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Flex между элементами
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Абсолютное заполнение
+@mixin absolute-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+// Фиксированное заполнение
+@mixin fixed-fill {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}

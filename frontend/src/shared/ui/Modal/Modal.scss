@@ -1,0 +1,110 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.modal-overlay {
+  @include fixed-fill;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  z-index: $z-index-modal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease, backdrop-filter 0.4s ease;
+
+  &--active {
+    opacity: 1;
+    visibility: visible;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur($blur-sm);
+
+    .modal {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-height: calc(100vh - #{$spacing-5xl * 2});
+  overflow-y: auto;
+  background: var(--color-bg-secondary);
+  backdrop-filter: blur($blur-lg);
+  border: 1px solid var(--color-glass-border);
+  border-radius: $radius-2xl;
+  padding: $spacing-4xl;
+  transform: scale(0.9) translateY(40px);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.4s ease;
+  animation-fill-mode: forwards;
+
+  // Размеры
+  &--sm {
+    max-width: 400px;
+  }
+
+  &--md {
+    max-width: 600px;
+  }
+
+  &--lg {
+    max-width: 800px;
+  }
+
+  &__close {
+    position: absolute;
+    top: $spacing-xl;
+    right: $spacing-xl;
+    width: 40px;
+    height: 40px;
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    border-radius: $radius-circle;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: var(--color-text-primary);
+      color: var(--color-bg-primary);
+      transform: rotate(90deg);
+    }
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-extrabold;
+    margin-bottom: $spacing-3xl;
+    padding-right: $spacing-5xl;
+    color: var(--color-text-primary);
+  }
+
+  &__content {
+    color: var(--color-text-secondary);
+    line-height: $line-height-relaxed;
+  }
+
+  @include mobile {
+    padding: $spacing-3xl;
+    border-radius: $radius-xl;
+
+    &__title {
+      font-size: $font-size-xl;
+    }
+  }
+}
