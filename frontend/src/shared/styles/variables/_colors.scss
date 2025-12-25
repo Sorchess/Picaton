@@ -1,0 +1,111 @@
+// Основные переменные для темизации
+// Темная тема (по умолчанию)
+:root,
+[data-theme="dark"] {
+  // Фоны
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #111111;
+  --color-bg-tertiary: #1a1a1a;
+
+  // Тексты
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #666666;
+
+  // Glass эффекты
+  --color-glass-bg: rgba(255, 255, 255, 0.03);
+  --color-glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-border-hover: rgba(255, 255, 255, 0.2);
+  --color-glass-shadow: rgba(0, 0, 0, 0.3);
+  --color-border: rgba(255, 255, 255, 0.1);
+
+  // Акценты
+  --color-accent: #ffffff;
+  --color-accent-hover: #e0e0e0;
+  --color-success: #4ade80;
+  --color-error: #f87171;
+  --color-warning: #fbbf24;
+
+  // Градиенты
+  --gradient-primary: linear-gradient(135deg, #ffffff 0%, #666666 100%);
+  --gradient-glass: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    transparent 50%
+  );
+  --gradient-glass-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 60%
+  );
+  --gradient-button: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+
+  // Blob цвета
+  --color-blob-1: rgba(255, 255, 255, 0.15);
+  --color-blob-2: rgba(200, 200, 200, 0.1);
+  --color-blob-3: rgba(180, 180, 180, 0.12);
+  --color-blob-4: rgba(255, 255, 255, 0.08);
+
+  // Прочие
+  --color-cursor-glow: rgba(255, 255, 255, 0.06);
+  --color-grid: rgba(255, 255, 255, 0.5);
+  --color-overlay: rgba(10, 10, 10, 0.8);
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-accent-rgb: 255, 255, 255;
+}
+
+// Светлая тема
+[data-theme="light"] {
+  // Фоны
+  --color-bg-primary: #f8faf8;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #eef3ee;
+
+  // Тексты
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #4a5a4a;
+  --color-text-muted: #7a8a7a;
+
+  // Glass эффекты
+  --color-glass-bg: rgba(33, 160, 56, 0.04);
+  --color-glass-bg-hover: rgba(33, 160, 56, 0.08);
+  --color-glass-border: rgba(33, 160, 56, 0.12);
+  --color-glass-border-hover: rgba(33, 160, 56, 0.25);
+  --color-glass-shadow: rgba(33, 160, 56, 0.15);
+  --color-border: rgba(33, 160, 56, 0.15);
+
+  // Акценты (Сбербанк зеленый)
+  --color-accent: #21a038;
+  --color-accent-hover: #1a8a2e;
+  --color-success: #21a038;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+
+  // Градиенты
+  --gradient-primary: linear-gradient(135deg, #21a038 0%, #107c10 100%);
+  --gradient-glass: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(230, 233, 230, 0.05) 50%
+  );
+  --gradient-glass-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(163, 177, 163, 0.05) 60%
+  );
+  --gradient-button: linear-gradient(135deg, #21a038 0%, #1a8a2e 100%);
+
+  // Blob цвета (зеленые оттенки)
+  --color-blob-1: rgba(33, 160, 56, 0.12);
+  --color-blob-2: rgba(33, 160, 56, 0.08);
+  --color-blob-3: rgba(16, 124, 16, 0.1);
+  --color-blob-4: rgba(33, 160, 56, 0.06);
+
+  // Прочие
+  --color-cursor-glow: rgba(33, 160, 56, 0.08);
+  --color-grid: rgba(33, 160, 56, 0.15);
+  --color-overlay: rgba(248, 250, 248, 0.9);
+  --color-shadow: rgba(33, 160, 56, 0.15);
+  --color-accent-rgb: 33, 160, 56;
+}

@@ -1,0 +1,40 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.card {
+  @include glass-card;
+
+  // Padding варианты
+  &--padding-none {
+    padding: 0;
+  }
+
+  &--padding-sm {
+    padding: $spacing-xl;
+  }
+
+  &--padding-md {
+    padding: $spacing-4xl;
+  }
+
+  &--padding-lg {
+    padding: $spacing-5xl;
+  }
+
+
+  &--interactive {
+    cursor: pointer;
+  }
+
+  &--static {
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  &__content {
+    position: relative;
+    z-index: 1;
+  }
+}

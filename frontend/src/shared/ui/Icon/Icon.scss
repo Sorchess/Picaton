@@ -1,0 +1,44 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.icon {
+  @include flex-center;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border-radius: $radius-2xl;
+  border: 1px solid var(--color-glass-border);
+  transition: $transition-bounce;
+
+  &--sm {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    border-radius: $radius-md;
+  }
+
+  &--md {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+
+  &--lg {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+  }
+
+  &:hover {
+    transform: scale(1.15) rotate(-5deg);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    border-color: var(--color-glass-border-hover);
+    box-shadow: 0 10px 30px -10px rgba(255, 255, 255, 0.1);
+  }
+}

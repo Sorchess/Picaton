@@ -1,0 +1,69 @@
+from dataclasses import dataclass, field
+from datetime import datetime
+from uuid import UUID
+
+from domain.entities.base import Entity
+
+
+@dataclass
+class SavedContact(Entity):
+    """
+    Сущность сохраненного контакта.
+    Представляет связь между пользователями - когда один пользователь
+    сохраняет другого в свои контакты.
+    """
+
+    # Кто сохранил контакт
+    owner_id: UUID = field(default=None)
+
+    # Чей контакт сохранен (может быть None если контакт добавлен вручную)
+    saved_user_id: UUID | None = field(default=None)
+
+    # Данные контакта (для ручного ввода или импорта)
+    name: str = field(default="")
+    phone: str | None = field(default=None)
+    email: str | None = field(default=None)
+    notes: str | None = field(default=None)
+
+    # Теги для ассоциативного поиска
+    search_tags: list[str] = field(default_factory=list)
+
+    # Источник контакта
+    source: str = field(default="manual")  # manual, import, qr_code, app
+
+    # Метаданные
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+    def add_search_tag(self, tag: str) -> None:
+        """Добавить тег для поиска."""
+        normalized_tag = tag.strip().lower()
+        if normalized_tag and normalized_tag not in self.search_tags:
+            self.search_tags.append(normalized_tag)
+            self.updated_at = datetime.utcnow()
+
+    def remove_search_tag(self, tag: str) -> None:
+        """Удалить тег для поиска."""
+        normalized_tag = tag.strip().lower()
+        if normalized_tag in self.search_tags:
+            self.search_tags.remove(normalized_tag)
+            self.updated_at = datetime.utcnow()
+
+    def set_search_tags(self, tags: list[str]) -> None:
+        """Установить теги для поиска."""
+        self.search_tags = [t.strip().lower() for t in tags if t.strip()]
+        self.updated_at = datetime.utcnow()
+
+    def update_notes(self, notes: str | None) -> None:
+        """Обновить заметки о контакте."""
+        self.notes = notes
+        self.updated_at = datetime.utcnow()
+
+    def get_searchable_text(self) -> str:
+        """Получить текст для поиска."""
+        parts = [
+            self.name,
+            self.notes or "",
+            " ".join(self.search_tags),
+        ]
+        return " ".join(filter(None, parts))

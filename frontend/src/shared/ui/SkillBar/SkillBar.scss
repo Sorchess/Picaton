@@ -1,0 +1,21 @@
+@use "../../styles/variables" as *;
+
+.skill-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: $radius-sm;
+  overflow: hidden;
+
+  &__progress {
+    height: 100%;
+    background: linear-gradient(90deg, #fff, #888);
+    border-radius: $radius-sm;
+    transition: width $duration-long $ease-out;
+  }
+
+  &--animated {
+    .skill-bar__progress {
+      transition: width $duration-long $ease-out;
+    }
+  }
+}

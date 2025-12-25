@@ -1,0 +1,69 @@
+@use "../variables" as *;
+
+// Заголовок hero
+@mixin heading-hero {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-extrabold;
+  font-size: $font-size-hero;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-tight;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Заголовок секции
+@mixin heading-section {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-extrabold;
+  font-size: $font-size-section;
+  letter-spacing: $letter-spacing-normal;
+}
+
+// Заголовок карточки
+@mixin heading-card {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-2xl;
+  letter-spacing: $letter-spacing-normal;
+}
+
+// Подзаголовок
+@mixin text-subtitle {
+  font-size: $font-size-xl;
+  color: var(--color-text-secondary);
+  font-weight: $font-weight-regular;
+}
+
+// Обычный текст
+@mixin text-body {
+  font-size: $font-size-md;
+  color: var(--color-text-secondary);
+  line-height: $line-height-loose;
+}
+
+// Маленький текст (теги, метки)
+@mixin text-small {
+  font-size: $font-size-sm;
+  color: var(--color-text-secondary);
+}
+
+// Section tag
+@mixin text-tag {
+  font-size: $font-size-sm;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: $letter-spacing-widest;
+}
+
+// Logo стиль
+@mixin text-logo {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-extrabold;
+  letter-spacing: $letter-spacing-normal;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

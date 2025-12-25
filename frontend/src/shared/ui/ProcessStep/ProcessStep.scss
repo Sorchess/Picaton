@@ -1,0 +1,118 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.process-step {
+  display: flex;
+  gap: $spacing-xl;
+  position: relative;
+
+  &__indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__number {
+    width: 48px;
+    height: 48px;
+    background: var(--gradient-primary);
+    border-radius: $radius-circle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: white;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+
+    // Свечение
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      background: var(--gradient-primary);
+      border-radius: $radius-circle;
+      opacity: 0;
+      filter: blur(8px);
+      z-index: -1;
+      transition: opacity 0.3s ease;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__line {
+    width: 2px;
+    flex: 1;
+    min-height: 40px;
+    background: linear-gradient(
+      to bottom,
+      var(--color-glass-border),
+      transparent
+    );
+    margin-top: $spacing-md;
+  }
+
+  &__content {
+    padding-bottom: $spacing-3xl;
+  }
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-sm;
+    color: var(--color-text-primary);
+  }
+
+  &__description {
+    font-size: $font-size-sm;
+    color: var(--color-text-secondary);
+    line-height: $line-height-relaxed;
+    max-width: 300px;
+  }
+
+  // Последний шаг без линии
+  &--last {
+    .process-step__content {
+      padding-bottom: 0;
+    }
+  }
+
+  // Hover эффект
+  &:hover {
+    .process-step__number {
+      transform: scale(1.1);
+
+      &::after {
+        opacity: 0.5;
+      }
+    }
+  }
+
+  @include mobile {
+    gap: $spacing-lg;
+
+    &__number {
+      width: 40px;
+      height: 40px;
+      font-size: $font-size-base;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    &__content {
+      padding-bottom: $spacing-2xl;
+    }
+  }
+}

@@ -1,0 +1,30 @@
+// Переходы и анимации
+$transition-fast: 0.3s ease;
+$transition-base: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+$transition-smooth: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Длительности
+$duration-fast: 0.2s;
+$duration-base: 0.3s;
+$duration-slow: 0.5s;
+$duration-slower: 0.8s;
+$duration-animation: 1.2s;
+$duration-long: 1.5s;
+$duration-loader: 1.4s;
+$duration-blob: 20s;
+$duration-float: 6s;
+$duration-pulse: 2s;
+$duration-scroll: 2s;
+
+// Easing функции
+$ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+$ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+$ease-in-out: ease-in-out;
+
+// Blur значения
+$blur-sm: 10px;
+$blur-base: 20px;
+$blur-lg: 40px;
+$blur-xl: 80px;

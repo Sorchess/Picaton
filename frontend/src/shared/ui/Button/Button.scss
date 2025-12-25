@@ -1,0 +1,103 @@
+@use "../../styles/variables" as *;
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  border-radius: $radius-full;
+  font-family: $font-family-primary;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+  transition: $transition-base;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+
+  // Размеры
+  &--sm {
+    padding: $spacing-md $spacing-xl;
+    font-size: $font-size-sm;
+  }
+
+  &--md {
+    padding: $spacing-lg $spacing-4xl;
+    font-size: $font-size-base;
+  }
+
+  &--lg {
+    padding: $spacing-xl $spacing-4xl;
+    font-size: $font-size-base;
+  }
+
+  // Варианты
+  &--primary {
+    background: var(--color-text-primary);
+    color: var(--color-bg-primary);
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
+
+    &:hover {
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 0 60px rgba(255, 255, 255, 0.3),
+        0 10px 40px -10px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: scale(1.02);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  &--secondary {
+    background: transparent;
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-glass-border);
+    backdrop-filter: blur($blur-sm);
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.02) 100%
+      );
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    &:active {
+      transform: scale(1.02);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--color-text-secondary);
+    padding: $spacing-sm $spacing-lg;
+
+    &:hover {
+      color: var(--color-text-primary);
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  // Модификаторы
+  &--full-width {
+    width: 100%;
+  }
+}

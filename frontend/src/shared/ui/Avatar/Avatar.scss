@@ -1,0 +1,185 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.avatar {
+  position: relative;
+  flex-shrink: 0;
+
+  // Размеры
+  &--sm {
+    .avatar__inner {
+      width: 40px;
+      height: 40px;
+      border-radius: $radius-lg;
+    }
+
+    .avatar__initials {
+      font-size: $font-size-sm;
+    }
+
+    .avatar__status {
+      width: 10px;
+      height: 10px;
+    }
+
+    .avatar__verified {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &--md {
+    .avatar__inner {
+      width: 64px;
+      height: 64px;
+      border-radius: $radius-xl;
+    }
+
+    .avatar__initials {
+      font-size: $font-size-2xl;
+    }
+
+    .avatar__status {
+      width: 14px;
+      height: 14px;
+    }
+
+    .avatar__verified {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &--lg {
+    .avatar__inner {
+      width: 100px;
+      height: 100px;
+      border-radius: $radius-2xl;
+    }
+
+    .avatar__initials {
+      font-size: $font-size-3xl;
+    }
+
+    .avatar__status {
+      width: 18px;
+      height: 18px;
+    }
+
+    .avatar__verified {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  &--xl {
+    .avatar__inner {
+      width: 140px;
+      height: 140px;
+      border-radius: $radius-3xl;
+    }
+
+    .avatar__initials {
+      font-size: $font-size-4xl;
+    }
+
+    .avatar__status {
+      width: 22px;
+      height: 22px;
+    }
+
+    .avatar__verified {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  &__inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #333 0%, #111 100%);
+    overflow: hidden;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__initials {
+    font-family: $font-family-heading;
+    font-weight: $font-weight-extrabold;
+    color: var(--color-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  // Shine effect overlay
+  &__shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+  }
+
+  // Online status indicator
+  &__status {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    border-radius: $radius-circle;
+    border: 2px solid var(--color-bg-primary);
+
+    &--online {
+      background: var(--color-success);
+      box-shadow: 0 0 8px var(--color-success);
+      animation: pulse-status 2s ease-in-out infinite;
+    }
+
+    &--offline {
+      background: var(--color-text-muted);
+    }
+
+    &--busy {
+      background: var(--color-error);
+    }
+  }
+
+  // Verified badge
+  &__verified {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: var(--color-text-primary);
+    border-radius: $radius-circle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-bg-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    svg {
+      width: 60%;
+      height: 60%;
+    }
+  }
+}
+
+@keyframes pulse-status {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}

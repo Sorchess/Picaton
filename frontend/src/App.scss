@@ -1,0 +1,140 @@
+@use "./shared/styles/variables" as *;
+@use "./shared/styles/mixins" as *;
+
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  &--loading {
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--color-text-secondary);
+  }
+
+  &__spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(139, 92, 246, 0.2);
+    border-top-color: #8b5cf6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  &__header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--color-glass-bg);
+    border-bottom: 1px solid var(--color-glass-border);
+    backdrop-filter: blur(20px);
+
+    @media (max-width: 768px) {
+      padding: 12px 16px;
+    }
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+
+    svg {
+      filter: drop-shadow(0 2px 8px rgba(139, 92, 246, 0.3));
+      transition: filter 0.3s ease;
+    }
+
+    &:hover svg {
+      filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.5));
+    }
+
+    &-text {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      background: linear-gradient(
+        135deg,
+        #6366f1 0%,
+        #8b5cf6 50%,
+        #d946ef 100%
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    @media (max-width: 480px) {
+      &-text {
+        display: none;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__user {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
+
+  &__logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--color-glass-border);
+    border-radius: 10px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+  }
+
+  &__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+}
