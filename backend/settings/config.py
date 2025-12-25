@@ -50,6 +50,17 @@ class GroqConfig(BaseSettings):
     temperature: float = 0.7
 
 
+class CloudinaryConfig(BaseSettings):
+    """Конфигурация Cloudinary для хранения изображений."""
+
+    cloud_name: str = ""
+    api_key: str = ""
+    api_secret: str = ""
+    folder: str = "picaton/avatars"
+    max_file_size: int = 5 * 1024 * 1024  # 5MB
+    allowed_formats: list[str] = ["jpg", "jpeg", "png", "webp"]
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
@@ -60,6 +71,7 @@ class Config(BaseSettings):
     logging: LoggingConfig = LoggingConfig()
     jwt: JWTConfig = JWTConfig()
     groq: GroqConfig = GroqConfig()
+    cloudinary: CloudinaryConfig = CloudinaryConfig()
     mongo: DatabaseConfig
     api: APIConfig
 

@@ -1,0 +1,92 @@
+.avatar-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  &__container {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+
+      .avatar-upload__overlay {
+        opacity: 1;
+      }
+    }
+
+    &--dragging {
+      transform: scale(1.05);
+      box-shadow: 0 12px 40px rgba(99, 102, 241, 0.4);
+
+      .avatar-upload__overlay {
+        opacity: 1;
+        background: rgba(99, 102, 241, 0.8);
+      }
+    }
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.2s;
+
+    svg {
+      color: white;
+    }
+  }
+
+  &__input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__error {
+    padding: 8px 16px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 8px;
+    color: #ef4444;
+    font-size: 0.85rem;
+    cursor: pointer;
+    max-width: 200px;
+    text-align: center;
+  }
+
+  &__hint {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+}

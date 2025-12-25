@@ -53,6 +53,30 @@ async function request<T>(
   return response.json();
 }
 
+async function uploadFile<T>(endpoint: string, file: File, fieldName = "file"): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const token = tokenStorage.get();
+
+  const formData = new FormData();
+  formData.append(fieldName, file);
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Do NOT set Content-Type - browser will set it with boundary
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new ApiError(response.status, response.statusText, data);
+  }
+
+  return response.json();
+}
+
 export const api = {
   get: <T>(endpoint: string) => request<T>(endpoint),
 
@@ -75,6 +99,9 @@ export const api = {
     }),
 
   delete: <T>(endpoint: string) => request<T>(endpoint, { method: "DELETE" }),
+
+  upload: <T>(endpoint: string, file: File, fieldName?: string) =>
+    uploadFile<T>(endpoint, file, fieldName),
 };
 
 export { ApiError };

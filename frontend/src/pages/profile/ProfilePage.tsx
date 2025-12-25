@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { User } from "@/entities/user";
-import { UserAvatar, getFullName } from "@/entities/user";
+import { getFullName } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import { useAuth } from "@/features/auth";
+import { AvatarUpload } from "@/features/avatar-upload";
 import { Loader } from "@/shared";
 import "./ProfilePage.scss";
 
@@ -175,6 +176,17 @@ export function ProfilePage() {
     }
   };
 
+  // Загрузка аватарки
+  const handleAvatarUpload = useCallback(
+    async (file: File) => {
+      if (!user) throw new Error("User not loaded");
+      const result = await userApi.uploadAvatar(user.id, file);
+      setUser({ ...user, avatar_url: result.avatar_url });
+      return result;
+    },
+    [user]
+  );
+
   // QR код
   const handleGetQrCode = async () => {
     if (!user) return;
@@ -231,11 +243,12 @@ export function ProfilePage() {
       {/* Шапка профиля */}
       <header className="profile__header">
         <div className="profile__user">
-          <UserAvatar
-            src={user.avatar_url}
-            firstName={user.first_name}
-            lastName={user.last_name}
-            size="xl"
+          <AvatarUpload
+            currentAvatarUrl={user.avatar_url}
+            onUpload={handleAvatarUpload}
+            size={80}
+            name={getFullName(user)}
+            showHint={false}
           />
           <div className="profile__user-info">
             <h1>{getFullName(user)}</h1>

@@ -130,13 +130,28 @@ export const userApi = {
     contacts: Array<{ name: string; phone?: string; email?: string }>
   ) => api.post<ImportResult>(`/users/${userId}/contacts/import`, { contacts }),
 
-  // Импорт vCard
-  importVCard: (userId: string, vcardData: string) =>
-    api.post<ImportResult>(`/users/${userId}/contacts/import-vcard`, {
-      vcard_data: vcardData,
+  // Синхронизация контактов (Enterprise/Privacy-First)
+  syncContacts: (
+    userId: string,
+    hashedContacts: Array<{ name: string; hash: string }>
+  ) =>
+    api.post<{
+      found: Array<{
+        hash: string;
+        original_name: string;
+        user: { id: string; name: string; avatar_url?: string };
+      }>;
+      found_count: number;
+      pending_count: number;
+    }>(`/users/${userId}/contacts/sync`, {
+      hashed_contacts: hashedContacts,
     }),
 
   // Генерация тегов из заметок (AI)
   generateTagsFromNotes: (notes: string) =>
     api.post<{ tags: string[] }>("/users/contacts/generate-tags", { notes }),
+
+  // Загрузка аватарки
+  uploadAvatar: (userId: string, file: File) =>
+    api.upload<{ avatar_url: string }>(`/users/${userId}/avatar`, file),
 };

@@ -250,18 +250,52 @@ class ContactImportRequest(BaseModel):
     contacts: list[ImportContactItem]
 
 
-class VCardImportRequest(BaseModel):
-    """Запрос на импорт из vCard."""
-
-    vcard_data: str
-
-
 class ImportResult(BaseModel):
     """Результат импорта."""
 
     imported_count: int
     skipped_count: int
     errors: list[str]
+
+
+# ============ Contact Sync (Enterprise/Privacy-First) ============
+
+
+class HashedContactItem(BaseModel):
+    """Хешированный контакт для синхронизации."""
+
+    name: str = Field(max_length=200)
+    hash: str = Field(min_length=64, max_length=64, description="SHA-256 hash номера телефона")
+
+
+class ContactSyncRequest(BaseModel):
+    """Запрос на синхронизацию контактов по хешам."""
+
+    hashed_contacts: list[HashedContactItem] = Field(max_length=1000)
+
+
+class FoundUserInfo(BaseModel):
+    """Информация о найденном пользователе."""
+
+    id: UUID
+    name: str
+    avatar_url: str | None = None
+
+
+class FoundContact(BaseModel):
+    """Найденный контакт при синхронизации."""
+
+    hash: str
+    original_name: str
+    user: FoundUserInfo
+
+
+class ContactSyncResponse(BaseModel):
+    """Результат синхронизации контактов."""
+
+    found: list[FoundContact]
+    found_count: int
+    pending_count: int
 
 
 # ============ AI Bio ============
@@ -299,6 +333,15 @@ class GeneratedBioResponse(BaseModel):
     """Сгенерированная самопрезентация."""
 
     bio: str
+
+
+# ============ Avatar Upload ============
+
+
+class AvatarUploadResponse(BaseModel):
+    """Результат загрузки аватарки."""
+
+    avatar_url: str
 
 
 # Обновляем forward reference

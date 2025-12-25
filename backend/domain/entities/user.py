@@ -47,6 +47,7 @@ class User(Entity):
     last_name: str = field(default="")
     email: str = field(default="")
     hashed_password: str = field(default="")
+    phone_hash: str | None = field(default=None)  # SHA-256 hash телефона для sync
     avatar_url: str | None = field(default=None)
 
     # Локация

@@ -115,9 +115,9 @@
     transition: all 0.2s ease;
 
     &:hover {
-      background: var(--color-accent);
-      border-color: var(--color-accent);
-      color: white;
+      background: rgba(139, 92, 246, 0.15);
+      border-color: #8b5cf6;
+      color: var(--color-text-primary);
       border-style: solid;
     }
   }

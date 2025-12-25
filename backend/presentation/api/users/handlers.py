@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 
 from presentation.api.users.schemas import (
     UserCreate,
@@ -19,7 +19,6 @@ from presentation.api.users.schemas import (
     SavedContactUpdate,
     SavedContactResponse,
     ContactImportRequest,
-    VCardImportRequest,
     ImportResult,
     GeneratedBioResponse,
     TagInfo,
@@ -29,6 +28,9 @@ from presentation.api.users.schemas import (
     ApplyTagsRequest,
     GenerateContactTagsRequest,
     GenerateContactTagsResponse,
+    ContactSyncRequest,
+    ContactSyncResponse,
+    AvatarUploadResponse,
 )
 from infrastructure.dependencies import (
     get_user_service,
@@ -36,9 +38,14 @@ from infrastructure.dependencies import (
     get_search_service,
     get_qrcode_service,
     get_import_service,
+    get_contact_sync_service,
     get_ai_tags_service,
     get_groq_tags_service,
+    get_cloudinary_service,
 )
+from application.services.contact_sync import HashedContact
+from infrastructure.storage import CloudinaryService
+from infrastructure.storage.cloudinary_service import CloudinaryError, InvalidFileError
 
 
 router = APIRouter()
@@ -130,6 +137,59 @@ async def delete_user(
 ):
     """Удалить пользователя."""
     await user_service.delete_user(user_id)
+
+
+# ============ Avatar Upload ============
+
+
+@router.post("/{user_id}/avatar", response_model=AvatarUploadResponse)
+async def upload_avatar(
+    user_id: UUID,
+    file: UploadFile = File(...),
+    user_service=Depends(get_user_service),
+    cloudinary_service: CloudinaryService = Depends(get_cloudinary_service),
+):
+    """
+    Загрузить аватарку пользователя.
+
+    - Поддерживаемые форматы: jpg, jpeg, png, webp
+    - Максимальный размер: 5MB
+    - Изображение автоматически масштабируется до 400x400
+    """
+    try:
+        # Read file content
+        content = await file.read()
+
+        # Upload to Cloudinary
+        result = await cloudinary_service.upload_avatar(
+            user_id=user_id,
+            file_content=content,
+            filename=file.filename or "avatar.jpg",
+        )
+
+        # Update user profile with new avatar URL
+        await user_service.update_profile(
+            user_id=user_id,
+            avatar_url=result.url,
+        )
+
+        return AvatarUploadResponse(avatar_url=result.url)
+
+    except InvalidFileError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except CloudinaryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка загрузки: {str(e)}",
+        )
 
 
 # ============ Random Facts & AI Bio ============
@@ -439,20 +499,54 @@ async def import_contacts(
     )
 
 
-@router.post("/{user_id}/contacts/import-vcard", response_model=ImportResult)
-async def import_vcard(
-    user_id: UUID,
-    data: VCardImportRequest,
-    import_service=Depends(get_import_service),
-):
-    """Импорт контакта из vCard (например, отсканированного QR-кода)."""
-    result = await import_service.import_vcard(user_id, data.vcard_data)
+# ============ Contact Sync (Enterprise/Privacy-First) ============
 
-    return ImportResult(
-        imported_count=result.imported_count,
-        skipped_count=result.skipped_count,
-        errors=result.errors,
-    )
+
+@router.post("/{user_id}/contacts/sync", response_model=ContactSyncResponse)
+async def sync_contacts(
+    user_id: UUID,
+    data: ContactSyncRequest,
+    sync_service=Depends(get_contact_sync_service),
+):
+    """
+    Синхронизация контактов по хешам телефонов (Privacy-First).
+
+    Клиент хеширует номера телефонов (SHA-256) перед отправкой.
+    Сервер НИКОГДА не видит реальные номера — только их хеши.
+
+    Возвращает:
+    - found: список найденных пользователей
+    - found_count: количество найденных
+    - pending_count: количество номеров, ожидающих регистрации
+    """
+    try:
+        hashed_contacts = [
+            HashedContact(name=c.name, hash=c.hash) for c in data.hashed_contacts
+        ]
+
+        result = await sync_service.sync_contacts(user_id, hashed_contacts)
+
+        return ContactSyncResponse(
+            found=[
+                {
+                    "hash": c.hash,
+                    "original_name": c.original_name,
+                    "user": {
+                        "id": c.user.id,
+                        "name": c.user.name,
+                        "avatar_url": c.user.avatar_url,
+                    },
+                }
+                for c in result.found
+            ],
+            found_count=result.found_count,
+            pending_count=result.pending_count,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка синхронизации: {str(e)}",
+        )
 
 
 # ============ Helper Functions ============

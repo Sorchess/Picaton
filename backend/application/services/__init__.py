@@ -6,6 +6,7 @@ from application.services.ai_bio import AIBioGeneratorService
 from application.services.llm_bio import AIBioGenerator
 from application.services.ai_tags import AITagsGeneratorService, MockAITagsGenerator
 from application.services.contact_import import ContactImportService
+from application.services.contact_sync import ContactSyncService
 from application.services.auth import (
     AuthService,
     AuthenticationError,
@@ -23,6 +24,7 @@ __all__ = [
     "AITagsGeneratorService",
     "MockAITagsGenerator",
     "ContactImportService",
+    "ContactSyncService",
     "AuthService",
     "AuthenticationError",
     "InvalidCredentialsError",

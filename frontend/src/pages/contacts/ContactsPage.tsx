@@ -1,8 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import type { SavedContact } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import { useAuth } from "@/features/auth";
-import { ContactImportButton, type PhoneContact, type ImportStats } from "@/features/contact-import";
+import {
+  ContactImportButton,
+  type PhoneContact,
+  type ImportStats,
+  type HashedContact,
+  type ContactSyncResult,
+} from "@/features/contact-import";
 import { Tag, Loader, Typography, Modal, Input, TagInput } from "@/shared";
 import "./ContactsPage.scss";
 
@@ -120,16 +126,58 @@ export function ContactsPage() {
     }
   };
 
-  const filteredContacts = contacts.filter((contact) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      contact.name.toLowerCase().includes(q) ||
-      contact.email?.toLowerCase().includes(q) ||
-      contact.phone?.includes(q) ||
-      contact.search_tags.some((tag) => tag.toLowerCase().includes(q))
-    );
-  });
+  const handleSyncContacts = useCallback(
+    async (hashedContacts: HashedContact[]): Promise<ContactSyncResult> => {
+      if (!authUser?.id) {
+        throw new Error("Не авторизован");
+      }
+
+      const result = await userApi.syncContacts(authUser.id, hashedContacts);
+      return {
+        found: result.found,
+        found_count: result.found_count,
+        pending_count: result.pending_count,
+      };
+    },
+    [authUser?.id]
+  );
+
+  const filteredContacts = useMemo(() => {
+    // Step 1: Filter by search query
+    let result = contacts;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = contacts.filter(
+        (contact) =>
+          contact.name.toLowerCase().includes(q) ||
+          contact.email?.toLowerCase().includes(q) ||
+          contact.phone?.includes(q) ||
+          contact.search_tags.some((tag) => tag.toLowerCase().includes(q))
+      );
+    }
+
+    // Step 2: Sort by matching tags (DESC), then by name (ASC)
+    const userTags = authUser?.search_tags || [];
+    if (userTags.length === 0) {
+      return result.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    }
+
+    const userTagsSet = new Set(userTags.map((t) => t.toLowerCase()));
+
+    return result.sort((a, b) => {
+      const scoreA = a.search_tags.filter((tag) =>
+        userTagsSet.has(tag.toLowerCase())
+      ).length;
+      const scoreB = b.search_tags.filter((tag) =>
+        userTagsSet.has(tag.toLowerCase())
+      ).length;
+
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA; // Higher score first
+      }
+      return a.name.localeCompare(b.name, "ru"); // Then alphabetically
+    });
+  }, [contacts, searchQuery, authUser?.search_tags]);
 
   const getInitials = (name: string) => {
     const parts = name.split(" ");
@@ -160,6 +208,7 @@ export function ContactsPage() {
           <div className="contacts-page__actions">
             <ContactImportButton
               onImport={handleImportContacts}
+              onSync={handleSyncContacts}
               onImported={loadContacts}
             />
             <button

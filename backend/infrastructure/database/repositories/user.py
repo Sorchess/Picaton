@@ -24,6 +24,7 @@ class MongoUserRepository(UserRepositoryInterface):
             "last_name": user.last_name,
             "email": user.email,
             "hashed_password": user.hashed_password,
+            "phone_hash": user.phone_hash,
             "avatar_url": user.avatar_url,
             "location": user.location,
             "tags": [
@@ -79,6 +80,7 @@ class MongoUserRepository(UserRepositoryInterface):
             last_name=doc.get("last_name", ""),
             email=doc.get("email", ""),
             hashed_password=doc.get("hashed_password", ""),
+            phone_hash=doc.get("phone_hash"),
             avatar_url=doc.get("avatar_url"),
             location=doc.get("location"),
             tags=tags,
@@ -193,6 +195,18 @@ class MongoUserRepository(UserRepositoryInterface):
     async def get_all(self, skip: int = 0, limit: int = 100) -> list[User]:
         """Получить всех пользователей с пагинацией."""
         cursor = self._collection.find().skip(skip).limit(limit)
+
+        users = []
+        async for doc in cursor:
+            users.append(self._from_document(doc))
+        return users
+
+    async def find_by_phone_hashes(self, hashes: list[str]) -> list[User]:
+        """Найти пользователей по хешам телефонов."""
+        if not hashes:
+            return []
+
+        cursor = self._collection.find({"phone_hash": {"$in": hashes}})
 
         users = []
         async for doc in cursor:

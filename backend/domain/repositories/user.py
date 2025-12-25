@@ -53,3 +53,8 @@ class UserRepositoryInterface(ABC):
     async def get_all(self, skip: int = 0, limit: int = 100) -> list[User]:
         """Получить всех пользователей с пагинацией."""
         pass
+
+    @abstractmethod
+    async def find_by_phone_hashes(self, hashes: list[str]) -> list[User]:
+        """Найти пользователей по хешам телефонов."""
+        pass

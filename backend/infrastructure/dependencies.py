@@ -19,10 +19,12 @@ from application.services import (
     AITagsGeneratorService,
     MockAITagsGenerator,
     ContactImportService,
+    ContactSyncService,
     AuthService,
 )
 from application.services.groq_bio import GroqBioGenerator
 from application.services.groq_tags import GroqTagsGenerator
+from infrastructure.storage import CloudinaryService
 from settings.config import settings
 
 
@@ -141,9 +143,21 @@ def get_import_service(
     return ContactImportService(contact_repo)
 
 
+def get_contact_sync_service(
+    user_repo: UserRepository,
+) -> ContactSyncService:
+    """Получить сервис синхронизации контактов."""
+    return ContactSyncService(user_repo)
+
+
 def get_auth_service(
     user_repo: UserRepository,
     user_service: UserService = Depends(get_user_service),
 ) -> AuthService:
     """Получить сервис аутентификации."""
     return AuthService(user_repo, user_service)
+
+
+def get_cloudinary_service() -> CloudinaryService:
+    """Получить сервис Cloudinary для загрузки изображений."""
+    return CloudinaryService()

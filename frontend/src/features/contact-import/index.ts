@@ -1,4 +1,11 @@
 export { ContactImportButton } from "./ui/ContactImportButton";
-export { useContactPicker } from "./lib/useContactPicker";
-export { parseVcfFile, readVcfFile } from "./lib/vcfParser";
-export type { PhoneContact, ImportStats, ContactPickerResult } from "./model/types";
+export { PhoneInputModal } from "./ui/PhoneInputModal";
+export { hashPhone, hashPhones, parsePhoneInput, normalizePhone } from "./lib/hashPhone";
+export type {
+  PhoneContact,
+  ImportStats,
+  HashedContact,
+  ContactSyncResult,
+  ContactSyncRequest,
+  FoundUser,
+} from "./model/types";
