@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth";
 import { Typography, Button, Input } from "@/shared";
-import { ApiError } from "@/shared/api";
 import "./AuthPage.scss";
 
 interface AuthPageProps {
@@ -20,16 +19,27 @@ export function LoginPage({ onSwitchToRegister }: AuthPageProps) {
 
     try {
       await login({ email, password });
-    } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status === 401) {
+    } catch (err: unknown) {
+      const apiErr = err as { status?: number; data?: { detail?: string } };
+      if (apiErr.status !== undefined) {
+        if (apiErr.status === 401) {
           setError("Неверный email или пароль");
-        } else if (err.status === 404) {
-          setError("Пользователь не найден");
+        } else if (apiErr.status === 404) {
+          setError("Пользователь с таким email не найден");
+        } else if (apiErr.status === 429) {
+          setError("Слишком много попыток. Попробуйте позже");
+        } else if (apiErr.status === 422) {
+          setError("Проверьте правильность введённых данных");
+        } else if (apiErr.status >= 500) {
+          setError("Ошибка сервера. Попробуйте позже");
         } else {
-          const data = err.data as { detail?: string } | null;
-          setError(data?.detail || "Ошибка авторизации");
+          setError(apiErr.data?.detail || "Ошибка авторизации");
         }
+      } else if (
+        err instanceof TypeError &&
+        (err as TypeError).message === "Failed to fetch"
+      ) {
+        setError("Нет соединения с сервером. Проверьте интернет");
       } else {
         setError(err instanceof Error ? err.message : "Ошибка входа");
       }
@@ -56,10 +66,38 @@ export function LoginPage({ onSwitchToRegister }: AuthPageProps) {
                 </linearGradient>
               </defs>
               <circle cx="16" cy="16" r="14" fill="url(#authLogoGradient)" />
-              <path
-                d="M10 12h4v8h-4v-8zm8 0h4v8h-4v-8zm-4 2h4v4h-4v-4z"
-                fill="white"
-                opacity="0.9"
+              {/* Network nodes */}
+              <circle cx="16" cy="10" r="2.5" fill="white" />
+              <circle cx="10" cy="20" r="2.5" fill="white" />
+              <circle cx="22" cy="20" r="2.5" fill="white" />
+              <circle cx="16" cy="16" r="3" fill="white" opacity="0.9" />
+              {/* Connection lines */}
+              <line
+                x1="16"
+                y1="10"
+                x2="16"
+                y2="16"
+                stroke="white"
+                strokeWidth="1.5"
+                opacity="0.7"
+              />
+              <line
+                x1="16"
+                y1="16"
+                x2="10"
+                y2="20"
+                stroke="white"
+                strokeWidth="1.5"
+                opacity="0.7"
+              />
+              <line
+                x1="16"
+                y1="16"
+                x2="22"
+                y2="20"
+                stroke="white"
+                strokeWidth="1.5"
+                opacity="0.7"
               />
             </svg>
           </div>

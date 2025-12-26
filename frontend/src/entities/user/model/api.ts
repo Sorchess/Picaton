@@ -188,14 +188,17 @@ export const userApi = {
     isVisible: boolean
   ) =>
     api.patch<User>(
-      `/users/${userId}/profile-contacts?contact_type=${encodeURIComponent(contactType)}&value=${encodeURIComponent(value)}`,
+      `/users/${userId}/profile-contacts?contact_type=${encodeURIComponent(
+        contactType
+      )}&value=${encodeURIComponent(value)}`,
       { is_visible: isVisible }
     ),
 
   // Удалить контакт из профиля
   deleteProfileContact: (userId: string, contactType: string, value: string) =>
-    api.delete<User>(`/users/${userId}/profile-contacts`, {
-      type: contactType,
-      value,
-    }),
+    api.delete<User>(
+      `/users/${userId}/profile-contacts?contact_type=${encodeURIComponent(
+        contactType
+      )}&value=${encodeURIComponent(value)}`
+    ),
 };

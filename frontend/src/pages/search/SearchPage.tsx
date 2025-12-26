@@ -172,7 +172,10 @@ export function SearchPage() {
         <div className="search-page__results">
           <div className="search-page__results-header">
             <h2 className="search-page__results-title">
-              Найдено: <span>{results.total_count}</span>
+              Найдено:{" "}
+              <span>
+                {results.users.filter((u) => u.id !== authUser?.id).length}
+              </span>
             </h2>
             {results.suggested_tags && results.suggested_tags.length > 0 && (
               <div className="search-page__suggested">
@@ -192,16 +195,18 @@ export function SearchPage() {
           </div>
 
           <div className="search-page__grid">
-            {results.users.map((user) => (
-              <UserCard
-                key={user.id}
-                user={user}
-                onClick={handleUserClick}
-                onAddContact={handleAddContact}
-                isSaved={savedContacts.has(user.id)}
-                showTags
-              />
-            ))}
+            {results.users
+              .filter((user) => user.id !== authUser?.id)
+              .map((user) => (
+                <UserCard
+                  key={user.id}
+                  user={user}
+                  onClick={handleUserClick}
+                  onAddContact={handleAddContact}
+                  isSaved={savedContacts.has(user.id)}
+                  showTags
+                />
+              ))}
           </div>
 
           {results.users.length === 0 && (

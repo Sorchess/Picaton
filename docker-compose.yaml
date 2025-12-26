@@ -1,5 +1,4 @@
 services:
-
   mongo:
     image: mongo:8
     environment:
@@ -10,13 +9,11 @@ services:
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")'"]
+      test: ["CMD-SHELL", 'mongosh --eval ''db.adminCommand("ping")''']
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 5s
-
-
 
   redis:
     image: redis:7-alpine
@@ -27,11 +24,10 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
-
 
   main-app:
     build:
@@ -53,11 +49,10 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
     ports:
       - 3000:3000
-
-  
-
 
 volumes:
   mongo_data:

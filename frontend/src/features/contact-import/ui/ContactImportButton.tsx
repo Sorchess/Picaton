@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { PhoneInputModal } from "./PhoneInputModal";
-import type { PhoneContact, ImportStats, HashedContact, ContactSyncResult } from "../model/types";
+import type {
+  PhoneContact,
+  ImportStats,
+  HashedContact,
+  ContactSyncResult,
+} from "../model/types";
 import "./ContactImportButton.scss";
 
 interface ContactImportButtonProps {
@@ -11,7 +16,7 @@ interface ContactImportButtonProps {
 }
 
 export function ContactImportButton({
-  onImport,
+  onImport: _onImport,
   onSync,
   onImported,
   disabled = false,

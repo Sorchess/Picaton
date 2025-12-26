@@ -4,21 +4,56 @@ import { getFullName } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import { useAuth } from "@/features/auth";
 import { AvatarUpload } from "@/features/avatar-upload";
-import { Loader } from "@/shared";
+import { Loader, TagInput } from "@/shared";
 import "./ProfilePage.scss";
 
 // Конфигурация типов контактов
 const CONTACT_TYPES = [
-  { type: "telegram", label: "Telegram", placeholder: "@username", icon: "telegram" },
-  { type: "whatsapp", label: "WhatsApp", placeholder: "+7 999 123-45-67", icon: "whatsapp" },
+  {
+    type: "telegram",
+    label: "Telegram",
+    placeholder: "@username",
+    icon: "telegram",
+  },
+  {
+    type: "whatsapp",
+    label: "WhatsApp",
+    placeholder: "+7 999 123-45-67",
+    icon: "whatsapp",
+  },
   { type: "vk", label: "ВКонтакте", placeholder: "id123456", icon: "vk" },
-  { type: "phone", label: "Телефон", placeholder: "+7 999 123-45-67", icon: "phone" },
-  { type: "email", label: "Email", placeholder: "mail@example.com", icon: "email" },
-  { type: "linkedin", label: "LinkedIn", placeholder: "username", icon: "linkedin" },
+  {
+    type: "phone",
+    label: "Телефон",
+    placeholder: "+7 999 123-45-67",
+    icon: "phone",
+  },
+  {
+    type: "email",
+    label: "Email",
+    placeholder: "mail@example.com",
+    icon: "email",
+  },
+  {
+    type: "linkedin",
+    label: "LinkedIn",
+    placeholder: "username",
+    icon: "linkedin",
+  },
   { type: "github", label: "GitHub", placeholder: "username", icon: "github" },
-  { type: "instagram", label: "Instagram", placeholder: "@username", icon: "instagram" },
+  {
+    type: "instagram",
+    label: "Instagram",
+    placeholder: "@username",
+    icon: "instagram",
+  },
   { type: "tiktok", label: "TikTok", placeholder: "@username", icon: "tiktok" },
-  { type: "messenger", label: "Messenger", placeholder: "username", icon: "messenger" },
+  {
+    type: "messenger",
+    label: "Messenger",
+    placeholder: "username",
+    icon: "messenger",
+  },
 ];
 
 interface SuggestedTag {
@@ -44,19 +79,17 @@ export function ProfilePage() {
   const [isGeneratingPresentation, setIsGeneratingPresentation] =
     useState(false);
   const [isGeneratingTags, setIsGeneratingTags] = useState(false);
-  const [suggestedTags, setSuggestedTags] = useState<SuggestedTag[]>([]);
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [aiTagSuggestions, setAiTagSuggestions] = useState<string[]>([]);
   const [isApplyingTags, setIsApplyingTags] = useState(false);
+  const [hasFetchedSuggestions, setHasFetchedSuggestions] = useState(false);
 
-  // Custom tag input
-  const [customTagInput, setCustomTagInput] = useState("");
-  const [customTags, setCustomTags] = useState<string[]>([]);
+  // Tag editing state
+  const [profileTags, setProfileTags] = useState<string[]>([]);
 
   // Contact form state
   const [showContactForm, setShowContactForm] = useState(false);
   const [newContactType, setNewContactType] = useState("telegram");
   const [newContactValue, setNewContactValue] = useState("");
-  const [newContactVisible, setNewContactVisible] = useState(true);
   const [isSavingContact, setIsSavingContact] = useState(false);
 
   // Автоматическое определение текущего шага
@@ -92,6 +125,7 @@ export function ProfilePage() {
       const userData = await userApi.getFull(authUser.id);
       setUser(userData);
       setBio(userData.bio || "");
+      setProfileTags(userData.tags?.map((t) => t.name) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка загрузки профиля");
     } finally {
@@ -102,6 +136,20 @@ export function ProfilePage() {
   useEffect(() => {
     loadUser();
   }, [loadUser]);
+
+  // Автоматическая загрузка AI-подсказок для тегов (только один раз)
+  useEffect(() => {
+    if (
+      user &&
+      bio.trim().length >= 20 &&
+      !hasFetchedSuggestions &&
+      !isGeneratingTags
+    ) {
+      setHasFetchedSuggestions(true); // Устанавливаем флаг ПЕРЕД запросом
+      handleSuggestTags();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, bio, hasFetchedSuggestions]);
 
   // Сохранение био
   const handleSaveBio = async () => {
@@ -154,14 +202,8 @@ export function ProfilePage() {
         setUser({ ...user, bio });
       }
       const result = await userApi.suggestTags(user.id);
-      setSuggestedTags(result.suggestions);
-      // Автовыбор тегов с высокой уверенностью
-      const autoSelected = new Set(
-        result.suggestions
-          .filter((t: SuggestedTag) => t.confidence >= 0.7)
-          .map((t: SuggestedTag) => t.name)
-      );
-      setSelectedTags(autoSelected);
+      // Преобразуем в простой массив строк для TagInput
+      setAiTagSuggestions(result.suggestions.map((t: SuggestedTag) => t.name));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка генерации тегов");
     } finally {
@@ -169,66 +211,27 @@ export function ProfilePage() {
     }
   };
 
-  // Переключение выбора тега
-  const handleToggleTag = (tagName: string) => {
-    setSelectedTags((prev) => {
-      const next = new Set(prev);
-      if (next.has(tagName)) {
-        next.delete(tagName);
-      } else {
-        next.add(tagName);
+  // Применение тегов (автосохранение)
+  const handleTagsChange = useCallback(
+    async (newTags: string[]) => {
+      setProfileTags(newTags);
+      if (!user || newTags.length === 0) return;
+
+      // Автоматически сохраняем теги
+      setIsApplyingTags(true);
+      try {
+        const updated = await userApi.applyTags(user.id, newTags);
+        setUser(updated);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Ошибка сохранения тегов"
+        );
+      } finally {
+        setIsApplyingTags(false);
       }
-      return next;
-    });
-  };
-
-  // Добавление кастомного тега
-  const handleAddCustomTag = () => {
-    const tag = customTagInput.trim().toLowerCase();
-    if (!tag || customTags.includes(tag) || selectedTags.has(tag)) return;
-    setCustomTags((prev) => [...prev, tag]);
-    setSelectedTags((prev) => new Set([...prev, tag]));
-    setCustomTagInput("");
-  };
-
-  // Удаление кастомного тега
-  const handleRemoveCustomTag = (tag: string) => {
-    setCustomTags((prev) => prev.filter((t) => t !== tag));
-    setSelectedTags((prev) => {
-      const next = new Set(prev);
-      next.delete(tag);
-      return next;
-    });
-  };
-
-  // Обработка Enter для добавления тега
-  const handleCustomTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddCustomTag();
-    }
-  };
-
-  // Применение выбранных тегов
-  const handleApplyTags = async () => {
-    if (!user || selectedTags.size === 0) return;
-    setIsApplyingTags(true);
-    try {
-      const updated = await userApi.applyTags(
-        user.id,
-        Array.from(selectedTags)
-      );
-      setUser(updated);
-      setSuggestedTags([]);
-      setSelectedTags(new Set());
-      setCustomTags([]);
-      setCustomTagInput("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка сохранения тегов");
-    } finally {
-      setIsApplyingTags(false);
-    }
-  };
+    },
+    [user]
+  );
 
   // Загрузка аватарки
   const handleAvatarUpload = useCallback(
@@ -273,30 +276,17 @@ export function ProfilePage() {
       const updated = await userApi.addProfileContact(user.id, {
         type: newContactType,
         value: newContactValue.trim(),
-        is_visible: newContactVisible,
+        is_visible: true,
       });
       setUser(updated);
       setNewContactValue("");
       setShowContactForm(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка добавления контакта");
+      setError(
+        err instanceof Error ? err.message : "Ошибка добавления контакта"
+      );
     } finally {
       setIsSavingContact(false);
-    }
-  };
-
-  const handleToggleContactVisibility = async (contact: ContactInfo) => {
-    if (!user) return;
-    try {
-      const updated = await userApi.updateProfileContactVisibility(
-        user.id,
-        contact.type,
-        contact.value,
-        !contact.is_visible
-      );
-      setUser(updated);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка обновления контакта");
     }
   };
 
@@ -316,7 +306,9 @@ export function ProfilePage() {
   };
 
   const getContactLabel = (type: string) => {
-    return CONTACT_TYPES.find(ct => ct.type === type.toLowerCase())?.label || type;
+    return (
+      CONTACT_TYPES.find((ct) => ct.type === type.toLowerCase())?.label || type
+    );
   };
 
   if (isLoading) {
@@ -505,7 +497,7 @@ export function ProfilePage() {
               {user.ai_generated_bio ? "✓" : "2"}
             </span>
             <div>
-              <h2>AI Самопрезентация</h2>
+              <h2>Самопрезентация</h2>
               <p>Нейросеть создаст краткое профессиональное описание</p>
             </div>
           </div>
@@ -583,134 +575,29 @@ export function ProfilePage() {
           </div>
 
           {currentStep === 3 &&
-            !suggestedTags.length &&
-            (!user.tags || user.tags.length === 0) && (
+            !aiTagSuggestions.length &&
+            profileTags.length === 0 && (
               <div className="profile__hint profile__hint--highlight">
                 🏷️ Добавьте теги вручную или получите рекомендации от AI!
               </div>
             )}
 
-          {/* Текущие теги */}
-          {user.tags && user.tags.length > 0 && (
-            <div className="profile__current-tags">
-              <span className="profile__label">Ваши навыки:</span>
-              <div className="profile__tags-list">
-                {user.tags.map((tag, i) => (
-                  <span key={i} className="profile__tag">
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Поле ввода своего тега */}
-          <div className="profile__custom-tag-input">
-            <span className="profile__label">Добавить свой тег:</span>
-            <div className="profile__tag-input-row">
-              <input
-                type="text"
-                className="profile__input"
-                value={customTagInput}
-                onChange={(e) => setCustomTagInput(e.target.value)}
-                onKeyDown={handleCustomTagKeyDown}
-                placeholder="Введите тег и нажмите Enter..."
-                maxLength={50}
-              />
-              <button
-                className="profile__btn profile__btn--secondary"
-                onClick={handleAddCustomTag}
-                disabled={!customTagInput.trim()}
-              >
-                +
-              </button>
-            </div>
-            {/* Добавленные кастомные теги */}
-            {customTags.length > 0 && (
-              <div className="profile__custom-tags-list">
-                {customTags.map((tag) => (
-                  <span key={tag} className="profile__custom-tag">
-                    {tag}
-                    <button
-                      className="profile__custom-tag-remove"
-                      onClick={() => handleRemoveCustomTag(tag)}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
+          {/* Редактор тегов с TagInput */}
+          <div className="profile__tag-editor">
+            <TagInput
+              label="Ваши навыки и теги"
+              value={profileTags}
+              onChange={handleTagsChange}
+              placeholder="Добавьте тег..."
+              suggestions={aiTagSuggestions}
+              isLoadingSuggestions={isGeneratingTags}
+              maxTags={15}
+              disabled={bio.length < 20 || isApplyingTags}
+            />
+            {isApplyingTags && (
+              <span className="profile__saving-indicator">Сохранение...</span>
             )}
           </div>
-
-          {/* Предложенные теги от AI */}
-          {suggestedTags.length > 0 && (
-            <div className="profile__suggested-tags">
-              <span className="profile__label">AI рекомендует:</span>
-              <div className="profile__tags-grid">
-                {suggestedTags.map((tag) => (
-                  <button
-                    key={tag.name}
-                    className={`profile__tag-chip ${
-                      selectedTags.has(tag.name)
-                        ? "profile__tag-chip--selected"
-                        : ""
-                    }`}
-                    onClick={() => handleToggleTag(tag.name)}
-                    title={tag.reason}
-                  >
-                    <span className="profile__tag-name">{tag.name}</span>
-                    <span className="profile__tag-category">
-                      {tag.category}
-                    </span>
-                    {tag.confidence >= 0.8 && (
-                      <span className="profile__tag-star">⭐</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Кнопка применения тегов - показываем когда есть выбранные теги */}
-          {(selectedTags.size > 0 || customTags.length > 0) && (
-            <div className="profile__tags-actions">
-              <span className="profile__selected-count">
-                Выбрано: {selectedTags.size}
-              </span>
-              <button
-                className="profile__btn profile__btn--primary"
-                onClick={handleApplyTags}
-                disabled={selectedTags.size === 0 || isApplyingTags}
-              >
-                {isApplyingTags ? "Сохранение..." : "Сохранить теги"}
-              </button>
-            </div>
-          )}
-
-          {/* Кнопка генерации */}
-          {suggestedTags.length === 0 && (
-            <button
-              className={`profile__btn profile__btn--primary profile__btn--full ${
-                currentStep === 3 && (!user.tags || user.tags.length === 0)
-                  ? "profile__btn--pulse"
-                  : ""
-              }`}
-              onClick={handleSuggestTags}
-              disabled={isGeneratingTags || !bio.trim() || bio.length < 20}
-            >
-              {isGeneratingTags ? (
-                <>
-                  <span className="profile__spinner" />
-                  Анализ...
-                </>
-              ) : user.tags && user.tags.length > 0 ? (
-                "🏷️ Добавить ещё теги"
-              ) : (
-                "🏷️ Предложить теги"
-              )}
-            </button>
-          )}
 
           {/* Поздравление при завершении */}
           {profileComplete && (
@@ -723,7 +610,11 @@ export function ProfilePage() {
         {/* Шаг 4: Контакты для связи */}
         <section className="profile__card profile__card--contacts">
           <div className="profile__card-header">
-            <span className={`profile__step ${user.contacts?.length > 0 ? "profile__step--done" : ""}`}>
+            <span
+              className={`profile__step ${
+                user.contacts?.length > 0 ? "profile__step--done" : ""
+              }`}
+            >
               {user.contacts?.length > 0 ? "✓" : "4"}
             </span>
             <div>
@@ -737,16 +628,15 @@ export function ProfilePage() {
             <div className="profile__contacts-list">
               {user.contacts.map((contact, idx) => (
                 <div key={idx} className="profile__contact-item">
-                  <span className={`profile__contact-icon profile__contact-icon--${contact.type.toLowerCase()}`} />
-                  <span className="profile__contact-type">{getContactLabel(contact.type)}</span>
-                  <span className="profile__contact-value">{contact.value}</span>
-                  <button
-                    className={`profile__contact-visibility ${contact.is_visible ? "" : "profile__contact-visibility--hidden"}`}
-                    onClick={() => handleToggleContactVisibility(contact)}
-                    title={contact.is_visible ? "Виден в профиле" : "Скрыт от других"}
-                  >
-                    {contact.is_visible ? "👁️" : "🔒"}
-                  </button>
+                  <span
+                    className={`profile__contact-icon profile__contact-icon--${contact.type.toLowerCase()}`}
+                  />
+                  <span className="profile__contact-type">
+                    {getContactLabel(contact.type)}
+                  </span>
+                  <span className="profile__contact-value">
+                    {contact.value}
+                  </span>
                   <button
                     className="profile__contact-delete"
                     onClick={() => handleDeleteContact(contact)}
@@ -779,18 +669,11 @@ export function ProfilePage() {
                   className="profile__input"
                   value={newContactValue}
                   onChange={(e) => setNewContactValue(e.target.value)}
-                  placeholder={CONTACT_TYPES.find(ct => ct.type === newContactType)?.placeholder}
+                  placeholder={
+                    CONTACT_TYPES.find((ct) => ct.type === newContactType)
+                      ?.placeholder
+                  }
                 />
-              </div>
-              <div className="profile__contact-form-row">
-                <label className="profile__checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={newContactVisible}
-                    onChange={(e) => setNewContactVisible(e.target.checked)}
-                  />
-                  <span>Показывать в профиле</span>
-                </label>
               </div>
               <div className="profile__contact-form-actions">
                 <button
@@ -815,13 +698,6 @@ export function ProfilePage() {
             >
               ➕ Добавить контакт
             </button>
-          )}
-
-          {/* Предупреждение если нет публичных контактов */}
-          {user.contacts && user.contacts.length > 0 && !user.contacts.some(c => c.is_visible) && (
-            <div className="profile__warning">
-              ⚠️ У вас нет публичных контактов. Добавьте хотя бы один видимый контакт для связи.
-            </div>
           )}
         </section>
       </div>

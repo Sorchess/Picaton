@@ -2,10 +2,10 @@
   &__header {
     display: flex;
     gap: 1.5rem;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    border-bottom: 1px solid var(--color-border);
   }
 
   &__avatar {
@@ -21,14 +21,14 @@
     font-size: 1.5rem;
     font-weight: 600;
     margin: 0 0 0.5rem;
-    color: var(--text-primary, #1f2937);
+    color: var(--color-text-primary);
   }
 
   &__location {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--text-secondary, #6b7280);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
     margin: 0 0 0.75rem;
   }
@@ -47,7 +47,7 @@
     align-items: center;
     gap: 0.75rem;
     font-size: 0.75rem;
-    color: var(--text-secondary, #6b7280);
+    color: var(--color-text-secondary);
 
     span {
       white-space: nowrap;
@@ -56,7 +56,7 @@
 
   &__completeness-bar {
     height: 6px;
-    background: linear-gradient(90deg, var(--primary-color, #6366f1), var(--primary-light, #818cf8));
+    background: linear-gradient(90deg, #6366f1, #818cf8);
     border-radius: 3px;
     min-width: 20px;
     max-width: 100px;
@@ -70,14 +70,14 @@
   &__section-title {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--text-secondary, #6b7280);
+    color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin: 0 0 0.75rem;
   }
 
   &__bio {
-    color: var(--text-primary, #1f2937);
+    color: var(--color-text-primary);
     line-height: 1.6;
     margin: 0;
     white-space: pre-wrap;
@@ -100,14 +100,15 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: var(--bg-secondary, #f9fafb);
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     text-decoration: none;
-    color: var(--text-primary, #1f2937);
+    color: var(--color-text-primary);
     transition: all 0.2s ease;
 
     &:hover {
-      background: var(--bg-tertiary, #f3f4f6);
+      background: var(--color-glass-bg-hover);
       transform: translateX(4px);
     }
   }
@@ -171,11 +172,12 @@
   }
 
   &__no-contacts {
-    color: var(--text-secondary, #6b7280);
+    color: var(--color-text-secondary);
     font-style: italic;
     margin: 0;
     padding: 1rem;
-    background: var(--bg-secondary, #f9fafb);
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     text-align: center;
   }
@@ -185,13 +187,13 @@
     gap: 1rem;
     margin-top: 1.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color, #e5e7eb);
+    border-top: 1px solid var(--color-border);
     justify-content: flex-end;
   }
 }
 
-// Dark mode support
-@media (prefers-color-scheme: dark) {
+// Dark mode support for icons with dark fills
+[data-theme="dark"] {
   .specialist-modal {
     &__contact-icon--github {
       filter: invert(1);

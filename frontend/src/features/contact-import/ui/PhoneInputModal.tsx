@@ -81,13 +81,18 @@ export function PhoneInputModal({
   const parsedCount = parsePhoneInput(input).length;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Синхронизация контактов" size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Синхронизация контактов"
+      size="md"
+    >
       <div className="phone-input-modal">
         {!result ? (
           <>
             <p className="phone-input-modal__description">
-              Введите номера телефонов для поиска в Picaton. Номера хешируются на
-              вашем устройстве — мы никогда не видим реальные данные.
+              Введите номера телефонов для поиска в Picaton. Номера хешируются
+              на вашем устройстве — мы никогда не видим реальные данные.
             </p>
 
             <div className="phone-input-modal__input-group">
@@ -104,14 +109,17 @@ export function PhoneInputModal({
               />
               <span className="phone-input-modal__hint">
                 {parsedCount > 0
-                  ? `Распознано: ${parsedCount} ${getNoun(parsedCount, "номер", "номера", "номеров")}`
+                  ? `Распознано: ${parsedCount} ${getNoun(
+                      parsedCount,
+                      "номер",
+                      "номера",
+                      "номеров"
+                    )}`
                   : "Один номер на строку. Формат: Имя: +7 999 123 45 67"}
               </span>
             </div>
 
-            {error && (
-              <div className="phone-input-modal__error">{error}</div>
-            )}
+            {error && <div className="phone-input-modal__error">{error}</div>}
 
             <div className="phone-input-modal__actions">
               <button
@@ -168,7 +176,12 @@ export function PhoneInputModal({
                   </svg>
                   <span>
                     {result.found.length}{" "}
-                    {getNoun(result.found.length, "контакт найден", "контакта найдено", "контактов найдено")}
+                    {getNoun(
+                      result.found.length,
+                      "контакт найден",
+                      "контакта найдено",
+                      "контактов найдено"
+                    )}
                   </span>
                 </div>
               )}
@@ -187,8 +200,13 @@ export function PhoneInputModal({
                   </svg>
                   <span>
                     {result.pending_count}{" "}
-                    {getNoun(result.pending_count, "номер", "номера", "номеров")} ожидает
-                    регистрации
+                    {getNoun(
+                      result.pending_count,
+                      "номер",
+                      "номера",
+                      "номеров"
+                    )}{" "}
+                    ожидает регистрации
                   </span>
                 </div>
               )}
@@ -198,7 +216,10 @@ export function PhoneInputModal({
               <div className="phone-input-modal__found-list">
                 <h4>Найденные пользователи:</h4>
                 {result.found.map((user) => (
-                  <div key={user.user.id} className="phone-input-modal__found-item">
+                  <div
+                    key={user.user.id}
+                    className="phone-input-modal__found-item"
+                  >
                     <div className="phone-input-modal__found-avatar">
                       {user.user.avatar_url ? (
                         <img src={user.user.avatar_url} alt={user.user.name} />
@@ -219,7 +240,7 @@ export function PhoneInputModal({
               </div>
             )}
 
-            {result.pending_count > 0 && navigator.share && (
+            {result.pending_count > 0 && "share" in navigator && (
               <button
                 className="phone-input-modal__btn phone-input-modal__btn--invite"
                 onClick={handleInvite}

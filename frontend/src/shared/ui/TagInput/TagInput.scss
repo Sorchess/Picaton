@@ -36,12 +36,12 @@
   &__tag {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
+    gap: 8px;
+    padding: 6px 12px;
     background: var(--color-accent);
     color: var(--color-text-on-accent);
-    border-radius: 6px;
-    font-size: 13px;
+    border-radius: 8px;
+    font-size: 15px;
     font-weight: 500;
     animation: tagAppear 0.2s ease;
   }
@@ -50,21 +50,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
+    width: 28px;
+    height: 28px;
     padding: 0;
-    background: rgba(255, 255, 255, 0.2);
+    background: none;
     border: none;
     border-radius: 50%;
     color: inherit;
-    font-size: 14px;
+    font-size: 22px;
     line-height: 1;
     cursor: pointer;
-    transition: background 0.2s ease;
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
   }
 
   &__input {
@@ -128,7 +124,11 @@
     justify-content: center;
     gap: 8px;
     padding: 10px 16px;
-    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark, var(--color-accent)) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-accent-dark, var(--color-accent)) 100%
+    );
     border: none;
     border-radius: 8px;
     color: var(--color-text-on-accent);

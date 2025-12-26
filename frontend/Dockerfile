@@ -1,13 +1,21 @@
-FROM node:alpine as build
+FROM node:20-alpine as build
 
-COPY package.json package.json
-RUN npm install
+ARG VITE_API_URL=http://localhost:8000
+ENV VITE_API_URL=$VITE_API_URL
+
+WORKDIR /app
+
+# Копируем файлы зависимостей отдельно для кэширования
+COPY package.json package-lock.json* ./
+RUN npm ci --silent
+
+# Копируем остальной код
 COPY . .
 RUN npm run build
 
 FROM nginx:1.25-alpine
 
-COPY --from=build /dist /usr/share/nginx/html
-COPY --from=build nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3000
 CMD [ "nginx", "-g", "daemon off;" ]

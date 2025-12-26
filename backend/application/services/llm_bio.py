@@ -16,7 +16,8 @@ from .ai_bio import AIBioGeneratorInterface, GeneratedBio
 
 # Путь для хранения модели
 MODEL_DIR = Path("/tmp/minilm_onnx")
-MODEL_URL = "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model_quantized.onnx"
+# Используем float32 модель вместо квантизированной (более стабильный URL)
+MODEL_URL = "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model.onnx"
 TOKENIZER_URL = "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer.json"
 
 

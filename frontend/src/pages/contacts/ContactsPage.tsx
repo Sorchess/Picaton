@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import type { SavedContact } from "@/entities/user";
+import type { SavedContact, UserPublic } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import { useAuth } from "@/features/auth";
 import {
@@ -9,7 +9,8 @@ import {
   type HashedContact,
   type ContactSyncResult,
 } from "@/features/contact-import";
-import { Tag, Loader, Typography, Modal, Input, TagInput } from "@/shared";
+import { SpecialistModal } from "@/features/specialist-modal";
+import { Tag, Loader, Typography, Modal, Input } from "@/shared";
 import "./ContactsPage.scss";
 
 export function ContactsPage() {
@@ -27,13 +28,9 @@ export function ContactsPage() {
     last_name: "",
     phone: "",
     email: "",
-    messenger_type: "",
-    messenger_value: "",
     notes: "",
   });
   const [newContactTags, setNewContactTags] = useState<string[]>([]);
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
-  const [isLoadingAI, setIsLoadingAI] = useState(false);
 
   // Edit contact state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -43,21 +40,15 @@ export function ContactsPage() {
     last_name: "",
     phone: "",
     email: "",
-    messenger_type: "",
-    messenger_value: "",
     notes: "",
   });
   const [editContactTags, setEditContactTags] = useState<string[]>([]);
-  const [editAiSuggestions, setEditAiSuggestions] = useState<string[]>([]);
-  const [isEditLoadingAI, setIsEditLoadingAI] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const MESSENGER_TYPES = [
-    { value: "telegram", label: "Telegram", placeholder: "@username" },
-    { value: "whatsapp", label: "WhatsApp", placeholder: "+7 999 123 45 67" },
-    { value: "vk", label: "ВКонтакте", placeholder: "id или username" },
-    { value: "messenger", label: "Messenger", placeholder: "username" },
-  ];
+  // User profile modal state (for registered users)
+  const [selectedUserProfile, setSelectedUserProfile] =
+    useState<UserPublic | null>(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
   useEffect(() => {
     loadContacts();
@@ -95,8 +86,6 @@ export function ContactsPage() {
         last_name: newContact.last_name,
         phone: newContact.phone || undefined,
         email: newContact.email || undefined,
-        messenger_type: newContact.messenger_type || undefined,
-        messenger_value: newContact.messenger_value || undefined,
         notes: newContact.notes || undefined,
         search_tags: newContactTags.length > 0 ? newContactTags : undefined,
       });
@@ -106,28 +95,30 @@ export function ContactsPage() {
         last_name: "",
         phone: "",
         email: "",
-        messenger_type: "",
-        messenger_value: "",
         notes: "",
       });
       setNewContactTags([]);
-      setAiSuggestions([]);
       setIsAddModalOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка добавления");
     }
   };
 
-  const handleGenerateAITags = async () => {
-    if (!newContact.notes.trim() || newContact.notes.length < 3) return;
-    setIsLoadingAI(true);
+  // Open user profile for registered users
+  const handleOpenUserProfile = async (contact: SavedContact) => {
+    if (!contact.saved_user_id) {
+      // For non-registered users, show regular contact modal
+      setSelectedContact(contact);
+      return;
+    }
+
     try {
-      const result = await userApi.generateTagsFromNotes(newContact.notes);
-      setAiSuggestions(result.tags);
-    } catch (err) {
-      console.error("Ошибка генерации тегов:", err);
-    } finally {
-      setIsLoadingAI(false);
+      const userData = await userApi.getPublic(contact.saved_user_id);
+      setSelectedUserProfile(userData);
+      setIsUserModalOpen(true);
+    } catch {
+      // Fallback to regular contact modal if user not found
+      setSelectedContact(contact);
     }
   };
 
@@ -138,12 +129,9 @@ export function ContactsPage() {
       last_name: contact.last_name || "",
       phone: contact.phone || "",
       email: contact.email || "",
-      messenger_type: contact.messenger_type || "",
-      messenger_value: contact.messenger_value || "",
       notes: contact.notes || "",
     });
     setEditContactTags(contact.search_tags || []);
-    setEditAiSuggestions([]);
     setIsEditModalOpen(true);
     setSelectedContact(null);
   };
@@ -158,8 +146,6 @@ export function ContactsPage() {
         last_name: editContact.last_name,
         phone: editContact.phone || undefined,
         email: editContact.email || undefined,
-        messenger_type: editContact.messenger_type || undefined,
-        messenger_value: editContact.messenger_value || undefined,
         notes: editContact.notes || undefined,
         search_tags: editContactTags.length > 0 ? editContactTags : undefined,
       });
@@ -173,8 +159,6 @@ export function ContactsPage() {
         last_name: "",
         phone: "",
         email: "",
-        messenger_type: "",
-        messenger_value: "",
         notes: "",
       });
       setEditContactTags([]);
@@ -182,19 +166,6 @@ export function ContactsPage() {
       setError(err instanceof Error ? err.message : "Ошибка обновления");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleEditGenerateAITags = async () => {
-    if (!editContact.notes.trim() || editContact.notes.length < 3) return;
-    setIsEditLoadingAI(true);
-    try {
-      const result = await userApi.generateTagsFromNotes(editContact.notes);
-      setEditAiSuggestions(result.tags);
-    } catch (err) {
-      console.error("Ошибка генерации тегов:", err);
-    } finally {
-      setIsEditLoadingAI(false);
     }
   };
 
@@ -254,12 +225,19 @@ export function ContactsPage() {
     return contact.name;
   };
 
+  // Контакты без себя
+  const contactsWithoutSelf = useMemo(
+    () => contacts.filter((c) => c.saved_user_id !== authUser?.id),
+    [contacts, authUser?.id]
+  );
+
   const filteredContacts = useMemo(() => {
+    let result = contactsWithoutSelf;
+
     // Step 1: Filter by search query
-    let result = contacts;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = contacts.filter((contact) => {
+      result = result.filter((contact) => {
         const fullName = getContactFullName(contact).toLowerCase();
         return (
           fullName.includes(q) ||
@@ -310,8 +288,13 @@ export function ContactsPage() {
 
   const getMessengerLabel = (type: string | null) => {
     if (!type) return "";
-    const found = MESSENGER_TYPES.find((m) => m.value === type);
-    return found?.label || type;
+    const labels: Record<string, string> = {
+      telegram: "Telegram",
+      whatsapp: "WhatsApp",
+      vk: "ВКонтакте",
+      messenger: "Messenger",
+    };
+    return labels[type] || type;
   };
 
   if (isLoading) {
@@ -381,7 +364,7 @@ export function ContactsPage() {
 
         <div className="contacts-page__stats">
           <span className="contacts-page__count">
-            {filteredContacts.length} из {contacts.length} контактов
+            {filteredContacts.length} из {contactsWithoutSelf.length} контактов
           </span>
         </div>
       </div>
@@ -408,10 +391,12 @@ export function ContactsPage() {
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
           <h3>
-            {contacts.length === 0 ? "Нет контактов" : "Ничего не найдено"}
+            {contactsWithoutSelf.length === 0
+              ? "Нет контактов"
+              : "Ничего не найдено"}
           </h3>
           <p>
-            {contacts.length === 0
+            {contactsWithoutSelf.length === 0
               ? "Добавляйте экспертов из поиска или создавайте контакты вручную"
               : "Попробуйте изменить поисковый запрос"}
           </p>
@@ -422,7 +407,7 @@ export function ContactsPage() {
             <div
               key={contact.id}
               className="contacts-page__card"
-              onClick={() => setSelectedContact(contact)}
+              onClick={() => handleOpenUserProfile(contact)}
             >
               <div className="contacts-page__card-avatar">
                 {getInitials(contact)}
@@ -531,20 +516,21 @@ export function ContactsPage() {
                   </a>
                 </div>
               )}
-              {selectedContact.messenger_type && selectedContact.messenger_value && (
-                <div className="contacts-page__modal-row contacts-page__modal-row--messenger">
-                  <span className="contacts-page__messenger-icon">
-                    {selectedContact.messenger_type === "telegram" && "✈️"}
-                    {selectedContact.messenger_type === "whatsapp" && "💬"}
-                    {selectedContact.messenger_type === "vk" && "🔷"}
-                    {selectedContact.messenger_type === "messenger" && "💭"}
-                  </span>
-                  <span>
-                    {getMessengerLabel(selectedContact.messenger_type)}:{" "}
-                    {selectedContact.messenger_value}
-                  </span>
-                </div>
-              )}
+              {selectedContact.messenger_type &&
+                selectedContact.messenger_value && (
+                  <div className="contacts-page__modal-row contacts-page__modal-row--messenger">
+                    <span className="contacts-page__messenger-icon">
+                      {selectedContact.messenger_type === "telegram" && "✈️"}
+                      {selectedContact.messenger_type === "whatsapp" && "💬"}
+                      {selectedContact.messenger_type === "vk" && "🔷"}
+                      {selectedContact.messenger_type === "messenger" && "💭"}
+                    </span>
+                    <span>
+                      {getMessengerLabel(selectedContact.messenger_type)}:{" "}
+                      {selectedContact.messenger_value}
+                    </span>
+                  </div>
+                )}
             </div>
 
             {selectedContact.notes && (
@@ -598,7 +584,10 @@ export function ContactsPage() {
               label="Имя *"
               value={editContact.first_name}
               onChange={(e) =>
-                setEditContact((prev) => ({ ...prev, first_name: e.target.value }))
+                setEditContact((prev) => ({
+                  ...prev,
+                  first_name: e.target.value,
+                }))
               }
               placeholder="Иван"
               required
@@ -607,7 +596,10 @@ export function ContactsPage() {
               label="Фамилия"
               value={editContact.last_name}
               onChange={(e) =>
-                setEditContact((prev) => ({ ...prev, last_name: e.target.value }))
+                setEditContact((prev) => ({
+                  ...prev,
+                  last_name: e.target.value,
+                }))
               }
               placeholder="Иванов"
             />
@@ -630,38 +622,6 @@ export function ContactsPage() {
             }
             placeholder="+7 999 123 45 67"
           />
-          <div className="contacts-page__add-form-messenger">
-            <label>Мессенджер</label>
-            <div className="contacts-page__messenger-row">
-              <select
-                value={editContact.messenger_type}
-                onChange={(e) =>
-                  setEditContact((prev) => ({ ...prev, messenger_type: e.target.value }))
-                }
-                className="contacts-page__messenger-select"
-              >
-                <option value="">Выберите...</option>
-                {MESSENGER_TYPES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={editContact.messenger_value}
-                onChange={(e) =>
-                  setEditContact((prev) => ({ ...prev, messenger_value: e.target.value }))
-                }
-                placeholder={
-                  MESSENGER_TYPES.find((m) => m.value === editContact.messenger_type)
-                    ?.placeholder || "@username или номер"
-                }
-                className="contacts-page__messenger-input"
-                disabled={!editContact.messenger_type}
-              />
-            </div>
-          </div>
           <div className="contacts-page__add-form-notes">
             <label>Заметки</label>
             <textarea
@@ -673,16 +633,6 @@ export function ContactsPage() {
               rows={3}
             />
           </div>
-          <TagInput
-            label="Теги для поиска"
-            value={editContactTags}
-            onChange={setEditContactTags}
-            placeholder="Добавьте тег..."
-            suggestions={editAiSuggestions}
-            onGenerateSuggestions={editContact.notes.length >= 3 ? handleEditGenerateAITags : undefined}
-            isLoadingSuggestions={isEditLoadingAI}
-            maxTags={10}
-          />
           <div className="contacts-page__add-form-actions">
             <button
               className="contacts-page__btn contacts-page__btn--secondary"
@@ -716,7 +666,10 @@ export function ContactsPage() {
               label="Имя *"
               value={newContact.first_name}
               onChange={(e) =>
-                setNewContact((prev) => ({ ...prev, first_name: e.target.value }))
+                setNewContact((prev) => ({
+                  ...prev,
+                  first_name: e.target.value,
+                }))
               }
               placeholder="Иван"
               required
@@ -725,7 +678,10 @@ export function ContactsPage() {
               label="Фамилия"
               value={newContact.last_name}
               onChange={(e) =>
-                setNewContact((prev) => ({ ...prev, last_name: e.target.value }))
+                setNewContact((prev) => ({
+                  ...prev,
+                  last_name: e.target.value,
+                }))
               }
               placeholder="Иванов"
             />
@@ -748,38 +704,6 @@ export function ContactsPage() {
             }
             placeholder="+7 999 123 45 67"
           />
-          <div className="contacts-page__add-form-messenger">
-            <label>Мессенджер</label>
-            <div className="contacts-page__messenger-row">
-              <select
-                value={newContact.messenger_type}
-                onChange={(e) =>
-                  setNewContact((prev) => ({ ...prev, messenger_type: e.target.value }))
-                }
-                className="contacts-page__messenger-select"
-              >
-                <option value="">Выберите...</option>
-                {MESSENGER_TYPES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={newContact.messenger_value}
-                onChange={(e) =>
-                  setNewContact((prev) => ({ ...prev, messenger_value: e.target.value }))
-                }
-                placeholder={
-                  MESSENGER_TYPES.find((m) => m.value === newContact.messenger_type)
-                    ?.placeholder || "@username или номер"
-                }
-                className="contacts-page__messenger-input"
-                disabled={!newContact.messenger_type}
-              />
-            </div>
-          </div>
           <div className="contacts-page__add-form-notes">
             <label>Заметки</label>
             <textarea
@@ -791,16 +715,6 @@ export function ContactsPage() {
               rows={3}
             />
           </div>
-          <TagInput
-            label="Теги для поиска"
-            value={newContactTags}
-            onChange={setNewContactTags}
-            placeholder="Добавьте тег..."
-            suggestions={aiSuggestions}
-            onGenerateSuggestions={newContact.notes.length >= 3 ? handleGenerateAITags : undefined}
-            isLoadingSuggestions={isLoadingAI}
-            maxTags={10}
-          />
           <div className="contacts-page__add-form-actions">
             <button
               className="contacts-page__btn contacts-page__btn--secondary"
@@ -818,6 +732,17 @@ export function ContactsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* User Profile Modal (for registered users with contacts) */}
+      <SpecialistModal
+        user={selectedUserProfile}
+        isOpen={isUserModalOpen}
+        onClose={() => {
+          setIsUserModalOpen(false);
+          setSelectedUserProfile(null);
+        }}
+        isSaved={true}
+      />
     </div>
   );
 }

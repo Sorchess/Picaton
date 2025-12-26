@@ -1,4 +1,4 @@
-import { Modal, Avatar, Tag, Button } from "@/shared";
+import { Modal, Avatar, Button, Tag } from "@/shared";
 import type { UserPublic, ContactInfo } from "@/entities/user";
 import { getFullName } from "@/entities/user";
 import "./SpecialistModal.scss";
@@ -12,11 +12,15 @@ interface SpecialistModalProps {
 }
 
 // Иконки и лейблы для типов контактов
-const CONTACT_ICONS: Record<string, { icon: string; label: string; getLink: (value: string) => string }> = {
+const CONTACT_ICONS: Record<
+  string,
+  { icon: string; label: string; getLink: (value: string) => string }
+> = {
   telegram: {
     icon: "telegram",
     label: "Telegram",
-    getLink: (v) => v.startsWith("@") ? `https://t.me/${v.slice(1)}` : `https://t.me/${v}`,
+    getLink: (v) =>
+      v.startsWith("@") ? `https://t.me/${v.slice(1)}` : `https://t.me/${v}`,
   },
   whatsapp: {
     icon: "whatsapp",
@@ -26,7 +30,7 @@ const CONTACT_ICONS: Record<string, { icon: string; label: string; getLink: (val
   vk: {
     icon: "vk",
     label: "ВКонтакте",
-    getLink: (v) => v.startsWith("http") ? v : `https://vk.com/${v}`,
+    getLink: (v) => (v.startsWith("http") ? v : `https://vk.com/${v}`),
   },
   messenger: {
     icon: "messenger",
@@ -46,22 +50,24 @@ const CONTACT_ICONS: Record<string, { icon: string; label: string; getLink: (val
   linkedin: {
     icon: "linkedin",
     label: "LinkedIn",
-    getLink: (v) => v.startsWith("http") ? v : `https://linkedin.com/in/${v}`,
+    getLink: (v) => (v.startsWith("http") ? v : `https://linkedin.com/in/${v}`),
   },
   github: {
     icon: "github",
     label: "GitHub",
-    getLink: (v) => v.startsWith("http") ? v : `https://github.com/${v}`,
+    getLink: (v) => (v.startsWith("http") ? v : `https://github.com/${v}`),
   },
   instagram: {
     icon: "instagram",
     label: "Instagram",
-    getLink: (v) => v.startsWith("http") ? v : `https://instagram.com/${v.replace("@", "")}`,
+    getLink: (v) =>
+      v.startsWith("http") ? v : `https://instagram.com/${v.replace("@", "")}`,
   },
   tiktok: {
     icon: "tiktok",
     label: "TikTok",
-    getLink: (v) => v.startsWith("http") ? v : `https://tiktok.com/@${v.replace("@", "")}`,
+    getLink: (v) =>
+      v.startsWith("http") ? v : `https://tiktok.com/@${v.replace("@", "")}`,
   },
 };
 
@@ -79,7 +85,9 @@ function ContactLink({ contact }: { contact: ContactInfo }) {
       rel="noopener noreferrer"
       className="specialist-modal__contact"
     >
-      <span className={`specialist-modal__contact-icon specialist-modal__contact-icon--${config.icon}`} />
+      <span
+        className={`specialist-modal__contact-icon specialist-modal__contact-icon--${config.icon}`}
+      />
       <span className="specialist-modal__contact-value">{contact.value}</span>
     </a>
   );
@@ -98,12 +106,27 @@ export function SpecialistModal({
   const bio = user.bio || user.ai_generated_bio;
   const contacts = user.contacts || [];
 
+  // Генерируем инициалы из имени
+  const getInitials = (name: string): string => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" className="specialist-modal">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      className="specialist-modal"
+    >
       <div className="specialist-modal__header">
         <Avatar
-          src={user.avatar_url}
+          src={user.avatar_url ?? undefined}
           alt={fullName}
+          initials={getInitials(fullName)}
           size="xl"
           className="specialist-modal__avatar"
         />
@@ -115,13 +138,6 @@ export function SpecialistModal({
               {user.location}
             </p>
           )}
-          <div className="specialist-modal__completeness">
-            <div
-              className="specialist-modal__completeness-bar"
-              style={{ width: `${user.profile_completeness}%` }}
-            />
-            <span>{user.profile_completeness}% профиль</span>
-          </div>
         </div>
       </div>
 
@@ -137,21 +153,8 @@ export function SpecialistModal({
           <h3 className="specialist-modal__section-title">Навыки</h3>
           <div className="specialist-modal__tags">
             {user.tags.map((tag) => (
-              <Tag key={tag.id} size="sm" variant="primary">
+              <Tag key={tag.id} size="sm" variant="default">
                 {tag.name}
-              </Tag>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {user.search_tags.length > 0 && (
-        <div className="specialist-modal__section">
-          <h3 className="specialist-modal__section-title">Теги</h3>
-          <div className="specialist-modal__tags">
-            {user.search_tags.map((tag, idx) => (
-              <Tag key={idx} size="sm" variant="secondary">
-                {tag}
               </Tag>
             ))}
           </div>
@@ -160,7 +163,9 @@ export function SpecialistModal({
 
       {contacts.length > 0 && (
         <div className="specialist-modal__section">
-          <h3 className="specialist-modal__section-title">Контакты для связи</h3>
+          <h3 className="specialist-modal__section-title">
+            Контакты для связи
+          </h3>
           <div className="specialist-modal__contacts">
             {contacts.map((contact, idx) => (
               <ContactLink key={idx} contact={contact} />

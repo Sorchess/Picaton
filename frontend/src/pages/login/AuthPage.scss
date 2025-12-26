@@ -72,15 +72,41 @@
   }
 
   &__error {
-    padding: 0.875rem 1rem;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
     border-radius: 12px;
     color: #ef4444;
+    animation: shake 0.4s ease-in-out;
+
+    &::before {
+      content: "⚠️";
+      font-size: 1.25rem;
+    }
 
     p {
       margin: 0;
-      font-size: 0.875rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    50% {
+      transform: translateX(5px);
+    }
+    75% {
+      transform: translateX(-5px);
     }
   }
 

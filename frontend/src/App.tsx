@@ -37,10 +37,38 @@ function AuthenticatedApp() {
               </linearGradient>
             </defs>
             <circle cx="16" cy="16" r="14" fill="url(#logoGradient)" />
-            <path
-              d="M10 12h4v8h-4v-8zm8 0h4v8h-4v-8zm-4 2h4v4h-4v-4z"
-              fill="white"
-              opacity="0.9"
+            {/* Network nodes */}
+            <circle cx="16" cy="10" r="2.5" fill="white" />
+            <circle cx="10" cy="20" r="2.5" fill="white" />
+            <circle cx="22" cy="20" r="2.5" fill="white" />
+            <circle cx="16" cy="16" r="3" fill="white" opacity="0.9" />
+            {/* Connection lines */}
+            <line
+              x1="16"
+              y1="10"
+              x2="16"
+              y2="16"
+              stroke="white"
+              strokeWidth="1.5"
+              opacity="0.7"
+            />
+            <line
+              x1="16"
+              y1="16"
+              x2="10"
+              y2="20"
+              stroke="white"
+              strokeWidth="1.5"
+              opacity="0.7"
+            />
+            <line
+              x1="16"
+              y1="16"
+              x2="22"
+              y2="20"
+              stroke="white"
+              strokeWidth="1.5"
+              opacity="0.7"
             />
           </svg>
           <span className="app__logo-text">Picaton</span>
