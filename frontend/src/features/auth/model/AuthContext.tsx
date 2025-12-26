@@ -64,10 +64,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterData) => {
     setIsLoading(true);
     try {
-      await authApi.register(data);
-      await refreshUser();
+      const authUser = await authApi.register(data);
+      // Устанавливаем пользователя напрямую из ответа регистрации,
+      // чтобы избежать дополнительного запроса к /auth/me
+      setUser({
+        id: authUser.id,
+        first_name: authUser.first_name,
+        last_name: authUser.last_name,
+        email: authUser.email,
+        avatar_url: authUser.avatar_url,
+        location: null,
+        bio: null,
+        ai_generated_bio: null,
+        status: "active",
+        tags: [],
+        search_tags: [],
+        contacts: [],
+        random_facts: [],
+        profile_completeness: 0,
+      });
     } catch (error) {
-      setIsLoading(false);
       throw error;
     } finally {
       setIsLoading(false);
