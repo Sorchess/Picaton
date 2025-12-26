@@ -1,6 +1,6 @@
 """Domain exceptions module."""
 
-from domain.exceptions.base import DomainException
+from domain.exceptions.base import DomainException, ConfigurationError
 from domain.exceptions.user import (
     UserException,
     InvalidEmailError,
@@ -15,10 +15,16 @@ from domain.exceptions.user import (
     UserNotFoundError,
     UserAlreadyExistsError,
 )
+from domain.exceptions.contact import (
+    ContactException,
+    ContactNotFoundError,
+    ContactAlreadyExistsError,
+)
 
 
 __all__ = [
     "DomainException",
+    "ConfigurationError",
     "UserException",
     "InvalidEmailError",
     "InvalidNameError",
@@ -31,4 +37,7 @@ __all__ = [
     "InvalidRandomFactError",
     "UserNotFoundError",
     "UserAlreadyExistsError",
+    "ContactException",
+    "ContactNotFoundError",
+    "ContactAlreadyExistsError",
 ]

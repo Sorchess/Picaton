@@ -15,9 +15,9 @@ RUN pip install --no-cache-dir "poetry==$POETRY_VERSION"
 
 WORKDIR /backend
 COPY pyproject.toml ./
-# Генерируем lock-файл если его нет
+# Генерируем lock-файл (Poetry 2.x)
 COPY poetry.lock* ./
-RUN poetry lock --no-update || true
+RUN poetry lock
 
 # Установка Python-зависимостей
 RUN poetry install --no-interaction --no-ansi

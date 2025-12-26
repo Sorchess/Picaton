@@ -22,7 +22,7 @@
     &:hover:not(:disabled) {
       background: var(--color-accent);
       border-color: var(--color-accent);
-      color: white;
+      color: var(--color-text-on-accent);
     }
 
     &:disabled {

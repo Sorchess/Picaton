@@ -2,6 +2,11 @@ from uuid import UUID
 
 from domain.entities.saved_contact import SavedContact
 from domain.entities.user import User
+from domain.exceptions import (
+    UserNotFoundError,
+    ContactNotFoundError,
+    ContactAlreadyExistsError,
+)
 from domain.repositories.saved_contact import SavedContactRepositoryInterface
 from domain.repositories.user import UserRepositoryInterface
 
@@ -30,11 +35,11 @@ class SavedContactService:
         # Проверяем, что пользователь существует
         user = await self._user_repository.get_by_id(user_id)
         if not user:
-            raise ValueError(f"User {user_id} not found")
+            raise UserNotFoundError(str(user_id))
 
         # Проверяем, не сохранен ли уже
         if await self._contact_repository.exists(owner_id, user_id):
-            raise ValueError("Contact already saved")
+            raise ContactAlreadyExistsError(str(user_id))
 
         contact = SavedContact(
             owner_id=owner_id,
@@ -97,7 +102,7 @@ class SavedContactService:
         """Обновить теги контакта."""
         contact = await self._contact_repository.get_by_id(contact_id)
         if not contact:
-            raise ValueError(f"Contact {contact_id} not found")
+            raise ContactNotFoundError(str(contact_id))
 
         contact.set_search_tags(tags)
         return await self._contact_repository.update(contact)
@@ -110,7 +115,7 @@ class SavedContactService:
         """Обновить заметки о контакте."""
         contact = await self._contact_repository.get_by_id(contact_id)
         if not contact:
-            raise ValueError(f"Contact {contact_id} not found")
+            raise ContactNotFoundError(str(contact_id))
 
         contact.update_notes(notes)
         return await self._contact_repository.update(contact)

@@ -3,7 +3,12 @@ import bcrypt
 
 from domain.entities.user import User
 from domain.entities.tag import Tag
-from domain.exceptions.user import UserNotFoundError, UserAlreadyExistsError
+from domain.exceptions import (
+    UserNotFoundError,
+    UserAlreadyExistsError,
+    ConfigurationError,
+    InvalidBioError,
+)
 from domain.repositories.user import UserRepositoryInterface
 from application.services.ai_bio import AIBioGeneratorService
 from application.services.ai_tags import AITagsGeneratorService
@@ -88,7 +93,7 @@ class UserService:
     async def generate_ai_bio(self, user_id: UUID) -> User:
         """Сгенерировать AI-презентацию на основе фактов."""
         if not self._ai_bio_service:
-            raise ValueError("AI bio service is not configured")
+            raise ConfigurationError("AI bio service")
 
         user = await self.get_user(user_id)
         bio = await self._ai_bio_service.generate_bio_from_user(user)
@@ -104,11 +109,11 @@ class UserService:
     async def generate_tags_from_bio(self, user_id: UUID) -> User:
         """Сгенерировать теги и навыки из bio пользователя."""
         if not self._ai_tags_service:
-            raise ValueError("AI tags service is not configured")
+            raise ConfigurationError("AI tags service")
 
         user = await self.get_user(user_id)
         if not user.bio:
-            raise ValueError("Сначала заполните информацию о себе (bio)")
+            raise InvalidBioError("Сначала заполните информацию о себе")
 
         result = await self._ai_tags_service.generate_from_bio(user.bio)
 

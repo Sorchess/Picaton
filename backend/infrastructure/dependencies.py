@@ -8,7 +8,9 @@ from infrastructure.database.repositories import (
     MongoUserRepository,
     MongoSavedContactRepository,
 )
+from infrastructure.database.repositories.pending_hash import MongoPendingHashRepository
 from domain.repositories import UserRepositoryInterface, SavedContactRepositoryInterface
+from domain.repositories.pending_hash import PendingHashRepositoryInterface
 from application.services import (
     UserService,
     SavedContactService,
@@ -63,9 +65,19 @@ def get_contact_repository(
     return MongoSavedContactRepository(db["saved_contacts"])
 
 
+def get_pending_hash_repository(
+    db: Database,
+) -> PendingHashRepositoryInterface:
+    """Получить репозиторий pending хешей."""
+    return MongoPendingHashRepository(db["pending_hashes"])
+
+
 UserRepository = Annotated[UserRepositoryInterface, Depends(get_user_repository)]
 ContactRepository = Annotated[
     SavedContactRepositoryInterface, Depends(get_contact_repository)
+]
+PendingHashRepository = Annotated[
+    PendingHashRepositoryInterface, Depends(get_pending_hash_repository)
 ]
 
 
@@ -145,17 +157,19 @@ def get_import_service(
 
 def get_contact_sync_service(
     user_repo: UserRepository,
+    pending_repo: PendingHashRepository,
 ) -> ContactSyncService:
-    """Получить сервис синхронизации контактов."""
-    return ContactSyncService(user_repo)
+    """Получить сервис синхронизации контактов с поддержкой pending хешей."""
+    return ContactSyncService(user_repo, pending_repo)
 
 
 def get_auth_service(
     user_repo: UserRepository,
+    pending_repo: PendingHashRepository,
     user_service: UserService = Depends(get_user_service),
 ) -> AuthService:
-    """Получить сервис аутентификации."""
-    return AuthService(user_repo, user_service)
+    """Получить сервис аутентификации с поддержкой pending хешей."""
+    return AuthService(user_repo, user_service, pending_repo)
 
 
 def get_cloudinary_service() -> CloudinaryService:

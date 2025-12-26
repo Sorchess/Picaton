@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -151,7 +152,9 @@ class MongoUserRepository(UserRepositoryInterface):
             return users
         except Exception:
             # Если текстовый индекс не создан, делаем fallback на regex поиск
-            regex_pattern = {"$regex": query, "$options": "i"}
+            # Экранируем спецсимволы для защиты от ReDoS
+            safe_query = re.escape(query)
+            regex_pattern = {"$regex": safe_query, "$options": "i"}
             cursor = self._collection.find(
                 {
                     "$or": [

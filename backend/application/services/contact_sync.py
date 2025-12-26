@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from domain.repositories import UserRepositoryInterface
+from domain.repositories.pending_hash import PendingHashRepositoryInterface
 
 
 @dataclass
@@ -54,10 +55,16 @@ class ContactSyncService:
     1. Клиент хеширует номера телефонов (SHA-256) перед отправкой
     2. Сервер НИКОГДА не видит реальные номера
     3. Сравнение только по хешам
+    4. Pending хеши сохраняются для уведомлений при регистрации
     """
 
-    def __init__(self, user_repository: UserRepositoryInterface):
+    def __init__(
+        self,
+        user_repository: UserRepositoryInterface,
+        pending_hash_repository: PendingHashRepositoryInterface | None = None,
+    ):
         self._user_repo = user_repository
+        self._pending_repo = pending_hash_repository
 
     async def sync_contacts(
         self,
@@ -104,10 +111,12 @@ class ContactSyncService:
                 )
 
         # Хеши, которые не найдены — pending (для будущих уведомлений)
-        pending_count = len(hashes) - len(found_hashes)
+        pending_hashes = list(set(hashes) - found_hashes)
+        pending_count = len(pending_hashes)
 
-        # TODO: Сохранить pending_hashes для уведомлений при регистрации
-        # await self._pending_repo.save_pending(owner_id, list(set(hashes) - found_hashes))
+        # Сохраняем pending хеши для уведомлений при регистрации
+        if self._pending_repo and pending_hashes:
+            await self._pending_repo.save_pending(owner_id, pending_hashes)
 
         return ContactSyncResult(
             found=found_contacts,

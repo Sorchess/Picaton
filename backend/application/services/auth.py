@@ -6,6 +6,7 @@ from jose import JWTError, jwt
 from domain.entities.user import User
 from domain.exceptions.user import UserNotFoundError
 from domain.repositories.user import UserRepositoryInterface
+from domain.repositories.pending_hash import PendingHashRepositoryInterface
 from application.services.user import UserService
 from settings.config import settings
 
@@ -35,9 +36,11 @@ class AuthService:
         self,
         user_repository: UserRepositoryInterface,
         user_service: UserService,
+        pending_hash_repository: PendingHashRepositoryInterface | None = None,
     ):
         self._user_repository = user_repository
         self._user_service = user_service
+        self._pending_repo = pending_hash_repository
 
     async def register(
         self,
@@ -45,6 +48,7 @@ class AuthService:
         password: str,
         first_name: str = "",
         last_name: str = "",
+        phone_hash: str | None = None,
     ) -> tuple[User, str]:
         """Регистрация нового пользователя."""
         user = await self._user_service.create_user(
@@ -53,8 +57,37 @@ class AuthService:
             first_name=first_name,
             last_name=last_name,
         )
+
+        # Если у пользователя есть хеш телефона, проверяем pending
+        if phone_hash and self._pending_repo:
+            await self._process_pending_hash(phone_hash)
+
         token = self._create_access_token(user.id)
         return user, token
+
+    async def _process_pending_hash(self, phone_hash: str) -> list[UUID]:
+        """
+        Обработать pending хеш при регистрации/обновлении пользователя.
+
+        Находит всех пользователей, ожидающих контакт с этим хешем,
+        и удаляет pending записи.
+
+        Returns:
+            Список ID пользователей, которым нужно отправить уведомление
+        """
+        if not self._pending_repo:
+            return []
+
+        # Найти всех, кто ждёт этот контакт
+        owners = await self._pending_repo.find_owners_by_hash(phone_hash)
+
+        if owners:
+            # Удалить все pending записи для этого хеша
+            await self._pending_repo.remove_all_for_hash(phone_hash)
+            # TODO: Отправить уведомления владельцам (email/push)
+            # Пока просто возвращаем список для логирования
+
+        return owners
 
     async def login(self, email: str, password: str) -> tuple[User, str]:
         """Аутентификация пользователя."""
