@@ -3,6 +3,7 @@ import bcrypt
 
 from domain.entities.user import User
 from domain.entities.tag import Tag
+from domain.enums.contact import ContactType
 from domain.exceptions import (
     UserNotFoundError,
     UserAlreadyExistsError,
@@ -178,6 +179,47 @@ class UserService:
     async def list_users(self, skip: int = 0, limit: int = 100) -> list[User]:
         """Получить список пользователей."""
         return await self._user_repository.get_all(skip, limit)
+
+    # ============ User Profile Contacts ============
+
+    async def add_contact(
+        self,
+        user_id: UUID,
+        contact_type: str,
+        value: str,
+        is_primary: bool = False,
+        is_visible: bool = True,
+    ) -> User:
+        """Добавить контакт в профиль пользователя."""
+        user = await self.get_user(user_id)
+        ct = ContactType(contact_type.upper())
+        user.add_contact(ct, value, is_primary, is_visible)
+        return await self._user_repository.update(user)
+
+    async def remove_contact(
+        self,
+        user_id: UUID,
+        contact_type: str,
+        value: str,
+    ) -> User:
+        """Удалить контакт из профиля пользователя."""
+        user = await self.get_user(user_id)
+        ct = ContactType(contact_type.upper())
+        user.remove_contact(ct, value)
+        return await self._user_repository.update(user)
+
+    async def update_contact_visibility(
+        self,
+        user_id: UUID,
+        contact_type: str,
+        value: str,
+        is_visible: bool,
+    ) -> User:
+        """Обновить видимость контакта."""
+        user = await self.get_user(user_id)
+        ct = ContactType(contact_type.upper())
+        user.update_contact_visibility(ct, value, is_visible)
+        return await self._user_repository.update(user)
 
     @staticmethod
     def _hash_password(password: str) -> str:

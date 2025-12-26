@@ -46,6 +46,32 @@ class ContactInfo(BaseModel):
     type: str
     value: str
     is_primary: bool = False
+    is_visible: bool = True
+
+
+class UserContactAdd(BaseModel):
+    """Добавление контакта пользователя в профиль."""
+
+    type: str = Field(
+        pattern="^(telegram|whatsapp|vk|messenger|email|phone|linkedin|github|instagram|tiktok|slack)$",
+        examples=["telegram"],
+    )
+    value: str = Field(max_length=200, examples=["@username"])
+    is_primary: bool = False
+    is_visible: bool = True
+
+
+class UserContactUpdate(BaseModel):
+    """Обновление видимости контакта."""
+
+    is_visible: bool
+
+
+class UserContactDelete(BaseModel):
+    """Удаление контакта."""
+
+    type: str
+    value: str
 
 
 class TagInfo(BaseModel):
@@ -88,6 +114,7 @@ class UserPublicResponse(BaseModel):
     location: str | None
     tags: list[TagInfo]
     search_tags: list[str]
+    contacts: list[ContactInfo] = []  # Публичные контакты (is_visible=True)
     profile_completeness: int
 
 
@@ -203,18 +230,39 @@ class SavedContactCreate(BaseModel):
 class ManualContactCreate(BaseModel):
     """Добавление контакта вручную."""
 
-    name: str = Field(max_length=200)
+    first_name: str = Field(max_length=100)
+    last_name: str = Field(max_length=100)
     phone: str | None = None
     email: EmailStr | None = None
+    messenger_type: str | None = Field(
+        default=None,
+        pattern="^(telegram|whatsapp|vk|messenger)$",
+        description="Тип мессенджера",
+    )
+    messenger_value: str | None = Field(
+        default=None,
+        max_length=200,
+        description="Username или номер в мессенджере",
+    )
     notes: str | None = Field(default=None, max_length=1000)
     search_tags: list[str] = Field(default_factory=list)
+    name: str | None = Field(default=None, max_length=200, description="Legacy: полное имя")
 
 
 class SavedContactUpdate(BaseModel):
     """Обновление контакта."""
 
-    search_tags: list[str] | None = None
+    first_name: str | None = Field(default=None, max_length=100)
+    last_name: str | None = Field(default=None, max_length=100)
+    phone: str | None = None
+    email: EmailStr | None = None
+    messenger_type: str | None = Field(
+        default=None,
+        pattern="^(telegram|whatsapp|vk|messenger)$",
+    )
+    messenger_value: str | None = None
     notes: str | None = None
+    search_tags: list[str] | None = None
 
 
 class SavedContactResponse(BaseModel):
@@ -223,9 +271,13 @@ class SavedContactResponse(BaseModel):
     id: UUID
     owner_id: UUID
     saved_user_id: UUID | None
-    name: str
+    name: str  # Legacy: full_name
+    first_name: str
+    last_name: str
     phone: str | None
     email: str | None
+    messenger_type: str | None
+    messenger_value: str | None
     notes: str | None
     search_tags: list[str]
     source: str

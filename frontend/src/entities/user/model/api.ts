@@ -100,9 +100,12 @@ export const userApi = {
   addManualContact: (
     userId: string,
     data: {
-      name: string;
+      first_name: string;
+      last_name: string;
       phone?: string;
       email?: string;
+      messenger_type?: string;
+      messenger_value?: string;
       notes?: string;
       search_tags?: string[];
     }
@@ -117,7 +120,16 @@ export const userApi = {
   // Обновить контакт
   updateContact: (
     contactId: string,
-    data: { search_tags?: string[]; notes?: string }
+    data: {
+      first_name?: string;
+      last_name?: string;
+      phone?: string;
+      email?: string;
+      messenger_type?: string;
+      messenger_value?: string;
+      notes?: string;
+      search_tags?: string[];
+    }
   ) => api.patch<SavedContact>(`/users/contacts/${contactId}`, data),
 
   // Удалить контакт
@@ -154,4 +166,36 @@ export const userApi = {
   // Загрузка аватарки
   uploadAvatar: (userId: string, file: File) =>
     api.upload<{ avatar_url: string }>(`/users/${userId}/avatar`, file),
+
+  // ============ User Profile Contacts ============
+
+  // Добавить контакт в профиль
+  addProfileContact: (
+    userId: string,
+    data: {
+      type: string;
+      value: string;
+      is_primary?: boolean;
+      is_visible?: boolean;
+    }
+  ) => api.post<User>(`/users/${userId}/profile-contacts`, data),
+
+  // Обновить видимость контакта
+  updateProfileContactVisibility: (
+    userId: string,
+    contactType: string,
+    value: string,
+    isVisible: boolean
+  ) =>
+    api.patch<User>(
+      `/users/${userId}/profile-contacts?contact_type=${encodeURIComponent(contactType)}&value=${encodeURIComponent(value)}`,
+      { is_visible: isVisible }
+    ),
+
+  // Удалить контакт из профиля
+  deleteProfileContact: (userId: string, contactType: string, value: string) =>
+    api.delete<User>(`/users/${userId}/profile-contacts`, {
+      type: contactType,
+      value,
+    }),
 };

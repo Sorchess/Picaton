@@ -23,6 +23,9 @@ from presentation.api.users.schemas import (
     GeneratedBioResponse,
     TagInfo,
     ContactInfo,
+    UserContactAdd,
+    UserContactUpdate,
+    UserContactDelete,
     SuggestedTagResponse,
     TagSuggestionsResponse,
     ApplyTagsRequest,
@@ -32,6 +35,7 @@ from presentation.api.users.schemas import (
     ContactSyncResponse,
     AvatarUploadResponse,
 )
+from domain.enums.contact import ContactType
 from infrastructure.dependencies import (
     get_user_service,
     get_contact_service,
@@ -137,6 +141,73 @@ async def delete_user(
 ):
     """Удалить пользователя."""
     await user_service.delete_user(user_id)
+
+
+# ============ User Profile Contacts ============
+
+
+@router.post("/{user_id}/profile-contacts", response_model=UserResponse)
+async def add_user_contact(
+    user_id: UUID,
+    data: UserContactAdd,
+    user_service=Depends(get_user_service),
+):
+    """
+    Добавить контакт в профиль пользователя.
+
+    Доступные типы: telegram, whatsapp, vk, messenger, email, phone,
+    linkedin, github, instagram, tiktok, slack
+    """
+    try:
+        user = await user_service.add_contact(
+            user_id=user_id,
+            contact_type=data.type,
+            value=data.value,
+            is_primary=data.is_primary,
+            is_visible=data.is_visible,
+        )
+        return _user_to_response(user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.patch("/{user_id}/profile-contacts", response_model=UserResponse)
+async def update_user_contact_visibility(
+    user_id: UUID,
+    contact_type: str,
+    value: str,
+    data: UserContactUpdate,
+    user_service=Depends(get_user_service),
+):
+    """Обновить видимость контакта в профиле."""
+    try:
+        user = await user_service.update_contact_visibility(
+            user_id=user_id,
+            contact_type=contact_type,
+            value=value,
+            is_visible=data.is_visible,
+        )
+        return _user_to_response(user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{user_id}/profile-contacts", response_model=UserResponse)
+async def delete_user_contact(
+    user_id: UUID,
+    data: UserContactDelete,
+    user_service=Depends(get_user_service),
+):
+    """Удалить контакт из профиля."""
+    try:
+        user = await user_service.remove_contact(
+            user_id=user_id,
+            contact_type=data.type,
+            value=data.value,
+        )
+        return _user_to_response(user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ============ Avatar Upload ============
@@ -418,11 +489,15 @@ async def add_manual_contact(
     """
     contact = await contact_service.add_manual_contact(
         owner_id=user_id,
-        name=data.name,
+        first_name=data.first_name,
+        last_name=data.last_name,
         search_tags=data.search_tags,
         phone=data.phone,
         email=data.email,
         notes=data.notes,
+        messenger_type=data.messenger_type,
+        messenger_value=data.messenger_value,
+        name=data.name,  # Legacy
     )
     return _contact_to_response(contact)
 
@@ -445,18 +520,22 @@ async def update_contact(
     data: SavedContactUpdate,
     contact_service=Depends(get_contact_service),
 ):
-    """Обновить теги или заметки контакта."""
+    """Обновить контакт (имя, email, мессенджер, теги, заметки)."""
     contact = await contact_service.get_contact(contact_id)
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
 
-    if data.search_tags is not None:
-        contact = await contact_service.update_contact_tags(
-            contact_id, data.search_tags
-        )
-    if data.notes is not None:
-        contact = await contact_service.update_contact_notes(contact_id, data.notes)
-
+    contact = await contact_service.update_contact(
+        contact_id=contact_id,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        phone=data.phone,
+        email=data.email,
+        messenger_type=data.messenger_type,
+        messenger_value=data.messenger_value,
+        notes=data.notes,
+        search_tags=data.search_tags,
+    )
     return _contact_to_response(contact)
 
 
@@ -579,6 +658,7 @@ def _user_to_response(user) -> UserResponse:
                 type=c.type.value,
                 value=c.value,
                 is_primary=c.is_primary,
+                is_visible=c.is_visible,
             )
             for c in user.contacts
         ],
@@ -589,6 +669,9 @@ def _user_to_response(user) -> UserResponse:
 
 def _user_to_public_response(user) -> UserPublicResponse:
     """Преобразовать User в UserPublicResponse."""
+    # Только публичные контакты (is_visible=True)
+    visible_contacts = [c for c in user.contacts if c.is_visible]
+
     return UserPublicResponse(
         id=user.id,
         first_name=user.first_name,
@@ -607,6 +690,15 @@ def _user_to_public_response(user) -> UserPublicResponse:
             for t in user.tags
         ],
         search_tags=user.search_tags,
+        contacts=[
+            ContactInfo(
+                type=c.type.value,
+                value=c.value,
+                is_primary=c.is_primary,
+                is_visible=c.is_visible,
+            )
+            for c in visible_contacts
+        ],
         profile_completeness=user.profile_completeness,
     )
 
@@ -617,9 +709,13 @@ def _contact_to_response(contact) -> SavedContactResponse:
         id=contact.id,
         owner_id=contact.owner_id,
         saved_user_id=contact.saved_user_id,
-        name=contact.name,
+        name=contact.full_name,  # Legacy: использует full_name property
+        first_name=contact.first_name,
+        last_name=contact.last_name,
         phone=contact.phone,
         email=contact.email,
+        messenger_type=contact.messenger_type,
+        messenger_value=contact.messenger_value,
         notes=contact.notes,
         search_tags=contact.search_tags,
         source=contact.source,

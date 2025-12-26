@@ -23,14 +23,41 @@ export function ContactsPage() {
   );
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newContact, setNewContact] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
     phone: "",
     email: "",
+    messenger_type: "",
+    messenger_value: "",
     notes: "",
   });
   const [newContactTags, setNewContactTags] = useState<string[]>([]);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
+
+  // Edit contact state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
+  const [editContact, setEditContact] = useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+    email: "",
+    messenger_type: "",
+    messenger_value: "",
+    notes: "",
+  });
+  const [editContactTags, setEditContactTags] = useState<string[]>([]);
+  const [editAiSuggestions, setEditAiSuggestions] = useState<string[]>([]);
+  const [isEditLoadingAI, setIsEditLoadingAI] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const MESSENGER_TYPES = [
+    { value: "telegram", label: "Telegram", placeholder: "@username" },
+    { value: "whatsapp", label: "WhatsApp", placeholder: "+7 999 123 45 67" },
+    { value: "vk", label: "ВКонтакте", placeholder: "id или username" },
+    { value: "messenger", label: "Messenger", placeholder: "username" },
+  ];
 
   useEffect(() => {
     loadContacts();
@@ -61,17 +88,28 @@ export function ContactsPage() {
   };
 
   const handleAddContact = async () => {
-    if (!authUser?.id || !newContact.name.trim()) return;
+    if (!authUser?.id || !newContact.first_name.trim()) return;
     try {
       const contact = await userApi.addManualContact(authUser.id, {
-        name: newContact.name,
+        first_name: newContact.first_name,
+        last_name: newContact.last_name,
         phone: newContact.phone || undefined,
         email: newContact.email || undefined,
+        messenger_type: newContact.messenger_type || undefined,
+        messenger_value: newContact.messenger_value || undefined,
         notes: newContact.notes || undefined,
         search_tags: newContactTags.length > 0 ? newContactTags : undefined,
       });
       setContacts((prev) => [contact, ...prev]);
-      setNewContact({ name: "", phone: "", email: "", notes: "" });
+      setNewContact({
+        first_name: "",
+        last_name: "",
+        phone: "",
+        email: "",
+        messenger_type: "",
+        messenger_value: "",
+        notes: "",
+      });
       setNewContactTags([]);
       setAiSuggestions([]);
       setIsAddModalOpen(false);
@@ -90,6 +128,73 @@ export function ContactsPage() {
       console.error("Ошибка генерации тегов:", err);
     } finally {
       setIsLoadingAI(false);
+    }
+  };
+
+  const handleOpenEditModal = (contact: SavedContact) => {
+    setEditingContactId(contact.id);
+    setEditContact({
+      first_name: contact.first_name || "",
+      last_name: contact.last_name || "",
+      phone: contact.phone || "",
+      email: contact.email || "",
+      messenger_type: contact.messenger_type || "",
+      messenger_value: contact.messenger_value || "",
+      notes: contact.notes || "",
+    });
+    setEditContactTags(contact.search_tags || []);
+    setEditAiSuggestions([]);
+    setIsEditModalOpen(true);
+    setSelectedContact(null);
+  };
+
+  const handleUpdateContact = async () => {
+    if (!editingContactId) return;
+
+    setIsSaving(true);
+    try {
+      const updated = await userApi.updateContact(editingContactId, {
+        first_name: editContact.first_name,
+        last_name: editContact.last_name,
+        phone: editContact.phone || undefined,
+        email: editContact.email || undefined,
+        messenger_type: editContact.messenger_type || undefined,
+        messenger_value: editContact.messenger_value || undefined,
+        notes: editContact.notes || undefined,
+        search_tags: editContactTags.length > 0 ? editContactTags : undefined,
+      });
+      setContacts((prev) =>
+        prev.map((c) => (c.id === editingContactId ? updated : c))
+      );
+      setIsEditModalOpen(false);
+      setEditingContactId(null);
+      setEditContact({
+        first_name: "",
+        last_name: "",
+        phone: "",
+        email: "",
+        messenger_type: "",
+        messenger_value: "",
+        notes: "",
+      });
+      setEditContactTags([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка обновления");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEditGenerateAITags = async () => {
+    if (!editContact.notes.trim() || editContact.notes.length < 3) return;
+    setIsEditLoadingAI(true);
+    try {
+      const result = await userApi.generateTagsFromNotes(editContact.notes);
+      setEditAiSuggestions(result.tags);
+    } catch (err) {
+      console.error("Ошибка генерации тегов:", err);
+    } finally {
+      setIsEditLoadingAI(false);
     }
   };
 
@@ -142,24 +247,36 @@ export function ContactsPage() {
     [authUser?.id]
   );
 
+  const getContactFullName = (contact: SavedContact) => {
+    if (contact.first_name || contact.last_name) {
+      return `${contact.first_name} ${contact.last_name}`.trim();
+    }
+    return contact.name;
+  };
+
   const filteredContacts = useMemo(() => {
     // Step 1: Filter by search query
     let result = contacts;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = contacts.filter(
-        (contact) =>
-          contact.name.toLowerCase().includes(q) ||
+      result = contacts.filter((contact) => {
+        const fullName = getContactFullName(contact).toLowerCase();
+        return (
+          fullName.includes(q) ||
           contact.email?.toLowerCase().includes(q) ||
           contact.phone?.includes(q) ||
+          contact.messenger_value?.toLowerCase().includes(q) ||
           contact.search_tags.some((tag) => tag.toLowerCase().includes(q))
-      );
+        );
+      });
     }
 
     // Step 2: Sort by matching tags (DESC), then by name (ASC)
     const userTags = authUser?.search_tags || [];
     if (userTags.length === 0) {
-      return result.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+      return result.sort((a, b) =>
+        getContactFullName(a).localeCompare(getContactFullName(b), "ru")
+      );
     }
 
     const userTagsSet = new Set(userTags.map((t) => t.toLowerCase()));
@@ -175,16 +292,26 @@ export function ContactsPage() {
       if (scoreB !== scoreA) {
         return scoreB - scoreA; // Higher score first
       }
-      return a.name.localeCompare(b.name, "ru"); // Then alphabetically
+      return getContactFullName(a).localeCompare(getContactFullName(b), "ru");
     });
   }, [contacts, searchQuery, authUser?.search_tags]);
 
-  const getInitials = (name: string) => {
+  const getInitials = (contact: SavedContact) => {
+    if (contact.first_name && contact.last_name) {
+      return (contact.first_name[0] + contact.last_name[0]).toUpperCase();
+    }
+    const name = getContactFullName(contact);
     const parts = name.split(" ");
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     return name.slice(0, 2).toUpperCase();
+  };
+
+  const getMessengerLabel = (type: string | null) => {
+    if (!type) return "";
+    const found = MESSENGER_TYPES.find((m) => m.value === type);
+    return found?.label || type;
   };
 
   if (isLoading) {
@@ -298,15 +425,23 @@ export function ContactsPage() {
               onClick={() => setSelectedContact(contact)}
             >
               <div className="contacts-page__card-avatar">
-                {getInitials(contact.name)}
+                {getInitials(contact)}
               </div>
               <div className="contacts-page__card-info">
-                <h3 className="contacts-page__card-name">{contact.name}</h3>
+                <h3 className="contacts-page__card-name">
+                  {getContactFullName(contact)}
+                </h3>
                 {contact.email && (
                   <p className="contacts-page__card-email">{contact.email}</p>
                 )}
                 {contact.phone && (
                   <p className="contacts-page__card-phone">{contact.phone}</p>
+                )}
+                {contact.messenger_type && contact.messenger_value && (
+                  <p className="contacts-page__card-messenger">
+                    {getMessengerLabel(contact.messenger_type)}:{" "}
+                    {contact.messenger_value}
+                  </p>
                 )}
               </div>
               {contact.search_tags.length > 0 && (
@@ -354,10 +489,10 @@ export function ContactsPage() {
         {selectedContact && (
           <div className="contacts-page__modal">
             <div className="contacts-page__modal-avatar">
-              {getInitials(selectedContact.name)}
+              {getInitials(selectedContact)}
             </div>
             <h2 className="contacts-page__modal-name">
-              {selectedContact.name}
+              {getContactFullName(selectedContact)}
             </h2>
 
             <div className="contacts-page__modal-info">
@@ -396,6 +531,20 @@ export function ContactsPage() {
                   </a>
                 </div>
               )}
+              {selectedContact.messenger_type && selectedContact.messenger_value && (
+                <div className="contacts-page__modal-row contacts-page__modal-row--messenger">
+                  <span className="contacts-page__messenger-icon">
+                    {selectedContact.messenger_type === "telegram" && "✈️"}
+                    {selectedContact.messenger_type === "whatsapp" && "💬"}
+                    {selectedContact.messenger_type === "vk" && "🔷"}
+                    {selectedContact.messenger_type === "messenger" && "💭"}
+                  </span>
+                  <span>
+                    {getMessengerLabel(selectedContact.messenger_type)}:{" "}
+                    {selectedContact.messenger_value}
+                  </span>
+                </div>
+              )}
             </div>
 
             {selectedContact.notes && (
@@ -418,6 +567,12 @@ export function ContactsPage() {
 
             <div className="contacts-page__modal-actions">
               <button
+                className="contacts-page__btn contacts-page__btn--secondary"
+                onClick={() => handleOpenEditModal(selectedContact)}
+              >
+                Редактировать
+              </button>
+              <button
                 className="contacts-page__btn contacts-page__btn--danger"
                 onClick={() => handleDeleteContact(selectedContact.id)}
               >
@@ -428,6 +583,127 @@ export function ContactsPage() {
         )}
       </Modal>
 
+      {/* Edit Contact Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingContactId(null);
+        }}
+        title="Редактировать контакт"
+      >
+        <div className="contacts-page__add-form">
+          <div className="contacts-page__add-form-row">
+            <Input
+              label="Имя *"
+              value={editContact.first_name}
+              onChange={(e) =>
+                setEditContact((prev) => ({ ...prev, first_name: e.target.value }))
+              }
+              placeholder="Иван"
+              required
+            />
+            <Input
+              label="Фамилия"
+              value={editContact.last_name}
+              onChange={(e) =>
+                setEditContact((prev) => ({ ...prev, last_name: e.target.value }))
+              }
+              placeholder="Иванов"
+            />
+          </div>
+          <Input
+            label="Email"
+            type="email"
+            value={editContact.email}
+            onChange={(e) =>
+              setEditContact((prev) => ({ ...prev, email: e.target.value }))
+            }
+            placeholder="ivan@example.com"
+          />
+          <Input
+            label="Телефон"
+            type="tel"
+            value={editContact.phone}
+            onChange={(e) =>
+              setEditContact((prev) => ({ ...prev, phone: e.target.value }))
+            }
+            placeholder="+7 999 123 45 67"
+          />
+          <div className="contacts-page__add-form-messenger">
+            <label>Мессенджер</label>
+            <div className="contacts-page__messenger-row">
+              <select
+                value={editContact.messenger_type}
+                onChange={(e) =>
+                  setEditContact((prev) => ({ ...prev, messenger_type: e.target.value }))
+                }
+                className="contacts-page__messenger-select"
+              >
+                <option value="">Выберите...</option>
+                {MESSENGER_TYPES.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={editContact.messenger_value}
+                onChange={(e) =>
+                  setEditContact((prev) => ({ ...prev, messenger_value: e.target.value }))
+                }
+                placeholder={
+                  MESSENGER_TYPES.find((m) => m.value === editContact.messenger_type)
+                    ?.placeholder || "@username или номер"
+                }
+                className="contacts-page__messenger-input"
+                disabled={!editContact.messenger_type}
+              />
+            </div>
+          </div>
+          <div className="contacts-page__add-form-notes">
+            <label>Заметки</label>
+            <textarea
+              value={editContact.notes}
+              onChange={(e) =>
+                setEditContact((prev) => ({ ...prev, notes: e.target.value }))
+              }
+              placeholder="Дизайнер из Яндекса, познакомились на конференции..."
+              rows={3}
+            />
+          </div>
+          <TagInput
+            label="Теги для поиска"
+            value={editContactTags}
+            onChange={setEditContactTags}
+            placeholder="Добавьте тег..."
+            suggestions={editAiSuggestions}
+            onGenerateSuggestions={editContact.notes.length >= 3 ? handleEditGenerateAITags : undefined}
+            isLoadingSuggestions={isEditLoadingAI}
+            maxTags={10}
+          />
+          <div className="contacts-page__add-form-actions">
+            <button
+              className="contacts-page__btn contacts-page__btn--secondary"
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setEditingContactId(null);
+              }}
+            >
+              Отмена
+            </button>
+            <button
+              className="contacts-page__btn contacts-page__btn--primary"
+              onClick={handleUpdateContact}
+              disabled={!editContact.first_name.trim() || isSaving}
+            >
+              {isSaving ? "Сохранение..." : "Сохранить"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Add Contact Modal */}
       <Modal
         isOpen={isAddModalOpen}
@@ -435,15 +711,25 @@ export function ContactsPage() {
         title="Добавить контакт"
       >
         <div className="contacts-page__add-form">
-          <Input
-            label="Имя"
-            value={newContact.name}
-            onChange={(e) =>
-              setNewContact((prev) => ({ ...prev, name: e.target.value }))
-            }
-            placeholder="Иван Иванов"
-            required
-          />
+          <div className="contacts-page__add-form-row">
+            <Input
+              label="Имя *"
+              value={newContact.first_name}
+              onChange={(e) =>
+                setNewContact((prev) => ({ ...prev, first_name: e.target.value }))
+              }
+              placeholder="Иван"
+              required
+            />
+            <Input
+              label="Фамилия"
+              value={newContact.last_name}
+              onChange={(e) =>
+                setNewContact((prev) => ({ ...prev, last_name: e.target.value }))
+              }
+              placeholder="Иванов"
+            />
+          </div>
           <Input
             label="Email"
             type="email"
@@ -462,6 +748,38 @@ export function ContactsPage() {
             }
             placeholder="+7 999 123 45 67"
           />
+          <div className="contacts-page__add-form-messenger">
+            <label>Мессенджер</label>
+            <div className="contacts-page__messenger-row">
+              <select
+                value={newContact.messenger_type}
+                onChange={(e) =>
+                  setNewContact((prev) => ({ ...prev, messenger_type: e.target.value }))
+                }
+                className="contacts-page__messenger-select"
+              >
+                <option value="">Выберите...</option>
+                {MESSENGER_TYPES.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={newContact.messenger_value}
+                onChange={(e) =>
+                  setNewContact((prev) => ({ ...prev, messenger_value: e.target.value }))
+                }
+                placeholder={
+                  MESSENGER_TYPES.find((m) => m.value === newContact.messenger_type)
+                    ?.placeholder || "@username или номер"
+                }
+                className="contacts-page__messenger-input"
+                disabled={!newContact.messenger_type}
+              />
+            </div>
+          </div>
           <div className="contacts-page__add-form-notes">
             <label>Заметки</label>
             <textarea
@@ -493,7 +811,7 @@ export function ContactsPage() {
             <button
               className="contacts-page__btn contacts-page__btn--primary"
               onClick={handleAddContact}
-              disabled={!newContact.name.trim()}
+              disabled={!newContact.first_name.trim()}
             >
               Добавить
             </button>

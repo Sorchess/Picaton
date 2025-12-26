@@ -20,10 +20,16 @@ class SavedContact(Entity):
     saved_user_id: UUID | None = field(default=None)
 
     # Данные контакта (для ручного ввода или импорта)
-    name: str = field(default="")
+    name: str = field(default="")  # Полное имя (legacy, для обратной совместимости)
+    first_name: str = field(default="")  # Имя
+    last_name: str = field(default="")  # Фамилия
     phone: str | None = field(default=None)
     email: str | None = field(default=None)
     notes: str | None = field(default=None)
+
+    # Мессенджер для связи
+    messenger_type: str | None = field(default=None)  # telegram, whatsapp, vk
+    messenger_value: str | None = field(default=None)  # @username или номер
 
     # Теги для ассоциативного поиска
     search_tags: list[str] = field(default_factory=list)
@@ -34,6 +40,13 @@ class SavedContact(Entity):
     # Метаданные
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
+
+    @property
+    def full_name(self) -> str:
+        """Получить полное имя контакта."""
+        if self.first_name or self.last_name:
+            return f"{self.first_name} {self.last_name}".strip()
+        return self.name
 
     def add_search_tag(self, tag: str) -> None:
         """Добавить тег для поиска."""
@@ -59,10 +72,52 @@ class SavedContact(Entity):
         self.notes = notes
         self.updated_at = datetime.utcnow()
 
+    def update(
+        self,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        messenger_type: str | None = None,
+        messenger_value: str | None = None,
+        notes: str | None = None,
+        search_tags: list[str] | None = None,
+    ) -> None:
+        """Обновить данные контакта."""
+        if first_name is not None:
+            self.first_name = first_name
+            # Обновляем legacy name для совместимости
+            self.name = f"{first_name} {self.last_name}".strip()
+
+        if last_name is not None:
+            self.last_name = last_name
+            self.name = f"{self.first_name} {last_name}".strip()
+
+        if email is not None:
+            self.email = email
+
+        if phone is not None:
+            self.phone = phone
+
+        if messenger_type is not None:
+            self.messenger_type = messenger_type
+
+        if messenger_value is not None:
+            self.messenger_value = messenger_value
+
+        if notes is not None:
+            self.notes = notes
+
+        if search_tags is not None:
+            self.set_search_tags(search_tags)
+
+        self.updated_at = datetime.utcnow()
+
     def get_searchable_text(self) -> str:
         """Получить текст для поиска."""
         parts = [
-            self.name,
+            self.full_name,
+            self.email or "",
             self.notes or "",
             " ".join(self.search_tags),
         ]

@@ -3,6 +3,7 @@ import type { UserPublic, SearchResult } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import { UserCard } from "@/entities/user";
 import { useAuth } from "@/features/auth";
+import { SpecialistModal } from "@/features/specialist-modal";
 import { Tag, Loader, Typography } from "@/shared";
 import "./SearchPage.scss";
 
@@ -23,6 +24,8 @@ export function SearchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedContacts, setSavedContacts] = useState<Set<string>>(new Set());
+  const [selectedUser, setSelectedUser] = useState<UserPublic | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Загрузить сохранённые контакты
   useEffect(() => {
@@ -70,8 +73,17 @@ export function SearchPage() {
   };
 
   const handleUserClick = (user: UserPublic) => {
-    // Открыть модальное окно с профилем пользователя
-    console.log("Selected user:", user);
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleSaveContactFromModal = async (user: UserPublic) => {
+    await handleAddContact(user);
   };
 
   const handleAddContact = async (user: UserPublic) => {
@@ -209,6 +221,14 @@ export function SearchPage() {
           <p>Введите ключевые слова или выберите из популярных тегов</p>
         </div>
       )}
+
+      <SpecialistModal
+        user={selectedUser}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSaveContact={handleSaveContactFromModal}
+        isSaved={selectedUser ? savedContacts.has(selectedUser.id) : false}
+      />
     </div>
   );
 }

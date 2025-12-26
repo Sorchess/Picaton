@@ -157,7 +157,8 @@ class User(Entity):
                 raise InvalidContactValueError(
                     contact_type.value, value, "Invalid email format"
                 )
-        elif contact_type == ContactType.PHONE:
+        elif contact_type in (ContactType.PHONE, ContactType.WHATSAPP):
+            # Телефон и WhatsApp используют номер телефона
             clean_phone = (
                 value.replace(" ", "")
                 .replace("-", "")
@@ -173,10 +174,18 @@ class User(Entity):
                 raise InvalidContactValueError(
                     contact_type.value, value, "Invalid Telegram username"
                 )
-        elif contact_type in (ContactType.GITHUB, ContactType.LINKEDIN):
+        elif contact_type in (
+            ContactType.GITHUB,
+            ContactType.LINKEDIN,
+            ContactType.VK,
+            ContactType.INSTAGRAM,
+            ContactType.TIKTOK,
+            ContactType.MESSENGER,
+        ):
+            # Username или URL для соц.сетей
             if (
                 not URL_REGEX.match(value)
-                and not value.replace("_", "").replace("-", "").isalnum()
+                and not value.replace("_", "").replace("-", "").replace(".", "").isalnum()
             ):
                 raise InvalidContactValueError(
                     contact_type.value, value, "Invalid username or URL"
@@ -271,7 +280,11 @@ class User(Entity):
         self._recalculate_completeness()
 
     def add_contact(
-        self, contact_type: ContactType, value: str, is_primary: bool = False
+        self,
+        contact_type: ContactType,
+        value: str,
+        is_primary: bool = False,
+        is_visible: bool = True,
     ) -> None:
         """Добавить контакт. Если он primary, сбрасываем флаг у других."""
         self._validate_contact(contact_type, value)
@@ -279,11 +292,31 @@ class User(Entity):
         if not any(c.type == contact_type and c.value == value for c in self.contacts):
             if is_primary:
                 self.contacts = [
-                    Contact(c.type, c.value, is_primary=False) for c in self.contacts
+                    Contact(c.type, c.value, is_primary=False, is_visible=c.is_visible)
+                    for c in self.contacts
                 ]
 
-            self.contacts.append(Contact(contact_type, value, is_primary))
+            self.contacts.append(Contact(contact_type, value, is_primary, is_visible))
             self._recalculate_completeness()
+
+    def update_contact_visibility(
+        self, contact_type: ContactType, value: str, is_visible: bool
+    ) -> None:
+        """Обновить видимость контакта в публичном профиле."""
+        self.contacts = [
+            Contact(c.type, c.value, c.is_primary, is_visible)
+            if c.type == contact_type and c.value == value
+            else c
+            for c in self.contacts
+        ]
+
+    def get_visible_contacts(self) -> list[Contact]:
+        """Получить контакты для публичного отображения."""
+        return [c for c in self.contacts if c.is_visible]
+
+    def has_visible_contact(self) -> bool:
+        """Проверить есть ли хотя бы один публичный контакт."""
+        return any(c.is_visible for c in self.contacts)
 
     def remove_contact(self, contact_type: ContactType, value: str) -> None:
         """Удалить контакт."""

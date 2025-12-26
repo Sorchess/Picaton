@@ -43,6 +43,7 @@ class MongoUserRepository(UserRepositoryInterface):
                     "type": contact.type.value,
                     "value": contact.value,
                     "is_primary": contact.is_primary,
+                    "is_visible": contact.is_visible,
                 }
                 for contact in user.contacts
             ],
@@ -71,6 +72,7 @@ class MongoUserRepository(UserRepositoryInterface):
                 type=ContactType(contact["type"]),
                 value=contact["value"],
                 is_primary=contact.get("is_primary", False),
+                is_visible=contact.get("is_visible", True),
             )
             for contact in doc.get("contacts", [])
         ]

@@ -11,7 +11,22 @@ export interface ContactInfo {
   type: string;
   value: string;
   is_primary: boolean;
+  is_visible: boolean;
 }
+
+// Типы контактов для отображения
+export type ContactType =
+  | "telegram"
+  | "whatsapp"
+  | "vk"
+  | "messenger"
+  | "email"
+  | "phone"
+  | "linkedin"
+  | "github"
+  | "instagram"
+  | "tiktok"
+  | "slack";
 
 export interface User {
   id: string;
@@ -55,6 +70,7 @@ export interface UserPublic {
   position?: string | null;
   tags: TagInfo[];
   search_tags: string[];
+  contacts: ContactInfo[];  // Публичные контакты для связи
   profile_completeness: number;
 }
 
@@ -85,9 +101,13 @@ export interface SavedContact {
   id: string;
   owner_id: string;
   saved_user_id: string | null;
-  name: string;
+  name: string;  // Legacy: full_name
+  first_name: string;
+  last_name: string;
   phone: string | null;
   email: string | null;
+  messenger_type: string | null;
+  messenger_value: string | null;
   notes: string | null;
   search_tags: string[];
   source: string;
