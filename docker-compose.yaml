@@ -14,6 +14,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+    networks:
+      - app-network
 
   redis:
     image: redis:7-alpine
@@ -28,6 +30,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - app-network
 
   main-app:
     build:
@@ -45,13 +49,16 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+    networks:
+      - app-network
 
   frontend:
     build:
       context: ./frontend
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
-
+    networks:
+      - app-network
 
   nginx:
     image: nginx:stable-alpine
@@ -60,11 +67,17 @@ services:
       # - "443:443"
     volumes:
       # - './frontend/certs/:/etc/nginx/certs:ro'
-      - './nginx.conf:/etc/nginx/nginx.conf'
+      - "./nginx.conf:/etc/nginx/nginx.conf"
     depends_on:
       - main-app
       - frontend
+    networks:
+      - app-network
 
 volumes:
   mongo_data:
   redis_data:
+
+networks:
+  app-network:
+    driver: bridge
