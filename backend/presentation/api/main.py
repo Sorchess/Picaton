@@ -8,9 +8,11 @@ from presentation.api.users.handlers import router as user_router
 from presentation.api.auth.handlers import router as auth_router
 
 origins = [
+    "http://localhost",
     "http://localhost:3000",
-    "http://d.picaton.com/",
-    "https://d.picaton.com/",
+    "http://localhost:5173",
+    "http://d.picaton.com",
+    "https://d.picaton.com",
 ]
 
 

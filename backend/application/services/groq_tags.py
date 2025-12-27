@@ -178,23 +178,89 @@ class GroqTagsGenerator(AITagsGeneratorInterface):
         )
 
     def _fallback_extract_tags_simple(self, text: str) -> list[str]:
-        """Simple keyword extraction from text."""
+        """Simple keyword extraction from text with implied technologies."""
         # Common tech keywords
         tech_keywords = {
-            "python", "javascript", "typescript", "java", "go", "rust", "c++",
-            "react", "vue", "angular", "node", "django", "fastapi", "flask",
-            "docker", "kubernetes", "aws", "gcp", "azure",
-            "postgresql", "mongodb", "redis", "mysql",
-            "ml", "ai", "machine learning", "data science",
-            "devops", "ci/cd", "backend", "frontend", "fullstack",
+            "python",
+            "javascript",
+            "typescript",
+            "java",
+            "go",
+            "rust",
+            "c++",
+            "react",
+            "vue",
+            "angular",
+            "node",
+            "django",
+            "fastapi",
+            "flask",
+            "docker",
+            "kubernetes",
+            "aws",
+            "gcp",
+            "azure",
+            "postgresql",
+            "mongodb",
+            "redis",
+            "mysql",
+            "ml",
+            "ai",
+            "machine learning",
+            "data science",
+            "devops",
+            "ci/cd",
+            "backend",
+            "frontend",
+            "fullstack",
+            "html",
+            "css",
+            "sass",
+            "scss",
+            "tailwind",
+            "bootstrap",
+        }
+
+        # Implied technologies mapping
+        implied_tech = {
+            "верстк": ["HTML", "CSS", "верстка", "Frontend"],
+            "вёрстк": ["HTML", "CSS", "верстка", "Frontend"],
+            "стилизац": ["CSS", "стилизация"],
+            "фронтенд": ["HTML", "CSS", "JavaScript", "Frontend"],
+            "frontend": ["HTML", "CSS", "JavaScript", "Frontend"],
+            "бэкенд": ["Backend", "API"],
+            "бекенд": ["Backend", "API"],
+            "backend": ["Backend", "API"],
+            "fullstack": ["Frontend", "Backend", "Fullstack"],
+            "фулстек": ["Frontend", "Backend", "Fullstack"],
+            "мобильн": ["Mobile"],
+            "ios": ["iOS", "Swift", "Mobile"],
+            "android": ["Android", "Kotlin", "Mobile"],
+            "веб-разраб": ["веб-разработка", "HTML", "CSS"],
+            "веб разраб": ["веб-разработка", "HTML", "CSS"],
+            "сайт": ["веб-разработка"],
         }
 
         text_lower = text.lower()
         found = []
+        seen = set()
 
+        # First, check for implied technologies
+        for pattern, tags in implied_tech.items():
+            if pattern in text_lower:
+                for tag in tags:
+                    tag_lower = tag.lower()
+                    if tag_lower not in seen:
+                        seen.add(tag_lower)
+                        found.append(tag)
+
+        # Then check for explicit tech keywords
         for keyword in tech_keywords:
-            if keyword in text_lower:
-                found.append(keyword.title() if len(keyword) <= 3 else keyword.capitalize())
+            if keyword in text_lower and keyword not in seen:
+                seen.add(keyword)
+                found.append(
+                    keyword.upper() if len(keyword) <= 3 else keyword.capitalize()
+                )
 
         return found[:10]
 

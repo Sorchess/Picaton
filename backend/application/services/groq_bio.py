@@ -69,7 +69,9 @@ class GroqBioGenerator(AIBioGeneratorInterface):
 
     async def _generate(self, text: str, name: str) -> GeneratedBio:
         """Internal method to generate bio using LLM."""
-        user_prompt = f"Имя: {name}\nИнформация: {text}" if name else f"Информация: {text}"
+        user_prompt = (
+            f"Имя: {name}\nИнформация: {text}" if name else f"Информация: {text}"
+        )
 
         try:
             response = await self._client.complete(
@@ -112,7 +114,7 @@ class GroqBioGenerator(AIBioGeneratorInterface):
         ]
         for prefix in prefixes_to_remove:
             if bio.lower().startswith(prefix.lower()):
-                bio = bio[len(prefix):].strip()
+                bio = bio[len(prefix) :].strip()
 
         return bio
 
@@ -124,12 +126,28 @@ class GroqBioGenerator(AIBioGeneratorInterface):
 
     def _fallback_bio(self, text: str, name: str) -> str:
         """Fallback bio generation when API fails."""
-        # Simple extraction of key info
         text_lower = text.lower()
 
-        # Detect role
+        # Detect role with specialization
         role = "специалист"
-        if any(word in text_lower for word in ["разработ", "програм", "developer"]):
+        specialization = ""
+
+        # Check for specific activities first
+        if any(word in text_lower for word in ["верстк", "вёрстк"]):
+            role = "веб-разработчик"
+            specialization = "вёрстке и стилизации сайтов"
+        elif any(word in text_lower for word in ["стилизац"]):
+            role = "веб-разработчик"
+            specialization = "стилизации веб-интерфейсов"
+        elif any(word in text_lower for word in ["frontend", "фронтенд"]):
+            role = "frontend-разработчик"
+            specialization = "создании пользовательских интерфейсов"
+        elif any(word in text_lower for word in ["backend", "бэкенд", "бекенд"]):
+            role = "backend-разработчик"
+            specialization = "серверной разработке"
+        elif any(word in text_lower for word in ["fullstack", "фулстек"]):
+            role = "fullstack-разработчик"
+        elif any(word in text_lower for word in ["разработ", "програм", "developer"]):
             role = "разработчик"
         elif any(word in text_lower for word in ["дизайн", "design"]):
             role = "дизайнер"
@@ -138,6 +156,11 @@ class GroqBioGenerator(AIBioGeneratorInterface):
         elif any(word in text_lower for word in ["аналитик", "analyst"]):
             role = "аналитик"
 
-        if name:
+        # Build bio with extracted info
+        if name and specialization:
+            return f"{name} — {role}, специализирующийся на {specialization}. Открыт к интересным проектам."
+        elif name:
             return f"{name} — опытный {role}, открытый к интересным проектам."
+        elif specialization:
+            return f"Опытный {role}, специализирующийся на {specialization}."
         return f"Опытный {role}, открытый к интересным проектам."
