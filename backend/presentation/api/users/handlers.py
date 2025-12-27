@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Query
 
 from presentation.api.users.schemas import (
     UserCreate,
@@ -195,15 +195,16 @@ async def update_user_contact_visibility(
 @router.delete("/{user_id}/profile-contacts", response_model=UserResponse)
 async def delete_user_contact(
     user_id: UUID,
-    data: UserContactDelete,
+    contact_type: str = Query(..., description="Тип контакта"),
+    value: str = Query(..., description="Значение контакта"),
     user_service=Depends(get_user_service),
 ):
     """Удалить контакт из профиля."""
     try:
         user = await user_service.remove_contact(
             user_id=user_id,
-            contact_type=data.type,
-            value=data.value,
+            contact_type=contact_type,
+            value=value,
         )
         return _user_to_response(user)
     except ValueError as e:

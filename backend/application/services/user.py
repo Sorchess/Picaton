@@ -105,6 +105,20 @@ class UserService:
         """Обновить теги для поиска."""
         user = await self.get_user(user_id)
         user.set_search_tags(tags)
+
+        # Синхронизируем tags с search_tags
+        from domain.entities.tag import Tag
+
+        new_tags = []
+        for tag_name in tags:
+            tag = Tag(
+                name=tag_name,
+                category="Выбрано",
+                proficiency=3,
+            )
+            new_tags.append(tag)
+        user.tags = new_tags
+
         return await self._user_repository.update(user)
 
     async def generate_tags_from_bio(self, user_id: UUID) -> User:

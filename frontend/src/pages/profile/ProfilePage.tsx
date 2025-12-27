@@ -125,7 +125,7 @@ export function ProfilePage() {
       const userData = await userApi.getFull(authUser.id);
       setUser(userData);
       setBio(userData.bio || "");
-      setProfileTags(userData.tags?.map((t) => t.name) || []);
+      setProfileTags(userData.search_tags || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка загрузки профиля");
     } finally {
@@ -158,6 +158,21 @@ export function ProfilePage() {
     try {
       const updated = await userApi.update(user.id, { bio });
       setUser(updated);
+
+      // Обновляем предложения тегов после изменения био
+      if (bio.trim().length >= 20) {
+        setIsGeneratingTags(true);
+        try {
+          const result = await userApi.suggestTags(user.id);
+          setAiTagSuggestions(
+            result.suggestions.map((t: SuggestedTag) => t.name)
+          );
+        } catch {
+          // Игнорируем ошибки генерации тегов
+        } finally {
+          setIsGeneratingTags(false);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка сохранения");
     } finally {
@@ -215,12 +230,12 @@ export function ProfilePage() {
   const handleTagsChange = useCallback(
     async (newTags: string[]) => {
       setProfileTags(newTags);
-      if (!user || newTags.length === 0) return;
+      if (!user) return;
 
-      // Автоматически сохраняем теги
+      // Автоматически сохраняем теги (включая пустой массив)
       setIsApplyingTags(true);
       try {
-        const updated = await userApi.applyTags(user.id, newTags);
+        const updated = await userApi.updateSearchTags(user.id, newTags);
         setUser(updated);
       } catch (err) {
         setError(
