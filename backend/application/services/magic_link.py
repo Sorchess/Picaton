@@ -82,7 +82,7 @@ class MagicLinkService:
             Полный URL для входа
         """
         token = self.generate_magic_token(email)
-        return f"{settings.magic_link.frontend_url}/auth/magic?token={token}"
+        return f"{settings.api.url}/auth/magic?token={token}"
 
     async def verify_magic_token(self, token: str) -> tuple[User, str]:
         """
@@ -153,7 +153,7 @@ class MagicLinkService:
             hashed_password="",  # Пустой пароль для passwordless
             first_name=first_name,
             last_name="",
-            status=UserStatus.ACTIVE,
+            status=UserStatus.AVAILABLE,
         )
 
         await self._user_repository.create(user)

@@ -92,7 +92,6 @@ class MagicLinkConfig(BaseSettings):
 
     secret_key: str = "magic-link-secret-change-in-production"
     expire_minutes: int = 15  # Ссылка действует 15 минут
-    frontend_url: str = "http://localhost:3000"
 
 
 class Config(BaseSettings):
