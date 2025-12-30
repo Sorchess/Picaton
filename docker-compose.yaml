@@ -1,6 +1,8 @@
 services:
   mongo:
     image: mongo:8
+    hostname: mongo
+    container_name: mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO__USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO__PASSWORD}
@@ -33,6 +35,52 @@ services:
     networks:
       - app-network
 
+  maildev:
+    image: maildev/maildev
+    container_name: maildev
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    hostname: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ__USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ__PASSWORD:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  taskiq-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: app-image
+    container_name: taskiq-worker
+    env_file:
+      - .env
+    command: "python -m taskiq worker infrastructure.broker.broker:broker --fs-discover --tasks-pattern application/tasks/*.py"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      maildev:
+        condition: service_started
+    networks:
+      - app-network
+
   main-app:
     build:
       context: ./backend
@@ -43,11 +91,15 @@ services:
       - "app_service=api"
     env_file:
       - .env
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
     ports:
       - "${API__PORT}:8000"
     command: "python -m uvicorn --factory presentation.api.main:create_app --host 0.0.0.0 --port 8000"
     depends_on:
       mongo:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - app-network
@@ -77,6 +129,7 @@ services:
 volumes:
   mongo_data:
   redis_data:
+  rabbitmq_data:
 
 networks:
   app-network:

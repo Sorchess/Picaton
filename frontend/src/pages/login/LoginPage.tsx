@@ -1,51 +1,165 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useAuth } from "@/features/auth";
 import { Typography, Button, Input } from "@/shared";
 import "./AuthPage.scss";
 
-interface AuthPageProps {
-  onSwitchToRegister: () => void;
-}
+type AuthView = "email" | "sent" | "verifying" | "error";
 
-export function LoginPage({ onSwitchToRegister }: AuthPageProps) {
-  const { login, isLoading } = useAuth();
+export function LoginPage() {
+  const { requestMagicLink, verifyMagicLink, isLoading } = useAuth();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [view, setView] = useState<AuthView>("email");
   const [error, setError] = useState<string | null>(null);
+
+  // Проверяем URL на наличие magic link токена
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token) {
+      handleVerifyToken(token);
+    }
+  }, []);
+
+  const handleVerifyToken = async (token: string) => {
+    setView("verifying");
+    setError(null);
+
+    try {
+      await verifyMagicLink(token);
+      // Убираем токен из URL после успешной верификации
+      window.history.replaceState({}, "", window.location.pathname);
+    } catch (err: unknown) {
+      const apiErr = err as { status?: number; data?: { detail?: string } };
+      setView("error");
+
+      if (apiErr.status === 410) {
+        setError("Ссылка для входа истекла. Запросите новую.");
+      } else if (apiErr.status === 400) {
+        setError(apiErr.data?.detail || "Невалидная ссылка для входа");
+      } else {
+        setError("Ошибка при входе. Попробуйте ещё раз.");
+      }
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
     try {
-      await login({ email, password });
+      await requestMagicLink(email);
+      setView("sent");
     } catch (err: unknown) {
       const apiErr = err as { status?: number; data?: { detail?: string } };
-      if (apiErr.status !== undefined) {
-        if (apiErr.status === 401) {
-          setError("Неверный email или пароль");
-        } else if (apiErr.status === 404) {
-          setError("Пользователь с таким email не найден");
-        } else if (apiErr.status === 429) {
-          setError("Слишком много попыток. Попробуйте позже");
-        } else if (apiErr.status === 422) {
-          setError("Проверьте правильность введённых данных");
-        } else if (apiErr.status >= 500) {
-          setError("Ошибка сервера. Попробуйте позже");
-        } else {
-          setError(apiErr.data?.detail || "Ошибка авторизации");
-        }
-      } else if (
-        err instanceof TypeError &&
-        (err as TypeError).message === "Failed to fetch"
-      ) {
-        setError("Нет соединения с сервером. Проверьте интернет");
+      if (apiErr.status === 429) {
+        setError("Слишком много запросов. Подождите немного.");
+      } else if (apiErr.status === 422) {
+        setError("Введите корректный email");
       } else {
-        setError(err instanceof Error ? err.message : "Ошибка входа");
+        setError("Не удалось отправить ссылку. Попробуйте позже.");
       }
     }
   };
 
+  const handleBack = () => {
+    setView("email");
+    setError(null);
+  };
+
+  // Показываем экран загрузки при верификации токена
+  if (view === "verifying") {
+    return (
+      <div className="auth-page">
+        <div className="auth-page__container">
+          <div className="auth-page__header">
+            <div className="auth-page__icon auth-page__icon--loading">
+              <div className="auth-page__spinner" />
+            </div>
+            <Typography variant="h1" className="auth-page__title">
+              Входим...
+            </Typography>
+            <Typography variant="body" className="auth-page__subtitle">
+              Проверяем ссылку для входа
+            </Typography>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Показываем ошибку верификации
+  if (view === "error") {
+    return (
+      <div className="auth-page">
+        <div className="auth-page__container">
+          <div className="auth-page__header">
+            <div className="auth-page__icon auth-page__icon--error">❌</div>
+            <Typography variant="h1" className="auth-page__title">
+              Ошибка входа
+            </Typography>
+            <Typography variant="body" className="auth-page__subtitle">
+              {error}
+            </Typography>
+          </div>
+
+          <Button
+            variant="primary"
+            className="auth-page__submit"
+            onClick={handleBack}
+          >
+            Запросить новую ссылку
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Показываем экран "ссылка отправлена"
+  if (view === "sent") {
+    return (
+      <div className="auth-page">
+        <div className="auth-page__container">
+          <div className="auth-page__header">
+            <div className="auth-page__icon auth-page__icon--success">✉️</div>
+            <Typography variant="h1" className="auth-page__title">
+              Проверьте почту
+            </Typography>
+            <Typography variant="body" className="auth-page__subtitle">
+              Мы отправили ссылку для входа на
+            </Typography>
+            <Typography variant="body" className="auth-page__email-highlight">
+              {email}
+            </Typography>
+          </div>
+
+          <div className="auth-page__sent-info">
+            <Typography variant="small" className="auth-page__sent-tip">
+              💡 Ссылка действительна 15 минут
+            </Typography>
+            <Typography variant="small" className="auth-page__sent-tip">
+              📧 Проверьте папку "Спам", если письмо не пришло
+            </Typography>
+          </div>
+
+          <div className="auth-page__footer">
+            <Typography variant="small">
+              Не получили письмо?{" "}
+              <button
+                type="button"
+                className="auth-page__link"
+                onClick={handleBack}
+              >
+                Отправить ещё раз
+              </button>
+            </Typography>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Основная форма ввода email
   return (
     <div className="auth-page">
       <div className="auth-page__container">
@@ -66,12 +180,10 @@ export function LoginPage({ onSwitchToRegister }: AuthPageProps) {
                 </linearGradient>
               </defs>
               <circle cx="16" cy="16" r="14" fill="url(#authLogoGradient)" />
-              {/* Network nodes */}
               <circle cx="16" cy="10" r="2.5" fill="white" />
               <circle cx="10" cy="20" r="2.5" fill="white" />
               <circle cx="22" cy="20" r="2.5" fill="white" />
               <circle cx="16" cy="16" r="3" fill="white" opacity="0.9" />
-              {/* Connection lines */}
               <line
                 x1="16"
                 y1="10"
@@ -105,7 +217,7 @@ export function LoginPage({ onSwitchToRegister }: AuthPageProps) {
             Picaton
           </Typography>
           <Typography variant="body" className="auth-page__subtitle">
-            Войдите в свой аккаунт
+            Войдите или зарегистрируйтесь
           </Typography>
         </div>
 
@@ -124,17 +236,7 @@ export function LoginPage({ onSwitchToRegister }: AuthPageProps) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
               required
-            />
-          </div>
-
-          <div className="auth-page__field">
-            <label className="auth-page__label">Пароль</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
+              autoFocus
             />
           </div>
 
@@ -142,22 +244,15 @@ export function LoginPage({ onSwitchToRegister }: AuthPageProps) {
             type="submit"
             variant="primary"
             className="auth-page__submit"
-            disabled={isLoading}
+            disabled={isLoading || !email}
           >
-            {isLoading ? "Вход..." : "Войти"}
+            {isLoading ? "Отправка..." : "Получить ссылку для входа"}
           </Button>
         </form>
 
         <div className="auth-page__footer">
-          <Typography variant="small">
-            Нет аккаунта?{" "}
-            <button
-              type="button"
-              className="auth-page__link"
-              onClick={onSwitchToRegister}
-            >
-              Зарегистрироваться
-            </button>
+          <Typography variant="small" className="auth-page__hint">
+            🔐 Без пароля — просто перейдите по ссылке из письма
           </Typography>
         </div>
       </div>

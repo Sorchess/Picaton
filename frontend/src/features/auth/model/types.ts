@@ -21,6 +21,19 @@ export interface RegisterData {
   last_name?: string;
 }
 
+export interface MagicLinkRequest {
+  email: string;
+}
+
+export interface MagicLinkResponse {
+  message: string;
+  email: string;
+}
+
+export interface MagicLinkVerifyRequest {
+  token: string;
+}
+
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;

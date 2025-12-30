@@ -18,6 +18,8 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  requestMagicLink: (email: string) => Promise<void>;
+  verifyMagicLink: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -95,6 +97,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const requestMagicLink = async (email: string) => {
+    await authApi.requestMagicLink({ email });
+  };
+
+  const verifyMagicLink = async (token: string) => {
+    setIsLoading(true);
+    try {
+      const authUser = await authApi.verifyMagicLink({ token });
+      setUser({
+        id: authUser.id,
+        first_name: authUser.first_name,
+        last_name: authUser.last_name,
+        email: authUser.email,
+        avatar_url: authUser.avatar_url,
+        location: null,
+        bio: null,
+        ai_generated_bio: null,
+        status: "active",
+        tags: [],
+        search_tags: [],
+        contacts: [],
+        random_facts: [],
+        profile_completeness: 0,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -105,6 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         refreshUser,
+        requestMagicLink,
+        verifyMagicLink,
       }}
     >
       {children}

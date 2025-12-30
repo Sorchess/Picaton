@@ -23,10 +23,12 @@ from application.services import (
     ContactImportService,
     ContactSyncService,
     AuthService,
+    MagicLinkService,
 )
 from application.services.groq_bio import GroqBioGenerator
 from application.services.groq_tags import GroqTagsGenerator
 from infrastructure.storage import CloudinaryService
+from infrastructure.email import SmtpEmailBackend
 from settings.config import settings
 
 
@@ -172,6 +174,34 @@ def get_auth_service(
     return AuthService(user_repo, user_service, pending_repo)
 
 
+def get_magic_link_service(
+    user_repo: UserRepository,
+) -> MagicLinkService:
+    """Получить сервис magic link авторизации."""
+    return MagicLinkService(user_repo)
+
+
 def get_cloudinary_service() -> CloudinaryService:
     """Получить сервис Cloudinary для загрузки изображений."""
     return CloudinaryService()
+
+
+def get_email_service() -> SmtpEmailBackend | None:
+    """
+    Получить сервис отправки email.
+
+    Returns:
+        SmtpEmailBackend если email настроен, иначе None.
+    """
+    return SmtpEmailBackend(
+        smtp_host=settings.email.smtp_host,
+        smtp_port=settings.email.smtp_port,
+        smtp_user=settings.email.smtp_user,
+        smtp_password=settings.email.smtp_password,
+        from_email=settings.email.from_email,
+        from_name=settings.email.from_name,
+        use_tls=settings.email.use_tls,
+    )
+
+
+EmailServiceDep = Annotated[SmtpEmailBackend | None, Depends(get_email_service)]

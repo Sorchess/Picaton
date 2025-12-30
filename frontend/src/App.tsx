@@ -2,17 +2,9 @@ import { useState } from "react";
 import { ThemeProvider, ThemeToggle } from "./shared";
 import { PageSwitcher } from "./widgets";
 import type { PageType } from "./widgets";
-import {
-  SearchPage,
-  ContactsPage,
-  ProfilePage,
-  LoginPage,
-  RegisterPage,
-} from "./pages";
+import { SearchPage, ContactsPage, ProfilePage, LoginPage } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
 import "./App.scss";
-
-type AuthView = "login" | "register";
 
 function AuthenticatedApp() {
   const { user, logout } = useAuth();
@@ -106,15 +98,9 @@ function AuthenticatedApp() {
 }
 
 function UnauthenticatedApp() {
-  const [view, setView] = useState<AuthView>("login");
-
   return (
     <div className="app">
-      {view === "login" ? (
-        <LoginPage onSwitchToRegister={() => setView("register")} />
-      ) : (
-        <RegisterPage onSwitchToLogin={() => setView("login")} />
-      )}
+      <LoginPage />
     </div>
   );
 }

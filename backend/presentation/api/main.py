@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from infrastructure.database.client import mongodb_client
+from infrastructure.broker import broker
 from presentation.api.users.handlers import router as user_router
 from presentation.api.auth.handlers import router as auth_router
 
@@ -22,8 +23,15 @@ async def lifespan(app: FastAPI):
     # Startup
     await mongodb_client.connect()
 
+    # Запуск брокера TaskIQ
+    if not broker.is_worker_process:
+        await broker.startup()
+
     yield
+
     # Shutdown
+    if not broker.is_worker_process:
+        await broker.shutdown()
     await mongodb_client.disconnect()
 
 

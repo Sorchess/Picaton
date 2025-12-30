@@ -4,15 +4,22 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from presentation.api.auth.schemas import (
     RegisterRequest,
     LoginRequest,
+    MagicLinkRequest,
+    MagicLinkVerifyRequest,
+    MagicLinkResponse,
     AuthUserResponse,
 )
 from presentation.api.users.schemas import UserResponse, TagInfo, ContactInfo
-from infrastructure.dependencies import get_auth_service
+from infrastructure.dependencies import get_auth_service, get_magic_link_service
 from application.services import (
     AuthService,
+    MagicLinkService,
     InvalidCredentialsError,
     InvalidTokenError,
+    MagicLinkExpiredError,
+    MagicLinkInvalidError,
 )
+from application.tasks import send_magic_link_email
 from domain.exceptions.user import UserAlreadyExistsError
 
 
@@ -123,4 +130,63 @@ async def get_current_user(
         ],
         random_facts=user.random_facts,
         profile_completeness=user.profile_completeness,
+    )
+
+
+@router.post("/magic-link", response_model=MagicLinkResponse)
+async def request_magic_link(
+    data: MagicLinkRequest,
+    magic_link_service: MagicLinkService = Depends(get_magic_link_service),
+):
+    """
+    Запросить magic link для входа по email.
+
+    Отправляет письмо со ссылкой для входа на указанный email.
+    Ссылка действительна 15 минут.
+    """
+    # Генерируем magic link
+    magic_link = magic_link_service.generate_magic_link(data.email)
+
+    # Отправляем задачу в очередь
+    await send_magic_link_email.kiq(
+        to_email=data.email,
+        magic_link=magic_link,
+    )
+
+    return MagicLinkResponse(
+        message="Ссылка для входа отправлена на вашу почту",
+        email=data.email,
+    )
+
+
+@router.post("/magic-link/verify", response_model=AuthUserResponse)
+async def verify_magic_link(
+    data: MagicLinkVerifyRequest,
+    magic_link_service: MagicLinkService = Depends(get_magic_link_service),
+):
+    """
+    Верифицировать magic link и войти в систему.
+
+    Проверяет токен из ссылки и возвращает access token для авторизации.
+    """
+    try:
+        user, access_token = await magic_link_service.verify_magic_token(data.token)
+    except MagicLinkExpiredError:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="Ссылка для входа истекла. Запросите новую.",
+        )
+    except MagicLinkInvalidError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e) or "Невалидная ссылка для входа",
+        )
+
+    return AuthUserResponse(
+        id=str(user.id),
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        avatar_url=user.avatar_url,
+        access_token=access_token,
     )

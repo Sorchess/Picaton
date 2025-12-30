@@ -4,4 +4,7 @@ export type {
   LoginCredentials,
   RegisterData,
   AuthState,
+  MagicLinkRequest,
+  MagicLinkResponse,
+  MagicLinkVerifyRequest,
 } from "./model";

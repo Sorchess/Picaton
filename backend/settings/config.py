@@ -61,6 +61,40 @@ class CloudinaryConfig(BaseSettings):
     allowed_formats: list[str] = ["jpg", "jpeg", "png", "webp"]
 
 
+class EmailConfig(BaseSettings):
+    """Конфигурация отправки email."""
+
+    smtp_host: str = "localhost"  # Локальный Postfix на сервере
+    smtp_port: int = 25  # Локальный порт без TLS
+    smtp_user: str = ""  # Не нужен для локального Postfix
+    smtp_password: str = ""  # Не нужен для локального Postfix
+    from_email: str = "info@picaton.com"
+    from_name: str = "Picaton"
+    use_tls: bool = False  # Для локального Postfix TLS не нужен
+    enabled: bool = False
+
+
+class RabbitMQConfig(BaseSettings):
+    """Конфигурация RabbitMQ."""
+
+    host: str = "rabbitmq"
+    port: int = 5672
+    username: str = "guest"
+    password: str = "guest"
+
+    @property
+    def url(self) -> str:
+        return f"amqp://{self.username}:{self.password}@{self.host}:{self.port}/"
+
+
+class MagicLinkConfig(BaseSettings):
+    """Конфигурация magic link авторизации."""
+
+    secret_key: str = "magic-link-secret-change-in-production"
+    expire_minutes: int = 15  # Ссылка действует 15 минут
+    frontend_url: str = "http://localhost:3000"
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
@@ -72,6 +106,9 @@ class Config(BaseSettings):
     jwt: JWTConfig = JWTConfig()
     groq: GroqConfig = GroqConfig()
     cloudinary: CloudinaryConfig = CloudinaryConfig()
+    email: EmailConfig = EmailConfig()
+    rabbitmq: RabbitMQConfig = RabbitMQConfig()
+    magic_link: MagicLinkConfig = MagicLinkConfig()
     mongo: DatabaseConfig
     api: APIConfig
 

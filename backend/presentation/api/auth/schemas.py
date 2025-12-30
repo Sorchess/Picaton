@@ -17,11 +17,30 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class MagicLinkRequest(BaseModel):
+    """Запрос на отправку magic link."""
+
+    email: EmailStr
+
+
+class MagicLinkVerifyRequest(BaseModel):
+    """Запрос на верификацию magic link."""
+
+    token: str
+
+
 class TokenResponse(BaseModel):
     """Ответ с токеном."""
 
     access_token: str
     token_type: str = "bearer"
+
+
+class MagicLinkResponse(BaseModel):
+    """Ответ на запрос magic link."""
+
+    message: str
+    email: str
 
 
 class AuthUserResponse(BaseModel):

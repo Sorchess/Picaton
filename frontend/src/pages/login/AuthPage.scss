@@ -154,6 +154,65 @@
     }
   }
 
+  &__hint {
+    color: var(--color-text-muted);
+  }
+
+  // Icon styles
+  &__icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 3rem;
+
+    &--loading {
+      .auth-page__spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid var(--color-glass-border);
+        border-top-color: #8b5cf6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+    }
+
+    &--success,
+    &--error {
+      font-size: 4rem;
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  &__email-highlight {
+    margin-top: 0.5rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: 1.1rem;
+  }
+
+  &__sent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding: 1.25rem;
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 12px;
+  }
+
+  &__sent-tip {
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   // Override shared Input styles for auth page
   input {
     width: 100%;

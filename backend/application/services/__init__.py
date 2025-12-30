@@ -13,6 +13,12 @@ from application.services.auth import (
     InvalidCredentialsError,
     InvalidTokenError,
 )
+from application.services.magic_link import (
+    MagicLinkService,
+    MagicLinkError,
+    MagicLinkExpiredError,
+    MagicLinkInvalidError,
+)
 
 __all__ = [
     "UserService",
@@ -29,4 +35,8 @@ __all__ = [
     "AuthenticationError",
     "InvalidCredentialsError",
     "InvalidTokenError",
+    "MagicLinkService",
+    "MagicLinkError",
+    "MagicLinkExpiredError",
+    "MagicLinkInvalidError",
 ]
