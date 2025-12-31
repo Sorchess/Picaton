@@ -50,6 +50,13 @@ class UserRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def search_by_bio_keywords(
+        self, keywords: list[str], limit: int = 20
+    ) -> list[User]:
+        """Поиск пользователей по ключевым словам в bio."""
+        pass
+
+    @abstractmethod
     async def get_all(self, skip: int = 0, limit: int = 100) -> list[User]:
         """Получить всех пользователей с пагинацией."""
         pass

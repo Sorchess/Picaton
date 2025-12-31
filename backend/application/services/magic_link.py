@@ -136,23 +136,21 @@ class MagicLinkService:
         """
         Создаёт нового пользователя только по email (passwordless).
 
+        Имя и фамилия оставляются пустыми — пользователь заполнит их
+        на странице онбординга после первого входа.
+
         Args:
             email: Email пользователя
 
         Returns:
             Созданный пользователь
         """
-        # Извлекаем имя из email (до @)
-        email_name = email.split("@")[0]
-        # Убираем точки и подчёркивания, делаем первую букву заглавной
-        first_name = email_name.replace(".", " ").replace("_", " ").title().split()[0]
-
         user = User(
             id=uuid4(),
             email=email,
             hashed_password="",  # Пустой пароль для passwordless
-            first_name=first_name,
-            last_name="",
+            first_name="",  # Заполнится на онбординге
+            last_name="",  # Заполнится на онбординге
             status=UserStatus.AVAILABLE,
         )
 

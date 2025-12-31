@@ -2,7 +2,13 @@ import { useState } from "react";
 import { ThemeProvider, ThemeToggle } from "./shared";
 import { PageSwitcher } from "./widgets";
 import type { PageType } from "./widgets";
-import { SearchPage, ContactsPage, ProfilePage, LoginPage } from "./pages";
+import {
+  SearchPage,
+  ContactsPage,
+  ProfilePage,
+  LoginPage,
+  OnboardingPage,
+} from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
 import "./App.scss";
 
@@ -105,8 +111,15 @@ function UnauthenticatedApp() {
   );
 }
 
+// Проверяем, нужно ли показывать онбординг (новый пользователь без имени)
+function needsOnboarding(user: ReturnType<typeof useAuth>["user"]): boolean {
+  if (!user) return false;
+  // Если у пользователя нет имени или фамилии — показываем онбординг
+  return !user.first_name?.trim() || !user.last_name?.trim();
+}
+
 function AppContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -115,6 +128,15 @@ function AppContent() {
           <div className="app__spinner" />
           <span>Загрузка...</span>
         </div>
+      </div>
+    );
+  }
+
+  // Показываем онбординг для новых пользователей
+  if (isAuthenticated && needsOnboarding(user)) {
+    return (
+      <div className="app">
+        <OnboardingPage />
       </div>
     );
   }

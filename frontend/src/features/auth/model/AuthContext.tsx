@@ -104,23 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyMagicLink = async (token: string) => {
     setIsLoading(true);
     try {
-      const authUser = await authApi.verifyMagicLink({ token });
-      setUser({
-        id: authUser.id,
-        first_name: authUser.first_name,
-        last_name: authUser.last_name,
-        email: authUser.email,
-        avatar_url: authUser.avatar_url,
-        location: null,
-        bio: null,
-        ai_generated_bio: null,
-        status: "active",
-        tags: [],
-        search_tags: [],
-        contacts: [],
-        random_facts: [],
-        profile_completeness: 0,
-      });
+      await authApi.verifyMagicLink({ token });
+      // Получаем полные данные пользователя с сервера
+      await refreshUser();
     } finally {
       setIsLoading(false);
     }

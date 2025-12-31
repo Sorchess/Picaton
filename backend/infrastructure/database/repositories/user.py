@@ -206,6 +206,29 @@ class MongoUserRepository(UserRepositoryInterface):
             users.append(self._from_document(doc))
         return users
 
+    async def search_by_bio_keywords(
+        self, keywords: list[str], limit: int = 20
+    ) -> list[User]:
+        """Поиск пользователей по ключевым словам в bio и ai_generated_bio."""
+        if not keywords:
+            return []
+
+        # Создаём regex паттерны для каждого ключевого слова
+        or_conditions = []
+        for keyword in keywords:
+            # Экранируем спецсимволы для безопасного regex
+            safe_keyword = re.escape(keyword)
+            regex_pattern = {"$regex": safe_keyword, "$options": "i"}
+            or_conditions.append({"bio": regex_pattern})
+            or_conditions.append({"ai_generated_bio": regex_pattern})
+
+        cursor = self._collection.find({"$or": or_conditions}).limit(limit)
+
+        users = []
+        async for doc in cursor:
+            users.append(self._from_document(doc))
+        return users
+
     async def find_by_phone_hashes(self, hashes: list[str]) -> list[User]:
         """Найти пользователей по хешам телефонов."""
         if not hashes:

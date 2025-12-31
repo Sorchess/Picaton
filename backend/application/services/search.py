@@ -20,7 +20,301 @@ class SearchResult:
 
 # Ассоциативная карта: запрос → связанные теги/навыки
 ASSOCIATIVE_MAP: dict[str, list[str]] = {
-    # Роли и специализации → технологии
+    # ===== ЗАДАЧИ И ПОТРЕБНОСТИ → специалисты/навыки =====
+    # Сайты и веб-разработка
+    "сделать сайт": [
+        "веб-разработчик",
+        "верстка",
+        "html",
+        "css",
+        "javascript",
+        "react",
+        "vue",
+        "фронтенд",
+        "frontend",
+        "дизайн",
+        "адаптивная вёрстка",
+        "лендинг",
+        "web",
+    ],
+    "создать сайт": [
+        "веб-разработчик",
+        "верстка",
+        "html",
+        "css",
+        "javascript",
+        "react",
+        "vue",
+        "фронтенд",
+        "frontend",
+        "web",
+    ],
+    "разработать сайт": [
+        "веб-разработчик",
+        "верстка",
+        "html",
+        "css",
+        "javascript",
+        "react",
+        "vue",
+        "фронтенд",
+        "frontend",
+        "web",
+    ],
+    "нужен сайт": [
+        "веб-разработчик",
+        "верстка",
+        "html",
+        "css",
+        "javascript",
+        "react",
+        "фронтенд",
+        "web",
+    ],
+    "сверстать": [
+        "верстка",
+        "html",
+        "css",
+        "sass",
+        "адаптивная",
+        "разметка",
+        "вёрстка",
+        "стилизация",
+        "интерфейс",
+    ],
+    "лендинг": [
+        "верстка",
+        "html",
+        "css",
+        "landing page",
+        "дизайн",
+        "фронтенд",
+        "javascript",
+        "адаптивная",
+    ],
+    "интернет-магазин": [
+        "ecommerce",
+        "shopify",
+        "woocommerce",
+        "фронтенд",
+        "бэкенд",
+        "платежи",
+        "интеграции",
+        "react",
+    ],
+    # Мобильные приложения
+    "сделать приложение": [
+        "мобильная разработка",
+        "ios",
+        "android",
+        "swift",
+        "kotlin",
+        "react native",
+        "flutter",
+        "mobile",
+    ],
+    "мобильное приложение": [
+        "мобильная разработка",
+        "ios",
+        "android",
+        "swift",
+        "kotlin",
+        "react native",
+        "flutter",
+        "mobile",
+    ],
+    "приложение для телефона": [
+        "мобильная разработка",
+        "ios",
+        "android",
+        "react native",
+        "flutter",
+        "mobile",
+    ],
+    "ios приложение": [
+        "swift",
+        "ios",
+        "xcode",
+        "objective-c",
+        "mobile",
+        "apple",
+    ],
+    "android приложение": [
+        "kotlin",
+        "java",
+        "android",
+        "mobile",
+    ],
+    # Боты и автоматизация
+    "сделать бота": [
+        "python",
+        "telegram bot",
+        "чат-бот",
+        "автоматизация",
+        "aiogram",
+        "telebot",
+        "discord",
+        "bot",
+    ],
+    "телеграм бот": [
+        "python",
+        "telegram",
+        "aiogram",
+        "telebot",
+        "бот",
+        "автоматизация",
+    ],
+    "чат-бот": [
+        "python",
+        "nlp",
+        "ai",
+        "автоматизация",
+        "диалоговые системы",
+    ],
+    "автоматизация": [
+        "python",
+        "скрипты",
+        "api",
+        "интеграции",
+        "rpa",
+        "selenium",
+    ],
+    # Дизайн
+    "нарисовать дизайн": [
+        "дизайнер",
+        "ui",
+        "ux",
+        "figma",
+        "photoshop",
+        "sketch",
+        "интерфейс",
+        "прототип",
+    ],
+    "сделать дизайн": [
+        "дизайнер",
+        "ui",
+        "ux",
+        "figma",
+        "photoshop",
+        "интерфейс",
+        "визуал",
+    ],
+    "макет": [
+        "дизайнер",
+        "figma",
+        "ui",
+        "прототип",
+        "интерфейс",
+    ],
+    "логотип": [
+        "дизайнер",
+        "графический дизайн",
+        "illustrator",
+        "photoshop",
+        "брендинг",
+    ],
+    # Данные и аналитика
+    "проанализировать данные": [
+        "аналитик",
+        "data analyst",
+        "sql",
+        "python",
+        "pandas",
+        "excel",
+        "power bi",
+        "tableau",
+    ],
+    "дашборд": [
+        "bi",
+        "power bi",
+        "tableau",
+        "metabase",
+        "аналитика",
+        "визуализация",
+    ],
+    "отчёт": [
+        "аналитик",
+        "excel",
+        "sql",
+        "отчётность",
+        "power bi",
+    ],
+    # ML/AI
+    "нейросеть": [
+        "machine learning",
+        "deep learning",
+        "python",
+        "tensorflow",
+        "pytorch",
+        "ml",
+        "ai",
+    ],
+    "машинное обучение": [
+        "ml",
+        "python",
+        "tensorflow",
+        "pytorch",
+        "scikit-learn",
+        "data science",
+    ],
+    "распознавание": [
+        "computer vision",
+        "opencv",
+        "ml",
+        "нейросети",
+        "python",
+    ],
+    # Серверы и DevOps
+    "настроить сервер": [
+        "devops",
+        "linux",
+        "nginx",
+        "docker",
+        "системный администратор",
+        "sysadmin",
+    ],
+    "развернуть проект": [
+        "devops",
+        "docker",
+        "ci/cd",
+        "kubernetes",
+        "деплой",
+    ],
+    "деплой": [
+        "devops",
+        "docker",
+        "ci/cd",
+        "kubernetes",
+        "aws",
+        "gcp",
+    ],
+    # API и интеграции
+    "сделать api": [
+        "бэкенд",
+        "backend",
+        "rest",
+        "graphql",
+        "python",
+        "node.js",
+        "fastapi",
+        "express",
+    ],
+    "интеграция": [
+        "api",
+        "rest",
+        "бэкенд",
+        "интеграции",
+        "webhook",
+    ],
+    "парсинг": [
+        "python",
+        "scraping",
+        "beautifulsoup",
+        "selenium",
+        "scrapy",
+        "автоматизация",
+    ],
+    # ===== Роли и специализации → технологии =====
     "бэкенд": [
         "python",
         "java",
@@ -346,6 +640,7 @@ ASSOCIATIVE_MAP: dict[str, list[str]] = {
 
 # Синонимы для нормализации запросов
 SYNONYMS: dict[str, str] = {
+    # Языки программирования
     "питон": "python",
     "пайтон": "python",
     "джава": "java",
@@ -380,6 +675,24 @@ SYNONYMS: dict[str, str] = {
     "фигма": "figma",
     "фотошоп": "photoshop",
     "иллюстратор": "illustrator",
+    # Задачи/действия
+    "создать": "сделать",
+    "разработать": "сделать",
+    "написать": "сделать",
+    "запилить": "сделать",
+    "нужен": "сделать",
+    "нужна": "сделать",
+    "ищу": "сделать",
+    # Веб-термины
+    "сайт": "веб-разработчик",
+    "веб-сайт": "веб-разработчик",
+    "вебсайт": "веб-разработчик",
+    "web": "веб-разработчик",
+    "webapp": "веб-разработчик",
+    "веб-приложение": "веб-разработчик",
+    "верстальщик": "вёрстка",
+    "стилизация": "вёрстка",
+    "разметка": "вёрстка",
 }
 
 
@@ -429,9 +742,19 @@ class AssociativeSearchService:
 
         # Поиск пользователей
         if include_users:
-            # Сначала ищем по расширенным тегам
+            # Сначала ищем по расширенным тегам в search_tags
             if expanded_tags:
                 users = await self._user_repository.search_by_tags(expanded_tags, limit)
+
+            # Поиск по ключевым словам в bio
+            if len(users) < limit and expanded_tags:
+                bio_results = await self._user_repository.search_by_bio_keywords(
+                    expanded_tags, limit - len(users)
+                )
+                existing_ids = {u.id for u in users}
+                for user in bio_results:
+                    if user.id not in existing_ids:
+                        users.append(user)
 
             # Если мало результатов, добавляем полнотекстовый поиск
             if len(users) < limit:
@@ -520,9 +843,16 @@ class AssociativeSearchService:
         """Извлечь теги из поискового запроса с нормализацией синонимов."""
         import re
 
-        words = re.split(r"[\s,#]+", query.lower())
+        query_lower = query.lower().strip()
         tags = []
 
+        # Сначала проверяем полные фразы из ассоциативной карты
+        for phrase in ASSOCIATIVE_MAP.keys():
+            if phrase in query_lower:
+                tags.append(phrase)
+
+        # Затем разбиваем на отдельные слова
+        words = re.split(r"[\s,#]+", query_lower)
         for word in words:
             word = word.strip()
             if word and len(word) >= 2:
