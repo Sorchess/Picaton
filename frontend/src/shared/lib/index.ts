@@ -1,0 +1,1 @@
+export { parseEmailName, formatParsedName } from "./parseEmailName";

@@ -91,6 +91,49 @@
     border-radius: 16px;
   }
 
+  // Name suggestion block
+  &__suggestion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: linear-gradient(
+      135deg,
+      rgba(99, 102, 241, 0.15),
+      rgba(139, 92, 246, 0.15)
+    );
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 16px;
+    text-align: center;
+  }
+
+  &__suggestion-text {
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+
+    strong {
+      color: #a78bfa;
+      font-weight: 700;
+    }
+  }
+
+  &__suggestion-actions {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+
+    @media (max-width: 480px) {
+      flex-direction: column;
+    }
+  }
+
+  &__suggestion-btn {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+  }
+
   &__feature {
     display: flex;
     align-items: flex-start;

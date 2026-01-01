@@ -1,7 +1,13 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useAuth } from "@/features/auth";
 import { userApi } from "@/entities/user";
-import { Typography, Button, Input } from "@/shared";
+import {
+  Typography,
+  Button,
+  Input,
+  parseEmailName,
+  formatParsedName,
+} from "@/shared";
 import "./OnboardingPage.scss";
 
 type OnboardingStep = "welcome" | "profile" | "complete";
@@ -12,11 +18,30 @@ export function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Парсим имя из email
+  const parsedName = user?.email ? parseEmailName(user.email) : null;
+  const suggestedName = parsedName ? formatParsedName(parsedName) : "";
+  const hasSuggestion = !!suggestedName;
+
   // Form state
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [location, setLocation] = useState(user?.location || "");
+  const [suggestionAccepted, setSuggestionAccepted] = useState(false);
+
+  // Предзаполняем форму из распознанного имени
+  useEffect(() => {
+    if (
+      parsedName &&
+      !user?.first_name &&
+      !user?.last_name &&
+      !suggestionAccepted
+    ) {
+      if (parsedName.firstName) setFirstName(parsedName.firstName);
+      if (parsedName.lastName) setLastName(parsedName.lastName);
+    }
+  }, [parsedName, user?.first_name, user?.last_name, suggestionAccepted]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -128,13 +153,50 @@ export function OnboardingPage() {
             </div>
           </div>
 
-          <Button
-            variant="primary"
-            className="onboarding__submit"
-            onClick={() => setStep("profile")}
-          >
-            Начать заполнение
-          </Button>
+          {hasSuggestion && (
+            <div className="onboarding__suggestion">
+              <Typography
+                variant="body"
+                className="onboarding__suggestion-text"
+              >
+                Вас зовут <strong>{suggestedName}</strong>?
+              </Typography>
+              <div className="onboarding__suggestion-actions">
+                <Button
+                  variant="primary"
+                  className="onboarding__suggestion-btn"
+                  onClick={() => {
+                    setSuggestionAccepted(true);
+                    setStep("profile");
+                  }}
+                >
+                  Да, это я
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="onboarding__suggestion-btn"
+                  onClick={() => {
+                    setFirstName("");
+                    setLastName("");
+                    setSuggestionAccepted(true);
+                    setStep("profile");
+                  }}
+                >
+                  Нет, другое имя
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!hasSuggestion && (
+            <Button
+              variant="primary"
+              className="onboarding__submit"
+              onClick={() => setStep("profile")}
+            >
+              Начать заполнение
+            </Button>
+          )}
         </div>
       </div>
     );
