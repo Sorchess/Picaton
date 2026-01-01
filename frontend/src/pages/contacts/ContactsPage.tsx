@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import type { SavedContact, UserPublic } from "@/entities/user";
 import { userApi } from "@/entities/user";
+import { businessCardApi } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
 import {
   ContactImportButton,
@@ -49,6 +50,8 @@ export function ContactsPage() {
   const [selectedUserProfile, setSelectedUserProfile] =
     useState<UserPublic | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [selectedContactForModal, setSelectedContactForModal] =
+    useState<SavedContact | null>(null);
 
   useEffect(() => {
     loadContacts();
@@ -113,12 +116,69 @@ export function ContactsPage() {
     }
 
     try {
-      const userData = await userApi.getPublic(contact.saved_user_id);
+      let userData: UserPublic;
+
+      // Если есть сохраненная визитная карточка, загружаем данные из неё
+      if (contact.saved_card_id) {
+        const cardData = await businessCardApi.getPublic(contact.saved_card_id);
+        // Преобразуем данные карточки в формат UserPublic
+        const firstName = cardData.display_name
+          ? cardData.display_name.split(" ")[0]
+          : contact.first_name;
+        const lastName = cardData.display_name
+          ? cardData.display_name.split(" ").slice(1).join(" ")
+          : contact.last_name;
+
+        userData = {
+          id: cardData.owner_id,
+          first_name: firstName,
+          last_name: lastName,
+          avatar_url: cardData.avatar_url,
+          bio: cardData.bio,
+          ai_generated_bio: cardData.ai_generated_bio,
+          location: null,
+          tags: cardData.tags,
+          search_tags: cardData.search_tags,
+          contacts: cardData.contacts.map((c) => ({
+            type: c.type,
+            value: c.value,
+            is_primary: c.is_primary,
+            is_visible: c.is_visible,
+          })),
+          profile_completeness: cardData.completeness,
+        };
+      } else if (contact.contacts && contact.contacts.length > 0) {
+        // Если нет карточки, но есть контакты в SavedContact, используем их
+        const userDataFromApi = await userApi.getPublic(contact.saved_user_id);
+        userData = {
+          ...userDataFromApi,
+          contacts: contact.contacts, // Используем контакты из SavedContact
+        };
+      } else {
+        // Загружаем данные пользователя
+        userData = await userApi.getPublic(contact.saved_user_id);
+      }
+
       setSelectedUserProfile(userData);
+      setSelectedContactForModal(contact);
       setIsUserModalOpen(true);
     } catch {
       // Fallback to regular contact modal if user not found
       setSelectedContact(contact);
+    }
+  };
+
+  // Удаление контакта из модального окна профиля
+  const handleDeleteContactFromModal = async () => {
+    if (!selectedContactForModal) return;
+    try {
+      await userApi.deleteContact(selectedContactForModal.id);
+      setContacts((prev) => prev.filter((c) => c.id !== selectedContactForModal.id));
+      setIsUserModalOpen(false);
+      setSelectedUserProfile(null);
+      setSelectedContactForModal(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка удаления контакта");
     }
   };
 
@@ -763,7 +823,9 @@ export function ContactsPage() {
         onClose={() => {
           setIsUserModalOpen(false);
           setSelectedUserProfile(null);
+          setSelectedContactForModal(null);
         }}
+        onDeleteContact={handleDeleteContactFromModal}
         isSaved={true}
       />
     </div>

@@ -870,6 +870,7 @@ def _contact_to_response(contact) -> SavedContactResponse:
                 type=c.type.value if hasattr(c.type, "value") else c.type,
                 value=c.value,
                 is_primary=c.is_primary,
+                is_visible=c.is_visible if hasattr(c, "is_visible") else True,
             )
             for c in (contact.contacts or [])
         ],

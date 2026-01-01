@@ -67,7 +67,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
 
         contacts = [
             Contact(
-                type=ContactType(contact["type"]),
+                type=ContactType(contact["type"].upper()),
                 value=contact["value"],
                 is_primary=contact.get("is_primary", False),
                 is_visible=contact.get("is_visible", True),

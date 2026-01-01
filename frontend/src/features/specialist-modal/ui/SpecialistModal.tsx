@@ -8,7 +8,7 @@ interface SpecialistModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveContact?: (user: UserPublic) => void;
-  onDeleteContact?: (user: UserPublic) => void;
+  onDeleteContact?: ((user: UserPublic) => void) | (() => void);
   isSaved?: boolean;
 }
 
@@ -191,7 +191,7 @@ export function SpecialistModal({
           </Button>
         )}
         {isSaved && onDeleteContact && (
-          <Button variant="danger" onClick={() => onDeleteContact(user)}>
+          <Button variant="danger" onClick={() => (onDeleteContact as (user: UserPublic) => void)(user)}>
             Удалить из контактов
           </Button>
         )}
