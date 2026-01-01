@@ -2,6 +2,7 @@ from uuid import UUID
 
 from domain.entities.saved_contact import SavedContact
 from domain.entities.user import User
+from domain.entities.business_card import BusinessCard
 from domain.exceptions import (
     UserNotFoundError,
     ContactNotFoundError,
@@ -9,6 +10,15 @@ from domain.exceptions import (
 )
 from domain.repositories.saved_contact import SavedContactRepositoryInterface
 from domain.repositories.user import UserRepositoryInterface
+from domain.repositories.business_card import BusinessCardRepositoryInterface
+
+
+class BusinessCardNotFoundError(Exception):
+    """Карточка не найдена."""
+
+    def __init__(self, card_id: str):
+        self.card_id = card_id
+        super().__init__(f"Business card not found: {card_id}")
 
 
 class SavedContactService:
@@ -18,20 +28,87 @@ class SavedContactService:
         self,
         contact_repository: SavedContactRepositoryInterface,
         user_repository: UserRepositoryInterface,
+        card_repository: BusinessCardRepositoryInterface | None = None,
     ):
         self._contact_repository = contact_repository
         self._user_repository = user_repository
+        self._card_repository = card_repository
+
+    async def save_card_contact(
+        self,
+        owner_id: UUID,
+        card_id: UUID,
+        search_tags: list[str] | None = None,
+        notes: str | None = None,
+    ) -> SavedContact:
+        """
+        Сохранить контакт по визитной карточке.
+        Сохраняет конкретную карточку пользователя.
+        """
+        if not self._card_repository:
+            raise ValueError("Card repository not configured")
+
+        # Проверяем, что карточка существует
+        card = await self._card_repository.get_by_id(card_id)
+        if not card:
+            raise BusinessCardNotFoundError(str(card_id))
+
+        # Проверяем, не сохранена ли уже эта карточка
+        existing = await self._contact_repository.get_by_owner(owner_id)
+        for c in existing:
+            if c.saved_card_id == card_id:
+                raise ContactAlreadyExistsError(str(card_id))
+
+        # Получаем данные владельца карточки для email
+        user = await self._user_repository.get_by_id(card.owner_id)
+
+        # Парсим имя из display_name или берём из user
+        first_name = ""
+        last_name = ""
+        if card.display_name:
+            parts = card.display_name.split(" ", 1)
+            first_name = parts[0]
+            last_name = parts[1] if len(parts) > 1 else ""
+        elif user:
+            first_name = user.first_name
+            last_name = user.last_name
+
+        contact = SavedContact(
+            owner_id=owner_id,
+            saved_user_id=card.owner_id,
+            saved_card_id=card_id,
+            name=card.display_name or (user.full_name if user else ""),
+            first_name=first_name,
+            last_name=last_name,
+            email=user.email if user else None,
+            contacts=list(card.contacts),  # Копируем контакты из карточки
+            search_tags=search_tags or [],
+            notes=notes,
+            source="app",
+        )
+
+        # Добавляем теги карточки как теги поиска
+        for tag in card.search_tags:
+            contact.add_search_tag(tag)
+
+        return await self._contact_repository.create(contact)
 
     async def save_user_contact(
         self,
         owner_id: UUID,
         user_id: UUID,
+        card_id: UUID | None = None,
         search_tags: list[str] | None = None,
         notes: str | None = None,
     ) -> SavedContact:
         """
         Сохранить контакт другого пользователя.
+        Если передан card_id, сохраняет конкретную карточку.
         """
+        # Если передан card_id, используем новый метод
+        if card_id and self._card_repository:
+            return await self.save_card_contact(owner_id, card_id, search_tags, notes)
+
         # Проверяем, что пользователь существует
         user = await self._user_repository.get_by_id(user_id)
         if not user:
@@ -48,6 +125,7 @@ class SavedContactService:
             first_name=user.first_name,
             last_name=user.last_name,
             email=user.email,
+            contacts=list(user.contacts),  # Копируем контакты пользователя
             search_tags=search_tags or [],
             notes=notes,
             source="app",

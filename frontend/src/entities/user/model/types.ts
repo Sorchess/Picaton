@@ -70,7 +70,7 @@ export interface UserPublic {
   position?: string | null;
   tags: TagInfo[];
   search_tags: string[];
-  contacts: ContactInfo[];  // Публичные контакты для связи
+  contacts: ContactInfo[]; // Публичные контакты для связи
   profile_completeness: number;
 }
 
@@ -101,11 +101,13 @@ export interface SavedContact {
   id: string;
   owner_id: string;
   saved_user_id: string | null;
-  name: string;  // Legacy: full_name
+  saved_card_id: string | null; // ID конкретной карточки
+  name: string; // Legacy: full_name
   first_name: string;
   last_name: string;
   phone: string | null;
   email: string | null;
+  contacts: ContactInfo[]; // Контакты для связи (telegram, whatsapp и т.д.)
   messenger_type: string | null;
   messenger_value: string | null;
   notes: string | null;
@@ -115,13 +117,35 @@ export interface SavedContact {
   updated_at: string;
 }
 
+// Контакт в карточке поиска
+export interface SearchCardContact {
+  type: string;
+  value: string;
+  is_primary: boolean;
+}
+
+// Карточка в результатах поиска
+export interface SearchCardResult {
+  id: string;
+  owner_id: string;
+  display_name: string;
+  owner_first_name: string;
+  owner_last_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  ai_generated_bio: string | null;
+  search_tags: string[];
+  contacts: SearchCardContact[];
+  completeness: number;
+}
+
 export interface SearchResult {
-  users: UserPublic[];
+  users: UserPublic[]; // deprecated
+  cards: SearchCardResult[]; // визитные карточки
   contacts: SavedContact[];
   query: string;
+  expanded_tags: string[];
   total_count: number;
-  total: number;
-  suggested_tags?: string[];
 }
 
 export interface ImportResult {

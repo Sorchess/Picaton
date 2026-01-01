@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from domain.entities.user import User
+from domain.entities.business_card import BusinessCard
 from domain.entities.saved_contact import SavedContact
 from domain.repositories.user import UserRepositoryInterface
+from domain.repositories.business_card import BusinessCardRepositoryInterface
 from domain.repositories.saved_contact import SavedContactRepositoryInterface
 
 
@@ -12,6 +14,7 @@ class SearchResult:
     """Результат поиска."""
 
     users: list[User]
+    cards: list[BusinessCard]  # Визитные карточки
     contacts: list[SavedContact]
     query: str
     expanded_tags: list[str]  # Расширенные теги после ассоциативного анализа
@@ -569,6 +572,37 @@ ASSOCIATIVE_MAP: dict[str, list[str]] = {
     "junior": ["junior", "trainee", "beginner", "learning"],
     # Технологии → смежные технологии
     "python": ["django", "fastapi", "flask", "asyncio", "pandas", "numpy", "pytest"],
+    "flask": [
+        "python",
+        "бэкенд",
+        "backend",
+        "веб-разработка",
+        "api",
+        "rest",
+        "python разработчик",
+        "бэкенд разработчик",
+        "backend developer",
+    ],
+    "django": [
+        "python",
+        "бэкенд",
+        "backend",
+        "веб-разработка",
+        "orm",
+        "rest",
+        "python разработчик",
+        "бэкенд разработчик",
+    ],
+    "fastapi": [
+        "python",
+        "бэкенд",
+        "backend",
+        "api",
+        "async",
+        "rest",
+        "python разработчик",
+        "бэкенд разработчик",
+    ],
     "javascript": ["typescript", "react", "vue", "node.js", "npm", "webpack", "babel"],
     "react": ["javascript", "typescript", "redux", "next.js", "hooks", "jsx"],
     "vue": ["javascript", "typescript", "vuex", "nuxt", "composition api"],
@@ -700,16 +734,21 @@ class AssociativeSearchService:
     """
     Сервис ассоциативного поиска экспертов и контактов.
     Позволяет искать по ассоциациям, тегам и семантически.
+    Использует AI для интеллектуального расширения запросов.
     """
 
     def __init__(
         self,
         user_repository: UserRepositoryInterface,
+        card_repository: BusinessCardRepositoryInterface,
         contact_repository: SavedContactRepositoryInterface,
+        ai_search_service: "AISearchServiceInterface | None" = None,
         embedding_service: "EmbeddingServiceInterface | None" = None,
     ):
         self._user_repository = user_repository
+        self._card_repository = card_repository
         self._contact_repository = contact_repository
+        self._ai_search_service = ai_search_service
         self._embedding_service = embedding_service
 
     async def search(
@@ -727,59 +766,56 @@ class AssociativeSearchService:
             query: Поисковый запрос (теги, ассоциации, имена)
             owner_id: ID владельца для поиска в его контактах
             limit: Максимальное количество результатов
-            include_users: Включать ли пользователей в результат
+            include_users: Включать ли пользователей/карточки в результат
             include_contacts: Включать ли сохраненные контакты
 
         Returns:
-            SearchResult с найденными пользователями и контактами
+            SearchResult с найденными карточками и контактами
         """
         users = []
+        cards = []
         contacts = []
 
-        # Разбиваем запрос на теги и расширяем ассоциативно
-        raw_tags = self._extract_tags(query)
-        expanded_tags = self._expand_tags_associatively(raw_tags)
+        # Расширяем запрос с помощью AI (приоритет) или статической карты
+        if self._ai_search_service:
+            try:
+                ai_result = await self._ai_search_service.expand_query(query)
+                expanded_tags = ai_result.expanded_tags
+            except Exception:
+                # Fallback на статическое расширение
+                raw_tags = self._extract_tags(query)
+                expanded_tags = self._expand_tags_associatively(raw_tags)
+        else:
+            # Используем статическое расширение
+            raw_tags = self._extract_tags(query)
+            expanded_tags = self._expand_tags_associatively(raw_tags)
 
-        # Поиск пользователей
+        # Поиск визитных карточек (основной поиск)
         if include_users:
             # Сначала ищем по расширенным тегам в search_tags
             if expanded_tags:
-                users = await self._user_repository.search_by_tags(expanded_tags, limit)
+                cards = await self._card_repository.search_by_tags(expanded_tags, limit)
 
             # Поиск по ключевым словам в bio
-            if len(users) < limit and expanded_tags:
-                bio_results = await self._user_repository.search_by_bio_keywords(
-                    expanded_tags, limit - len(users)
+            if len(cards) < limit and expanded_tags:
+                bio_results = await self._card_repository.search_by_bio_keywords(
+                    expanded_tags, limit - len(cards)
                 )
-                existing_ids = {u.id for u in users}
-                for user in bio_results:
-                    if user.id not in existing_ids:
-                        users.append(user)
+                existing_ids = {c.id for c in cards}
+                for card in bio_results:
+                    if card.id not in existing_ids:
+                        cards.append(card)
 
             # Если мало результатов, добавляем полнотекстовый поиск
-            if len(users) < limit:
-                text_results = await self._user_repository.search_by_text(
-                    query, limit - len(users)
+            if len(cards) < limit:
+                text_results = await self._card_repository.search_by_text(
+                    query, limit - len(cards)
                 )
                 # Добавляем только уникальные
-                existing_ids = {u.id for u in users}
-                for user in text_results:
-                    if user.id not in existing_ids:
-                        users.append(user)
-
-            # Семантический поиск если есть embedding service
-            if self._embedding_service and len(users) < limit:
-                try:
-                    embedding = await self._embedding_service.get_embedding(query)
-                    semantic_results = await self._user_repository.search_by_embedding(
-                        embedding, limit - len(users)
-                    )
-                    existing_ids = {u.id for u in users}
-                    for user in semantic_results:
-                        if user.id not in existing_ids:
-                            users.append(user)
-                except Exception:
-                    pass  # Если embedding не работает, продолжаем без него
+                existing_ids = {c.id for c in cards}
+                for card in text_results:
+                    if card.id not in existing_ids:
+                        cards.append(card)
 
         # Поиск в сохраненных контактах
         if include_contacts and owner_id:
@@ -799,29 +835,39 @@ class AssociativeSearchService:
                     if contact.id not in existing_ids:
                         contacts.append(contact)
 
-        total_count = len(users) + len(contacts)
+        total_count = len(cards) + len(contacts)
 
         return SearchResult(
             users=users[:limit],
+            cards=cards[:limit],
             contacts=contacts[:limit],
             query=query,
             expanded_tags=expanded_tags,
             total_count=total_count,
         )
 
-    async def search_users_only(
+    async def search_cards_only(
         self,
         query: str,
         limit: int = 20,
-    ) -> list[User]:
-        """Поиск только среди пользователей."""
+    ) -> list[BusinessCard]:
+        """Поиск только среди визитных карточек."""
         result = await self.search(
             query=query,
             limit=limit,
             include_users=True,
             include_contacts=False,
         )
-        return result.users
+        return result.cards
+
+    async def search_users_only(
+        self,
+        query: str,
+        limit: int = 20,
+    ) -> list[User]:
+        """Поиск только среди пользователей (deprecated, используйте search_cards_only)."""
+        # Для обратной совместимости возвращаем пустой список
+        return []
 
     async def search_contacts_only(
         self,
@@ -908,6 +954,14 @@ class AssociativeSearchService:
                 suggestions.add(normalized)
 
         return sorted(suggestions)[:limit]
+
+
+class AISearchServiceInterface:
+    """Интерфейс сервиса AI-расширения поисковых запросов."""
+
+    async def expand_query(self, query: str):
+        """Расширить поисковый запрос с помощью AI."""
+        raise NotImplementedError
 
 
 class EmbeddingServiceInterface:

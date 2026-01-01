@@ -83,15 +83,17 @@ export const userApi = {
       include_contacts: options?.include_contacts ?? true,
     }),
 
-  // Сохранить контакт пользователя
+  // Сохранить контакт пользователя (или конкретную карточку)
   saveContact: (
     userId: string,
     targetUserId: string,
+    cardId?: string,
     searchTags?: string[],
     notes?: string
   ) =>
     api.post<SavedContact>(`/users/${userId}/contacts`, {
       user_id: targetUserId,
+      card_id: cardId || null,
       search_tags: searchTags ?? [],
       notes,
     }),
@@ -200,5 +202,11 @@ export const userApi = {
       `/users/${userId}/profile-contacts?contact_type=${encodeURIComponent(
         contactType
       )}&value=${encodeURIComponent(value)}`
+    ),
+
+  // Синхронизировать контакты профиля с визитной карточкой
+  syncProfileToCard: (userId: string) =>
+    api.post<{ synced_count: number; total_contacts: number }>(
+      `/users/${userId}/sync-contacts`
     ),
 };

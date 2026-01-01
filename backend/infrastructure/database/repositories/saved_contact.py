@@ -4,6 +4,8 @@ from uuid import UUID
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from domain.entities.saved_contact import SavedContact
+from domain.values.contact import Contact
+from domain.enums.contact import ContactType
 from domain.repositories.saved_contact import SavedContactRepositoryInterface
 
 
@@ -21,11 +23,23 @@ class MongoSavedContactRepository(SavedContactRepositoryInterface):
             "saved_user_id": (
                 str(contact.saved_user_id) if contact.saved_user_id else None
             ),
+            "saved_card_id": (
+                str(contact.saved_card_id) if contact.saved_card_id else None
+            ),
             "name": contact.name,
             "first_name": contact.first_name,
             "last_name": contact.last_name,
             "phone": contact.phone,
             "email": contact.email,
+            "contacts": [
+                {
+                    "type": c.type.value if hasattr(c.type, "value") else c.type,
+                    "value": c.value,
+                    "is_primary": c.is_primary,
+                    "is_visible": c.is_visible,
+                }
+                for c in (contact.contacts or [])
+            ],
             "messenger_type": contact.messenger_type,
             "messenger_value": contact.messenger_value,
             "notes": contact.notes,
@@ -37,17 +51,41 @@ class MongoSavedContactRepository(SavedContactRepositoryInterface):
 
     def _from_document(self, doc: dict) -> SavedContact:
         """Преобразовать документ MongoDB в сущность."""
+        # Парсим контакты
+        contacts = []
+        for c in doc.get("contacts", []):
+            try:
+                contact_type = (
+                    ContactType(c["type"].upper())
+                    if isinstance(c["type"], str)
+                    else c["type"]
+                )
+                contacts.append(
+                    Contact(
+                        type=contact_type,
+                        value=c["value"],
+                        is_primary=c.get("is_primary", False),
+                        is_visible=c.get("is_visible", True),
+                    )
+                )
+            except (KeyError, ValueError):
+                continue
+
         return SavedContact(
             id=UUID(doc["_id"]),
             owner_id=UUID(doc["owner_id"]),
             saved_user_id=(
                 UUID(doc["saved_user_id"]) if doc.get("saved_user_id") else None
             ),
+            saved_card_id=(
+                UUID(doc["saved_card_id"]) if doc.get("saved_card_id") else None
+            ),
             name=doc.get("name", ""),
             first_name=doc.get("first_name", ""),
             last_name=doc.get("last_name", ""),
             phone=doc.get("phone"),
             email=doc.get("email"),
+            contacts=contacts,
             messenger_type=doc.get("messenger_type"),
             messenger_value=doc.get("messenger_value"),
             notes=doc.get("notes"),

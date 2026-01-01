@@ -180,10 +180,36 @@ class SearchRequest(BaseModel):
     include_contacts: bool = True
 
 
+class SearchCardContactInfo(BaseModel):
+    """Информация о контакте в поиске."""
+
+    type: str
+    value: str
+    is_primary: bool = False
+
+
+class SearchCardResult(BaseModel):
+    """Карточка в результатах поиска."""
+
+    id: UUID
+    owner_id: UUID
+    display_name: str
+    # Резервные поля для имени владельца (если display_name пустой)
+    owner_first_name: str = ""
+    owner_last_name: str = ""
+    avatar_url: str | None = None
+    bio: str | None = None
+    ai_generated_bio: str | None = None
+    search_tags: list[str] = []
+    contacts: list[SearchCardContactInfo] = []
+    completeness: int = 0
+
+
 class SearchResult(BaseModel):
     """Результат поиска."""
 
-    users: list[UserPublicResponse]
+    users: list[UserPublicResponse]  # deprecated, оставлено для совместимости
+    cards: list[SearchCardResult] = []  # визитные карточки
     contacts: list["SavedContactResponse"]
     query: str
     expanded_tags: list[str] = Field(
@@ -222,7 +248,8 @@ class QRCodeType(BaseModel):
 class SavedContactCreate(BaseModel):
     """Сохранение контакта пользователя."""
 
-    user_id: UUID
+    user_id: UUID  # ID владельца карточки
+    card_id: UUID | None = None  # ID конкретной карточки (опционально)
     search_tags: list[str] = []
     notes: str | None = None
 
@@ -246,7 +273,9 @@ class ManualContactCreate(BaseModel):
     )
     notes: str | None = Field(default=None, max_length=1000)
     search_tags: list[str] = Field(default_factory=list)
-    name: str | None = Field(default=None, max_length=200, description="Legacy: полное имя")
+    name: str | None = Field(
+        default=None, max_length=200, description="Legacy: полное имя"
+    )
 
 
 class SavedContactUpdate(BaseModel):
@@ -271,11 +300,13 @@ class SavedContactResponse(BaseModel):
     id: UUID
     owner_id: UUID
     saved_user_id: UUID | None
+    saved_card_id: UUID | None = None  # ID конкретной карточки
     name: str  # Legacy: full_name
     first_name: str
     last_name: str
     phone: str | None
     email: str | None
+    contacts: list[ContactInfo] = []  # Контакты для связи
     messenger_type: str | None
     messenger_value: str | None
     notes: str | None
@@ -317,7 +348,9 @@ class HashedContactItem(BaseModel):
     """Хешированный контакт для синхронизации."""
 
     name: str = Field(max_length=200)
-    hash: str = Field(min_length=64, max_length=64, description="SHA-256 hash номера телефона")
+    hash: str = Field(
+        min_length=64, max_length=64, description="SHA-256 hash номера телефона"
+    )
 
 
 class ContactSyncRequest(BaseModel):

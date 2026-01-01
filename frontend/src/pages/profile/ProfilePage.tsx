@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import type { User, ContactInfo } from "@/entities/user";
 import { getFullName } from "@/entities/user";
 import { userApi } from "@/entities/user";
+import type { BusinessCard } from "@/entities/business-card";
+import { businessCardApi } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
 import { AvatarUpload } from "@/features/avatar-upload";
+import { CardSelector } from "@/features/card-selector";
 import { Loader, TagInput } from "@/shared";
 import "./ProfilePage.scss";
 
@@ -71,7 +74,10 @@ export function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Form state
+  // Business card state
+  const [selectedCard, setSelectedCard] = useState<BusinessCard | null>(null);
+
+  // Form state - теперь для карточки
   const [bio, setBio] = useState("");
   const [isSavingBio, setIsSavingBio] = useState(false);
 
@@ -92,30 +98,30 @@ export function ProfilePage() {
   const [newContactValue, setNewContactValue] = useState("");
   const [isSavingContact, setIsSavingContact] = useState(false);
 
-  // Автоматическое определение текущего шага
+  // Автоматическое определение текущего шага (теперь на основе карточки)
   const currentStep = useMemo((): ProfileStep => {
-    if (!user) return 1;
+    if (!selectedCard) return 1;
     // Шаг 1: Нужно заполнить bio
     if (!bio.trim() || bio.length < 20) return 1;
     // Шаг 2: Нужно сгенерировать презентацию
-    if (!user.ai_generated_bio) return 2;
+    if (!selectedCard.ai_generated_bio) return 2;
     // Шаг 3: Нужно добавить теги
-    if (!user.tags || user.tags.length === 0) return 3;
+    if (!selectedCard.tags || selectedCard.tags.length === 0) return 3;
     // Всё готово
     return 3;
-  }, [user, bio]);
+  }, [selectedCard, bio]);
 
-  // Проверка завершённости профиля
+  // Проверка завершённости карточки
   const profileComplete = useMemo(() => {
-    if (!user) return false;
+    if (!selectedCard) return false;
     return (
       !!bio.trim() &&
       bio.length >= 20 &&
-      !!user.ai_generated_bio &&
-      user.tags &&
-      user.tags.length > 0
+      !!selectedCard.ai_generated_bio &&
+      selectedCard.tags &&
+      selectedCard.tags.length > 0
     );
-  }, [user, bio]);
+  }, [selectedCard, bio]);
 
   const loadUser = useCallback(async () => {
     if (!authUser?.id) return;
@@ -124,8 +130,6 @@ export function ProfilePage() {
     try {
       const userData = await userApi.getFull(authUser.id);
       setUser(userData);
-      setBio(userData.bio || "");
-      setProfileTags(userData.search_tags || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка загрузки профиля");
     } finally {
@@ -137,33 +141,48 @@ export function ProfilePage() {
     loadUser();
   }, [loadUser]);
 
-  // Автоматическая загрузка AI-подсказок для тегов (только один раз)
+  // Обработка выбора карточки
+  const handleCardSelect = useCallback((card: BusinessCard) => {
+    setSelectedCard(card);
+    setBio(card.bio || "");
+    setProfileTags(card.search_tags || []);
+    setHasFetchedSuggestions(false); // Сбрасываем для новой карточки
+    setAiTagSuggestions([]);
+  }, []);
+
+  // Автоматическая загрузка AI-подсказок для тегов (только один раз на карточку)
   useEffect(() => {
     if (
-      user &&
+      selectedCard &&
       bio.trim().length >= 20 &&
       !hasFetchedSuggestions &&
       !isGeneratingTags
     ) {
-      setHasFetchedSuggestions(true); // Устанавливаем флаг ПЕРЕД запросом
-      handleSuggestTags();
+      setHasFetchedSuggestions(true);
+      handleSuggestTagsForCard();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, bio, hasFetchedSuggestions]);
+  }, [selectedCard, bio, hasFetchedSuggestions]);
 
-  // Сохранение био
+  // Сохранение био карточки
   const handleSaveBio = async () => {
-    if (!user) return;
+    if (!user || !selectedCard) return;
     setIsSavingBio(true);
     try {
-      const updated = await userApi.update(user.id, { bio });
-      setUser(updated);
+      const updated = await businessCardApi.update(selectedCard.id, user.id, {
+        bio,
+      });
+      setSelectedCard(updated);
 
       // Обновляем предложения тегов после изменения био
       if (bio.trim().length >= 20) {
         setIsGeneratingTags(true);
         try {
-          const result = await userApi.suggestTags(user.id);
+          // Используем cards API для suggestTags
+          const result = await businessCardApi.suggestTags(
+            selectedCard.id,
+            user.id
+          );
           setAiTagSuggestions(
             result.suggestions.map((t: SuggestedTag) => t.name)
           );
@@ -180,9 +199,9 @@ export function ProfilePage() {
     }
   };
 
-  // Генерация AI презентации
+  // Генерация AI презентации для карточки
   const handleGeneratePresentation = async () => {
-    if (!user || !bio.trim()) {
+    if (!user || !selectedCard || !bio.trim()) {
       setError("Сначала заполните информацию о себе");
       return;
     }
@@ -190,11 +209,14 @@ export function ProfilePage() {
     setError(null);
     try {
       // Сначала сохраняем био если изменилось
-      if (bio !== user.bio) {
-        await userApi.update(user.id, { bio });
+      if (bio !== selectedCard.bio) {
+        await businessCardApi.update(selectedCard.id, user.id, { bio });
       }
-      const result = await userApi.generateBio(user.id);
-      setUser({ ...user, bio, ai_generated_bio: result.bio });
+      const result = await businessCardApi.generateBio(
+        selectedCard.id,
+        user.id
+      );
+      setSelectedCard({ ...selectedCard, bio, ai_generated_bio: result.bio });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка генерации");
     } finally {
@@ -202,9 +224,9 @@ export function ProfilePage() {
     }
   };
 
-  // Получение предложений тегов от AI
-  const handleSuggestTags = async () => {
-    if (!user || !bio.trim()) {
+  // Получение предложений тегов от AI для карточки
+  const handleSuggestTagsForCard = async () => {
+    if (!user || !selectedCard || !bio.trim()) {
       setError("Сначала заполните информацию о себе");
       return;
     }
@@ -212,12 +234,15 @@ export function ProfilePage() {
     setError(null);
     try {
       // Сначала сохраняем био если изменилось
-      if (bio !== user.bio) {
-        await userApi.update(user.id, { bio });
-        setUser({ ...user, bio });
+      if (bio !== selectedCard.bio) {
+        await businessCardApi.update(selectedCard.id, user.id, { bio });
+        setSelectedCard({ ...selectedCard, bio });
       }
-      const result = await userApi.suggestTags(user.id);
-      // Преобразуем в простой массив строк для TagInput
+      // Используем cards API для suggest tags
+      const result = await businessCardApi.suggestTags(
+        selectedCard.id,
+        user.id
+      );
       setAiTagSuggestions(result.suggestions.map((t: SuggestedTag) => t.name));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка генерации тегов");
@@ -226,17 +251,21 @@ export function ProfilePage() {
     }
   };
 
-  // Применение тегов (автосохранение)
+  // Применение тегов карточки (автосохранение)
   const handleTagsChange = useCallback(
     async (newTags: string[]) => {
       setProfileTags(newTags);
-      if (!user) return;
+      if (!user || !selectedCard) return;
 
       // Автоматически сохраняем теги (включая пустой массив)
       setIsApplyingTags(true);
       try {
-        const updated = await userApi.updateSearchTags(user.id, newTags);
-        setUser(updated);
+        const updated = await businessCardApi.updateSearchTags(
+          selectedCard.id,
+          user.id,
+          newTags
+        );
+        setSelectedCard(updated);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Ошибка сохранения тегов"
@@ -245,7 +274,7 @@ export function ProfilePage() {
         setIsApplyingTags(false);
       }
     },
-    [user]
+    [user, selectedCard]
   );
 
   // Загрузка аватарки
@@ -281,19 +310,23 @@ export function ProfilePage() {
     }
   };
 
-  // ============ Contact Management ============
+  // ============ Contact Management (для карточки) ============
 
   const handleAddContact = async () => {
-    if (!user || !newContactValue.trim()) return;
+    if (!user || !selectedCard || !newContactValue.trim()) return;
     setIsSavingContact(true);
     setError(null);
     try {
-      const updated = await userApi.addProfileContact(user.id, {
-        type: newContactType,
-        value: newContactValue.trim(),
-        is_visible: true,
-      });
-      setUser(updated);
+      const updated = await businessCardApi.addContact(
+        selectedCard.id,
+        user.id,
+        {
+          type: newContactType,
+          value: newContactValue.trim(),
+          is_visible: true,
+        }
+      );
+      setSelectedCard(updated);
       setNewContactValue("");
       setShowContactForm(false);
     } catch (err) {
@@ -306,15 +339,16 @@ export function ProfilePage() {
   };
 
   const handleDeleteContact = async (contact: ContactInfo) => {
-    if (!user) return;
+    if (!user || !selectedCard) return;
     if (!confirm(`Удалить контакт ${contact.value}?`)) return;
     try {
-      const updated = await userApi.deleteProfileContact(
+      const updated = await businessCardApi.deleteContact(
+        selectedCard.id,
         user.id,
         contact.type,
         contact.value
       );
-      setUser(updated);
+      setSelectedCard(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка удаления контакта");
     }
@@ -410,9 +444,28 @@ export function ProfilePage() {
         </button>
       </header>
 
+      {/* Выбор визитной карточки */}
+      <CardSelector
+        ownerId={user.id}
+        selectedCardId={selectedCard?.id || null}
+        onCardSelect={handleCardSelect}
+      />
+
       {/* Основной контент */}
       <div className="profile__content">
-        {/* Прогресс-бар профиля */}
+        {/* Информация о текущей карточке */}
+        {selectedCard && (
+          <div className="profile__card-info">
+            <span className="profile__card-title">
+              📇 {selectedCard.title}
+              {selectedCard.is_primary && (
+                <span className="profile__card-primary-badge"> (основная)</span>
+              )}
+            </span>
+          </div>
+        )}
+
+        {/* Прогресс-бар карточки */}
         <div className="profile__progress">
           <div className="profile__progress-bar">
             <div
@@ -430,7 +483,7 @@ export function ProfilePage() {
           </div>
           <span className="profile__progress-text">
             {profileComplete
-              ? "✅ Профиль заполнен!"
+              ? "✅ Карточка заполнена!"
               : `Шаг ${currentStep} из 3`}
           </span>
         </div>
@@ -482,14 +535,14 @@ export function ProfilePage() {
             <button
               className="profile__btn profile__btn--secondary"
               onClick={handleSaveBio}
-              disabled={isSavingBio || bio === user.bio}
+              disabled={isSavingBio || bio === (selectedCard?.bio || "")}
             >
               {isSavingBio ? "Сохранение..." : "Сохранить"}
             </button>
           </div>
 
           {/* Подсказка для перехода к следующему шагу */}
-          {bio.length >= 20 && !user.ai_generated_bio && (
+          {bio.length >= 20 && !selectedCard?.ai_generated_bio && (
             <div className="profile__next-hint">
               <span className="profile__arrow">↓</span>
               Отлично! Теперь создайте AI презентацию
@@ -501,15 +554,15 @@ export function ProfilePage() {
         <section
           className={`profile__card profile__card--ai ${
             currentStep === 2 ? "profile__card--active" : ""
-          } ${user.ai_generated_bio ? "profile__card--done" : ""}`}
+          } ${selectedCard?.ai_generated_bio ? "profile__card--done" : ""}`}
         >
           <div className="profile__card-header">
             <span
               className={`profile__step ${
-                user.ai_generated_bio ? "profile__step--done" : ""
+                selectedCard?.ai_generated_bio ? "profile__step--done" : ""
               }`}
             >
-              {user.ai_generated_bio ? "✓" : "2"}
+              {selectedCard?.ai_generated_bio ? "✓" : "2"}
             </span>
             <div>
               <h2>Самопрезентация</h2>
@@ -523,9 +576,9 @@ export function ProfilePage() {
             </div>
           )}
 
-          {user.ai_generated_bio ? (
+          {selectedCard?.ai_generated_bio ? (
             <div className="profile__presentation">
-              <p>{user.ai_generated_bio}</p>
+              <p>{selectedCard.ai_generated_bio}</p>
             </div>
           ) : bio.length < 20 ? (
             <div className="profile__presentation profile__presentation--empty profile__presentation--locked">
@@ -553,7 +606,7 @@ export function ProfilePage() {
                 <span className="profile__spinner" />
                 Генерация...
               </>
-            ) : user.ai_generated_bio ? (
+            ) : selectedCard?.ai_generated_bio ? (
               "🔄 Перегенерировать"
             ) : (
               "✨ Создать самопрезентацию"
@@ -561,27 +614,34 @@ export function ProfilePage() {
           </button>
 
           {/* Подсказка для перехода к следующему шагу */}
-          {user.ai_generated_bio && (!user.tags || user.tags.length === 0) && (
-            <div className="profile__next-hint">
-              <span className="profile__arrow">↓</span>
-              Супер! Осталось добавить теги навыков
-            </div>
-          )}
+          {selectedCard?.ai_generated_bio &&
+            (!selectedCard.tags || selectedCard.tags.length === 0) && (
+              <div className="profile__next-hint">
+                <span className="profile__arrow">↓</span>
+                Супер! Осталось добавить теги навыков
+              </div>
+            )}
         </section>
 
         {/* Шаг 3: AI Теги и навыки */}
         <section
           className={`profile__card profile__card--tags ${
             currentStep === 3 ? "profile__card--active" : ""
-          } ${user.tags && user.tags.length > 0 ? "profile__card--done" : ""}`}
+          } ${
+            selectedCard?.tags && selectedCard.tags.length > 0
+              ? "profile__card--done"
+              : ""
+          }`}
         >
           <div className="profile__card-header">
             <span
               className={`profile__step ${
-                user.tags && user.tags.length > 0 ? "profile__step--done" : ""
+                selectedCard?.tags && selectedCard.tags.length > 0
+                  ? "profile__step--done"
+                  : ""
               }`}
             >
-              {user.tags && user.tags.length > 0 ? "✓" : "3"}
+              {selectedCard?.tags && selectedCard.tags.length > 0 ? "✓" : "3"}
             </span>
             <div>
               <h2>Навыки и теги</h2>
@@ -617,20 +677,22 @@ export function ProfilePage() {
           {/* Поздравление при завершении */}
           {profileComplete && (
             <div className="profile__complete-message">
-              🎉 Отлично! Ваш профиль полностью заполнен и готов к работе!
+              🎉 Отлично! Карточка полностью заполнена и готова к работе!
             </div>
           )}
         </section>
 
-        {/* Шаг 4: Контакты для связи */}
+        {/* Шаг 4: Контакты для связи (карточки) */}
         <section className="profile__card profile__card--contacts">
           <div className="profile__card-header">
             <span
               className={`profile__step ${
-                user.contacts?.length > 0 ? "profile__step--done" : ""
+                (selectedCard?.contacts?.length ?? 0) > 0
+                  ? "profile__step--done"
+                  : ""
               }`}
             >
-              {user.contacts?.length > 0 ? "✓" : "4"}
+              {(selectedCard?.contacts?.length ?? 0) > 0 ? "✓" : "4"}
             </span>
             <div>
               <h2>Контакты для связи</h2>
@@ -639,9 +701,9 @@ export function ProfilePage() {
           </div>
 
           {/* Список текущих контактов */}
-          {user.contacts && user.contacts.length > 0 && (
+          {selectedCard?.contacts && selectedCard.contacts.length > 0 && (
             <div className="profile__contacts-list">
-              {user.contacts.map((contact, idx) => (
+              {selectedCard.contacts.map((contact, idx) => (
                 <div key={idx} className="profile__contact-item">
                   <span
                     className={`profile__contact-icon profile__contact-icon--${contact.type.toLowerCase()}`}
@@ -654,7 +716,7 @@ export function ProfilePage() {
                   </span>
                   <button
                     className="profile__contact-delete"
-                    onClick={() => handleDeleteContact(contact)}
+                    onClick={() => handleDeleteContact(contact as ContactInfo)}
                     title="Удалить"
                   >
                     ✕

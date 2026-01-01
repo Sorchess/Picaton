@@ -531,6 +531,29 @@ export function ContactsPage() {
                     </span>
                   </div>
                 )}
+              {/* Контакты для связи из визитной карточки */}
+              {selectedContact.contacts &&
+                selectedContact.contacts.length > 0 && (
+                  <div className="contacts-page__modal-contacts">
+                    <h4>Контакты для связи</h4>
+                    {selectedContact.contacts.map((contact, idx) => (
+                      <div key={idx} className="contacts-page__modal-row">
+                        <span className="contacts-page__messenger-icon">
+                          {contact.type.toLowerCase() === "telegram" && "✈️"}
+                          {contact.type.toLowerCase() === "whatsapp" && "💬"}
+                          {contact.type.toLowerCase() === "email" && "📧"}
+                          {contact.type.toLowerCase() === "phone" && "📞"}
+                          {contact.type.toLowerCase() === "vk" && "🔷"}
+                          {contact.type.toLowerCase() === "linkedin" && "💼"}
+                          {contact.type.toLowerCase() === "github" && "🐙"}
+                        </span>
+                        <span>
+                          {contact.type}: {contact.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
 
             {selectedContact.notes && (

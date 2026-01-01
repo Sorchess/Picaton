@@ -67,6 +67,43 @@ class GroqBioGenerator(AIBioGeneratorInterface):
         facts_text = "; ".join(facts)
         return await self._generate(facts_text, name)
 
+    async def generate_from_text(
+        self,
+        bio_text: str,
+        name: str = "",
+        random_facts: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> GeneratedBio:
+        """
+        Generate bio from text data (for business cards).
+
+        Args:
+            bio_text: User's bio description
+            name: Display name
+            random_facts: Optional list of facts
+            tags: Optional list of skill tags
+
+        Returns:
+            GeneratedBio with generated presentation
+        """
+        # Combine all available info
+        parts = []
+        if bio_text:
+            parts.append(bio_text)
+        if random_facts:
+            parts.append(f"Факты: {'; '.join(random_facts)}")
+        if tags:
+            parts.append(f"Навыки: {', '.join(tags)}")
+
+        if not parts:
+            return GeneratedBio(
+                bio=self._default_bio(name),
+                tokens_used=0,
+            )
+
+        combined_text = " ".join(parts)
+        return await self._generate(combined_text, name)
+
     async def _generate(self, text: str, name: str) -> GeneratedBio:
         """Internal method to generate bio using LLM."""
         user_prompt = (

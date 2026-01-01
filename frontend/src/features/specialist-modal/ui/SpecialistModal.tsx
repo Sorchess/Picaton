@@ -8,6 +8,7 @@ interface SpecialistModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveContact?: (user: UserPublic) => void;
+  onDeleteContact?: (user: UserPublic) => void;
   isSaved?: boolean;
 }
 
@@ -98,6 +99,7 @@ export function SpecialistModal({
   isOpen,
   onClose,
   onSaveContact,
+  onDeleteContact,
   isSaved = false,
 }: SpecialistModalProps) {
   if (!user) return null;
@@ -183,13 +185,14 @@ export function SpecialistModal({
       )}
 
       <div className="specialist-modal__actions">
-        {onSaveContact && (
-          <Button
-            variant={isSaved ? "secondary" : "primary"}
-            onClick={() => onSaveContact(user)}
-            disabled={isSaved}
-          >
-            {isSaved ? "Уже в контактах" : "Сохранить в контакты"}
+        {onSaveContact && !isSaved && (
+          <Button variant="primary" onClick={() => onSaveContact(user)}>
+            Сохранить в контакты
+          </Button>
+        )}
+        {isSaved && onDeleteContact && (
+          <Button variant="danger" onClick={() => onDeleteContact(user)}>
+            Удалить из контактов
           </Button>
         )}
         <Button variant="ghost" onClick={onClose}>

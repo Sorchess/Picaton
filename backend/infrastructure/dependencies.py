@@ -7,9 +7,14 @@ from infrastructure.database.client import mongodb_client, MongoDBClient
 from infrastructure.database.repositories import (
     MongoUserRepository,
     MongoSavedContactRepository,
+    MongoBusinessCardRepository,
 )
 from infrastructure.database.repositories.pending_hash import MongoPendingHashRepository
-from domain.repositories import UserRepositoryInterface, SavedContactRepositoryInterface
+from domain.repositories import (
+    UserRepositoryInterface,
+    SavedContactRepositoryInterface,
+    BusinessCardRepositoryInterface,
+)
 from domain.repositories.pending_hash import PendingHashRepositoryInterface
 from application.services import (
     UserService,
@@ -25,8 +30,12 @@ from application.services import (
     AuthService,
     MagicLinkService,
 )
+from application.services.business_card import BusinessCardService
 from application.services.groq_bio import GroqBioGenerator
 from application.services.groq_tags import GroqTagsGenerator
+from application.services.ai_search import AISearchService
+from application.services.card_title import CardTitleGenerator
+from infrastructure.llm.groq_client import GroqClient
 from infrastructure.storage import CloudinaryService
 from infrastructure.email import SmtpEmailBackend
 from settings.config import settings
@@ -83,6 +92,18 @@ PendingHashRepository = Annotated[
 ]
 
 
+def get_business_card_repository(
+    db: Database,
+) -> BusinessCardRepositoryInterface:
+    """Получить репозиторий визитных карточек."""
+    return MongoBusinessCardRepository(db["business_cards"])
+
+
+BusinessCardRepository = Annotated[
+    BusinessCardRepositoryInterface, Depends(get_business_card_repository)
+]
+
+
 # ==================== Сервисы ====================
 
 
@@ -110,6 +131,23 @@ def get_ai_tags_service() -> AITagsGeneratorService:
     return AITagsGeneratorService(MockAITagsGenerator())
 
 
+def get_groq_bio_service() -> GroqBioGenerator:
+    """
+    Получить Groq сервис генерации биографий.
+
+    Используется для генерации AI-презентаций для карточек.
+    """
+    return GroqBioGenerator()
+
+
+def get_business_card_service(
+    card_repo: BusinessCardRepository,
+    user_repo: UserRepository,
+) -> BusinessCardService:
+    """Получить сервис визитных карточек."""
+    return BusinessCardService(card_repo, user_repo)
+
+
 def get_groq_tags_service() -> GroqTagsGenerator:
     """
     Получить Groq сервис генерации тегов для контактов.
@@ -117,6 +155,16 @@ def get_groq_tags_service() -> GroqTagsGenerator:
     Используется для генерации тегов из заметок о контактах.
     """
     return GroqTagsGenerator()
+
+
+def get_card_title_generator() -> CardTitleGenerator:
+    """
+    Получить генератор названий для визитных карточек.
+
+    Используется для автоматической генерации названий карточек
+    на основе информации о пользователе.
+    """
+    return CardTitleGenerator()
 
 
 def get_user_service(
@@ -131,17 +179,26 @@ def get_user_service(
 def get_contact_service(
     contact_repo: ContactRepository,
     user_repo: UserRepository,
+    card_repo: BusinessCardRepository,
 ) -> SavedContactService:
     """Получить сервис сохраненных контактов."""
-    return SavedContactService(contact_repo, user_repo)
+    return SavedContactService(contact_repo, user_repo, card_repo)
+
+
+def get_ai_search_service() -> AISearchService:
+    """Получить AI-сервис для расширения поисковых запросов."""
+    groq_client = GroqClient()
+    return AISearchService(groq_client)
 
 
 def get_search_service(
     user_repo: UserRepository,
+    card_repo: BusinessCardRepository,
     contact_repo: ContactRepository,
+    ai_search: AISearchService = Depends(get_ai_search_service),
 ) -> AssociativeSearchService:
-    """Получить сервис ассоциативного поиска."""
-    return AssociativeSearchService(user_repo, contact_repo)
+    """Получить сервис ассоциативного поиска с AI-расширением."""
+    return AssociativeSearchService(user_repo, card_repo, contact_repo, ai_search)
 
 
 def get_qrcode_service() -> QRCodeService:

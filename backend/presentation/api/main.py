@@ -7,6 +7,7 @@ from infrastructure.database.client import mongodb_client
 from infrastructure.broker import broker
 from presentation.api.users.handlers import router as user_router
 from presentation.api.auth.handlers import router as auth_router
+from presentation.api.cards.handlers import router as cards_router
 
 origins = [
     "http://localhost",
@@ -56,6 +57,7 @@ def create_app() -> FastAPI:
     # Подключение роутеров
     app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
     app.include_router(user_router, prefix="/api/users", tags=["Users"])
+    app.include_router(cards_router, prefix="/api/cards", tags=["Business Cards"])
 
     return app
 

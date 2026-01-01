@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import UUID
 
 from domain.entities.base import Entity
+from domain.values.contact import Contact
 
 
 @dataclass
@@ -19,6 +20,9 @@ class SavedContact(Entity):
     # Чей контакт сохранен (может быть None если контакт добавлен вручную)
     saved_user_id: UUID | None = field(default=None)
 
+    # Какая именно карточка сохранена (для отображения конкретной визитки)
+    saved_card_id: UUID | None = field(default=None)
+
     # Данные контакта (для ручного ввода или импорта)
     name: str = field(default="")  # Полное имя (legacy, для обратной совместимости)
     first_name: str = field(default="")  # Имя
@@ -27,7 +31,10 @@ class SavedContact(Entity):
     email: str | None = field(default=None)
     notes: str | None = field(default=None)
 
-    # Мессенджер для связи
+    # Контакты для связи (telegram, whatsapp и т.д.)
+    contacts: list[Contact] = field(default_factory=list)
+
+    # Мессенджер для связи (legacy, теперь используется contacts)
     messenger_type: str | None = field(default=None)  # telegram, whatsapp, vk
     messenger_value: str | None = field(default=None)  # @username или номер
 

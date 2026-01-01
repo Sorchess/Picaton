@@ -19,6 +19,7 @@ from application.services.magic_link import (
     MagicLinkExpiredError,
     MagicLinkInvalidError,
 )
+from application.services.business_card import BusinessCardService
 
 __all__ = [
     "UserService",
@@ -39,4 +40,5 @@ __all__ = [
     "MagicLinkError",
     "MagicLinkExpiredError",
     "MagicLinkInvalidError",
+    "BusinessCardService",
 ]

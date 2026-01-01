@@ -11,6 +11,8 @@ from presentation.api.users.schemas import (
     SearchTagsUpdate,
     SearchRequest,
     SearchResult,
+    SearchCardResult,
+    SearchCardContactInfo,
     SearchSuggestionsResponse,
     QRCodeResponse,
     QRCodeType,
@@ -46,6 +48,8 @@ from infrastructure.dependencies import (
     get_ai_tags_service,
     get_groq_tags_service,
     get_cloudinary_service,
+    get_business_card_service,
+    get_card_title_generator,
 )
 from application.services.contact_sync import HashedContact
 from infrastructure.storage import CloudinaryService
@@ -122,8 +126,19 @@ async def update_user_profile(
     user_id: UUID,
     data: UserUpdate,
     user_service=Depends(get_user_service),
+    card_service=Depends(get_business_card_service),
+    title_generator=Depends(get_card_title_generator),
 ):
-    """Обновить профиль пользователя (ФИО, фото, самопрезентация)."""
+    """Обновить профиль пользователя (ФИО, фото, самопрезентация).
+
+    При первом обновлении профиля (онбординг) автоматически создаёт
+    визитную карточку с AI-сгенерированным названием.
+    """
+    # Проверяем, есть ли у пользователя карточки (до обновления)
+    existing_cards = await card_service.get_user_cards(user_id)
+    is_onboarding = len(existing_cards) == 0
+
+    # Обновляем профиль
     user = await user_service.update_profile(
         user_id=user_id,
         first_name=data.first_name,
@@ -131,6 +146,28 @@ async def update_user_profile(
         avatar_url=data.avatar_url,
         bio=data.bio,
     )
+
+    # Если это онбординг - создаём первую карточку автоматически
+    if is_onboarding:
+        # Генерируем название карточки на основе информации пользователя
+        card_title = await title_generator.generate_title(
+            first_name=user.first_name,
+            last_name=user.last_name,
+            bio=user.bio,
+            location=user.location,
+        )
+
+        # Создаём основную карточку
+        await card_service.create_card(
+            owner_id=user_id,
+            title=card_title,
+            display_name=f"{user.first_name} {user.last_name}".strip(),
+            is_primary=True,
+            bio=user.bio,
+            avatar_url=user.avatar_url,
+            contacts=user.contacts,
+        )
+
     return _user_to_response(user)
 
 
@@ -151,9 +188,11 @@ async def add_user_contact(
     user_id: UUID,
     data: UserContactAdd,
     user_service=Depends(get_user_service),
+    card_service=Depends(get_business_card_service),
 ):
     """
     Добавить контакт в профиль пользователя.
+    Контакт также автоматически добавляется в основную визитную карточку.
 
     Доступные типы: telegram, whatsapp, vk, messenger, email, phone,
     linkedin, github, instagram, tiktok, slack
@@ -166,6 +205,23 @@ async def add_user_contact(
             is_primary=data.is_primary,
             is_visible=data.is_visible,
         )
+
+        # Синхронизируем с основной визитной карточкой
+        primary_card = await card_service.get_primary_card(user_id)
+        if primary_card:
+            try:
+                await card_service.add_contact(
+                    card_id=primary_card.id,
+                    owner_id=user_id,
+                    contact_type=data.type,
+                    value=data.value,
+                    is_primary=data.is_primary,
+                    is_visible=data.is_visible,
+                )
+            except Exception:
+                # Игнорируем ошибки синхронизации (например, если контакт уже есть)
+                pass
+
         return _user_to_response(user)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -198,17 +254,73 @@ async def delete_user_contact(
     contact_type: str = Query(..., description="Тип контакта"),
     value: str = Query(..., description="Значение контакта"),
     user_service=Depends(get_user_service),
+    card_service=Depends(get_business_card_service),
 ):
-    """Удалить контакт из профиля."""
+    """Удалить контакт из профиля. Также удаляет из основной визитной карточки."""
     try:
         user = await user_service.remove_contact(
             user_id=user_id,
             contact_type=contact_type,
             value=value,
         )
+
+        # Синхронизируем удаление с основной визитной карточкой
+        primary_card = await card_service.get_primary_card(user_id)
+        if primary_card:
+            try:
+                await card_service.remove_contact(
+                    card_id=primary_card.id,
+                    owner_id=user_id,
+                    contact_type=contact_type,
+                    value=value,
+                )
+            except Exception:
+                # Игнорируем ошибки синхронизации
+                pass
+
         return _user_to_response(user)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{user_id}/sync-contacts")
+async def sync_profile_to_primary_card(
+    user_id: UUID,
+    user_service=Depends(get_user_service),
+    card_service=Depends(get_business_card_service),
+):
+    """
+    Синхронизировать контакты из профиля пользователя в основную визитную карточку.
+
+    Полезно для миграции контактов у существующих пользователей.
+    """
+    user = await user_service.get_user(user_id)
+    primary_card = await card_service.get_primary_card(user_id)
+
+    if not primary_card:
+        raise HTTPException(status_code=404, detail="Primary card not found")
+
+    synced_count = 0
+    for contact in user.contacts:
+        try:
+            await card_service.add_contact(
+                card_id=primary_card.id,
+                owner_id=user_id,
+                contact_type=(
+                    contact.type.value
+                    if hasattr(contact.type, "value")
+                    else contact.type
+                ),
+                value=contact.value,
+                is_primary=contact.is_primary,
+                is_visible=contact.is_visible,
+            )
+            synced_count += 1
+        except Exception:
+            # Контакт уже существует или другая ошибка
+            pass
+
+    return {"synced_count": synced_count, "total_contacts": len(user.contacts)}
 
 
 # ============ Avatar Upload ============
@@ -408,6 +520,7 @@ async def search_experts(
     data: SearchRequest,
     owner_id: UUID | None = None,
     search_service=Depends(get_search_service),
+    user_service=Depends(get_user_service),
 ):
     """
     Ассоциативный поиск экспертов и контактов.
@@ -427,8 +540,43 @@ async def search_experts(
             include_contacts=data.include_contacts,
         )
 
+        # Получаем данные владельцев карточек для имён
+        owner_ids = list(set(c.owner_id for c in result.cards))
+        owners_map = {}
+        for oid in owner_ids:
+            try:
+                user = await user_service.get_user(oid)
+                owners_map[oid] = user
+            except Exception:
+                pass
+
+        def build_card_result(c):
+            owner = owners_map.get(c.owner_id)
+            return SearchCardResult(
+                id=c.id,
+                owner_id=c.owner_id,
+                display_name=c.display_name,
+                owner_first_name=owner.first_name if owner else "",
+                owner_last_name=owner.last_name if owner else "",
+                avatar_url=c.avatar_url or (owner.avatar_url if owner else None),
+                bio=c.bio,
+                ai_generated_bio=c.ai_generated_bio,
+                search_tags=c.search_tags,
+                contacts=[
+                    SearchCardContactInfo(
+                        type=contact.type.value,
+                        value=contact.value,
+                        is_primary=contact.is_primary,
+                    )
+                    for contact in c.contacts
+                    if contact.is_visible
+                ],
+                completeness=c.completeness,
+            )
+
         return SearchResult(
             users=[_user_to_public_response(u) for u in result.users],
+            cards=[build_card_result(c) for c in result.cards],
             contacts=[_contact_to_response(c) for c in result.contacts],
             query=result.query,
             expanded_tags=result.expanded_tags,
@@ -468,10 +616,11 @@ async def save_contact(
     data: SavedContactCreate,
     contact_service=Depends(get_contact_service),
 ):
-    """Сохранить контакт другого пользователя."""
+    """Сохранить контакт другого пользователя или его визитную карточку."""
     contact = await contact_service.save_user_contact(
         owner_id=user_id,
         user_id=data.user_id,
+        card_id=data.card_id,
         search_tags=data.search_tags,
         notes=data.notes,
     )
@@ -710,11 +859,20 @@ def _contact_to_response(contact) -> SavedContactResponse:
         id=contact.id,
         owner_id=contact.owner_id,
         saved_user_id=contact.saved_user_id,
+        saved_card_id=contact.saved_card_id,
         name=contact.full_name,  # Legacy: использует full_name property
         first_name=contact.first_name,
         last_name=contact.last_name,
         phone=contact.phone,
         email=contact.email,
+        contacts=[
+            ContactInfo(
+                type=c.type.value if hasattr(c.type, "value") else c.type,
+                value=c.value,
+                is_primary=c.is_primary,
+            )
+            for c in (contact.contacts or [])
+        ],
         messenger_type=contact.messenger_type,
         messenger_value=contact.messenger_value,
         notes=contact.notes,

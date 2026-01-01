@@ -8,6 +8,18 @@ class DomainException(Exception):
         super().__init__(self.detail, *args)
 
 
+class NotFoundError(DomainException):
+    """Ресурс не найден."""
+
+    detail = "Resource not found"
+    status_code = 404
+
+    def __init__(self, resource: str = ""):
+        if resource:
+            self.detail = f"Resource not found: {resource}"
+        super().__init__()
+
+
 class ConfigurationError(DomainException):
     """Ошибка конфигурации сервиса."""
 

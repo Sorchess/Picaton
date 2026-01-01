@@ -117,6 +117,29 @@
     gap: 24px;
   }
 
+  // Card info (выбранная карточка)
+  &__card-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--color-primary-bg);
+    border: 1px solid var(--color-primary-border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+
+  &__card-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-primary);
+  }
+
+  &__card-primary-badge {
+    font-size: 0.8rem;
+    color: var(--color-warning);
+  }
+
   // Progress bar
   &__progress {
     display: flex;
