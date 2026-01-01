@@ -467,3 +467,22 @@ async def suggest_tags_for_card(
         raise HTTPException(status_code=404, detail="Card not found")
     except CardAccessDeniedError:
         raise HTTPException(status_code=403, detail="Access denied")
+
+
+# ============ Clear Content ============
+
+
+@router.post("/{card_id}/clear", response_model=BusinessCardResponse)
+async def clear_card_content(
+    card_id: UUID,
+    owner_id: UUID = Query(..., description="ID владельца"),
+    card_service: BusinessCardService = Depends(get_business_card_service),
+):
+    """Очистить всё содержимое карточки (bio, AI bio, теги, контакты)."""
+    try:
+        card = await card_service.clear_content(card_id, owner_id)
+        return _card_to_response(card)
+    except BusinessCardNotFoundError:
+        raise HTTPException(status_code=404, detail="Card not found")
+    except CardAccessDeniedError:
+        raise HTTPException(status_code=403, detail="Access denied")

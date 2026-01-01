@@ -332,3 +332,17 @@ class BusinessCardService:
 
         card.set_ai_generated_bio(bio)
         return await self._card_repository.update(card)
+
+    async def clear_content(
+        self,
+        card_id: UUID,
+        owner_id: UUID,
+    ) -> BusinessCard:
+        """Очистить всё содержимое карточки."""
+        card = await self.get_card(card_id)
+
+        if card.owner_id != owner_id:
+            raise CardAccessDeniedError(str(card_id), str(owner_id))
+
+        card.clear_content()
+        return await self._card_repository.update(card)

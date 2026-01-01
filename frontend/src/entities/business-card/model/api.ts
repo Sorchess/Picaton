@@ -38,6 +38,10 @@ export const businessCardApi = {
   delete: (cardId: string, ownerId: string) =>
     api.delete(`/cards/${cardId}?owner_id=${ownerId}`),
 
+  // Очистить содержимое карточки (bio, AI bio, теги, контакты)
+  clearContent: (cardId: string, ownerId: string) =>
+    api.post<BusinessCard>(`/cards/${cardId}/clear?owner_id=${ownerId}`),
+
   // Установить карточку как основную
   setPrimary: (cardId: string, ownerId: string) =>
     api.post<BusinessCard>(`/cards/${cardId}/set-primary?owner_id=${ownerId}`),

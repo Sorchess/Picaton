@@ -164,6 +164,21 @@ class BusinessCard(Entity):
         self._validate_bio(bio)
         self.ai_generated_bio = bio
 
+    def clear_ai_generated_bio(self) -> None:
+        """Очистить AI-сгенерированную самопрезентацию."""
+        self.ai_generated_bio = None
+
+    def clear_content(self) -> None:
+        """Очистить всё содержимое карточки (bio, AI bio, теги, контакты, факты)."""
+        self.bio = None
+        self.ai_generated_bio = None
+        self.search_tags = []
+        self.contacts = []
+        self.random_facts = []
+        self.tags = []
+        self.embedding = []
+        self._recalculate_completeness()
+
     def add_random_fact(self, fact: str) -> None:
         """Добавить рандомный факт о себе."""
         self._validate_random_fact(fact)

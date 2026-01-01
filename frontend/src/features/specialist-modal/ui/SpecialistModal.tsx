@@ -191,7 +191,12 @@ export function SpecialistModal({
           </Button>
         )}
         {isSaved && onDeleteContact && (
-          <Button variant="danger" onClick={() => (onDeleteContact as (user: UserPublic) => void)(user)}>
+          <Button
+            variant="danger"
+            onClick={() =>
+              (onDeleteContact as (user: UserPublic) => void)(user)
+            }
+          >
             Удалить из контактов
           </Button>
         )}

@@ -173,7 +173,9 @@ export function ContactsPage() {
     if (!selectedContactForModal) return;
     try {
       await userApi.deleteContact(selectedContactForModal.id);
-      setContacts((prev) => prev.filter((c) => c.id !== selectedContactForModal.id));
+      setContacts((prev) =>
+        prev.filter((c) => c.id !== selectedContactForModal.id)
+      );
       setIsUserModalOpen(false);
       setSelectedUserProfile(null);
       setSelectedContactForModal(null);
