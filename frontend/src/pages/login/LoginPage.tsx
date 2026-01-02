@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useAuth } from "@/features/auth";
 import { Typography, Button, Input } from "@/shared";
 import "./AuthPage.scss";
@@ -10,13 +10,17 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [view, setView] = useState<AuthView>("email");
   const [error, setError] = useState<string | null>(null);
+  const isVerifyingRef = useRef(false);
 
   // Проверяем URL на наличие magic link токена
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
-    if (token) {
+    if (token && !isVerifyingRef.current) {
+      isVerifyingRef.current = true;
+      // Убираем токен из URL сразу, чтобы избежать повторных запросов при перезагрузке
+      window.history.replaceState({}, "", window.location.pathname);
       handleVerifyToken(token);
     }
   }, []);
@@ -27,8 +31,7 @@ export function LoginPage() {
 
     try {
       await verifyMagicLink(token);
-      // Убираем токен из URL после успешной верификации
-      window.history.replaceState({}, "", window.location.pathname);
+      // URL уже очищен в useEffect, здесь ничего делать не нужно
     } catch (err: unknown) {
       const apiErr = err as { status?: number; data?: { detail?: string } };
       setView("error");
