@@ -27,6 +27,7 @@ ASSOCIATIVE_MAP: dict[str, list[str]] = {
     # Сайты и веб-разработка
     "сделать сайт": [
         "веб-разработчик",
+        "верстальщик",
         "верстка",
         "html",
         "css",
@@ -42,6 +43,7 @@ ASSOCIATIVE_MAP: dict[str, list[str]] = {
     ],
     "создать сайт": [
         "веб-разработчик",
+        "верстальщик",
         "верстка",
         "html",
         "css",
@@ -54,6 +56,7 @@ ASSOCIATIVE_MAP: dict[str, list[str]] = {
     ],
     "разработать сайт": [
         "веб-разработчик",
+        "верстальщик",
         "верстка",
         "html",
         "css",
@@ -66,6 +69,7 @@ ASSOCIATIVE_MAP: dict[str, list[str]] = {
     ],
     "нужен сайт": [
         "веб-разработчик",
+        "верстальщик",
         "верстка",
         "html",
         "css",
@@ -73,6 +77,58 @@ ASSOCIATIVE_MAP: dict[str, list[str]] = {
         "react",
         "фронтенд",
         "web",
+    ],
+    "сайт": [
+        "веб-разработчик",
+        "верстальщик",
+        "верстка",
+        "фронтенд",
+        "frontend",
+        "html",
+        "css",
+        "javascript",
+        "react",
+        "дизайн",
+        "web",
+    ],
+    "веб-разработка": [
+        "веб-разработчик",
+        "верстальщик",
+        "фронтенд",
+        "бэкенд",
+        "fullstack",
+        "html",
+        "css",
+        "javascript",
+        "react",
+        "node.js",
+        "python",
+    ],
+    "web": [
+        "веб-разработчик",
+        "верстальщик",
+        "фронтенд",
+        "frontend",
+        "html",
+        "css",
+        "javascript",
+    ],
+    "веб": [
+        "веб-разработчик",
+        "верстальщик",
+        "фронтенд",
+        "html",
+        "css",
+        "javascript",
+    ],
+    "верстка": [
+        "верстальщик",
+        "html",
+        "css",
+        "sass",
+        "фронтенд",
+        "адаптивная",
+        "responsive",
     ],
     "сверстать": [
         "верстка",
@@ -717,13 +773,10 @@ SYNONYMS: dict[str, str] = {
     "нужен": "сделать",
     "нужна": "сделать",
     "ищу": "сделать",
-    # Веб-термины
-    "сайт": "веб-разработчик",
-    "веб-сайт": "веб-разработчик",
-    "вебсайт": "веб-разработчик",
-    "web": "веб-разработчик",
-    "webapp": "веб-разработчик",
-    "веб-приложение": "веб-разработчик",
+    # Веб-термины (убрали "сайт" чтобы он работал через ASSOCIATIVE_MAP)
+    "веб-сайт": "сайт",
+    "вебсайт": "сайт",
+    "webapp": "веб-приложение",
     "верстальщик": "вёрстка",
     "стилизация": "вёрстка",
     "разметка": "вёрстка",
@@ -891,11 +944,20 @@ class AssociativeSearchService:
 
         query_lower = query.lower().strip()
         tags = []
+        matched_phrases = set()
 
-        # Сначала проверяем полные фразы из ассоциативной карты
-        for phrase in ASSOCIATIVE_MAP.keys():
-            if phrase in query_lower:
-                tags.append(phrase)
+        # Сортируем фразы по длине (от длинных к коротким) для правильного приоритета
+        sorted_phrases = sorted(ASSOCIATIVE_MAP.keys(), key=len, reverse=True)
+
+        # Проверяем полные фразы из ассоциативной карты
+        for phrase in sorted_phrases:
+            # Используем регулярное выражение для поиска фразы как целого слова/фразы
+            # \b - граница слова
+            pattern = r"\b" + re.escape(phrase) + r"\b"
+            if re.search(pattern, query_lower):
+                if phrase not in matched_phrases:
+                    tags.append(phrase)
+                    matched_phrases.add(phrase)
 
         # Затем разбиваем на отдельные слова
         words = re.split(r"[\s,#]+", query_lower)
@@ -904,7 +966,7 @@ class AssociativeSearchService:
             if word and len(word) >= 2:
                 # Нормализуем синонимы
                 normalized = SYNONYMS.get(word, word)
-                if normalized not in tags:
+                if normalized not in tags and normalized not in matched_phrases:
                     tags.append(normalized)
 
         return tags
