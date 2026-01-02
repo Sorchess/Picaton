@@ -193,7 +193,11 @@ class CompanyInvitation(Entity):
         """Проверить, истекло ли приглашение."""
         if self.expires_at is None:
             return False
-        return datetime.now(timezone.utc) > self.expires_at
+        # Приводим expires_at к aware datetime если он naive
+        expires_at = self.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) > expires_at
 
     def is_pending(self) -> bool:
         """Проверить, ожидает ли ответа."""

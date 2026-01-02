@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemeProvider, ThemeToggle } from "./shared";
 import { PageSwitcher } from "./widgets";
 import type { PageType } from "./widgets";
@@ -11,14 +11,106 @@ import {
   CompanyPage,
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
+import { companyApi } from "./entities/company";
 import "./App.scss";
+
+// Парсинг URL для получения токена приглашения
+function getInviteTokenFromUrl(): string | null {
+  const path = window.location.pathname;
+  const match = path.match(/^\/invite\/([^/]+)$/);
+  return match ? match[1] : null;
+}
+
+// Сохранение токена для использования после авторизации
+function saveInviteToken(token: string) {
+  sessionStorage.setItem("pendingInviteToken", token);
+}
+
+function getPendingInviteToken(): string | null {
+  return sessionStorage.getItem("pendingInviteToken");
+}
+
+function clearPendingInviteToken() {
+  sessionStorage.removeItem("pendingInviteToken");
+}
 
 function AuthenticatedApp() {
   const { user, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageType>("search");
+  const [inviteProcessing, setInviteProcessing] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  // Обработка приглашения из URL или сохраненного токена
+  useEffect(() => {
+    const urlToken = getInviteTokenFromUrl();
+    const pendingToken = getPendingInviteToken();
+    const token = urlToken || pendingToken;
+
+    if (token && !inviteProcessing) {
+      setInviteProcessing(true);
+      // Очищаем сохраненный токен
+      clearPendingInviteToken();
+
+      companyApi
+        .acceptInvitation({ token })
+        .then(() => {
+          setInviteMessage({
+            type: "success",
+            text: "Вы успешно присоединились к компании!",
+          });
+          setCurrentPage("company");
+          // Очищаем URL
+          window.history.replaceState({}, "", "/");
+        })
+        .catch((err) => {
+          const errorMessage =
+            err?.data?.detail ||
+            err?.message ||
+            "Не удалось принять приглашение";
+          setInviteMessage({ type: "error", text: errorMessage });
+          window.history.replaceState({}, "", "/");
+        })
+        .finally(() => {
+          setInviteProcessing(false);
+        });
+    }
+  }, []);
+
+  // Автоскрытие сообщения
+  useEffect(() => {
+    if (inviteMessage) {
+      const timer = setTimeout(() => setInviteMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [inviteMessage]);
+
+  // Показываем загрузку при обработке приглашения
+  if (inviteProcessing) {
+    return (
+      <div className="app app--loading">
+        <div className="app__loader">
+          <div className="app__spinner" />
+          <span>Принимаем приглашение...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
+      {/* Уведомление о приглашении */}
+      {inviteMessage && (
+        <div
+          className={`app__invite-notification app__invite-notification--${inviteMessage.type}`}
+        >
+          <span>{inviteMessage.text}</span>
+          <button onClick={() => setInviteMessage(null)}>×</button>
+        </div>
+      )}
+
       <header className="app__header">
         <div className="app__logo">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -113,6 +205,16 @@ function AuthenticatedApp() {
 }
 
 function UnauthenticatedApp() {
+  // Сохраняем токен приглашения для использования после авторизации
+  useEffect(() => {
+    const token = getInviteTokenFromUrl();
+    if (token) {
+      saveInviteToken(token);
+      // Очищаем URL
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
+
   return (
     <div className="app">
       <LoginPage />
