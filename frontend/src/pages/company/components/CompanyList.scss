@@ -1,0 +1,209 @@
+// Empty state
+.company-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 40px 24px;
+
+  &__icon {
+    font-size: 4rem;
+    margin-bottom: 24px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  &__title {
+    margin-bottom: 12px;
+    background: linear-gradient(
+      135deg,
+      var(--color-text-primary) 0%,
+      var(--color-text-secondary) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__description {
+    max-width: 400px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px !important;
+    font-size: 1rem !important;
+  }
+
+  &__button-icon {
+    font-size: 1.25rem;
+    font-weight: 300;
+  }
+}
+
+// Company list
+.company-list {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+}
+
+// Company card
+.company-card {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    background: var(--color-glass-bg-hover);
+    border-color: var(--color-glass-border-hover);
+    box-shadow: 0 20px 40px var(--color-glass-shadow);
+
+    .company-card__arrow {
+      transform: translateX(4px);
+      opacity: 1;
+    }
+
+    .company-card__logo {
+      transform: scale(1.05);
+    }
+  }
+
+  &__logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(
+      135deg,
+      rgba(99, 102, 241, 0.2),
+      rgba(139, 92, 246, 0.2)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__logo-letter {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__content {
+    flex: 1;
+    margin-bottom: 20px;
+  }
+
+  &__name {
+    font-family: "Syne", sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  &__domain {
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  &__description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-glass-border);
+  }
+
+  &__arrow {
+    font-size: 1.25rem;
+    color: var(--color-text-secondary);
+    opacity: 0.5;
+    transition: all 0.3s ease;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .company-list {
+    padding: 16px;
+
+    &__header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    &__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .company-list-empty {
+    padding: 24px 16px;
+
+    &__icon {
+      font-size: 3rem;
+    }
+  }
+}
