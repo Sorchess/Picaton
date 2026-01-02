@@ -2,4 +2,17 @@
 .page-switcher {
   // Стили наследуются от компонента Switcher
   // Здесь можно добавить специфичные стили для этого виджета
+
+  // Адаптация для мобильной версии в футере
+  @media (max-width: 768px) {
+    .switcher__option {
+      flex-direction: column;
+      padding: 10px 8px;
+      gap: 4px;
+    }
+
+    .switcher__option-label {
+      font-size: 11px;
+    }
+  }
 }

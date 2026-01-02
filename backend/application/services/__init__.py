@@ -20,6 +20,20 @@ from application.services.magic_link import (
     MagicLinkInvalidError,
 )
 from application.services.business_card import BusinessCardService
+from application.services.company import (
+    CompanyService,
+    CompanyError,
+    CompanyNotFoundError,
+    CompanyAlreadyExistsError,
+    MemberNotFoundError,
+    AlreadyMemberError,
+    InvitationNotFoundError,
+    InvitationExpiredError,
+    InvitationAlreadyExistsError,
+    PermissionDeniedError,
+    CannotRemoveOwnerError,
+    CannotChangeOwnRoleError,
+)
 
 __all__ = [
     "UserService",
@@ -41,4 +55,16 @@ __all__ = [
     "MagicLinkExpiredError",
     "MagicLinkInvalidError",
     "BusinessCardService",
+    "CompanyService",
+    "CompanyError",
+    "CompanyNotFoundError",
+    "CompanyAlreadyExistsError",
+    "MemberNotFoundError",
+    "AlreadyMemberError",
+    "InvitationNotFoundError",
+    "InvitationExpiredError",
+    "InvitationAlreadyExistsError",
+    "PermissionDeniedError",
+    "CannotRemoveOwnerError",
+    "CannotChangeOwnRoleError",
 ]

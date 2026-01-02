@@ -8,6 +8,7 @@ from infrastructure.broker import broker
 from presentation.api.users.handlers import router as user_router
 from presentation.api.auth.handlers import router as auth_router
 from presentation.api.cards.handlers import router as cards_router
+from presentation.api.companies.handlers import router as companies_router
 
 origins = [
     "http://localhost",
@@ -58,6 +59,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
     app.include_router(user_router, prefix="/api/users", tags=["Users"])
     app.include_router(cards_router, prefix="/api/cards", tags=["Business Cards"])
+    app.include_router(companies_router, prefix="/api/companies", tags=["Companies"])
 
     return app
 

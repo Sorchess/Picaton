@@ -8,12 +8,18 @@ from infrastructure.database.repositories import (
     MongoUserRepository,
     MongoSavedContactRepository,
     MongoBusinessCardRepository,
+    MongoCompanyRepository,
+    MongoCompanyMemberRepository,
+    MongoCompanyInvitationRepository,
 )
 from infrastructure.database.repositories.pending_hash import MongoPendingHashRepository
 from domain.repositories import (
     UserRepositoryInterface,
     SavedContactRepositoryInterface,
     BusinessCardRepositoryInterface,
+    CompanyRepositoryInterface,
+    CompanyMemberRepositoryInterface,
+    CompanyInvitationRepositoryInterface,
 )
 from domain.repositories.pending_hash import PendingHashRepositoryInterface
 from application.services import (
@@ -29,6 +35,7 @@ from application.services import (
     ContactSyncService,
     AuthService,
     MagicLinkService,
+    CompanyService,
 )
 from application.services.business_card import BusinessCardService
 from application.services.groq_bio import GroqBioGenerator
@@ -101,6 +108,38 @@ def get_business_card_repository(
 
 BusinessCardRepository = Annotated[
     BusinessCardRepositoryInterface, Depends(get_business_card_repository)
+]
+
+
+def get_company_repository(
+    db: Database,
+) -> CompanyRepositoryInterface:
+    """Получить репозиторий компаний."""
+    return MongoCompanyRepository(db["companies"])
+
+
+def get_company_member_repository(
+    db: Database,
+) -> CompanyMemberRepositoryInterface:
+    """Получить репозиторий членов компании."""
+    return MongoCompanyMemberRepository(db["company_members"])
+
+
+def get_company_invitation_repository(
+    db: Database,
+) -> CompanyInvitationRepositoryInterface:
+    """Получить репозиторий приглашений в компанию."""
+    return MongoCompanyInvitationRepository(db["company_invitations"])
+
+
+CompanyRepository = Annotated[
+    CompanyRepositoryInterface, Depends(get_company_repository)
+]
+CompanyMemberRepository = Annotated[
+    CompanyMemberRepositoryInterface, Depends(get_company_member_repository)
+]
+CompanyInvitationRepository = Annotated[
+    CompanyInvitationRepositoryInterface, Depends(get_company_invitation_repository)
 ]
 
 
@@ -236,6 +275,16 @@ def get_magic_link_service(
 ) -> MagicLinkService:
     """Получить сервис magic link авторизации."""
     return MagicLinkService(user_repo)
+
+
+def get_company_service(
+    company_repo: CompanyRepository,
+    member_repo: CompanyMemberRepository,
+    invitation_repo: CompanyInvitationRepository,
+    user_repo: UserRepository,
+) -> CompanyService:
+    """Получить сервис управления компаниями."""
+    return CompanyService(company_repo, member_repo, invitation_repo, user_repo)
 
 
 def get_cloudinary_service() -> CloudinaryService:

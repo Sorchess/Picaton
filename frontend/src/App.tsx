@@ -8,6 +8,7 @@ import {
   ProfilePage,
   LoginPage,
   OnboardingPage,
+  CompanyPage,
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
 import "./App.scss";
@@ -72,7 +73,9 @@ function AuthenticatedApp() {
           <span className="app__logo-text">Picaton</span>
         </div>
 
-        <PageSwitcher value={currentPage} onChange={setCurrentPage} />
+        <div className="app__page-switcher app__page-switcher--desktop">
+          <PageSwitcher value={currentPage} onChange={setCurrentPage} />
+        </div>
 
         <div className="app__actions">
           <span className="app__user">{user?.first_name}</span>
@@ -98,7 +101,13 @@ function AuthenticatedApp() {
         {currentPage === "search" && <SearchPage />}
         {currentPage === "contacts" && <ContactsPage />}
         {currentPage === "profile" && <ProfilePage />}
+        {currentPage === "company" && <CompanyPage />}
       </main>
+
+      {/* Мобильный футер с навигацией */}
+      <footer className="app__footer">
+        <PageSwitcher value={currentPage} onChange={setCurrentPage} />
+      </footer>
     </div>
   );
 }

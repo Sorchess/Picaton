@@ -416,3 +416,268 @@ async def send_welcome_email(to_email: str, user_name: str) -> bool:
     except Exception as e:
         logger.error(f"Failed to send welcome email to {to_email}: {e}")
         return False
+
+
+def _get_company_invitation_email_html(
+    company_name: str,
+    inviter_name: str,
+    role: str,
+    invitation_link: str,
+    expire_days: int = 7,
+) -> str:
+    """
+    Генерирует HTML шаблон письма для приглашения в компанию.
+    """
+    role_display = {
+        "owner": "Владелец",
+        "admin": "Администратор",
+        "member": "Участник",
+    }.get(role, "Участник")
+
+    return f"""
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приглашение в команду</title>
+</head>
+<body style="
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #1a1a1a 100%);
+    min-height: 100vh;
+">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #1a1a1a 100%);">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 500px; margin: 0 auto;">
+                    
+                    <!-- Logo -->
+                    <tr>
+                        <td style="text-align: center; padding-bottom: 32px;">
+                            <div style="
+                                display: inline-block;
+                                font-size: 32px;
+                                font-weight: 700;
+                                color: #ffffff;
+                                letter-spacing: -1px;
+                            ">
+                                <span style="color: #ffffff;">Picaton</span>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Card -->
+                    <tr>
+                        <td>
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="
+                                background: rgba(255, 255, 255, 0.03);
+                                border: 1px solid rgba(255, 255, 255, 0.08);
+                                border-radius: 20px;
+                                overflow: hidden;
+                            ">
+                                <!-- Card Header -->
+                                <tr>
+                                    <td style="
+                                        padding: 40px 40px 24px;
+                                        text-align: center;
+                                    ">
+                                        <!-- Icon -->
+                                        <div style="
+                                            width: 64px;
+                                            height: 64px;
+                                            margin: 0 auto 24px;
+                                            background: rgba(255, 255, 255, 0.05);
+                                            border: 1px solid rgba(255, 255, 255, 0.1);
+                                            border-radius: 16px;
+                                            line-height: 64px;
+                                            font-size: 28px;
+                                        ">
+                                            🤝
+                                        </div>
+                                        
+                                        <h1 style="
+                                            margin: 0 0 12px;
+                                            font-size: 24px;
+                                            font-weight: 600;
+                                            color: #ffffff;
+                                            letter-spacing: -0.5px;
+                                        ">
+                                            Приглашение в команду
+                                        </h1>
+                                        
+                                        <p style="
+                                            margin: 0;
+                                            font-size: 15px;
+                                            color: #a0a0a0;
+                                            line-height: 1.6;
+                                        ">
+                                            <strong style="color: #ffffff;">{inviter_name}</strong> приглашает вас 
+                                            присоединиться к компании <strong style="color: #ffffff;">{company_name}</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Role Info -->
+                                <tr>
+                                    <td style="padding: 0 40px 24px;">
+                                        <div style="
+                                            background: rgba(255, 255, 255, 0.02);
+                                            border: 1px solid rgba(255, 255, 255, 0.05);
+                                            border-radius: 12px;
+                                            padding: 16px;
+                                            text-align: center;
+                                        ">
+                                            <p style="margin: 0; font-size: 13px; color: #666666;">
+                                                Ваша роль в команде
+                                            </p>
+                                            <p style="margin: 8px 0 0; font-size: 16px; font-weight: 600; color: #ffffff;">
+                                                {role_display}
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Button -->
+                                <tr>
+                                    <td style="padding: 0 40px 24px; text-align: center;">
+                                        <a href="{invitation_link}" style="
+                                            display: inline-block;
+                                            padding: 16px 48px;
+                                            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+                                            color: #0a0a0a;
+                                            text-decoration: none;
+                                            font-size: 15px;
+                                            font-weight: 600;
+                                            border-radius: 12px;
+                                            letter-spacing: -0.2px;
+                                        ">
+                                            Принять приглашение
+                                        </a>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Expire Notice -->
+                                <tr>
+                                    <td style="
+                                        padding: 20px 40px;
+                                        background: rgba(255, 255, 255, 0.02);
+                                        border-top: 1px solid rgba(255, 255, 255, 0.05);
+                                    ">
+                                        <p style="
+                                            margin: 0;
+                                            font-size: 13px;
+                                            color: #666666;
+                                            text-align: center;
+                                        ">
+                                            ⏰ Приглашение действительно {expire_days} дней
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 32px 20px; text-align: center;">
+                            <p style="
+                                margin: 0;
+                                font-size: 12px;
+                                color: #444444;
+                            ">
+                                Если вы не ожидали это приглашение, просто проигнорируйте письмо.
+                            </p>
+                            <p style="
+                                margin: 16px 0 0;
+                                font-size: 12px;
+                                color: #333333;
+                            ">
+                                © 2026 Picaton
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+"""
+
+
+@broker.task
+async def send_company_invitation_email(
+    to_email: str,
+    company_name: str,
+    inviter_name: str,
+    role: str,
+    invitation_link: str,
+) -> bool:
+    """
+    Задача отправки письма с приглашением в компанию.
+
+    Args:
+        to_email: Email получателя
+        company_name: Название компании
+        inviter_name: Имя приглашающего
+        role: Роль в компании
+        invitation_link: Ссылка для принятия приглашения
+
+    Returns:
+        True если успешно, False при ошибке
+    """
+    try:
+        html = _get_company_invitation_email_html(
+            company_name=company_name,
+            inviter_name=inviter_name,
+            role=role,
+            invitation_link=invitation_link,
+        )
+
+        text = f"""
+Приглашение в команду {company_name}
+
+{inviter_name} приглашает вас присоединиться к компании {company_name} в Picaton.
+
+Ваша роль: {role}
+
+Чтобы принять приглашение, перейдите по ссылке:
+{invitation_link}
+
+Приглашение действительно 7 дней.
+
+Если вы не ожидали это приглашение, просто проигнорируйте письмо.
+
+© 2026 Picaton
+        """
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"🤝 {inviter_name} приглашает вас в {company_name}"
+        msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
+        msg["To"] = to_email
+
+        text_part = MIMEText(text.strip(), "plain", "utf-8")
+        html_part = MIMEText(html, "html", "utf-8")
+        msg.attach(text_part)
+        msg.attach(html_part)
+
+        with smtplib.SMTP(settings.email.smtp_host, settings.email.smtp_port) as server:
+            if settings.email.use_tls:
+                server.starttls()
+            if settings.email.smtp_user and settings.email.smtp_password:
+                server.login(settings.email.smtp_user, settings.email.smtp_password)
+            server.sendmail(settings.email.from_email, [to_email], msg.as_string())
+
+        logger.info(f"Company invitation email sent to {to_email} for {company_name}")
+        return True
+
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP error sending invitation to {to_email}: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send invitation email to {to_email}: {e}")
+        return False
