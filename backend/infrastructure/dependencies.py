@@ -242,8 +242,9 @@ def get_search_service(
 
 def get_qrcode_service() -> QRCodeService:
     """Получить сервис QR-кодов."""
-    # TODO: Получить base_url из конфига
-    return QRCodeService(base_url=settings.api.url)
+    # Используем frontend URL для ссылок в QR-кодах
+    frontend_url = settings.magic_link.frontend_url or settings.api.url
+    return QRCodeService(base_url=frontend_url)
 
 
 def get_import_service(

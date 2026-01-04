@@ -6,6 +6,7 @@ import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
 import { AvatarUpload } from "@/features/avatar-upload";
+import { QrModal } from "@/features/qr-modal";
 import { Loader, Button, Modal } from "@/shared";
 import { CardEditor, CardPreview } from "./components";
 import "./ProfilePage.scss";
@@ -28,6 +29,10 @@ export function ProfilePage() {
 
   // Create card modal
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // QR code modal
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
@@ -140,18 +145,9 @@ export function ProfilePage() {
     if (!user) return;
     try {
       const qr = await userApi.getQRCode(user.id);
-      const win = window.open("", "_blank");
-      if (win) {
-        const imageData = qr.qr_code_base64 || qr.image_base64;
-        win.document.write(`
-          <html>
-            <head><title>QR Code - ${getFullName(user)}</title></head>
-            <body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0a0a0a;">
-              <img src="${imageData}" alt="QR Code" style="max-width:300px;border-radius:16px;"/>
-            </body>
-          </html>
-        `);
-      }
+      const imageData = qr.qr_code_base64 || qr.image_base64;
+      setQrCodeImage(imageData);
+      setShowQrModal(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка генерации QR");
     }
@@ -328,6 +324,16 @@ export function ProfilePage() {
           </div>
         </div>
       </Modal>
+
+      {/* QR Code Modal */}
+      {qrCodeImage && (
+        <QrModal
+          isOpen={showQrModal}
+          onClose={() => setShowQrModal(false)}
+          qrCodeImage={qrCodeImage}
+          userName={getFullName(user)}
+        />
+      )}
     </div>
   );
 }

@@ -11,13 +11,23 @@ import {
   CompanyPage,
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
+import { SpecialistModal } from "./features/specialist-modal";
 import { companyApi } from "./entities/company";
+import type { UserPublic } from "./entities/user";
+import { userApi } from "./entities/user";
 import "./App.scss";
 
 // Парсинг URL для получения токена приглашения
 function getInviteTokenFromUrl(): string | null {
   const path = window.location.pathname;
   const match = path.match(/^\/invite\/([^/]+)$/);
+  return match ? match[1] : null;
+}
+
+// Парсинг URL для получения ID пользователя из QR кода
+function getUserIdFromUrl(): string | null {
+  const path = window.location.pathname;
+  const match = path.match(/^\/users\/([^/]+)$/);
   return match ? match[1] : null;
 }
 
@@ -42,6 +52,11 @@ function AuthenticatedApp() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  // User QR code modal state
+  const [qrUser, setQrUser] = useState<UserPublic | null>(null);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isLoadingQrUser, setIsLoadingQrUser] = useState(false);
 
   // Обработка приглашения из URL или сохраненного токена
   useEffect(() => {
@@ -75,6 +90,33 @@ function AuthenticatedApp() {
         })
         .finally(() => {
           setInviteProcessing(false);
+        });
+    }
+  }, []);
+
+  // Обработка ссылки на пользователя из QR кода
+  useEffect(() => {
+    const userId = getUserIdFromUrl();
+    if (userId && !isLoadingQrUser && !qrUser) {
+      setIsLoadingQrUser(true);
+      userApi
+        .getPublic(userId)
+        .then((userData) => {
+          setQrUser(userData);
+          setIsQrModalOpen(true);
+          // Очищаем URL
+          window.history.replaceState({}, "", "/");
+        })
+        .catch((err) => {
+          const errorMessage =
+            err?.data?.detail ||
+            err?.message ||
+            "Не удалось загрузить профиль пользователя";
+          setInviteMessage({ type: "error", text: errorMessage });
+          window.history.replaceState({}, "", "/");
+        })
+        .finally(() => {
+          setIsLoadingQrUser(false);
         });
     }
   }, []);
@@ -200,6 +242,33 @@ function AuthenticatedApp() {
       <footer className="app__footer">
         <PageSwitcher value={currentPage} onChange={setCurrentPage} />
       </footer>
+
+      {/* User QR Code Modal */}
+      {qrUser && (
+        <SpecialistModal
+          user={qrUser}
+          isOpen={isQrModalOpen}
+          onClose={() => {
+            setIsQrModalOpen(false);
+            setQrUser(null);
+          }}
+          onSaveContact={async (savedUser) => {
+            if (!user?.id) return;
+            try {
+              await userApi.saveContact(user.id, savedUser.id);
+              setInviteMessage({
+                type: "success",
+                text: "Контакт сохранен!",
+              });
+            } catch (err) {
+              setInviteMessage({
+                type: "error",
+                text: "Не удалось сохранить контакт",
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ export function Modal({
   size = "md",
   className = "",
 }: ModalProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(isOpen);
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
@@ -26,12 +26,13 @@ export function Modal({
       // Сначала рендерим элемент (isVisible)
       setIsVisible(true);
       // Затем на следующем кадре добавляем класс анимации
-      requestAnimationFrame(() => {
+      const frame = requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsAnimating(true);
         });
       });
       document.body.style.overflow = "hidden";
+      return () => cancelAnimationFrame(frame);
     } else {
       // Сначала убираем класс анимации
       setIsAnimating(false);
@@ -40,10 +41,6 @@ export function Modal({
       document.body.style.overflow = "";
       return () => clearTimeout(timer);
     }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [isOpen]);
 
   useEffect(() => {
