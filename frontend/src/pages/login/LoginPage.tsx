@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
-import { useAuth } from "@/features/auth";
+import {
+  useAuth,
+  TelegramLoginButton,
+  type TelegramAuthData,
+} from "@/features/auth";
 import { Typography, Button, Input } from "@/shared";
 import "./AuthPage.scss";
 
 type AuthView = "email" | "sent" | "verifying" | "error";
 
 export function LoginPage() {
-  const { requestMagicLink, verifyMagicLink, isLoading } = useAuth();
+  const { requestMagicLink, verifyMagicLink, telegramLogin, isLoading } =
+    useAuth();
   const [email, setEmail] = useState("");
   const [view, setView] = useState<AuthView>("email");
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +73,22 @@ export function LoginPage() {
   const handleBack = () => {
     setView("email");
     setError(null);
+  };
+
+  const handleTelegramAuth = async (data: TelegramAuthData) => {
+    setError(null);
+    try {
+      await telegramLogin(data);
+    } catch (err: unknown) {
+      const apiErr = err as { status?: number; data?: { detail?: string } };
+      if (apiErr.status === 410) {
+        setError("Данные авторизации Telegram устарели. Попробуйте ещё раз.");
+      } else if (apiErr.status === 503) {
+        setError("Telegram авторизация временно недоступна.");
+      } else {
+        setError(apiErr.data?.detail || "Ошибка авторизации через Telegram.");
+      }
+    }
   };
 
   // Показываем экран загрузки при верификации токена
@@ -251,6 +272,19 @@ export function LoginPage() {
           >
             {isLoading ? "Отправка..." : "Получить ссылку для входа"}
           </Button>
+
+          <div className="auth-page__divider">
+            <span>или</span>
+          </div>
+
+          <div className="auth-page__social">
+            <TelegramLoginButton
+              onAuth={handleTelegramAuth}
+              onError={(error) => setError(error)}
+              buttonSize="large"
+              cornerRadius={12}
+            />
+          </div>
         </form>
 
         <div className="auth-page__footer">

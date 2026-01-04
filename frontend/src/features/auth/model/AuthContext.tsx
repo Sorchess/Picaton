@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { User } from "@/entities/user";
 import { authApi } from "./api";
-import type { LoginCredentials, RegisterData } from "./types";
+import type { LoginCredentials, RegisterData, TelegramAuthData } from "./types";
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +20,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   requestMagicLink: (email: string) => Promise<void>;
   verifyMagicLink: (token: string) => Promise<void>;
+  telegramLogin: (data: TelegramAuthData) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -112,6 +113,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const telegramLogin = async (data: TelegramAuthData) => {
+    setIsLoading(true);
+    try {
+      await authApi.telegramAuth(data);
+      // Получаем полные данные пользователя с сервера
+      await refreshUser();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -124,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshUser,
         requestMagicLink,
         verifyMagicLink,
+        telegramLogin,
       }}
     >
       {children}

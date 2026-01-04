@@ -65,3 +65,19 @@ class UserRepositoryInterface(ABC):
     async def find_by_phone_hashes(self, hashes: list[str]) -> list[User]:
         """Найти пользователей по хешам телефонов."""
         pass
+
+    # Telegram методы
+    @abstractmethod
+    async def find_by_telegram_id(self, telegram_id: int) -> User | None:
+        """Найти пользователя по Telegram ID."""
+        pass
+
+    @abstractmethod
+    async def find_by_telegram_ids(self, telegram_ids: list[int]) -> list[User]:
+        """Найти пользователей по списку Telegram ID."""
+        pass
+
+    @abstractmethod
+    async def find_by_telegram_usernames(self, usernames: list[str]) -> list[User]:
+        """Найти пользователей по Telegram username."""
+        pass

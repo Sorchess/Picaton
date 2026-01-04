@@ -27,6 +27,8 @@ class MongoUserRepository(UserRepositoryInterface):
             "hashed_password": user.hashed_password,
             "phone_hash": user.phone_hash,
             "avatar_url": user.avatar_url,
+            "telegram_id": user.telegram_id,
+            "telegram_username": user.telegram_username,
             "location": user.location,
             "tags": [
                 {
@@ -85,6 +87,8 @@ class MongoUserRepository(UserRepositoryInterface):
             hashed_password=doc.get("hashed_password", ""),
             phone_hash=doc.get("phone_hash"),
             avatar_url=doc.get("avatar_url"),
+            telegram_id=doc.get("telegram_id"),
+            telegram_username=doc.get("telegram_username"),
             location=doc.get("location"),
             tags=tags,
             search_tags=doc.get("search_tags", []),
@@ -235,6 +239,48 @@ class MongoUserRepository(UserRepositoryInterface):
             return []
 
         cursor = self._collection.find({"phone_hash": {"$in": hashes}})
+
+        users = []
+        async for doc in cursor:
+            users.append(self._from_document(doc))
+        return users
+
+    # Telegram методы
+
+    async def find_by_telegram_id(self, telegram_id: int) -> User | None:
+        """Найти пользователя по Telegram ID."""
+        doc = await self._collection.find_one({"telegram_id": telegram_id})
+        return self._from_document(doc) if doc else None
+
+    async def find_by_telegram_ids(self, telegram_ids: list[int]) -> list[User]:
+        """Найти пользователей по списку Telegram ID."""
+        if not telegram_ids:
+            return []
+
+        cursor = self._collection.find({"telegram_id": {"$in": telegram_ids}})
+
+        users = []
+        async for doc in cursor:
+            users.append(self._from_document(doc))
+        return users
+
+    async def find_by_telegram_usernames(self, usernames: list[str]) -> list[User]:
+        """Найти пользователей по Telegram username."""
+        if not usernames:
+            return []
+
+        # Нормализуем usernames (убираем @, приводим к нижнему регистру)
+        normalized = [u.lstrip("@").lower() for u in usernames if u]
+
+        # Ищем без учёта регистра
+        cursor = self._collection.find(
+            {
+                "telegram_username": {
+                    "$regex": f"^({'|'.join(normalized)})$",
+                    "$options": "i",
+                }
+            }
+        )
 
         users = []
         async for doc in cursor:

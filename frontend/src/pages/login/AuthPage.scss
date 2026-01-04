@@ -234,4 +234,34 @@
       background: var(--color-glass-bg-hover);
     }
   }
+
+  // Divider between methods
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+
+    &::before,
+    &::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    span {
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      text-transform: lowercase;
+    }
+  }
+
+  // Social login buttons
+  &__social {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+  }
 }

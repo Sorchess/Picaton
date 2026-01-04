@@ -91,6 +91,8 @@ class UserResponse(BaseModel):
     last_name: str
     email: str
     avatar_url: str | None
+    telegram_id: int | None = None
+    telegram_username: str | None = None
     location: str | None
     bio: str | None
     ai_generated_bio: str | None

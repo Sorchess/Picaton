@@ -42,6 +42,7 @@ from application.services.groq_bio import GroqBioGenerator
 from application.services.groq_tags import GroqTagsGenerator
 from application.services.ai_search import AISearchService
 from application.services.card_title import CardTitleGenerator
+from application.services.telegram_auth import TelegramAuthService
 from infrastructure.llm.groq_client import GroqClient
 from infrastructure.storage import CloudinaryService
 from infrastructure.email import SmtpEmailBackend
@@ -276,6 +277,20 @@ def get_magic_link_service(
 ) -> MagicLinkService:
     """Получить сервис magic link авторизации."""
     return MagicLinkService(user_repo)
+
+
+def get_telegram_auth_service(
+    user_repo: UserRepository,
+    user_service: UserService = Depends(get_user_service),
+) -> TelegramAuthService:
+    """Получить сервис Telegram авторизации."""
+    return TelegramAuthService(
+        user_repository=user_repo,
+        user_service=user_service,
+        jwt_secret=settings.jwt.secret_key,
+        jwt_algorithm=settings.jwt.algorithm,
+        access_token_expire_minutes=settings.jwt.access_token_expire_minutes,
+    )
 
 
 def get_company_service(

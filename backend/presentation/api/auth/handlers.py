@@ -8,9 +8,18 @@ from presentation.api.auth.schemas import (
     MagicLinkVerifyRequest,
     MagicLinkResponse,
     AuthUserResponse,
+    TelegramAuthRequest,
+    TelegramContactsSyncRequest,
+    TelegramContactsSyncResponse,
+    TelegramFoundContact,
+    TelegramConfigResponse,
 )
 from presentation.api.users.schemas import UserResponse, TagInfo, ContactInfo
-from infrastructure.dependencies import get_auth_service, get_magic_link_service
+from infrastructure.dependencies import (
+    get_auth_service,
+    get_magic_link_service,
+    get_telegram_auth_service,
+)
 from application.services import (
     AuthService,
     MagicLinkService,
@@ -19,8 +28,17 @@ from application.services import (
     MagicLinkExpiredError,
     MagicLinkInvalidError,
 )
+from application.services.telegram_auth import (
+    TelegramAuthService,
+    TelegramAuthError,
+    TelegramDataExpiredError,
+    TelegramInvalidHashError,
+    TelegramBotNotConfiguredError,
+    TelegramContact,
+)
 from application.tasks import send_magic_link_email
 from domain.exceptions.user import UserAlreadyExistsError
+from settings.config import settings
 
 
 router = APIRouter()
@@ -106,6 +124,8 @@ async def get_current_user(
         last_name=user.last_name,
         email=user.email,
         avatar_url=user.avatar_url,
+        telegram_id=user.telegram_id,
+        telegram_username=user.telegram_username,
         location=user.location,
         bio=user.bio,
         ai_generated_bio=user.ai_generated_bio,
@@ -189,4 +209,118 @@ async def verify_magic_link(
         last_name=user.last_name,
         avatar_url=user.avatar_url,
         access_token=access_token,
+    )
+
+
+# ==================== Telegram авторизация ====================
+
+
+@router.get("/telegram/config", response_model=TelegramConfigResponse)
+async def get_telegram_config():
+    """
+    Получить конфигурацию Telegram для фронтенда.
+
+    Возвращает username бота для Telegram Login Widget.
+    """
+    return TelegramConfigResponse(
+        bot_username=settings.telegram.bot_username,
+        enabled=bool(settings.telegram.bot_token and settings.telegram.bot_username),
+    )
+
+
+@router.post("/telegram", response_model=AuthUserResponse)
+async def telegram_auth(
+    data: TelegramAuthRequest,
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Авторизация через Telegram Login Widget.
+
+    Принимает данные от Telegram, верифицирует подпись,
+    создаёт/находит пользователя и возвращает JWT токен.
+    """
+    try:
+        user, token = await telegram_service.authenticate(data.model_dump())
+    except TelegramBotNotConfiguredError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram авторизация не настроена",
+        )
+    except TelegramDataExpiredError:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="Данные авторизации Telegram устарели. Попробуйте ещё раз.",
+        )
+    except TelegramInvalidHashError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Невалидная подпись данных Telegram",
+        )
+    except TelegramAuthError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e) or "Ошибка авторизации через Telegram",
+        )
+
+    return AuthUserResponse(
+        id=str(user.id),
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        avatar_url=user.avatar_url,
+        telegram_id=user.telegram_id,
+        telegram_username=user.telegram_username,
+        access_token=token,
+    )
+
+
+@router.post("/telegram/sync-contacts", response_model=TelegramContactsSyncResponse)
+async def sync_telegram_contacts(
+    data: TelegramContactsSyncRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Синхронизировать контакты из Telegram.
+
+    Принимает список контактов из Telegram и ищет
+    зарегистрированных пользователей по telegram_id или username.
+    """
+    try:
+        user = await auth_service.get_current_user(credentials.credentials)
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Невалидный или истёкший токен",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Преобразуем запрос в объекты TelegramContact
+    contacts = [
+        TelegramContact(
+            telegram_id=c.telegram_id,
+            first_name=c.first_name,
+            last_name=c.last_name,
+            username=c.username,
+            phone=c.phone,
+        )
+        for c in data.contacts
+    ]
+
+    result = await telegram_service.sync_telegram_contacts(user.id, contacts)
+
+    return TelegramContactsSyncResponse(
+        found=[
+            TelegramFoundContact(
+                user_id=f["user_id"],
+                user_name=f["user_name"],
+                contact_name=f.get("contact_name"),
+                avatar_url=f.get("avatar_url"),
+                telegram_username=f.get("telegram_username"),
+            )
+            for f in result["found"]
+        ],
+        found_count=result["found_count"],
+        total=result["total"],
     )

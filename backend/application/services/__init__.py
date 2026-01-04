@@ -19,6 +19,13 @@ from application.services.magic_link import (
     MagicLinkExpiredError,
     MagicLinkInvalidError,
 )
+from application.services.telegram_auth import (
+    TelegramAuthService,
+    TelegramAuthError,
+    TelegramDataExpiredError,
+    TelegramInvalidHashError,
+    TelegramBotNotConfiguredError,
+)
 from application.services.business_card import BusinessCardService
 from application.services.company import (
     CompanyService,
@@ -54,6 +61,11 @@ __all__ = [
     "MagicLinkError",
     "MagicLinkExpiredError",
     "MagicLinkInvalidError",
+    "TelegramAuthService",
+    "TelegramAuthError",
+    "TelegramDataExpiredError",
+    "TelegramInvalidHashError",
+    "TelegramBotNotConfiguredError",
     "BusinessCardService",
     "CompanyService",
     "CompanyError",

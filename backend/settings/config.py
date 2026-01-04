@@ -95,6 +95,21 @@ class MagicLinkConfig(BaseSettings):
     frontend_url: str = ""  # URL фронтенда для ссылок в QR-кодах и email
 
 
+class TelegramConfig(BaseSettings):
+    """Конфигурация Telegram авторизации."""
+
+    bot_token: str = ""  # Токен Telegram бота от @BotFather
+    bot_username: str = ""  # Username бота без @
+    auth_timeout: int = 86400  # Время жизни auth данных (24 часа)
+
+    @property
+    def bot_id(self) -> str:
+        """Получить ID бота из токена."""
+        if self.bot_token:
+            return self.bot_token.split(":")[0]
+        return ""
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
@@ -109,6 +124,7 @@ class Config(BaseSettings):
     email: EmailConfig = EmailConfig()
     rabbitmq: RabbitMQConfig = RabbitMQConfig()
     magic_link: MagicLinkConfig = MagicLinkConfig()
+    telegram: TelegramConfig = TelegramConfig()
     mongo: DatabaseConfig
     api: APIConfig
 

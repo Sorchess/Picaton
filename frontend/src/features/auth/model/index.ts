@@ -8,4 +8,9 @@ export type {
   MagicLinkRequest,
   MagicLinkResponse,
   MagicLinkVerifyRequest,
+  TelegramAuthData,
+  TelegramConfig,
+  TelegramContact,
+  TelegramFoundContact,
+  TelegramContactsSyncResponse,
 } from "./types";

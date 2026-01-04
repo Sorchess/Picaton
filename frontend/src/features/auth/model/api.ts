@@ -7,6 +7,10 @@ import type {
   MagicLinkRequest,
   MagicLinkResponse,
   MagicLinkVerifyRequest,
+  TelegramAuthData,
+  TelegramConfig,
+  TelegramContact,
+  TelegramContactsSyncResponse,
 } from "./types";
 
 export const authApi = {
@@ -45,5 +49,27 @@ export const authApi = {
     const response = await api.post<AuthUser>("/auth/magic-link/verify", data);
     tokenStorage.set(response.access_token);
     return response;
+  },
+
+  // Telegram авторизация
+  getTelegramConfig: async (): Promise<TelegramConfig> => {
+    return api.get<TelegramConfig>("/auth/telegram/config");
+  },
+
+  telegramAuth: async (data: TelegramAuthData): Promise<AuthUser> => {
+    const response = await api.post<AuthUser>("/auth/telegram", data);
+    tokenStorage.set(response.access_token);
+    return response;
+  },
+
+  syncTelegramContacts: async (
+    contacts: TelegramContact[]
+  ): Promise<TelegramContactsSyncResponse> => {
+    return api.post<TelegramContactsSyncResponse>(
+      "/auth/telegram/sync-contacts",
+      {
+        contacts,
+      }
+    );
   },
 };

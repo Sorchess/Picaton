@@ -1,4 +1,5 @@
 export { AuthProvider, useAuth, authApi } from "./model";
+export { TelegramLoginButton } from "./ui";
 export type {
   AuthUser,
   LoginCredentials,
@@ -7,4 +8,9 @@ export type {
   MagicLinkRequest,
   MagicLinkResponse,
   MagicLinkVerifyRequest,
+  TelegramAuthData,
+  TelegramConfig,
+  TelegramContact,
+  TelegramFoundContact,
+  TelegramContactsSyncResponse,
 } from "./model";

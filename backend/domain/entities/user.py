@@ -50,6 +50,10 @@ class User(Entity):
     phone_hash: str | None = field(default=None)  # SHA-256 hash телефона для sync
     avatar_url: str | None = field(default=None)
 
+    # Telegram авторизация
+    telegram_id: int | None = field(default=None)  # Telegram user ID
+    telegram_username: str | None = field(default=None)  # @username в Telegram
+
     # Локация
     location: str | None = field(default=None)
 
@@ -185,7 +189,10 @@ class User(Entity):
             # Username или URL для соц.сетей
             if (
                 not URL_REGEX.match(value)
-                and not value.replace("_", "").replace("-", "").replace(".", "").isalnum()
+                and not value.replace("_", "")
+                .replace("-", "")
+                .replace(".", "")
+                .isalnum()
             ):
                 raise InvalidContactValueError(
                     contact_type.value, value, "Invalid username or URL"
@@ -304,9 +311,11 @@ class User(Entity):
     ) -> None:
         """Обновить видимость контакта в публичном профиле."""
         self.contacts = [
-            Contact(c.type, c.value, c.is_primary, is_visible)
-            if c.type == contact_type and c.value == value
-            else c
+            (
+                Contact(c.type, c.value, c.is_primary, is_visible)
+                if c.type == contact_type and c.value == value
+                else c
+            )
             for c in self.contacts
         ]
 
