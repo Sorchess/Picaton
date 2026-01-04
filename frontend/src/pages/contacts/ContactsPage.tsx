@@ -1,15 +1,9 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { SavedContact, UserPublic } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import { businessCardApi } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
-import {
-  ContactImportButton,
-  type PhoneContact,
-  type ImportStats,
-  type HashedContact,
-  type ContactSyncResult,
-} from "@/features/contact-import";
+import { ContactImportButton } from "@/features/contact-import";
 import { SpecialistModal } from "@/features/specialist-modal";
 import { Tag, Loader, Typography, Modal, Input } from "@/shared";
 import "./ContactsPage.scss";
@@ -273,55 +267,6 @@ export function ContactsPage() {
     }
   };
 
-  const handleImportContacts = async (
-    phoneContacts: PhoneContact[]
-  ): Promise<ImportStats> => {
-    if (!authUser?.id) {
-      return { total: 0, imported: 0, skipped: 0, errors: ["Не авторизован"] };
-    }
-
-    try {
-      const result = await userApi.importContacts(
-        authUser.id,
-        phoneContacts.map((c) => ({
-          name: c.name,
-          phone: c.phone,
-          email: c.email,
-        }))
-      );
-
-      return {
-        total: phoneContacts.length,
-        imported: result.imported_count,
-        skipped: result.skipped_count,
-        errors: result.errors,
-      };
-    } catch (err) {
-      return {
-        total: phoneContacts.length,
-        imported: 0,
-        skipped: phoneContacts.length,
-        errors: [err instanceof Error ? err.message : "Ошибка импорта"],
-      };
-    }
-  };
-
-  const handleSyncContacts = useCallback(
-    async (hashedContacts: HashedContact[]): Promise<ContactSyncResult> => {
-      if (!authUser?.id) {
-        throw new Error("Не авторизован");
-      }
-
-      const result = await userApi.syncContacts(authUser.id, hashedContacts);
-      return {
-        found: result.found,
-        found_count: result.found_count,
-        pending_count: result.pending_count,
-      };
-    },
-    [authUser?.id]
-  );
-
   const getContactFullName = (contact: SavedContact) => {
     if (contact.first_name || contact.last_name) {
       return `${contact.first_name} ${contact.last_name}`.trim();
@@ -420,11 +365,7 @@ export function ContactsPage() {
             Мои <span className="contacts-page__title-accent">контакты</span>
           </h1>
           <div className="contacts-page__actions">
-            <ContactImportButton
-              onImport={handleImportContacts}
-              onSync={handleSyncContacts}
-              onImported={loadContacts}
-            />
+            <ContactImportButton onSyncComplete={() => loadContacts()} />
             <button
               className="contacts-page__add-btn"
               onClick={() => setIsAddModalOpen(true)}

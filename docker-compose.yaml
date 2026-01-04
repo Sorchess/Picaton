@@ -104,6 +104,26 @@ services:
     networks:
       - app-network
 
+  telegram-bot:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: app-image
+    container_name: telegram-bot
+    labels:
+      - "app_service=telegram-bot"
+    env_file:
+      - .env
+    environment:
+      - RUNNING_IN_DOCKER=1
+    command: "python telegram_bot.py"
+    depends_on:
+      main-app:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend

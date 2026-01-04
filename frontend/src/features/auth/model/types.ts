@@ -80,3 +80,44 @@ export interface TelegramContactsSyncResponse {
   found_count: number;
   total: number;
 }
+
+// Telegram Deep Link Auth
+
+export interface TelegramDeepLinkResponse {
+  token: string;
+  deep_link: string;
+  tg_link: string;
+  expires_in: number;
+}
+
+export interface TelegramAuthStatusResponse {
+  status: "pending" | "confirmed" | "expired";
+  message?: string;
+  remaining?: number;
+  user?: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    avatar_url: string | null;
+    telegram_id: number | null;
+    telegram_username: string | null;
+  };
+  access_token?: string;
+}
+
+// Telegram Contact Sync (через бота)
+
+export interface ContactSyncSessionResponse {
+  token: string;
+  deep_link: string;
+  tg_link: string;
+  expires_in: number;
+}
+
+export interface ContactSyncStatusResponse {
+  status: "pending" | "completed" | "expired";
+  message?: string;
+  remaining?: number;
+  contacts?: TelegramFoundContact[];
+}

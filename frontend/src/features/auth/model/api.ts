@@ -11,6 +11,10 @@ import type {
   TelegramConfig,
   TelegramContact,
   TelegramContactsSyncResponse,
+  TelegramDeepLinkResponse,
+  TelegramAuthStatusResponse,
+  ContactSyncSessionResponse,
+  ContactSyncStatusResponse,
 } from "./types";
 
 export const authApi = {
@@ -51,7 +55,7 @@ export const authApi = {
     return response;
   },
 
-  // Telegram авторизация
+  // Telegram Widget авторизация
   getTelegramConfig: async (): Promise<TelegramConfig> => {
     return api.get<TelegramConfig>("/auth/telegram/config");
   },
@@ -62,6 +66,20 @@ export const authApi = {
     return response;
   },
 
+  // Telegram Deep Link авторизация (открывает приложение Telegram)
+  createTelegramDeepLink: async (): Promise<TelegramDeepLinkResponse> => {
+    return api.post<TelegramDeepLinkResponse>("/auth/telegram/deeplink", {});
+  },
+
+  checkTelegramAuthStatus: async (
+    token: string
+  ): Promise<TelegramAuthStatusResponse> => {
+    return api.get<TelegramAuthStatusResponse>(
+      `/auth/telegram/status/${token}`
+    );
+  },
+
+  // Синхронизация контактов
   syncTelegramContacts: async (
     contacts: TelegramContact[]
   ): Promise<TelegramContactsSyncResponse> => {
@@ -70,6 +88,22 @@ export const authApi = {
       {
         contacts,
       }
+    );
+  },
+
+  // Синхронизация контактов через бота (deep link)
+  createContactSyncSession: async (): Promise<ContactSyncSessionResponse> => {
+    return api.post<ContactSyncSessionResponse>(
+      "/auth/telegram/sync-session",
+      {}
+    );
+  },
+
+  checkContactSyncStatus: async (
+    token: string
+  ): Promise<ContactSyncStatusResponse> => {
+    return api.get<ContactSyncStatusResponse>(
+      `/auth/telegram/sync-status/${token}`
     );
   },
 };

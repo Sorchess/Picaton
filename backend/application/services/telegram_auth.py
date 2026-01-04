@@ -1,12 +1,13 @@
 """
 Telegram Authentication Service.
 
-Реализует авторизацию через Telegram Login Widget.
+Реализует авторизацию через Telegram Login Widget и Deep Link.
 https://core.telegram.org/widgets/login
 """
 
 import hashlib
 import hmac
+import secrets
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -42,6 +43,18 @@ class TelegramBotNotConfiguredError(TelegramAuthError):
     pass
 
 
+class TelegramAuthPendingError(TelegramAuthError):
+    """Авторизация ещё не подтверждена."""
+
+    pass
+
+
+class TelegramAuthTokenNotFoundError(TelegramAuthError):
+    """Токен авторизации не найден или истёк."""
+
+    pass
+
+
 @dataclass
 class TelegramAuthData:
     """Данные авторизации от Telegram."""
@@ -66,13 +79,43 @@ class TelegramContact:
     phone: str | None = None
 
 
+@dataclass
+class PendingTelegramAuth:
+    """Pending авторизация через Telegram deep link."""
+
+    token: str
+    created_at: float
+    telegram_data: TelegramAuthData | None = None
+    confirmed: bool = False
+
+
+@dataclass
+class PendingContactSync:
+    """Pending сессия синхронизации контактов."""
+
+    token: str
+    created_at: float
+    user_id: str  # ID пользователя который запросил синхронизацию
+    contacts: list[TelegramContact] | None = None
+    completed: bool = False
+
+
+# In-memory storage для pending авторизаций (в продакшене использовать Redis)
+_pending_auth_sessions: dict[str, PendingTelegramAuth] = {}
+_pending_sync_sessions: dict[str, PendingContactSync] = {}
+
+
 class TelegramAuthService:
     """
     Сервис авторизации через Telegram.
 
-    Верифицирует данные от Telegram Login Widget,
-    создаёт/обновляет пользователя и возвращает JWT токен.
+    Поддерживает два режима:
+    1. Telegram Login Widget (popup окно)
+    2. Deep Link авторизация (открывает приложение Telegram)
     """
+
+    # Время жизни pending токена (5 минут)
+    PENDING_TOKEN_TTL = 300
 
     def __init__(
         self,
@@ -87,6 +130,163 @@ class TelegramAuthService:
         self._jwt_secret = jwt_secret
         self._jwt_algorithm = jwt_algorithm
         self._token_expire_minutes = access_token_expire_minutes
+
+    # ==================== Deep Link Auth ====================
+
+    def create_auth_token(self) -> dict:
+        """
+        Создать токен для deep link авторизации.
+
+        Returns:
+            dict с token и deep_link URL
+        """
+        bot_username = settings.telegram.bot_username
+        if not bot_username:
+            raise TelegramBotNotConfiguredError(
+                "Telegram бот не настроен. Укажите TELEGRAM__BOT_USERNAME в .env"
+            )
+
+        # Генерируем уникальный токен
+        token = secrets.token_urlsafe(32)
+
+        # Сохраняем pending сессию
+        _pending_auth_sessions[token] = PendingTelegramAuth(
+            token=token,
+            created_at=time.time(),
+        )
+
+        # Очищаем старые сессии
+        self._cleanup_expired_sessions()
+
+        # Формируем deep link
+        # tg://resolve открывает приложение, https://t.me работает как fallback
+        deep_link = f"https://t.me/{bot_username}?start=auth_{token}"
+        tg_link = f"tg://resolve?domain={bot_username}&start=auth_{token}"
+
+        return {
+            "token": token,
+            "deep_link": deep_link,
+            "tg_link": tg_link,
+            "expires_in": self.PENDING_TOKEN_TTL,
+        }
+
+    def confirm_auth_from_bot(
+        self,
+        token: str,
+        telegram_id: int,
+        first_name: str,
+        last_name: str | None = None,
+        username: str | None = None,
+        photo_url: str | None = None,
+    ) -> bool:
+        """
+        Подтвердить авторизацию от Telegram бота.
+
+        Вызывается когда бот получает /start auth_TOKEN от пользователя.
+
+        Args:
+            token: Токен авторизации (без префикса auth_)
+            telegram_id: ID пользователя в Telegram
+            first_name: Имя пользователя
+            last_name: Фамилия
+            username: Username в Telegram
+            photo_url: URL аватара
+
+        Returns:
+            True если токен валиден и авторизация подтверждена
+        """
+        # Убираем префикс auth_ если он есть
+        if token.startswith("auth_"):
+            token = token[5:]
+
+        pending = _pending_auth_sessions.get(token)
+        if not pending:
+            return False
+
+        # Проверяем TTL
+        if time.time() - pending.created_at > self.PENDING_TOKEN_TTL:
+            del _pending_auth_sessions[token]
+            return False
+
+        # Сохраняем данные пользователя
+        pending.telegram_data = TelegramAuthData(
+            id=telegram_id,
+            first_name=first_name,
+            last_name=last_name,
+            username=username,
+            photo_url=photo_url,
+            auth_date=int(time.time()),
+        )
+        pending.confirmed = True
+
+        return True
+
+    async def check_auth_status(self, token: str) -> dict:
+        """
+        Проверить статус авторизации по токену.
+
+        Фронтенд polling'ом вызывает этот метод.
+
+        Returns:
+            dict со статусом и данными пользователя если авторизован
+        """
+        pending = _pending_auth_sessions.get(token)
+
+        if not pending:
+            return {"status": "expired", "message": "Токен не найден или истёк"}
+
+        # Проверяем TTL
+        if time.time() - pending.created_at > self.PENDING_TOKEN_TTL:
+            del _pending_auth_sessions[token]
+            return {"status": "expired", "message": "Токен истёк"}
+
+        if not pending.confirmed or not pending.telegram_data:
+            remaining = int(self.PENDING_TOKEN_TTL - (time.time() - pending.created_at))
+            return {"status": "pending", "remaining": remaining}
+
+        # Авторизация подтверждена - создаём/обновляем пользователя
+        tg_data = pending.telegram_data
+
+        # Ищем или создаём пользователя
+        user = await self._user_repo.find_by_telegram_id(tg_data.id)
+
+        if user:
+            user = await self._update_user_from_telegram(user, tg_data)
+        else:
+            user = await self._create_user_from_telegram(tg_data)
+
+        # Генерируем JWT токен
+        access_token = self._create_access_token(user.id)
+
+        # Удаляем использованную сессию
+        del _pending_auth_sessions[token]
+
+        return {
+            "status": "confirmed",
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "avatar_url": user.avatar_url,
+                "telegram_id": user.telegram_id,
+                "telegram_username": user.telegram_username,
+            },
+            "access_token": access_token,
+        }
+
+    def _cleanup_expired_sessions(self) -> None:
+        """Удалить истёкшие pending сессии."""
+        current_time = time.time()
+        expired = [
+            token
+            for token, session in _pending_auth_sessions.items()
+            if current_time - session.created_at > self.PENDING_TOKEN_TTL
+        ]
+        for token in expired:
+            del _pending_auth_sessions[token]
+
+    # ==================== Widget Auth (existing) ====================
 
     def verify_telegram_auth(self, auth_data: dict[str, Any]) -> TelegramAuthData:
         """
@@ -313,3 +513,177 @@ class TelegramAuthService:
             "found_count": len(found_contacts),
             "total": len(contacts),
         }
+
+    # ==================== Contact Sync via Bot ====================
+
+    def create_sync_session(self, user_id: str) -> dict:
+        """
+        Создать сессию синхронизации контактов.
+
+        Пользователь переходит в бота, пересылает контакты,
+        бот отправляет их на сервер.
+
+        Args:
+            user_id: ID авторизованного пользователя
+
+        Returns:
+            dict с token и deep_link URL
+        """
+        bot_username = settings.telegram.bot_username
+        if not bot_username:
+            raise TelegramBotNotConfiguredError(
+                "Telegram бот не настроен. Укажите TELEGRAM__BOT_USERNAME в .env"
+            )
+
+        # Генерируем уникальный токен
+        token = secrets.token_urlsafe(32)
+
+        # Сохраняем pending сессию
+        _pending_sync_sessions[token] = PendingContactSync(
+            token=token,
+            created_at=time.time(),
+            user_id=user_id,
+        )
+
+        # Очищаем старые сессии
+        self._cleanup_expired_sync_sessions()
+
+        # Формируем deep link
+        deep_link = f"https://t.me/{bot_username}?start=sync_{token}"
+        tg_link = f"tg://resolve?domain={bot_username}&start=sync_{token}"
+
+        return {
+            "token": token,
+            "deep_link": deep_link,
+            "tg_link": tg_link,
+            "expires_in": self.PENDING_TOKEN_TTL,
+        }
+
+    def add_contacts_to_sync(
+        self,
+        token: str,
+        contacts: list[TelegramContact],
+    ) -> bool:
+        """
+        Добавить контакты в сессию синхронизации (вызывается ботом).
+
+        Args:
+            token: Токен сессии (без префикса sync_)
+            contacts: Список контактов
+
+        Returns:
+            True если успешно
+        """
+        if token.startswith("sync_"):
+            token = token[5:]
+
+        pending = _pending_sync_sessions.get(token)
+        if not pending:
+            return False
+
+        # Проверяем TTL
+        if time.time() - pending.created_at > self.PENDING_TOKEN_TTL:
+            del _pending_sync_sessions[token]
+            return False
+
+        # Добавляем контакты (или заменяем)
+        pending.contacts = contacts
+        return True
+
+    def complete_sync(self, token: str) -> bool:
+        """
+        Завершить сессию синхронизации (вызывается ботом).
+
+        Args:
+            token: Токен сессии (без префикса sync_)
+
+        Returns:
+            True если успешно
+        """
+        if token.startswith("sync_"):
+            token = token[5:]
+
+        pending = _pending_sync_sessions.get(token)
+        if not pending:
+            return False
+
+        # Проверяем TTL
+        if time.time() - pending.created_at > self.PENDING_TOKEN_TTL:
+            del _pending_sync_sessions[token]
+            return False
+
+        pending.completed = True
+        return True
+
+    async def check_sync_status(self, token: str) -> dict[str, Any]:
+        """
+        Проверить статус синхронизации контактов.
+
+        Args:
+            token: Токен сессии
+
+        Returns:
+            dict со статусом и результатами
+        """
+        pending = _pending_sync_sessions.get(token)
+
+        if not pending:
+            return {
+                "status": "expired",
+                "message": "Сессия синхронизации не найдена или истекла",
+            }
+
+        elapsed = time.time() - pending.created_at
+        remaining = max(0, int(self.PENDING_TOKEN_TTL - elapsed))
+
+        if elapsed > self.PENDING_TOKEN_TTL:
+            del _pending_sync_sessions[token]
+            return {
+                "status": "expired",
+                "message": "Время синхронизации истекло",
+            }
+
+        if not pending.completed:
+            return {
+                "status": "pending",
+                "message": "Ожидаем контакты из Telegram",
+                "remaining": remaining,
+            }
+
+        # Синхронизация завершена - ищем контакты в базе
+        contacts = pending.contacts or []
+
+        if not contacts:
+            # Удаляем сессию
+            del _pending_sync_sessions[token]
+            return {
+                "status": "completed",
+                "message": "Контакты не получены",
+                "contacts": [],
+            }
+
+        # Ищем пользователей
+        from uuid import UUID
+
+        user_id = UUID(pending.user_id)
+        result = await self.sync_contacts(user_id, contacts)
+
+        # Удаляем сессию
+        del _pending_sync_sessions[token]
+
+        return {
+            "status": "completed",
+            "message": f"Найдено {result['found_count']} контактов",
+            "contacts": result["found"],
+        }
+
+    def _cleanup_expired_sync_sessions(self) -> None:
+        """Удалить истёкшие сессии синхронизации."""
+        now = time.time()
+        expired = [
+            token
+            for token, session in _pending_sync_sessions.items()
+            if now - session.created_at > self.PENDING_TOKEN_TTL
+        ]
+        for token in expired:
+            del _pending_sync_sessions[token]

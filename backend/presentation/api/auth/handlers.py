@@ -13,6 +13,13 @@ from presentation.api.auth.schemas import (
     TelegramContactsSyncResponse,
     TelegramFoundContact,
     TelegramConfigResponse,
+    TelegramDeepLinkResponse,
+    TelegramAuthStatusResponse,
+    TelegramBotConfirmRequest,
+    ContactSyncSessionResponse,
+    ContactSyncStatusResponse,
+    BotContactsSyncRequest,
+    BotSyncCompleteRequest,
 )
 from presentation.api.users.schemas import UserResponse, TagInfo, ContactInfo
 from infrastructure.dependencies import (
@@ -324,3 +331,211 @@ async def sync_telegram_contacts(
         found_count=result["found_count"],
         total=result["total"],
     )
+
+
+# ==================== Telegram Deep Link Auth ====================
+
+
+@router.post("/telegram/deeplink", response_model=TelegramDeepLinkResponse)
+async def create_telegram_deeplink(
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Создать deep link для авторизации через Telegram.
+
+    Возвращает ссылку, которая откроет приложение Telegram.
+    Фронтенд должен polling'ом проверять статус по токену.
+    """
+    try:
+        result = telegram_service.create_auth_token()
+    except TelegramBotNotConfiguredError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram авторизация не настроена",
+        )
+
+    return TelegramDeepLinkResponse(
+        token=result["token"],
+        deep_link=result["deep_link"],
+        tg_link=result["tg_link"],
+        expires_in=result["expires_in"],
+    )
+
+
+@router.get("/telegram/status/{token}", response_model=TelegramAuthStatusResponse)
+async def check_telegram_auth_status(
+    token: str,
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Проверить статус авторизации через Telegram deep link.
+
+    Фронтенд вызывает этот endpoint polling'ом каждые 2-3 секунды.
+
+    Возможные статусы:
+    - pending: Ожидание подтверждения в Telegram
+    - confirmed: Авторизация успешна, возвращает user и access_token
+    - expired: Токен истёк
+    """
+    result = await telegram_service.check_auth_status(token)
+
+    return TelegramAuthStatusResponse(
+        status=result["status"],
+        message=result.get("message"),
+        remaining=result.get("remaining"),
+        user=result.get("user"),
+        access_token=result.get("access_token"),
+    )
+
+
+@router.post("/telegram/bot/confirm")
+async def confirm_telegram_auth_from_bot(
+    data: TelegramBotConfirmRequest,
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Подтвердить авторизацию от Telegram бота.
+
+    Этот endpoint вызывается Telegram ботом когда пользователь
+    нажимает /start auth_TOKEN в боте.
+
+    ⚠️ В продакшене нужно добавить верификацию что запрос от бота!
+    """
+    # TODO: Добавить проверку secret токена от бота
+    success = telegram_service.confirm_auth_from_bot(
+        token=data.token,
+        telegram_id=data.telegram_id,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        username=data.username,
+        photo_url=data.photo_url,
+    )
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Токен авторизации не найден или истёк",
+        )
+
+    return {"success": True, "message": "Авторизация подтверждена"}
+
+
+# ==================== Contact Sync via Bot ====================
+
+
+@router.post("/telegram/sync-session", response_model=ContactSyncSessionResponse)
+async def create_contact_sync_session(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Создать сессию синхронизации контактов через Telegram бота.
+
+    Возвращает deep link для открытия бота в Telegram.
+    Пользователь пересылает контакты боту, а затем нажимает "Готово".
+    """
+    # Получаем текущего пользователя
+    user = await auth_service.get_current_user(credentials.credentials)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Требуется авторизация",
+        )
+
+    try:
+        result = telegram_service.create_sync_session(str(user.id))
+    except TelegramBotNotConfiguredError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram бот не настроен",
+        )
+
+    return ContactSyncSessionResponse(
+        token=result["token"],
+        deep_link=result["deep_link"],
+        tg_link=result["tg_link"],
+        expires_in=result["expires_in"],
+    )
+
+
+@router.get("/telegram/sync-status/{token}", response_model=ContactSyncStatusResponse)
+async def check_contact_sync_status(
+    token: str,
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Проверить статус синхронизации контактов.
+
+    Фронтенд вызывает этот endpoint polling'ом каждые 2-3 секунды.
+
+    Возможные статусы:
+    - pending: Ожидание контактов
+    - completed: Синхронизация завершена, возвращает найденные контакты
+    - expired: Сессия истекла
+    """
+    result = await telegram_service.check_sync_status(token)
+
+    contacts = None
+    if result.get("contacts"):
+        contacts = [TelegramFoundContact(**c) for c in result["contacts"]]
+
+    return ContactSyncStatusResponse(
+        status=result["status"],
+        message=result.get("message"),
+        remaining=result.get("remaining"),
+        contacts=contacts,
+    )
+
+
+@router.post("/telegram/bot/sync-contacts")
+async def bot_add_sync_contacts(
+    data: BotContactsSyncRequest,
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Добавить контакты в сессию синхронизации (вызывается ботом).
+
+    ⚠️ В продакшене нужно добавить верификацию что запрос от бота!
+    """
+    contacts = [
+        TelegramContact(
+            telegram_id=c.telegram_id,
+            first_name=c.first_name,
+            last_name=c.last_name,
+            username=c.username,
+            phone=c.phone,
+        )
+        for c in data.contacts
+    ]
+
+    success = telegram_service.add_contacts_to_sync(data.token, contacts)
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Сессия синхронизации не найдена или истекла",
+        )
+
+    return {"success": True, "message": "Контакты добавлены"}
+
+
+@router.post("/telegram/bot/sync-complete")
+async def bot_complete_sync(
+    data: BotSyncCompleteRequest,
+    telegram_service: TelegramAuthService = Depends(get_telegram_auth_service),
+):
+    """
+    Завершить сессию синхронизации (вызывается ботом).
+
+    ⚠️ В продакшене нужно добавить верификацию что запрос от бота!
+    """
+    success = telegram_service.complete_sync(data.token)
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Сессия синхронизации не найдена или истекла",
+        )
+
+    return {"success": True, "message": "Синхронизация завершена"}
