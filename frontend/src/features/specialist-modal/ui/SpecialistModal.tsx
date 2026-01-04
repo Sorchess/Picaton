@@ -108,6 +108,15 @@ export function SpecialistModal({
   const bio = user.bio || user.ai_generated_bio;
   const contacts = user.contacts || [];
 
+  // Поддержка как объектных тегов (tags), так и строковых (search_tags)
+  const tags =
+    user.tags && user.tags.length > 0
+      ? user.tags
+      : (user.search_tags || []).map((name, idx) => ({
+          id: `search-${idx}`,
+          name,
+        }));
+
   // Генерируем инициалы из имени
   const getInitials = (name: string): string => {
     const parts = name.trim().split(/\s+/);
@@ -150,11 +159,11 @@ export function SpecialistModal({
         </div>
       )}
 
-      {user.tags.length > 0 && (
+      {tags.length > 0 && (
         <div className="specialist-modal__section">
           <h3 className="specialist-modal__section-title">Навыки</h3>
           <div className="specialist-modal__tags">
-            {user.tags.map((tag) => (
+            {tags.map((tag) => (
               <Tag key={tag.id} size="sm" variant="default">
                 {tag.name}
               </Tag>

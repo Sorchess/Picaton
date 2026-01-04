@@ -260,6 +260,9 @@ function AuthenticatedApp() {
                 type: "success",
                 text: "Контакт сохранен!",
               });
+              // Закрываем модальное окно после сохранения
+              setIsQrModalOpen(false);
+              setQrUser(null);
             } catch (err) {
               setInviteMessage({
                 type: "error",
