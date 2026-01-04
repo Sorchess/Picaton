@@ -15,6 +15,7 @@ import { SpecialistModal } from "./features/specialist-modal";
 import { companyApi } from "./entities/company";
 import type { UserPublic } from "./entities/user";
 import { userApi } from "./entities/user";
+import { businessCardApi } from "./entities/business-card";
 import "./App.scss";
 
 // Парсинг URL для получения токена приглашения
@@ -28,6 +29,13 @@ function getInviteTokenFromUrl(): string | null {
 function getUserIdFromUrl(): string | null {
   const path = window.location.pathname;
   const match = path.match(/^\/users\/([^/]+)$/);
+  return match ? match[1] : null;
+}
+
+// Парсинг URL для получения ID карточки из QR кода
+function getCardIdFromUrl(): string | null {
+  const path = window.location.pathname;
+  const match = path.match(/^\/cards\/([^/]+)$/);
   return match ? match[1] : null;
 }
 
@@ -112,6 +120,59 @@ function AuthenticatedApp() {
             err?.data?.detail ||
             err?.message ||
             "Не удалось загрузить профиль пользователя";
+          setInviteMessage({ type: "error", text: errorMessage });
+          window.history.replaceState({}, "", "/");
+        })
+        .finally(() => {
+          setIsLoadingQrUser(false);
+        });
+    }
+  }, []);
+
+  // Обработка ссылки на карточку из QR кода
+  useEffect(() => {
+    const cardId = getCardIdFromUrl();
+    if (cardId && !isLoadingQrUser && !qrUser) {
+      setIsLoadingQrUser(true);
+      businessCardApi
+        .getPublic(cardId)
+        .then((cardData) => {
+          // Преобразуем данные карточки в формат UserPublic
+          const firstName = cardData.display_name
+            ? cardData.display_name.split(" ")[0]
+            : "";
+          const lastName = cardData.display_name
+            ? cardData.display_name.split(" ").slice(1).join(" ")
+            : "";
+
+          const userData: UserPublic & { card_id?: string } = {
+            id: cardData.owner_id,
+            card_id: cardData.id,
+            first_name: firstName,
+            last_name: lastName,
+            avatar_url: cardData.avatar_url,
+            bio: cardData.bio,
+            ai_generated_bio: cardData.ai_generated_bio,
+            location: null,
+            tags: cardData.tags,
+            search_tags: cardData.search_tags,
+            contacts: cardData.contacts.map((c) => ({
+              type: c.type,
+              value: c.value,
+              is_primary: c.is_primary,
+              is_visible: c.is_visible,
+            })),
+            profile_completeness: cardData.completeness,
+          };
+
+          setQrUser(userData);
+          setIsQrModalOpen(true);
+          // Очищаем URL
+          window.history.replaceState({}, "", "/");
+        })
+        .catch((err) => {
+          const errorMessage =
+            err?.data?.detail || err?.message || "Не удалось загрузить визитку";
           setInviteMessage({ type: "error", text: errorMessage });
           window.history.replaceState({}, "", "/");
         })
@@ -255,7 +316,10 @@ function AuthenticatedApp() {
           onSaveContact={async (savedUser) => {
             if (!user?.id) return;
             try {
-              await userApi.saveContact(user.id, savedUser.id);
+              // Если есть card_id, передаём его для сохранения конкретной карточки
+              const cardId = (savedUser as UserPublic & { card_id?: string })
+                .card_id;
+              await userApi.saveContact(user.id, savedUser.id, cardId);
               setInviteMessage({
                 type: "success",
                 text: "Контакт сохранен!",

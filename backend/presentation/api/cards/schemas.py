@@ -162,3 +162,13 @@ class CardTagSuggestionsResponse(BaseModel):
     suggestions: list[CardSuggestedTag]
     bio_used: str
     card_id: UUID
+
+
+# ============ QR Code ============
+
+
+class CardQRCodeResponse(BaseModel):
+    """Ответ с QR-кодом карточки."""
+
+    image_base64: str
+    card_id: UUID

@@ -4,9 +4,10 @@ import "./CardPreview.scss";
 interface CardPreviewProps {
   card: BusinessCard;
   onClick: () => void;
+  onShare?: (card: BusinessCard) => void;
 }
 
-export function CardPreview({ card, onClick }: CardPreviewProps) {
+export function CardPreview({ card, onClick, onShare }: CardPreviewProps) {
   // Расчёт прогресса
   const getProgress = () => {
     let progress = 0;
@@ -20,8 +21,13 @@ export function CardPreview({ card, onClick }: CardPreviewProps) {
   const progress = getProgress();
   const isComplete = progress === 100;
 
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onShare?.(card);
+  };
+
   return (
-    <button className="card-preview" onClick={onClick}>
+    <div className="card-preview" onClick={onClick}>
       <div className="card-preview__content">
         <div className="card-preview__header">
           <div className="card-preview__info">
@@ -39,6 +45,30 @@ export function CardPreview({ card, onClick }: CardPreviewProps) {
               </p>
             )}
           </div>
+          {onShare && (
+            <button
+              className="card-preview__share-btn"
+              onClick={handleShareClick}
+              title="Поделиться"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="4" height="4" rx="0.5" />
+                <rect x="17" y="17" width="4" height="4" rx="0.5" />
+                <rect x="14" y="17" width="2" height="2" rx="0.25" />
+                <rect x="17" y="14" width="2" height="2" rx="0.25" />
+              </svg>
+            </button>
+          )}
         </div>
 
         <div className="card-preview__footer">
@@ -70,6 +100,6 @@ export function CardPreview({ card, onClick }: CardPreviewProps) {
           <span className="card-preview__arrow">→</span>
         </div>
       </div>
-    </button>
+    </div>
   );
 }

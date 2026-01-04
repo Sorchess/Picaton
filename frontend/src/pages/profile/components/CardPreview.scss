@@ -31,6 +31,28 @@
     align-items: flex-start;
   }
 
+  &__share-btn {
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: rgba(139, 92, 246, 0.4);
+      color: #8b5cf6;
+      transform: scale(1.05);
+    }
+
+    svg {
+      display: block;
+    }
+  }
+
   &__icon {
     font-size: 2rem;
     flex-shrink: 0;

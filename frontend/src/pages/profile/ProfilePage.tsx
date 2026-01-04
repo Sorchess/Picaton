@@ -140,13 +140,14 @@ export function ProfilePage() {
     [user]
   );
 
-  // QR код
-  const handleGetQrCode = async () => {
-    if (!user) return;
+  // QR код карточки
+  const [qrCardName, setQrCardName] = useState<string | undefined>();
+
+  const handleShareCard = async (card: BusinessCard) => {
     try {
-      const qr = await userApi.getQRCode(user.id);
-      const imageData = qr.qr_code_base64 || qr.image_base64;
-      setQrCodeImage(imageData);
+      const qr = await businessCardApi.getQRCode(card.id);
+      setQrCodeImage(qr.image_base64);
+      setQrCardName(card.title);
       setShowQrModal(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка генерации QR");
@@ -215,42 +216,6 @@ export function ProfilePage() {
             <span className="profile__email">{user.email}</span>
           </div>
         </div>
-        <button className="profile__qr-btn" onClick={handleGetQrCode}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <rect
-              x="3"
-              y="3"
-              width="7"
-              height="7"
-              rx="1"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <rect
-              x="14"
-              y="3"
-              width="7"
-              height="7"
-              rx="1"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <rect
-              x="3"
-              y="14"
-              width="7"
-              height="7"
-              rx="1"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <rect x="14" y="14" width="3" height="3" fill="currentColor" />
-            <rect x="18" y="14" width="3" height="3" fill="currentColor" />
-            <rect x="14" y="18" width="3" height="3" fill="currentColor" />
-            <rect x="18" y="18" width="3" height="3" fill="currentColor" />
-          </svg>
-          QR код
-        </button>
       </header>
 
       {/* Секция карточек */}
@@ -271,6 +236,7 @@ export function ProfilePage() {
                 key={card.id}
                 card={card}
                 onClick={() => handleOpenCard(card)}
+                onShare={handleShareCard}
               />
             ))}
 
@@ -331,7 +297,7 @@ export function ProfilePage() {
           isOpen={showQrModal}
           onClose={() => setShowQrModal(false)}
           qrCodeImage={qrCodeImage}
-          userName={getFullName(user)}
+          userName={qrCardName || getFullName(user)}
         />
       )}
     </div>

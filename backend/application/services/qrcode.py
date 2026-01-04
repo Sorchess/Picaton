@@ -1,11 +1,13 @@
 import base64
 import io
 from dataclasses import dataclass
+from uuid import UUID
 
 import qrcode
 from qrcode.image.pil import PilImage
 
 from domain.entities.user import User
+from domain.entities.business_card import BusinessCard
 
 
 @dataclass
@@ -22,36 +24,44 @@ class QRCodeService:
     def __init__(self, base_url: str = ""):
         self._base_url = base_url
 
-    def generate_contact_qr(self, user: User) -> QRCodeData:
-        """
-        Генерирует QR-код для пользователя.
-        QR-код содержит ссылку на профиль или vCard данные.
-        """
-        # Формируем URL профиля
-        profile_url = f"{self._base_url}/users/{user.id}"
-
+    def _generate_qr_image(self, data: str) -> str:
+        """Генерирует QR-код изображение из данных."""
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=10,
             border=4,
         )
-        qr.add_data(profile_url)
+        qr.add_data(data)
         qr.make(fit=True)
 
-        # Создаем изображение используя Pillow
         img = qr.make_image(
             image_factory=PilImage, fill_color="black", back_color="white"
         )
 
-        # Конвертируем в base64
         buffer = io.BytesIO()
         img.save(buffer, format="PNG")
         buffer.seek(0)
-        image_base64 = "data:image/png;base64," + base64.b64encode(
-            buffer.read()
-        ).decode("utf-8")
+        return "data:image/png;base64," + base64.b64encode(buffer.read()).decode(
+            "utf-8"
+        )
 
+    def generate_contact_qr(self, user: User) -> QRCodeData:
+        """
+        Генерирует QR-код для пользователя.
+        QR-код содержит ссылку на профиль или vCard данные.
+        """
+        profile_url = f"{self._base_url}/users/{user.id}"
+        image_base64 = self._generate_qr_image(profile_url)
+        return QRCodeData(image_base64=image_base64)
+
+    def generate_card_qr(self, card_id: UUID) -> QRCodeData:
+        """
+        Генерирует QR-код для визитной карточки.
+        QR-код содержит ссылку на конкретную карточку.
+        """
+        card_url = f"{self._base_url}/cards/{card_id}"
+        image_base64 = self._generate_qr_image(card_url)
         return QRCodeData(image_base64=image_base64)
 
     def generate_vcard_qr(self, user: User) -> QRCodeData:

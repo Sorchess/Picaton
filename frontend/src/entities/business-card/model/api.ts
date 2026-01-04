@@ -119,4 +119,12 @@ export const businessCardApi = {
       bio_used: string;
       card_id: string;
     }>(`/cards/${cardId}/suggest-tags?owner_id=${ownerId}`),
+
+  // ============ QR Code ============
+
+  // Получить QR-код для визитной карточки
+  getQRCode: (cardId: string) =>
+    api.get<{ image_base64: string; card_id: string }>(
+      `/cards/${cardId}/qr-code`
+    ),
 };

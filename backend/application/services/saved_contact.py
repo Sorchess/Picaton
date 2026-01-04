@@ -104,6 +104,7 @@ class SavedContactService:
         """
         Сохранить контакт другого пользователя.
         Если передан card_id, сохраняет конкретную карточку.
+        Если card_id не передан, ищет основную карточку пользователя.
         """
         # Если передан card_id, используем новый метод
         if card_id and self._card_repository:
@@ -118,6 +119,22 @@ class SavedContactService:
         if await self._contact_repository.exists(owner_id, user_id):
             raise ContactAlreadyExistsError(str(user_id))
 
+        # Пытаемся найти основную карточку пользователя для получения контактов
+        contacts_to_save = list(user.contacts)
+        user_search_tags = list(user.search_tags)
+
+        if self._card_repository and not contacts_to_save:
+            # Если у пользователя нет контактов, пробуем взять из его карточки
+            cards = await self._card_repository.get_by_owner(user_id)
+            if cards:
+                # Берём основную (первую) карточку
+                primary_card = cards[0]
+                contacts_to_save = list(primary_card.contacts)
+                # Также добавляем теги из карточки
+                user_search_tags = list(
+                    set(user_search_tags + primary_card.search_tags)
+                )
+
         contact = SavedContact(
             owner_id=owner_id,
             saved_user_id=user_id,
@@ -125,14 +142,14 @@ class SavedContactService:
             first_name=user.first_name,
             last_name=user.last_name,
             email=user.email,
-            contacts=list(user.contacts),  # Копируем контакты пользователя
+            contacts=contacts_to_save,  # Копируем контакты пользователя или из карточки
             search_tags=search_tags or [],
             notes=notes,
             source="app",
         )
 
         # Добавляем теги пользователя как теги поиска
-        for tag in user.search_tags:
+        for tag in user_search_tags:
             contact.add_search_tag(tag)
 
         return await self._contact_repository.create(contact)

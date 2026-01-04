@@ -19,11 +19,13 @@ from presentation.api.cards.schemas import (
     CardContactInfo,
     CardSuggestedTag,
     CardTagSuggestionsResponse,
+    CardQRCodeResponse,
 )
 from infrastructure.dependencies import (
     get_business_card_service,
     get_groq_bio_service,
     get_ai_tags_service,
+    get_qrcode_service,
 )
 from application.services.business_card import (
     BusinessCardService,
@@ -31,6 +33,7 @@ from application.services.business_card import (
     CardLimitExceededError,
     CardAccessDeniedError,
 )
+from application.services.qrcode import QRCodeService
 
 
 router = APIRouter()
@@ -486,3 +489,28 @@ async def clear_card_content(
         raise HTTPException(status_code=404, detail="Card not found")
     except CardAccessDeniedError:
         raise HTTPException(status_code=403, detail="Access denied")
+
+
+# ============ QR Code ============
+
+
+@router.get("/{card_id}/qr-code", response_model=CardQRCodeResponse)
+async def get_card_qr_code(
+    card_id: UUID,
+    card_service: BusinessCardService = Depends(get_business_card_service),
+    qrcode_service: QRCodeService = Depends(get_qrcode_service),
+):
+    """Получить QR-код для визитной карточки."""
+    try:
+        # Проверяем что карточка существует
+        card = await card_service.get_card(card_id)
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found")
+
+        qr_data = qrcode_service.generate_card_qr(card_id)
+        return CardQRCodeResponse(
+            image_base64=qr_data.image_base64,
+            card_id=card_id,
+        )
+    except BusinessCardNotFoundError:
+        raise HTTPException(status_code=404, detail="Card not found")

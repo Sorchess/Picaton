@@ -147,16 +147,58 @@ export function ContactsPage() {
           })),
           profile_completeness: cardData.completeness,
         };
-      } else if (contact.contacts && contact.contacts.length > 0) {
-        // Если нет карточки, но есть контакты в SavedContact, используем их
+      } else {
+        // Загружаем данные пользователя из API
         const userDataFromApi = await userApi.getPublic(contact.saved_user_id);
+
+        // Если у пользователя нет контактов, но есть в SavedContact - используем их
+        // Если в обоих местах нет - пробуем загрузить карточку пользователя
+        let contactsToUse = userDataFromApi.contacts || [];
+        let tagsToUse = userDataFromApi.tags || [];
+        let searchTagsToUse = userDataFromApi.search_tags || [];
+
+        if (contact.contacts && contact.contacts.length > 0) {
+          contactsToUse = contact.contacts;
+        }
+
+        if (contact.search_tags && contact.search_tags.length > 0) {
+          searchTagsToUse = contact.search_tags;
+        }
+
+        // Если всё еще нет контактов, пробуем загрузить основную карточку пользователя
+        if (contactsToUse.length === 0) {
+          try {
+            const primaryCard = await businessCardApi.getPrimary(
+              contact.saved_user_id
+            );
+            if (primaryCard) {
+              contactsToUse = primaryCard.contacts.map((c) => ({
+                type: c.type,
+                value: c.value,
+                is_primary: c.is_primary,
+                is_visible: c.is_visible,
+              }));
+              if (primaryCard.tags && primaryCard.tags.length > 0) {
+                tagsToUse = primaryCard.tags;
+              }
+              if (
+                primaryCard.search_tags &&
+                primaryCard.search_tags.length > 0
+              ) {
+                searchTagsToUse = primaryCard.search_tags;
+              }
+            }
+          } catch {
+            // Ignore error if can't load cards
+          }
+        }
+
         userData = {
           ...userDataFromApi,
-          contacts: contact.contacts, // Используем контакты из SavedContact
+          contacts: contactsToUse,
+          tags: tagsToUse,
+          search_tags: searchTagsToUse,
         };
-      } else {
-        // Загружаем данные пользователя
-        userData = await userApi.getPublic(contact.saved_user_id);
       }
 
       setSelectedUserProfile(userData);
