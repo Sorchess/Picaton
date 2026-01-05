@@ -3,6 +3,7 @@ import type { User, ContactInfo } from "@/entities/user";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import { TagInput } from "@/shared";
+import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import "./CardEditor.scss";
 
 // Конфигурация типов контактов
@@ -61,7 +62,7 @@ interface SuggestedTag {
   reason: string;
 }
 
-type EditStep = 1 | 2 | 3 | 4;
+type EditStep = 1 | 2 | 3;
 
 interface CardEditorProps {
   card: BusinessCard;
@@ -83,13 +84,7 @@ export function CardEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Form state
-  const [bio, setBio] = useState(card.bio || "");
-  const [isSavingBio, setIsSavingBio] = useState(false);
-
   // AI states
-  const [isGeneratingPresentation, setIsGeneratingPresentation] =
-    useState(false);
   const [isGeneratingTags, setIsGeneratingTags] = useState(false);
   const [aiTagSuggestions, setAiTagSuggestions] = useState<string[]>([]);
   const [isApplyingTags, setIsApplyingTags] = useState(false);
@@ -109,36 +104,34 @@ export function CardEditor({
   // Sync with prop changes
   useEffect(() => {
     setSelectedCard(card);
-    setBio(card.bio || "");
     setProfileTags(card.search_tags || []);
   }, [card]);
 
-  // Текущий шаг
+  // Текущий шаг (теперь 3 шага: bio, tags, contacts)
   const currentStep = useMemo((): EditStep => {
-    if (!bio.trim() || bio.length < 20) return 1;
-    if (!selectedCard.ai_generated_bio) return 2;
-    if (profileTags.length === 0) return 3;
-    return 4;
-  }, [selectedCard, bio, profileTags]);
+    if (!selectedCard.ai_generated_bio) return 1;
+    if (profileTags.length === 0) return 2;
+    return 3;
+  }, [selectedCard, profileTags]);
 
-  // Расчёт прогресса
+  // Расчёт прогресса (3 секции: bio 33%, tags 33%, contacts 34%)
   const progressPercent = useMemo(() => {
     let progress = 0;
-    if (bio.trim() && bio.length >= 20) progress += 25;
-    if (selectedCard.ai_generated_bio) progress += 25;
-    if (profileTags.length > 0) progress += 25;
+    if (selectedCard.ai_generated_bio) progress += 33;
+    if (profileTags.length > 0) progress += 33;
     if (selectedCard.contacts && selectedCard.contacts.length > 0)
-      progress += 25;
+      progress += 34;
     return progress;
-  }, [selectedCard, bio, profileTags]);
+  }, [selectedCard, profileTags]);
 
   // Проверка завершённости
   const isComplete = progressPercent === 100;
 
   // Автоматическая загрузка AI-подсказок для тегов
   useEffect(() => {
+    const bioText = selectedCard.ai_generated_bio || selectedCard.bio || "";
     if (
-      bio.trim().length >= 20 &&
+      bioText.trim().length >= 20 &&
       !hasFetchedSuggestions &&
       !isGeneratingTags
     ) {
@@ -146,7 +139,7 @@ export function CardEditor({
       fetchTagSuggestions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bio, hasFetchedSuggestions]);
+  }, [selectedCard.ai_generated_bio, selectedCard.bio, hasFetchedSuggestions]);
 
   const fetchTagSuggestions = async () => {
     setIsGeneratingTags(true);
@@ -163,52 +156,16 @@ export function CardEditor({
     }
   };
 
-  // Сохранение био
-  const handleSaveBio = async () => {
-    setIsSavingBio(true);
-    setError(null);
-    try {
-      const updated = await businessCardApi.update(selectedCard.id, user.id, {
-        bio,
-      });
-      setSelectedCard(updated);
-      onCardUpdate(updated);
-
-      if (bio.trim().length >= 20) {
-        setHasFetchedSuggestions(false);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка сохранения");
-    } finally {
-      setIsSavingBio(false);
-    }
-  };
-
-  // Генерация AI презентации
-  const handleGeneratePresentation = async () => {
-    if (!bio.trim()) {
-      setError("Сначала заполните информацию о себе");
-      return;
-    }
-    setIsGeneratingPresentation(true);
-    setError(null);
-    try {
-      if (bio !== selectedCard.bio) {
-        await businessCardApi.update(selectedCard.id, user.id, { bio });
-      }
-      const result = await businessCardApi.generateBio(
-        selectedCard.id,
-        user.id
-      );
-      const updated = { ...selectedCard, bio, ai_generated_bio: result.bio };
-      setSelectedCard(updated);
-      onCardUpdate(updated);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка генерации");
-    } finally {
-      setIsGeneratingPresentation(false);
-    }
-  };
+  // Обработка обновления карточки из UnifiedBioEditor
+  const handleBioUpdate = useCallback(
+    (updatedCard: BusinessCard) => {
+      setSelectedCard(updatedCard);
+      onCardUpdate(updatedCard);
+      // Сбросить флаг для обновления тегов
+      setHasFetchedSuggestions(false);
+    },
+    [onCardUpdate]
+  );
 
   // Изменение тегов
   const handleTagsChange = useCallback(
@@ -351,118 +308,19 @@ export function CardEditor({
 
       {/* Content */}
       <div className="card-editor__content">
-        {/* Step 1: Bio */}
-        <section
-          className={`card-editor__section ${
-            currentStep === 1 ? "card-editor__section--active" : ""
-          } ${bio.length >= 20 ? "card-editor__section--done" : ""}`}
-        >
-          <div className="card-editor__section-header">
-            <span
-              className={`card-editor__step ${
-                bio.length >= 20 ? "card-editor__step--done" : ""
-              }`}
-            >
-              {bio.length >= 20 ? "✓" : "1"}
-            </span>
-            <div>
-              <h2>Расскажите о себе</h2>
-              <p>Опишите свой опыт, навыки и достижения</p>
-            </div>
-          </div>
+        {/* Step 1: Bio (UnifiedBioEditor) */}
+        <UnifiedBioEditor
+          card={selectedCard}
+          userId={user.id}
+          isActive={currentStep === 1}
+          onCardUpdate={handleBioUpdate}
+          onError={setError}
+        />
 
-          <textarea
-            className="card-editor__textarea"
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="Например: Python разработчик с 5-летним опытом. Работал над высоконагруженными системами..."
-            rows={5}
-          />
-
-          <div className="card-editor__section-footer">
-            <span className="card-editor__char-count">
-              {bio.length} / 2000
-              {bio.length > 0 && bio.length < 20 && (
-                <span className="card-editor__char-hint"> (минимум 20)</span>
-              )}
-            </span>
-            <button
-              className="card-editor__btn card-editor__btn--secondary"
-              onClick={handleSaveBio}
-              disabled={isSavingBio || bio === (selectedCard.bio || "")}
-            >
-              {isSavingBio ? "Сохранение..." : "Сохранить"}
-            </button>
-          </div>
-        </section>
-
-        {/* Step 2: AI Presentation */}
-        <section
-          className={`card-editor__section card-editor__section--ai ${
-            currentStep === 2 ? "card-editor__section--active" : ""
-          } ${
-            selectedCard.ai_generated_bio ? "card-editor__section--done" : ""
-          }`}
-        >
-          <div className="card-editor__section-header">
-            <span
-              className={`card-editor__step ${
-                selectedCard.ai_generated_bio ? "card-editor__step--done" : ""
-              }`}
-            >
-              {selectedCard.ai_generated_bio ? "✓" : "2"}
-            </span>
-            <div>
-              <h2>AI Презентация</h2>
-              <p>Нейросеть создаст краткое описание</p>
-            </div>
-          </div>
-
-          {selectedCard.ai_generated_bio ? (
-            <div className="card-editor__presentation">
-              <p>{selectedCard.ai_generated_bio}</p>
-            </div>
-          ) : (
-            <div
-              className={`card-editor__presentation card-editor__presentation--empty ${
-                bio.length < 20 ? "card-editor__presentation--locked" : ""
-              }`}
-            >
-              <span className="card-editor__presentation-icon">
-                {bio.length < 20 ? "🔒" : "✨"}
-              </span>
-              <p>
-                {bio.length < 20
-                  ? "Сначала заполните информацию о себе"
-                  : "Нажмите кнопку ниже"}
-              </p>
-            </div>
-          )}
-
-          <button
-            className={`card-editor__btn card-editor__btn--primary card-editor__btn--full ${
-              currentStep === 2 ? "card-editor__btn--pulse" : ""
-            }`}
-            onClick={handleGeneratePresentation}
-            disabled={isGeneratingPresentation || bio.length < 20}
-          >
-            {isGeneratingPresentation ? (
-              <>
-                <span className="card-editor__spinner" />
-                Генерация...
-              </>
-            ) : selectedCard.ai_generated_bio ? (
-              "🔄 Перегенерировать"
-            ) : (
-              "✨ Создать презентацию"
-            )}
-          </button>
-        </section>
-
-        {/* Step 3: Tags */}
+        {/* Step 2: Tags */}
         <section
           className={`card-editor__section card-editor__section--tags ${
-            currentStep === 3 ? "card-editor__section--active" : ""
+            currentStep === 2 ? "card-editor__section--active" : ""
           } ${
             selectedCard.tags && selectedCard.tags.length > 0
               ? "card-editor__section--done"
@@ -477,7 +335,7 @@ export function CardEditor({
                   : ""
               }`}
             >
-              {selectedCard.tags && selectedCard.tags.length > 0 ? "✓" : "3"}
+              {selectedCard.tags && selectedCard.tags.length > 0 ? "✓" : "2"}
             </span>
             <div>
               <h2>Навыки и теги</h2>
@@ -494,7 +352,7 @@ export function CardEditor({
               suggestions={aiTagSuggestions}
               isLoadingSuggestions={isGeneratingTags}
               maxTags={15}
-              disabled={bio.length < 20 || isApplyingTags}
+              disabled={!selectedCard.ai_generated_bio || isApplyingTags}
             />
             {isApplyingTags && (
               <span className="card-editor__saving">Сохранение...</span>
@@ -502,7 +360,7 @@ export function CardEditor({
           </div>
         </section>
 
-        {/* Step 4: Contacts */}
+        {/* Step 3: Contacts */}
         <section
           className={`card-editor__section card-editor__section--contacts ${
             (selectedCard.contacts?.length ?? 0) > 0
@@ -518,7 +376,7 @@ export function CardEditor({
                   : ""
               }`}
             >
-              {(selectedCard.contacts?.length ?? 0) > 0 ? "✓" : "4"}
+              {(selectedCard.contacts?.length ?? 0) > 0 ? "✓" : "3"}
             </span>
             <div>
               <h2>Контакты</h2>

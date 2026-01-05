@@ -40,10 +40,13 @@ from application.services import (
 from application.services.business_card import BusinessCardService
 from application.services.groq_bio import GroqBioGenerator
 from application.services.groq_tags import GroqTagsGenerator
+from application.services.local_bio import LocalBioGenerator
+from application.services.local_tags import LocalTagsGenerator
 from application.services.ai_search import AISearchService
 from application.services.card_title import CardTitleGenerator
 from application.services.telegram_auth import TelegramAuthService
 from infrastructure.llm.groq_client import GroqClient
+from infrastructure.llm.local_llm_client import LocalLLMClient
 from infrastructure.storage import CloudinaryService
 from infrastructure.email import SmtpEmailBackend
 from settings.config import settings
@@ -151,9 +154,13 @@ def get_ai_bio_service() -> AIBioGeneratorService:
     """
     Получить сервис AI генерации биографии.
 
-    Использует Groq LLM если API ключ настроен,
-    иначе fallback на локальный ONNX генератор.
+    Приоритет:
+    1. Локальная модель (T-lite) если enabled
+    2. Groq API если api_key настроен
+    3. Fallback на rule-based генератор
     """
+    if settings.local_llm.enabled:
+        return AIBioGeneratorService(LocalBioGenerator())
     if settings.groq.api_key:
         return AIBioGeneratorService(GroqBioGenerator())
     return AIBioGeneratorService(AIBioGenerator())
@@ -163,9 +170,13 @@ def get_ai_tags_service() -> AITagsGeneratorService:
     """
     Получить сервис AI генерации тегов.
 
-    Использует Groq LLM если API ключ настроен,
-    иначе fallback на rule-based генератор.
+    Приоритет:
+    1. Локальная модель (T-lite) если enabled
+    2. Groq API если api_key настроен
+    3. Fallback на rule-based генератор
     """
+    if settings.local_llm.enabled:
+        return AITagsGeneratorService(LocalTagsGenerator())
     if settings.groq.api_key:
         return AITagsGeneratorService(GroqTagsGenerator())
     return AITagsGeneratorService(MockAITagsGenerator())
@@ -178,6 +189,24 @@ def get_groq_bio_service() -> GroqBioGenerator:
     Используется для генерации AI-презентаций для карточек.
     """
     return GroqBioGenerator()
+
+
+def get_local_bio_service() -> LocalBioGenerator:
+    """
+    Получить локальный сервис генерации биографий.
+
+    Используется для streaming генерации через WebSocket.
+    """
+    return LocalBioGenerator()
+
+
+def get_local_tags_service() -> LocalTagsGenerator:
+    """
+    Получить локальный сервис генерации тегов.
+
+    Используется для генерации тегов через локальную модель.
+    """
+    return LocalTagsGenerator()
 
 
 def get_business_card_service(

@@ -50,6 +50,26 @@ class GroqConfig(BaseSettings):
     temperature: float = 0.7
 
 
+class LocalLLMConfig(BaseSettings):
+    """Конфигурация локального LLM (llama.cpp сервер)."""
+
+    enabled: bool = False
+    base_url: str = "http://localhost:8080"
+    model: str = "T-lite-instruct-0.1"
+    max_tokens: int = 500
+    temperature: float = 0.7
+    timeout: float = 120.0  # Увеличенный timeout для локальной модели
+
+
+class EmbeddingConfig(BaseSettings):
+    """Конфигурация сервиса эмбеддингов (USER-bge-m3)."""
+
+    enabled: bool = False
+    model_path: str = "/root/models/embedding/user-bge-m3"
+    dimensions: int = 1024
+    normalize: bool = True
+
+
 class CloudinaryConfig(BaseSettings):
     """Конфигурация Cloudinary для хранения изображений."""
 
@@ -120,6 +140,8 @@ class Config(BaseSettings):
     logging: LoggingConfig = LoggingConfig()
     jwt: JWTConfig = JWTConfig()
     groq: GroqConfig = GroqConfig()
+    local_llm: LocalLLMConfig = LocalLLMConfig()
+    embedding: EmbeddingConfig = EmbeddingConfig()
     cloudinary: CloudinaryConfig = CloudinaryConfig()
     email: EmailConfig = EmailConfig()
     rabbitmq: RabbitMQConfig = RabbitMQConfig()

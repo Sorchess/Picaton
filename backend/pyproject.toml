@@ -23,6 +23,7 @@ tokenizers = "^0.21.0"
 httpx = "^0.28.0"
 cloudinary = "^1.41.0"
 python-multipart = "^0.0.20"
+websockets = "^15.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"
