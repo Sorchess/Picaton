@@ -83,8 +83,11 @@ export class AIWebSocketClient {
 
     this.connectionPromise = new Promise((resolve, reject) => {
       try {
-        // Convert HTTP URL to WebSocket URL
-        const wsUrl = this.baseUrl.replace(/^http/, "ws").replace(/\/$/, "");
+        // Convert HTTP URL to WebSocket URL and remove /api suffix if present
+        const wsUrl = this.baseUrl
+          .replace(/^http/, "ws")
+          .replace(/\/api\/?$/, "")
+          .replace(/\/$/, "");
 
         const url = `${wsUrl}/api/ws/cards/${cardId}?owner_id=${ownerId}`;
 
