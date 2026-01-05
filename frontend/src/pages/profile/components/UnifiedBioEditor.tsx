@@ -33,6 +33,8 @@ export interface UnifiedBioEditorProps {
   onCardUpdate: (updatedCard: BusinessCard) => void;
   /** Callback для отображения ошибок */
   onError: Dispatch<SetStateAction<string | null>>;
+  /** Callback при обновлении предложенных тегов */
+  onTagsUpdate?: (tags: string[]) => void;
   /** Минимальная длина bio для активации AI */
   minLength?: number;
   /** Максимальная длина bio */
@@ -45,6 +47,7 @@ export function UnifiedBioEditor({
   isActive,
   onCardUpdate,
   onError,
+  onTagsUpdate,
   minLength = 20,
   maxLength = 2000,
 }: UnifiedBioEditorProps) {
@@ -75,6 +78,34 @@ export function UnifiedBioEditor({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preGenerationBioRef = useRef<string>("");
+  const requestTagsRef = useRef<(text: string) => void>(() => {});
+
+  // Function to request tags for given text
+  const requestTags = useCallback(
+    (text: string) => {
+      if (text.trim().length >= minLength && wsConnected) {
+        console.log(
+          "[BioEditor] Requesting tags for text:",
+          text.slice(0, 50) + "..."
+        );
+        const sent = aiWebSocket.send("suggest_tags", { bio_text: text });
+        console.log("[BioEditor] Tags request sent:", sent);
+      } else {
+        console.log(
+          "[BioEditor] Cannot request tags - wsConnected:",
+          wsConnected,
+          "textLength:",
+          text.trim().length
+        );
+      }
+    },
+    [wsConnected, minLength]
+  );
+
+  // Keep ref updated
+  useEffect(() => {
+    requestTagsRef.current = requestTags;
+  }, [requestTags]);
 
   // Connect to WebSocket
   useEffect(() => {
@@ -105,6 +136,11 @@ export function UnifiedBioEditor({
         // Save the generated bio to undo stack
         setBio(data.full_bio);
         setStreamedText("");
+        // Request tags for the new bio
+        const newBio = data.full_bio;
+        setTimeout(() => {
+          requestTagsRef.current(newBio);
+        }, 500);
       }
     });
 
@@ -120,8 +156,15 @@ export function UnifiedBioEditor({
       }
     });
 
-    const unsubTags = aiWebSocket.on("tags_update", (_data: WSMessage) => {
-      // Tags are handled separately in CardEditor
+    const unsubTags = aiWebSocket.on("tags_update", (data: WSMessage) => {
+      console.log("[BioEditor] Received tags_update:", data);
+      if (!mounted || !data.tags) return;
+      // Extract tag names and call callback
+      const tagNames = data.tags.map((t) => t.name);
+      console.log("[BioEditor] Tag names extracted:", tagNames);
+      if (onTagsUpdate) {
+        onTagsUpdate(tagNames);
+      }
     });
 
     return () => {
@@ -142,17 +185,7 @@ export function UnifiedBioEditor({
   }, [initialBio]);
 
   // Debounced tag update
-  const debouncedTagUpdate = useDebouncedCallback(
-    useCallback(
-      (text: string) => {
-        if (text.trim().length >= minLength && wsConnected) {
-          aiWebSocket.send("suggest_tags", { bio_text: text });
-        }
-      },
-      [wsConnected, minLength]
-    ),
-    1500
-  );
+  const debouncedTagUpdate = useDebouncedCallback(requestTags, 1500);
 
   // Handle bio changes
   const handleBioChange = useCallback(
@@ -231,6 +264,8 @@ export function UnifiedBioEditor({
         bio,
       });
       onCardUpdate(updatedCard);
+      // Request tags after successful save
+      requestTags(bio);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : "Ошибка сохранения";
       setError(errorMessage);
@@ -238,7 +273,16 @@ export function UnifiedBioEditor({
     } finally {
       setIsSaving(false);
     }
-  }, [bio, cardId, ownerId, onCardUpdate, onError, isSaving, isGenerating]);
+  }, [
+    bio,
+    cardId,
+    ownerId,
+    onCardUpdate,
+    onError,
+    isSaving,
+    isGenerating,
+    requestTags,
+  ]);
 
   // Display text: streaming or current bio
   const displayText = isGenerating ? streamedText : bio;

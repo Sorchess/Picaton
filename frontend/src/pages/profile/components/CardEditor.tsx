@@ -315,6 +315,7 @@ export function CardEditor({
           isActive={currentStep === 1}
           onCardUpdate={handleBioUpdate}
           onError={setError}
+          onTagsUpdate={setAiTagSuggestions}
         />
 
         {/* Step 2: Tags */}
