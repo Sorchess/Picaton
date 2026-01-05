@@ -34,12 +34,16 @@ class LocalTagsGenerator(AITagsGeneratorInterface):
             return GeneratedTags(suggested_tags=[], tags=[], skills=[])
 
         try:
+            logger.info(f"Generating tags for bio (len={len(bio)}): {bio[:80]}...")
+
             # Use complete_json for structured output
             tags_list = await self._client.complete_json(
                 system_prompt=TAGS_GENERATION_PROMPT,
                 user_prompt=bio,
                 max_tokens=200,
             )
+
+            logger.info(f"LLM returned tags_list: {tags_list}")
 
             # Handle response format
             if isinstance(tags_list, dict):
@@ -210,7 +214,19 @@ class LocalTagsGenerator(AITagsGeneratorInterface):
         tag_lower = tag.lower()
 
         # Language keywords
-        languages = ["python", "javascript", "typescript", "java", "go", "rust", "php", "swift", "kotlin", "c++", "c#"]
+        languages = [
+            "python",
+            "javascript",
+            "typescript",
+            "java",
+            "go",
+            "rust",
+            "php",
+            "swift",
+            "kotlin",
+            "c++",
+            "c#",
+        ]
         if any(lang in tag_lower for lang in languages):
             return "Языки"
 
@@ -220,7 +236,17 @@ class LocalTagsGenerator(AITagsGeneratorInterface):
             return "Frontend"
 
         # Backend keywords
-        backend = ["backend", "api", "server", "django", "fastapi", "flask", "node", "express", "spring"]
+        backend = [
+            "backend",
+            "api",
+            "server",
+            "django",
+            "fastapi",
+            "flask",
+            "node",
+            "express",
+            "spring",
+        ]
         if any(kw in tag_lower for kw in backend):
             return "Backend"
 
@@ -240,7 +266,16 @@ class LocalTagsGenerator(AITagsGeneratorInterface):
             return "Cloud"
 
         # AI/ML keywords
-        aiml = ["ml", "ai", "machine", "deep", "neural", "tensorflow", "pytorch", "data science"]
+        aiml = [
+            "ml",
+            "ai",
+            "machine",
+            "deep",
+            "neural",
+            "tensorflow",
+            "pytorch",
+            "data science",
+        ]
         if any(kw in tag_lower for kw in aiml):
             return "AI/ML"
 

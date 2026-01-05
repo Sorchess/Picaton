@@ -11,7 +11,10 @@ from application.services.local_bio import LocalBioGenerator
 from application.services.local_tags import LocalTagsGenerator
 from application.services.business_card import BusinessCardService
 from infrastructure.database.client import mongodb_client
-from infrastructure.database.repositories import MongoBusinessCardRepository, MongoUserRepository
+from infrastructure.database.repositories import (
+    MongoBusinessCardRepository,
+    MongoUserRepository,
+)
 from settings.config import settings
 
 logger = logging.getLogger(__name__)
@@ -98,10 +101,12 @@ async def websocket_card_ai(
     # Check if local LLM is enabled
     if not settings.local_llm.enabled:
         await websocket.accept()
-        await websocket.send_json({
-            "type": "error",
-            "message": "Local LLM is not enabled. Streaming not available.",
-        })
+        await websocket.send_json(
+            {
+                "type": "error",
+                "message": "Local LLM is not enabled. Streaming not available.",
+            }
+        )
         await websocket.close(code=4001)
         return
 
@@ -117,10 +122,13 @@ async def websocket_card_ai(
                 # Receive message with timeout
                 data = await websocket.receive_json()
             except json.JSONDecodeError:
-                await manager.send_json(client_id, {
-                    "type": "error",
-                    "message": "Invalid JSON format",
-                })
+                await manager.send_json(
+                    client_id,
+                    {
+                        "type": "error",
+                        "message": "Invalid JSON format",
+                    },
+                )
                 continue
 
             action = data.get("action")
@@ -146,19 +154,25 @@ async def websocket_card_ai(
                 )
 
             else:
-                await manager.send_json(client_id, {
-                    "type": "error",
-                    "message": f"Unknown action: {action}",
-                })
+                await manager.send_json(
+                    client_id,
+                    {
+                        "type": "error",
+                        "message": f"Unknown action: {action}",
+                    },
+                )
 
     except WebSocketDisconnect:
         logger.info(f"Client disconnected: {client_id}")
     except Exception as e:
         logger.error(f"WebSocket error for {client_id}: {e}")
-        await manager.send_json(client_id, {
-            "type": "error",
-            "message": str(e),
-        })
+        await manager.send_json(
+            client_id,
+            {
+                "type": "error",
+                "message": str(e),
+            },
+        )
     finally:
         manager.disconnect(client_id)
 
@@ -177,25 +191,34 @@ async def _handle_generate_bio(
 
         # Check ownership
         if card.owner_id != owner_id:
-            await manager.send_json(client_id, {
-                "type": "error",
-                "message": "Access denied",
-            })
+            await manager.send_json(
+                client_id,
+                {
+                    "type": "error",
+                    "message": "Access denied",
+                },
+            )
             return
 
         # Check if bio exists
         if not card.bio or not card.bio.strip():
-            await manager.send_json(client_id, {
-                "type": "error",
-                "message": "Bio text is required",
-            })
+            await manager.send_json(
+                client_id,
+                {
+                    "type": "error",
+                    "message": "Bio text is required",
+                },
+            )
             return
 
         # Notify start
-        await manager.send_json(client_id, {
-            "type": "start",
-            "message": "Starting generation...",
-        })
+        await manager.send_json(
+            client_id,
+            {
+                "type": "start",
+                "message": "Starting generation...",
+            },
+        )
 
         # Stream bio generation
         full_bio = ""
@@ -206,10 +229,13 @@ async def _handle_generate_bio(
             tags=[tag.name for tag in card.tags] if card.tags else None,
         ):
             full_bio += chunk
-            await manager.send_json(client_id, {
-                "type": "chunk",
-                "content": chunk,
-            })
+            await manager.send_json(
+                client_id,
+                {
+                    "type": "chunk",
+                    "content": chunk,
+                },
+            )
 
         # Clean the result
         full_bio = full_bio.strip()
@@ -220,17 +246,23 @@ async def _handle_generate_bio(
         await card_service.set_ai_generated_bio(card_id, owner_id, full_bio)
 
         # Send completion
-        await manager.send_json(client_id, {
-            "type": "complete",
-            "full_bio": full_bio,
-        })
+        await manager.send_json(
+            client_id,
+            {
+                "type": "complete",
+                "full_bio": full_bio,
+            },
+        )
 
     except Exception as e:
         logger.error(f"Bio generation error: {e}")
-        await manager.send_json(client_id, {
-            "type": "error",
-            "message": f"Generation failed: {str(e)}",
-        })
+        await manager.send_json(
+            client_id,
+            {
+                "type": "error",
+                "message": f"Generation failed: {str(e)}",
+            },
+        )
 
 
 async def _handle_suggest_tags(
@@ -241,32 +273,47 @@ async def _handle_suggest_tags(
     """Handle tag suggestions."""
     try:
         if not bio_text or len(bio_text.strip()) < 20:
-            await manager.send_json(client_id, {
-                "type": "error",
-                "message": "Bio text must be at least 20 characters",
-            })
+            await manager.send_json(
+                client_id,
+                {
+                    "type": "error",
+                    "message": "Bio text must be at least 20 characters",
+                },
+            )
             return
+
+        logger.info(f"Generating tags for bio: {bio_text[:100]}...")
 
         # Generate tags
         result = await tags_generator.generate_tags_from_bio(bio_text)
 
+        logger.info(
+            f"Generated {len(result.suggested_tags)} tags: {[t.name for t in result.suggested_tags]}"
+        )
+
         # Send tags
-        await manager.send_json(client_id, {
-            "type": "tags_update",
-            "tags": [
-                {
-                    "name": t.name,
-                    "category": t.category,
-                    "confidence": t.confidence,
-                    "reason": t.reason,
-                }
-                for t in result.suggested_tags
-            ],
-        })
+        await manager.send_json(
+            client_id,
+            {
+                "type": "tags_update",
+                "tags": [
+                    {
+                        "name": t.name,
+                        "category": t.category,
+                        "confidence": t.confidence,
+                        "reason": t.reason,
+                    }
+                    for t in result.suggested_tags
+                ],
+            },
+        )
 
     except Exception as e:
         logger.error(f"Tag suggestion error: {e}")
-        await manager.send_json(client_id, {
-            "type": "error",
-            "message": f"Tag generation failed: {str(e)}",
-        })
+        await manager.send_json(
+            client_id,
+            {
+                "type": "error",
+                "message": f"Tag generation failed: {str(e)}",
+            },
+        )
