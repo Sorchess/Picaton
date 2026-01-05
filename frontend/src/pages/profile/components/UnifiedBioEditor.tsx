@@ -51,7 +51,7 @@ export function UnifiedBioEditor({
   const cardId = card.id;
   const ownerId = userId;
   const initialBio = card.bio || "";
-  const disabled = !isActive;
+  // isActive is kept for potential styling but editing is always enabled
   // Undo/Redo state
   const {
     value: bio,
@@ -167,8 +167,8 @@ export function UnifiedBioEditor({
     [setBio, debouncedTagUpdate, maxLength]
   );
 
-  // AI Improve
-  const handleAIImprove = useCallback(() => {
+  // AI Improve - saves current bio first, then generates
+  const handleAIImprove = useCallback(async () => {
     if (bio.trim().length < minLength) {
       setError(`Минимум ${minLength} символов для AI-улучшения`);
       return;
@@ -181,12 +181,32 @@ export function UnifiedBioEditor({
 
     // Save current bio for potential rollback
     preGenerationBioRef.current = bio;
-    setIsGenerating(true);
-    setStreamedText("");
     setError(null);
 
+    // First save the current bio so AI generates from fresh data
+    if (bio !== initialBio) {
+      setIsSaving(true);
+      try {
+        const updatedCard = await businessCardApi.update(cardId, ownerId, {
+          bio,
+        });
+        onCardUpdate(updatedCard);
+      } catch (e) {
+        const errorMessage =
+          e instanceof Error ? e.message : "Ошибка сохранения";
+        setError(errorMessage);
+        setIsSaving(false);
+        return;
+      }
+      setIsSaving(false);
+    }
+
+    // Now start AI generation
+    setIsGenerating(true);
+    setStreamedText("");
+
     aiWebSocket.send("generate_bio");
-  }, [bio, wsConnected, minLength]);
+  }, [bio, initialBio, wsConnected, minLength, cardId, ownerId, onCardUpdate]);
 
   // Cancel generation
   const handleCancelGeneration = useCallback(() => {
@@ -224,8 +244,11 @@ export function UnifiedBioEditor({
   const displayText = isGenerating ? streamedText : bio;
   const charCount = isGenerating ? streamedText.length : bio.length;
   const canImprove =
-    bio.trim().length >= minLength && !isGenerating && !disabled && wsConnected;
+    bio.trim().length >= minLength && !isGenerating && !isSaving && wsConnected;
   const hasUnsavedChanges = bio !== initialBio;
+
+  // Mark isActive as used for potential future styling
+  void isActive;
 
   return (
     <div
@@ -249,7 +272,7 @@ export function UnifiedBioEditor({
             type="button"
             className="unified-bio-editor__history-btn"
             onClick={undo}
-            disabled={!canUndo || isGenerating || disabled}
+            disabled={!canUndo || isGenerating}
             title="Отменить (Ctrl+Z)"
             aria-label="Отменить"
           >
@@ -268,7 +291,7 @@ export function UnifiedBioEditor({
             type="button"
             className="unified-bio-editor__history-btn"
             onClick={redo}
-            disabled={!canRedo || isGenerating || disabled}
+            disabled={!canRedo || isGenerating}
             title="Повторить (Ctrl+Y)"
             aria-label="Повторить"
           >
@@ -307,7 +330,7 @@ export function UnifiedBioEditor({
           onChange={handleBioChange}
           placeholder="Расскажите о своем опыте, навыках и достижениях..."
           rows={6}
-          disabled={isGenerating || disabled}
+          disabled={isGenerating}
           aria-label="Описание о себе"
         />
 
@@ -377,7 +400,7 @@ export function UnifiedBioEditor({
                 type="button"
                 className="unified-bio-editor__btn unified-bio-editor__btn--save"
                 onClick={handleSave}
-                disabled={isSaving || !hasUnsavedChanges || disabled}
+                disabled={isSaving || !hasUnsavedChanges}
               >
                 {isSaving ? "Сохранение..." : "Сохранить"}
               </button>
