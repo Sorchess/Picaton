@@ -35,6 +35,8 @@ export interface UnifiedBioEditorProps {
   onError: Dispatch<SetStateAction<string | null>>;
   /** Callback при обновлении предложенных тегов */
   onTagsUpdate?: (tags: string[]) => void;
+  /** Callback при изменении статуса загрузки тегов */
+  onTagsLoading?: (isLoading: boolean) => void;
   /** Минимальная длина bio для активации AI */
   minLength?: number;
   /** Максимальная длина bio */
@@ -48,6 +50,7 @@ export function UnifiedBioEditor({
   onCardUpdate,
   onError,
   onTagsUpdate,
+  onTagsLoading,
   minLength = 20,
   maxLength = 2000,
 }: UnifiedBioEditorProps) {
@@ -88,8 +91,12 @@ export function UnifiedBioEditor({
           "[BioEditor] Requesting tags for text:",
           text.slice(0, 50) + "..."
         );
+        onTagsLoading?.(true);
         const sent = aiWebSocket.send("suggest_tags", { bio_text: text });
         console.log("[BioEditor] Tags request sent:", sent);
+        if (!sent) {
+          onTagsLoading?.(false);
+        }
       } else {
         console.log(
           "[BioEditor] Cannot request tags - wsConnected:",
@@ -158,7 +165,9 @@ export function UnifiedBioEditor({
 
     const unsubTags = aiWebSocket.on("tags_update", (data: WSMessage) => {
       console.log("[BioEditor] Received tags_update:", data);
-      if (!mounted || !data.tags) return;
+      if (!mounted) return;
+      onTagsLoading?.(false);
+      if (!data.tags) return;
       // Extract tag names and call callback
       const tagNames = data.tags.map((t) => t.name);
       console.log("[BioEditor] Tag names extracted:", tagNames);

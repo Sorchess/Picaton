@@ -316,6 +316,7 @@ export function CardEditor({
           onCardUpdate={handleBioUpdate}
           onError={setError}
           onTagsUpdate={setAiTagSuggestions}
+          onTagsLoading={setIsGeneratingTags}
         />
 
         {/* Step 2: Tags */}

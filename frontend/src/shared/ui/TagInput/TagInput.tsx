@@ -72,7 +72,9 @@ export function TagInput({
       {label && <label className="tag-input__label">{label}</label>}
 
       <div
-        className={`tag-input__container ${disabled ? "tag-input__container--disabled" : ""}`}
+        className={`tag-input__container ${
+          disabled ? "tag-input__container--disabled" : ""
+        }`}
         onClick={handleContainerClick}
       >
         {value.map((tag, index) => (
@@ -110,8 +112,17 @@ export function TagInput({
 
       {error && <span className="tag-input__error">{error}</span>}
 
-      {/* AI Suggestions */}
-      {filteredSuggestions.length > 0 && (
+      {/* AI Suggestions - show loading indicator or suggestions */}
+      {isLoadingSuggestions ? (
+        <div className="tag-input__progress">
+          <div className="tag-input__progress-bar">
+            <div className="tag-input__progress-fill" />
+          </div>
+          <span className="tag-input__progress-text">
+            AI анализирует текст...
+          </span>
+        </div>
+      ) : filteredSuggestions.length > 0 ? (
         <div className="tag-input__suggestions">
           <span className="tag-input__suggestions-label">Предложения:</span>
           <div className="tag-input__suggestions-list">
@@ -127,7 +138,7 @@ export function TagInput({
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Generate button */}
       {onGenerateSuggestions && (
@@ -163,7 +174,8 @@ export function TagInput({
       )}
 
       <div className="tag-input__hint">
-        {value.length}/{maxTags} тегов. Нажмите Enter или запятую для добавления.
+        {value.length}/{maxTags} тегов. Нажмите Enter или запятую для
+        добавления.
       </div>
     </div>
   );

@@ -60,7 +60,6 @@
     font-size: 22px;
     line-height: 1;
     cursor: pointer;
-
   }
 
   &__input {
@@ -87,6 +86,45 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  // Progress bar (same style as UnifiedBioEditor)
+  &__progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  &__progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--color-border, #e5e7eb);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #6366f1);
+    background-size: 200% 100%;
+    animation: tag-shimmer 1.5s infinite linear;
+  }
+
+  @keyframes tag-shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  &__progress-text {
+    font-size: 12px;
+    color: var(--color-accent, #6366f1);
+    white-space: nowrap;
   }
 
   &__suggestions-label {
