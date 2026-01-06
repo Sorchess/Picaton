@@ -660,11 +660,7 @@ export function CompanyPage() {
                 <div className="invitation-card__actions">
                   <Button
                     size="sm"
-                    onClick={() =>
-                      handleAcceptInvitation(
-                        (inv as unknown as { token?: string }).token || ""
-                      )
-                    }
+                    onClick={() => handleAcceptInvitation(inv.token)}
                     disabled={isSaving}
                   >
                     Принять
@@ -672,11 +668,7 @@ export function CompanyPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() =>
-                      handleDeclineInvitation(
-                        (inv as unknown as { token?: string }).token || ""
-                      )
-                    }
+                    onClick={() => handleDeclineInvitation(inv.token)}
                     disabled={isSaving}
                   >
                     Отклонить

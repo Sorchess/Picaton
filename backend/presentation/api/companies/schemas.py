@@ -133,6 +133,7 @@ class InvitationWithCompanyResponse(BaseModel):
     role: CompanyRole
     invited_by: MemberUserInfo | None = None
     status: InvitationStatus
+    token: str
     created_at: datetime
     expires_at: datetime | None = None
 

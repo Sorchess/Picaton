@@ -154,6 +154,158 @@ async def get_my_companies(
     ]
 
 
+# ==================== User Invitations ====================
+# NOTE: These routes MUST be defined BEFORE /{company_id} routes
+# to avoid path parameter conflicts
+
+
+@router.get("/invitations/my", response_model=list[InvitationWithCompanyResponse])
+async def get_my_invitations(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    company_service: CompanyService = Depends(get_company_service),
+):
+    """Получить ожидающие приглашения для текущего пользователя."""
+    user = await get_current_user_from_token(credentials, auth_service)
+
+    invitations_data = await company_service.get_pending_invitations_for_user(
+        user.email
+    )
+
+    result = []
+    for item in invitations_data:
+        inv = item["invitation"]
+        company = item["company"]
+        inviter = item.get("invited_by")
+
+        result.append(
+            InvitationWithCompanyResponse(
+                id=inv.id,
+                company=CompanyResponse(
+                    id=company.id,
+                    name=company.name,
+                    email_domain=company.email_domain,
+                    logo_url=company.logo_url,
+                    description=company.description,
+                    owner_id=company.owner_id,
+                    allow_auto_join=company.allow_auto_join,
+                    is_active=company.is_active,
+                    created_at=company.created_at,
+                    updated_at=company.updated_at,
+                ),
+                role=inv.role,
+                invited_by=(
+                    MemberUserInfo(
+                        id=inviter.id,
+                        first_name=inviter.first_name,
+                        last_name=inviter.last_name,
+                        email=inviter.email,
+                        avatar_url=inviter.avatar_url,
+                    )
+                    if inviter
+                    else None
+                ),
+                status=inv.status,
+                token=inv.token,
+                created_at=inv.created_at,
+                expires_at=inv.expires_at,
+            )
+        )
+
+    return result
+
+
+@router.post("/invitations/accept", response_model=MessageResponse)
+async def accept_invitation(
+    data: AcceptInvitationRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    company_service: CompanyService = Depends(get_company_service),
+):
+    """Принять приглашение в компанию."""
+    user = await get_current_user_from_token(credentials, auth_service)
+
+    try:
+        await company_service.accept_invitation(data.token, user)
+    except InvitationNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except InvitationExpiredError as e:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail=str(e),
+        )
+    except AlreadyMemberError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        )
+    except PermissionDeniedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e),
+        )
+
+    return MessageResponse(message="Вы успешно присоединились к компании")
+
+
+@router.post("/invitations/decline", response_model=MessageResponse)
+async def decline_invitation(
+    data: DeclineInvitationRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    company_service: CompanyService = Depends(get_company_service),
+):
+    """Отклонить приглашение в компанию."""
+    user = await get_current_user_from_token(credentials, auth_service)
+
+    try:
+        await company_service.decline_invitation(data.token, user)
+    except InvitationNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except PermissionDeniedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e),
+        )
+
+    return MessageResponse(message="Приглашение отклонено")
+
+
+# ==================== Card Selection ====================
+# NOTE: These routes MUST be defined BEFORE /{company_id} routes
+# to avoid path parameter conflicts
+
+
+@router.get("/card-assignments/my", response_model=list[CompanyCardAssignment])
+async def get_my_card_assignments(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    company_service: CompanyService = Depends(get_company_service),
+):
+    """Получить информацию о выбранных визитках для всех компаний текущего пользователя."""
+    user = await get_current_user_from_token(credentials, auth_service)
+
+    assignments = await company_service.get_user_card_assignments(user.id)
+
+    return [
+        CompanyCardAssignment(
+            company_id=a["company_id"],
+            company_name=a["company_name"],
+            selected_card_id=a["selected_card_id"],
+        )
+        for a in assignments
+    ]
+
+
+# ==================== Company by ID ====================
+
+
 @router.get("/{company_id}", response_model=CompanyResponse)
 async def get_company(
     company_id: UUID,
@@ -605,150 +757,6 @@ async def resend_invitation(
         created_at=invitation.created_at,
         expires_at=invitation.expires_at,
     )
-
-
-# ==================== User Invitations ====================
-
-
-@router.get("/invitations/my", response_model=list[InvitationWithCompanyResponse])
-async def get_my_invitations(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    auth_service: AuthService = Depends(get_auth_service),
-    company_service: CompanyService = Depends(get_company_service),
-):
-    """Получить ожидающие приглашения для текущего пользователя."""
-    user = await get_current_user_from_token(credentials, auth_service)
-
-    invitations_data = await company_service.get_pending_invitations_for_user(
-        user.email
-    )
-
-    result = []
-    for item in invitations_data:
-        inv = item["invitation"]
-        company = item["company"]
-        inviter = item.get("invited_by")
-
-        result.append(
-            InvitationWithCompanyResponse(
-                id=inv.id,
-                company=CompanyResponse(
-                    id=company.id,
-                    name=company.name,
-                    email_domain=company.email_domain,
-                    logo_url=company.logo_url,
-                    description=company.description,
-                    owner_id=company.owner_id,
-                    allow_auto_join=company.allow_auto_join,
-                    is_active=company.is_active,
-                    created_at=company.created_at,
-                    updated_at=company.updated_at,
-                ),
-                role=inv.role,
-                invited_by=(
-                    MemberUserInfo(
-                        id=inviter.id,
-                        first_name=inviter.first_name,
-                        last_name=inviter.last_name,
-                        email=inviter.email,
-                        avatar_url=inviter.avatar_url,
-                    )
-                    if inviter
-                    else None
-                ),
-                status=inv.status,
-                created_at=inv.created_at,
-                expires_at=inv.expires_at,
-            )
-        )
-
-    return result
-
-
-@router.post("/invitations/accept", response_model=MessageResponse)
-async def accept_invitation(
-    data: AcceptInvitationRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    auth_service: AuthService = Depends(get_auth_service),
-    company_service: CompanyService = Depends(get_company_service),
-):
-    """Принять приглашение в компанию."""
-    user = await get_current_user_from_token(credentials, auth_service)
-
-    try:
-        await company_service.accept_invitation(data.token, user)
-    except InvitationNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        )
-    except InvitationExpiredError as e:
-        raise HTTPException(
-            status_code=status.HTTP_410_GONE,
-            detail=str(e),
-        )
-    except AlreadyMemberError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(e),
-        )
-    except PermissionDeniedError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e),
-        )
-
-    return MessageResponse(message="Вы успешно присоединились к компании")
-
-
-@router.post("/invitations/decline", response_model=MessageResponse)
-async def decline_invitation(
-    data: DeclineInvitationRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    auth_service: AuthService = Depends(get_auth_service),
-    company_service: CompanyService = Depends(get_company_service),
-):
-    """Отклонить приглашение в компанию."""
-    user = await get_current_user_from_token(credentials, auth_service)
-
-    try:
-        await company_service.decline_invitation(data.token, user)
-    except InvitationNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        )
-    except PermissionDeniedError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e),
-        )
-
-    return MessageResponse(message="Приглашение отклонено")
-
-
-# ==================== Card Selection ====================
-
-
-@router.get("/card-assignments/my", response_model=list[CompanyCardAssignment])
-async def get_my_card_assignments(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    auth_service: AuthService = Depends(get_auth_service),
-    company_service: CompanyService = Depends(get_company_service),
-):
-    """Получить информацию о выбранных визитках для всех компаний текущего пользователя."""
-    user = await get_current_user_from_token(credentials, auth_service)
-
-    assignments = await company_service.get_user_card_assignments(user.id)
-
-    return [
-        CompanyCardAssignment(
-            company_id=a["company_id"],
-            company_name=a["company_name"],
-            selected_card_id=a["selected_card_id"],
-        )
-        for a in assignments
-    ]
 
 
 @router.patch("/{company_id}/selected-card", response_model=CompanyCardAssignment)

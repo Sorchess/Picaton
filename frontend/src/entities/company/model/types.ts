@@ -64,6 +64,7 @@ export interface InvitationWithCompany {
     avatar_url: string | null;
   } | null;
   status: InvitationStatus;
+  token: string;
   created_at: string;
   expires_at: string | null;
 }
