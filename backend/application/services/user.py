@@ -97,6 +97,18 @@ class UserService:
         user.is_public = is_public
         return await self._user_repository.update(user)
 
+    async def update_email(self, user_id: UUID, email: str) -> User:
+        """
+        Обновить email пользователя.
+
+        Args:
+            user_id: ID пользователя
+            email: Новый email адрес
+        """
+        user = await self.get_user(user_id)
+        user.email = email
+        return await self._user_repository.update(user)
+
     async def add_random_fact(self, user_id: UUID, fact: str) -> User:
         """Добавить рандомный факт о пользователе."""
         user = await self.get_user(user_id)

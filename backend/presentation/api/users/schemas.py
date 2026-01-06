@@ -40,6 +40,12 @@ class UserUpdate(BaseModel):
     location: str | None = Field(default=None, max_length=200, examples=["Москва"])
 
 
+class EmailUpdate(BaseModel):
+    """Схема обновления email."""
+
+    email: EmailStr = Field(description="Новый email адрес")
+
+
 class ContactInfo(BaseModel):
     """Информация о контакте."""
 

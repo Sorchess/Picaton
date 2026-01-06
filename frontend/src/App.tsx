@@ -12,6 +12,7 @@ import {
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
 import { SpecialistModal } from "./features/specialist-modal";
+import { EmailModal } from "./features/email-modal";
 import { companyApi } from "./entities/company";
 import type { UserPublic } from "./entities/user";
 import { userApi } from "./entities/user";
@@ -53,7 +54,7 @@ function clearPendingInviteToken() {
 }
 
 function AuthenticatedApp() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageType>("search");
   const [inviteProcessing, setInviteProcessing] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{
@@ -65,6 +66,21 @@ function AuthenticatedApp() {
   const [qrUser, setQrUser] = useState<UserPublic | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isLoadingQrUser, setIsLoadingQrUser] = useState(false);
+
+  // Email modal state for Telegram users with placeholder email
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+
+  // Проверяем placeholder email при входе через Telegram
+  const isPlaceholderEmail = user?.email?.includes("@telegram.placeholder");
+
+  // Открываем модалку для ввода email, если email - placeholder
+  useEffect(() => {
+    if (isPlaceholderEmail && !isEmailModalOpen) {
+      // Небольшая задержка для UX
+      const timer = setTimeout(() => setIsEmailModalOpen(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isPlaceholderEmail]);
 
   // Обработка приглашения из URL или сохраненного токена
   useEffect(() => {
@@ -333,6 +349,19 @@ function AuthenticatedApp() {
                 text: "Не удалось сохранить контакт",
               });
             }
+          }}
+        />
+      )}
+
+      {/* Email Modal for Telegram users */}
+      {user && (
+        <EmailModal
+          isOpen={isEmailModalOpen}
+          onClose={() => setIsEmailModalOpen(false)}
+          userId={user.id}
+          onEmailUpdated={async () => {
+            // Обновляем данные пользователя после изменения email
+            await refreshUser();
           }}
         />
       )}

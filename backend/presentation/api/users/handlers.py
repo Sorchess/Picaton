@@ -29,6 +29,7 @@ from presentation.api.users.schemas import (
     UserContactUpdate,
     UserContactDelete,
     ProfileVisibilityUpdate,
+    EmailUpdate,
     SuggestedTagResponse,
     TagSuggestionsResponse,
     ApplyTagsRequest,
@@ -204,6 +205,21 @@ async def update_profile_visibility(
     # Синхронизируем видимость всех карточек
     await card_service.update_visibility_for_owner(user_id, data.is_public)
 
+    return _user_to_response(user)
+
+
+@router.patch("/{user_id}/email", response_model=UserResponse)
+async def update_user_email(
+    user_id: UUID,
+    data: EmailUpdate,
+    user_service=Depends(get_user_service),
+):
+    """
+    Обновить email пользователя.
+
+    Используется для установки реального email после регистрации через Telegram.
+    """
+    user = await user_service.update_email(user_id, data.email)
     return _user_to_response(user)
 
 

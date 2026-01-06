@@ -213,4 +213,8 @@ export const userApi = {
   // Изменить видимость профиля (публичный/приватный)
   updateVisibility: (userId: string, isPublic: boolean) =>
     api.patch<User>(`/users/${userId}/visibility`, { is_public: isPublic }),
+
+  // Обновить email пользователя
+  updateEmail: (userId: string, email: string) =>
+    api.patch<User>(`/users/${userId}/email`, { email }),
 };
