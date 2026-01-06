@@ -16,6 +16,9 @@ import type {
   BusinessCardPublic,
 } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
+import type { UserPublic } from "@/entities/user";
+import { userApi } from "@/entities/user";
+import { SpecialistModal } from "@/features/specialist-modal";
 import { Button, Modal, Input, Loader, Typography } from "@/shared";
 import { CompanyList, CompanyDetail } from "./components";
 import "./CompanyPage.scss";
@@ -82,11 +85,12 @@ export function CompanyPage() {
   >([]);
 
   // Просмотр визитки участника
-  const [viewingCardId, setViewingCardId] = useState<string | null>(null);
-  const [viewingCard, setViewingCard] = useState<BusinessCardPublic | null>(
-    null
-  );
+  const [viewingUser, setViewingUser] = useState<
+    (UserPublic & { card_id?: string }) | null
+  >(null);
+  const [isViewCardModalOpen, setIsViewCardModalOpen] = useState(false);
   const [isLoadingViewCard, setIsLoadingViewCard] = useState(false);
+  const [savedCardIds, setSavedCardIds] = useState<Set<string>>(new Set());
 
   // Модалка создания
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -215,25 +219,119 @@ export function CompanyPage() {
     }
   };
 
+  // Конвертация BusinessCardPublic в UserPublic для SpecialistModal
+  const cardToUserPublic = (
+    card: BusinessCardPublic
+  ): UserPublic & { card_id: string } => {
+    const nameParts = card.display_name.split(" ");
+    return {
+      id: card.owner_id,
+      card_id: card.id,
+      first_name: nameParts[1] || nameParts[0] || "",
+      last_name: nameParts[0] || "",
+      middle_name: nameParts[2] || null,
+      avatar_url: card.avatar_url,
+      bio: card.bio,
+      ai_generated_bio: card.ai_generated_bio,
+      location: null,
+      position: card.title || null,
+      tags: card.tags.map((t) => ({
+        id: t.id,
+        name: t.name,
+        category: t.category,
+        proficiency: t.proficiency,
+      })),
+      search_tags: card.search_tags,
+      contacts: card.contacts.filter((c) => c.is_visible),
+      profile_completeness: card.completeness,
+    };
+  };
+
   // Просмотр визитки участника
   const handleViewMemberCard = async (userId: string, cardId: string) => {
-    void userId; // userId можно использовать для дополнительной информации
-    setViewingCardId(cardId);
     setIsLoadingViewCard(true);
+    setIsViewCardModalOpen(true);
     try {
       const card = await businessCardApi.getPublic(cardId);
-      setViewingCard(card);
+
+      // Получаем аватарку участника из списка members, если у визитки нет своей
+      const member = members.find((m) => m.user.id === userId);
+      const avatarUrl = card.avatar_url || member?.user.avatar_url || null;
+
+      const userForModal = cardToUserPublic({ ...card, avatar_url: avatarUrl });
+      setViewingUser(userForModal);
+
+      // Проверяем, сохранена ли эта карточка в контактах
+      if (authUser?.id) {
+        try {
+          const contacts = await userApi.getContacts(authUser.id);
+          const savedIds = new Set(
+            contacts
+              .filter((c) => c.saved_card_id)
+              .map((c) => c.saved_card_id as string)
+          );
+          setSavedCardIds(savedIds);
+        } catch {
+          // Игнорируем ошибку загрузки контактов
+        }
+      }
     } catch (err) {
       showError("Не удалось загрузить визитку");
-      setViewingCardId(null);
+      setIsViewCardModalOpen(false);
     } finally {
       setIsLoadingViewCard(false);
     }
   };
 
+  // Сохранение контакта из модалки
+  const handleSaveContactFromCard = async (
+    user: UserPublic & { card_id?: string }
+  ) => {
+    if (!authUser?.id) return;
+    try {
+      await userApi.saveContact(authUser.id, user.id, user.card_id);
+      if (user.card_id) {
+        setSavedCardIds((prev) => new Set([...prev, user.card_id!]));
+      }
+      showSuccess("Контакт сохранен!");
+      closeViewCard();
+    } catch (err) {
+      showError("Не удалось сохранить контакт");
+    }
+  };
+
+  // Удаление контакта из модалки
+  const handleDeleteContactFromCard = async (
+    user: UserPublic & { card_id?: string }
+  ) => {
+    if (!authUser?.id) return;
+    try {
+      const contacts = await userApi.getContacts(authUser.id);
+      const contactToDelete = contacts.find(
+        (c) =>
+          (user.card_id && c.saved_card_id === user.card_id) ||
+          c.saved_user_id === user.id
+      );
+      if (contactToDelete) {
+        await userApi.deleteContact(contactToDelete.id);
+        if (user.card_id) {
+          setSavedCardIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(user.card_id!);
+            return newSet;
+          });
+        }
+        showSuccess("Контакт удален");
+        closeViewCard();
+      }
+    } catch (err) {
+      showError("Не удалось удалить контакт");
+    }
+  };
+
   const closeViewCard = () => {
-    setViewingCardId(null);
-    setViewingCard(null);
+    setIsViewCardModalOpen(false);
+    setViewingUser(null);
   };
 
   useEffect(() => {
@@ -490,13 +588,8 @@ export function CompanyPage() {
         />
 
         {/* Модалка просмотра визитки участника */}
-        <Modal
-          isOpen={!!viewingCardId}
-          onClose={closeViewCard}
-          title="Визитка участника"
-          size="md"
-        >
-          {isLoadingViewCard ? (
+        {isLoadingViewCard && isViewCardModalOpen && (
+          <Modal isOpen={true} onClose={closeViewCard} title="Загрузка...">
             <div
               style={{
                 display: "flex",
@@ -506,70 +599,23 @@ export function CompanyPage() {
             >
               <Loader />
             </div>
-          ) : viewingCard ? (
-            <div className="view-card-modal">
-              <div className="view-card-modal__header">
-                <span className="view-card-modal__icon">📇</span>
-                <div>
-                  <Typography variant="h3">{viewingCard.title}</Typography>
-                  <Typography variant="body">
-                    {viewingCard.display_name}
-                  </Typography>
-                </div>
-              </div>
-              {viewingCard.ai_generated_bio && (
-                <div className="view-card-modal__section">
-                  <Typography variant="small" color="secondary">
-                    О себе
-                  </Typography>
-                  <Typography variant="body">
-                    {viewingCard.ai_generated_bio}
-                  </Typography>
-                </div>
-              )}
-              {viewingCard.tags && viewingCard.tags.length > 0 && (
-                <div className="view-card-modal__section">
-                  <Typography variant="small" color="secondary">
-                    Навыки
-                  </Typography>
-                  <div className="view-card-modal__tags">
-                    {viewingCard.tags.map((tag) => (
-                      <span key={tag.id} className="view-card-modal__tag">
-                        {tag.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {viewingCard.contacts &&
-                viewingCard.contacts.filter((c) => c.is_visible).length > 0 && (
-                  <div className="view-card-modal__section">
-                    <Typography variant="small" color="secondary">
-                      Контакты
-                    </Typography>
-                    <div className="view-card-modal__contacts">
-                      {viewingCard.contacts
-                        .filter((c) => c.is_visible)
-                        .map((contact, idx) => (
-                          <div key={idx} className="view-card-modal__contact">
-                            <span className="view-card-modal__contact-type">
-                              {contact.type}
-                            </span>
-                            <span className="view-card-modal__contact-value">
-                              {contact.value}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-            </div>
-          ) : (
-            <Typography variant="body" color="secondary">
-              Визитка не найдена
-            </Typography>
-          )}
-        </Modal>
+          </Modal>
+        )}
+
+        {!isLoadingViewCard && (
+          <SpecialistModal
+            user={viewingUser}
+            isOpen={isViewCardModalOpen && !!viewingUser}
+            onClose={closeViewCard}
+            onSaveContact={handleSaveContactFromCard}
+            onDeleteContact={handleDeleteContactFromCard}
+            isSaved={
+              viewingUser?.card_id
+                ? savedCardIds.has(viewingUser.card_id)
+                : false
+            }
+          />
+        )}
       </div>
     );
   }

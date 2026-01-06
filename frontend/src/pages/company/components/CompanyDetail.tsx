@@ -167,36 +167,6 @@ export function CompanyDetail({
           </div>
         </div>
 
-        {/* Секция выбора визитки */}
-        {userCards.length > 0 && (
-          <div className="company-detail__card-select">
-            <Typography variant="small" color="secondary">
-              Моя визитка в компании:
-            </Typography>
-            <button
-              className="company-detail__card-btn"
-              onClick={() => setIsCardSelectModalOpen(true)}
-            >
-              {selectedCard ? (
-                <>
-                  <span className="company-detail__card-icon">📇</span>
-                  <span className="company-detail__card-name">
-                    {selectedCard.title}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="company-detail__card-icon">➕</span>
-                  <span className="company-detail__card-name">
-                    Выбрать визитку
-                  </span>
-                </>
-              )}
-              <span className="company-detail__card-arrow">›</span>
-            </button>
-          </div>
-        )}
-
         <nav className="company-detail__nav">
           <button
             className={`company-detail__nav-item ${
@@ -246,6 +216,46 @@ export function CompanyDetail({
       <main className="company-detail__main">
         {activeTab === "members" && (
           <div className="company-detail__members">
+            {/* Моя визитка в компании */}
+            {userCards.length > 0 && (
+              <div className="company-detail__my-card">
+                <div className="company-detail__my-card-header">
+                  <Typography variant="h3">Моя визитка</Typography>
+                  <Typography variant="small" color="secondary">
+                    Визитка, которую увидят участники компании
+                  </Typography>
+                </div>
+                <button
+                  className="company-detail__my-card-btn"
+                  onClick={() => setIsCardSelectModalOpen(true)}
+                >
+                  {selectedCard ? (
+                    <>
+                      <span className="company-detail__my-card-icon">📇</span>
+                      <div className="company-detail__my-card-info">
+                        <span className="company-detail__my-card-title">
+                          {selectedCard.title}
+                        </span>
+                        <span className="company-detail__my-card-subtitle">
+                          {selectedCard.display_name}
+                        </span>
+                      </div>
+                      <span className="company-detail__my-card-action">
+                        Изменить
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="company-detail__my-card-icon">➕</span>
+                      <span className="company-detail__my-card-placeholder">
+                        Выбрать визитку для отображения
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
             <div className="company-detail__members-header">
               <Typography variant="h2">Участники компании</Typography>
               {canInvite(company.role) && (
