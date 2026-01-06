@@ -184,6 +184,21 @@ class BusinessCardService:
             owner_id, is_public
         )
 
+    async def update_avatar_for_owner(
+        self, owner_id: UUID, avatar_url: str | None
+    ) -> int:
+        """
+        Обновить аватарку во всех карточках пользователя.
+
+        Args:
+            owner_id: ID владельца карточек
+            avatar_url: Новый URL аватарки
+
+        Returns:
+            Количество обновлённых карточек
+        """
+        return await self._card_repository.update_avatar_by_owner(owner_id, avatar_url)
+
     # ============ Контакты ============
 
     async def add_contact(

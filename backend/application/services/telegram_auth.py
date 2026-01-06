@@ -16,6 +16,7 @@ from uuid import UUID
 
 from domain.entities.user import User
 from domain.repositories.user import UserRepositoryInterface
+from domain.repositories.business_card import BusinessCardRepositoryInterface
 from application.services.user import UserService
 from infrastructure.storage import CloudinaryService
 from settings.config import settings
@@ -129,6 +130,7 @@ class TelegramAuthService:
         jwt_algorithm: str = "HS256",
         access_token_expire_minutes: int = 10080,  # 7 days
         cloudinary_service: CloudinaryService | None = None,
+        card_repository: BusinessCardRepositoryInterface | None = None,
     ):
         self._user_repo = user_repository
         self._user_service = user_service
@@ -136,6 +138,7 @@ class TelegramAuthService:
         self._jwt_algorithm = jwt_algorithm
         self._token_expire_minutes = access_token_expire_minutes
         self._cloudinary = cloudinary_service
+        self._card_repo = card_repository
 
     # ==================== Deep Link Auth ====================
 
@@ -427,6 +430,11 @@ class TelegramAuthService:
                 if result:
                     user.avatar_url = result.url
                     user = await self._user_repo.update(user)
+                    # Синхронизируем аватар с карточками
+                    if self._card_repo:
+                        await self._card_repo.update_avatar_by_owner(
+                            user.id, result.url
+                        )
                     logger.info(
                         f"Avatar persisted to Cloudinary for new user {user.id}"
                     )
@@ -463,6 +471,11 @@ class TelegramAuthService:
                     if result:
                         user.avatar_url = result.url
                         updated = True
+                        # Синхронизируем аватар с карточками
+                        if self._card_repo:
+                            await self._card_repo.update_avatar_by_owner(
+                                user.id, result.url
+                            )
                         logger.info(f"Avatar updated in Cloudinary for user {user.id}")
                 except Exception as e:
                     logger.error(f"Failed to update avatar for user {user.id}: {e}")

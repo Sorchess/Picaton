@@ -233,3 +233,13 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             {"$set": {"is_public": is_public}},
         )
         return result.modified_count
+
+    async def update_avatar_by_owner(
+        self, owner_id: UUID, avatar_url: str | None
+    ) -> int:
+        """Обновить аватарку во всех карточках пользователя."""
+        result = await self._collection.update_many(
+            {"owner_id": str(owner_id)},
+            {"$set": {"avatar_url": avatar_url}},
+        )
+        return result.modified_count

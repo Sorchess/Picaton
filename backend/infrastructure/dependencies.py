@@ -315,6 +315,7 @@ def get_cloudinary_service() -> CloudinaryService:
 
 def get_telegram_auth_service(
     user_repo: UserRepository,
+    card_repo: BusinessCardRepository,
     user_service: UserService = Depends(get_user_service),
     cloudinary_service: CloudinaryService = Depends(get_cloudinary_service),
 ) -> TelegramAuthService:
@@ -326,6 +327,7 @@ def get_telegram_auth_service(
         jwt_algorithm=settings.jwt.algorithm,
         access_token_expire_minutes=settings.jwt.access_token_expire_minutes,
         cloudinary_service=cloudinary_service,
+        card_repository=card_repo,
     )
 
 

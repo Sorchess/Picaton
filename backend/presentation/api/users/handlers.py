@@ -168,6 +168,10 @@ async def update_user_profile(
             avatar_url=user.avatar_url,
             contacts=user.contacts,
         )
+    else:
+        # Синхронизируем аватар с существующими карточками, если он был передан
+        if data.avatar_url is not None:
+            await card_service.update_avatar_for_owner(user_id, user.avatar_url)
 
     return _user_to_response(user)
 
@@ -354,6 +358,7 @@ async def upload_avatar(
     user_id: UUID,
     file: UploadFile = File(...),
     user_service=Depends(get_user_service),
+    card_service=Depends(get_business_card_service),
     cloudinary_service: CloudinaryService = Depends(get_cloudinary_service),
 ):
     """
@@ -379,6 +384,9 @@ async def upload_avatar(
             user_id=user_id,
             avatar_url=result.url,
         )
+
+        # Sync avatar to all user's business cards
+        await card_service.update_avatar_for_owner(user_id, result.url)
 
         return AvatarUploadResponse(avatar_url=result.url)
 

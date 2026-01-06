@@ -71,6 +71,13 @@ class BusinessCardRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def update_avatar_by_owner(
+        self, owner_id: UUID, avatar_url: str | None
+    ) -> int:
+        """Обновить аватарку во всех карточках пользователя. Возвращает количество обновлённых."""
+        pass
+
+    @abstractmethod
     async def count_by_owner(self, owner_id: UUID) -> int:
         """Количество карточек у пользователя."""
         pass
