@@ -6,10 +6,14 @@ Handles avatar uploads with automatic optimization.
 
 import cloudinary
 import cloudinary.uploader
+import httpx
+import logging
 from dataclasses import dataclass
 from uuid import UUID
 
 from settings.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -149,6 +153,75 @@ class CloudinaryService:
 
         except Exception as e:
             raise UploadError(f"Ошибка загрузки: {str(e)}")
+
+    async def upload_avatar_from_url(
+        self,
+        user_id: UUID,
+        image_url: str,
+    ) -> UploadResult | None:
+        """
+        Download image from URL and upload to Cloudinary.
+
+        Useful for persisting Telegram avatars which have temporary URLs.
+
+        Args:
+            user_id: User ID for public_id generation
+            image_url: URL of the image to download
+
+        Returns:
+            UploadResult with permanent URL, or None if failed
+        """
+        if not self._configured:
+            logger.warning("Cloudinary not configured, cannot persist avatar")
+            return None
+
+        if not image_url:
+            return None
+
+        try:
+            # Download image from URL
+            async with httpx.AsyncClient() as client:
+                response = await client.get(image_url, timeout=30)
+                if response.status_code != 200:
+                    logger.warning(
+                        f"Failed to download avatar: HTTP {response.status_code}"
+                    )
+                    return None
+
+                file_content = response.content
+
+            # Check file size
+            if len(file_content) > self._config.max_file_size:
+                logger.warning("Avatar too large, skipping upload")
+                return None
+
+            public_id = f"{self._config.folder}/{user_id}"
+
+            result = cloudinary.uploader.upload(
+                file_content,
+                public_id=public_id,
+                overwrite=True,
+                resource_type="image",
+                transformation=[
+                    {"width": 400, "height": 400, "crop": "fill", "gravity": "face"},
+                    {"quality": "auto:good"},
+                    {"fetch_format": "auto"},
+                ],
+            )
+
+            logger.info(f"Avatar uploaded to Cloudinary for user {user_id}")
+
+            return UploadResult(
+                url=result["secure_url"],
+                public_id=result["public_id"],
+                format=result["format"],
+                width=result.get("width", 400),
+                height=result.get("height", 400),
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to upload avatar from URL: {e}")
+            return None
 
     async def delete_avatar(self, user_id: UUID) -> bool:
         """

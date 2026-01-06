@@ -7,6 +7,7 @@ https://core.telegram.org/widgets/login
 
 import hashlib
 import hmac
+import logging
 import secrets
 import time
 from dataclasses import dataclass
@@ -16,7 +17,10 @@ from uuid import UUID
 from domain.entities.user import User
 from domain.repositories.user import UserRepositoryInterface
 from application.services.user import UserService
+from infrastructure.storage import CloudinaryService
 from settings.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramAuthError(Exception):
@@ -124,12 +128,14 @@ class TelegramAuthService:
         jwt_secret: str,
         jwt_algorithm: str = "HS256",
         access_token_expire_minutes: int = 10080,  # 7 days
+        cloudinary_service: CloudinaryService | None = None,
     ):
         self._user_repo = user_repository
         self._user_service = user_service
         self._jwt_secret = jwt_secret
         self._jwt_algorithm = jwt_algorithm
         self._token_expire_minutes = access_token_expire_minutes
+        self._cloudinary = cloudinary_service
 
     # ==================== Deep Link Auth ====================
 
@@ -400,16 +406,37 @@ class TelegramAuthService:
         # Пользователь сможет потом добавить реальный email
         placeholder_email = f"tg_{tg_data.id}@telegram.placeholder"
 
+        # Сначала создаём пользователя без аватара
         user = User(
             first_name=tg_data.first_name,
             last_name=tg_data.last_name or "",
             email=placeholder_email,
             telegram_id=tg_data.id,
             telegram_username=tg_data.username,
-            avatar_url=tg_data.photo_url,
+            avatar_url=None,
         )
 
-        return await self._user_repo.create(user)
+        user = await self._user_repo.create(user)
+
+        # Загружаем аватар в Cloudinary для постоянного хранения
+        if tg_data.photo_url and self._cloudinary:
+            try:
+                result = await self._cloudinary.upload_avatar_from_url(
+                    user.id, tg_data.photo_url
+                )
+                if result:
+                    user.avatar_url = result.url
+                    user = await self._user_repo.update(user)
+                    logger.info(
+                        f"Avatar persisted to Cloudinary for new user {user.id}"
+                    )
+            except Exception as e:
+                logger.error(f"Failed to persist avatar for user {user.id}: {e}")
+                # Fallback to temporary Telegram URL
+                user.avatar_url = tg_data.photo_url
+                user = await self._user_repo.update(user)
+
+        return user
 
     async def _update_user_from_telegram(
         self, user: User, tg_data: TelegramAuthData
@@ -423,9 +450,26 @@ class TelegramAuthService:
             updated = True
 
         # Обновляем аватар, если у пользователя нет своего
-        if tg_data.photo_url and not user.avatar_url:
-            user.avatar_url = tg_data.photo_url
-            updated = True
+        # или если текущий аватар - временная ссылка Telegram
+        if tg_data.photo_url and (
+            not user.avatar_url or "api.telegram.org" in (user.avatar_url or "")
+        ):
+            # Загружаем в Cloudinary для постоянного хранения
+            if self._cloudinary:
+                try:
+                    result = await self._cloudinary.upload_avatar_from_url(
+                        user.id, tg_data.photo_url
+                    )
+                    if result:
+                        user.avatar_url = result.url
+                        updated = True
+                        logger.info(f"Avatar updated in Cloudinary for user {user.id}")
+                except Exception as e:
+                    logger.error(f"Failed to update avatar for user {user.id}: {e}")
+            else:
+                # Fallback if Cloudinary not configured
+                user.avatar_url = tg_data.photo_url
+                updated = True
 
         if updated:
             user = await self._user_repo.update(user)

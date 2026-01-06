@@ -308,9 +308,15 @@ def get_magic_link_service(
     return MagicLinkService(user_repo)
 
 
+def get_cloudinary_service() -> CloudinaryService:
+    """Получить сервис Cloudinary для загрузки изображений."""
+    return CloudinaryService()
+
+
 def get_telegram_auth_service(
     user_repo: UserRepository,
     user_service: UserService = Depends(get_user_service),
+    cloudinary_service: CloudinaryService = Depends(get_cloudinary_service),
 ) -> TelegramAuthService:
     """Получить сервис Telegram авторизации."""
     return TelegramAuthService(
@@ -319,6 +325,7 @@ def get_telegram_auth_service(
         jwt_secret=settings.jwt.secret_key,
         jwt_algorithm=settings.jwt.algorithm,
         access_token_expire_minutes=settings.jwt.access_token_expire_minutes,
+        cloudinary_service=cloudinary_service,
     )
 
 
@@ -330,11 +337,6 @@ def get_company_service(
 ) -> CompanyService:
     """Получить сервис управления компаниями."""
     return CompanyService(company_repo, member_repo, invitation_repo, user_repo)
-
-
-def get_cloudinary_service() -> CloudinaryService:
-    """Получить сервис Cloudinary для загрузки изображений."""
-    return CloudinaryService()
 
 
 def get_email_service() -> SmtpEmailBackend | None:
