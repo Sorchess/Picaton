@@ -28,6 +28,7 @@ from presentation.api.users.schemas import (
     UserContactAdd,
     UserContactUpdate,
     UserContactDelete,
+    ProfileVisibilityUpdate,
     SuggestedTagResponse,
     TagSuggestionsResponse,
     ApplyTagsRequest,
@@ -178,6 +179,28 @@ async def delete_user(
 ):
     """Удалить пользователя."""
     await user_service.delete_user(user_id)
+
+
+@router.patch("/{user_id}/visibility", response_model=UserResponse)
+async def update_profile_visibility(
+    user_id: UUID,
+    data: ProfileVisibilityUpdate,
+    user_service=Depends(get_user_service),
+    card_service=Depends(get_business_card_service),
+):
+    """
+    Изменить видимость профиля.
+
+    - is_public=True: публичный профиль, виден всем при поиске
+    - is_public=False: приватный профиль, виден только внутри компании
+    """
+    # Обновляем видимость пользователя
+    user = await user_service.update_visibility(user_id, data.is_public)
+
+    # Синхронизируем видимость всех карточек
+    await card_service.update_visibility_for_owner(user_id, data.is_public)
+
+    return _user_to_response(user)
 
 
 # ============ User Profile Contacts ============
@@ -814,6 +837,7 @@ def _user_to_response(user) -> UserResponse:
         ],
         random_facts=user.random_facts,
         profile_completeness=user.profile_completeness,
+        is_public=user.is_public,
     )
 
 

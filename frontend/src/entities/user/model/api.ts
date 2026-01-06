@@ -209,4 +209,8 @@ export const userApi = {
     api.post<{ synced_count: number; total_contacts: number }>(
       `/users/${userId}/sync-contacts`
     ),
+
+  // Изменить видимость профиля (публичный/приватный)
+  updateVisibility: (userId: string, isPublic: boolean) =>
+    api.patch<User>(`/users/${userId}/visibility`, { is_public: isPublic }),
 };

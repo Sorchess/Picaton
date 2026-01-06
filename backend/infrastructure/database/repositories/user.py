@@ -55,6 +55,7 @@ class MongoUserRepository(UserRepositoryInterface):
             "ai_generated_bio": user.ai_generated_bio,
             "embedding": user.embedding,
             "profile_completeness": user.profile_completeness,
+            "is_public": user.is_public,
         }
 
     def _from_document(self, doc: dict) -> User:
@@ -99,6 +100,7 @@ class MongoUserRepository(UserRepositoryInterface):
             ai_generated_bio=doc.get("ai_generated_bio"),
             embedding=doc.get("embedding", []),
             profile_completeness=doc.get("profile_completeness", 0),
+            is_public=doc.get("is_public", True),
         )
 
     async def get_by_id(self, user_id: UUID) -> User | None:

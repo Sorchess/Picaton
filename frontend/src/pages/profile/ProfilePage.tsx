@@ -143,6 +143,27 @@ export function ProfilePage() {
   // QR код карточки
   const [qrCardName, setQrCardName] = useState<string | undefined>();
 
+  // Visibility toggle
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
+
+  const handleVisibilityToggle = async () => {
+    if (!user || isUpdatingVisibility) return;
+    setIsUpdatingVisibility(true);
+    try {
+      const updatedUser = await userApi.updateVisibility(
+        user.id,
+        !user.is_public
+      );
+      setUser(updatedUser);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Ошибка изменения видимости"
+      );
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
+
   const handleShareCard = async (card: BusinessCard) => {
     try {
       const qr = await businessCardApi.getQRCode(card.id);
@@ -215,6 +236,35 @@ export function ProfilePage() {
             <h1>{getFullName(user)}</h1>
             <span className="profile__email">{user.email}</span>
           </div>
+        </div>
+
+        {/* Переключатель видимости */}
+        <div className="profile__visibility">
+          <button
+            className={`profile__visibility-toggle ${
+              user.is_public
+                ? "profile__visibility-toggle--public"
+                : "profile__visibility-toggle--private"
+            }`}
+            onClick={handleVisibilityToggle}
+            disabled={isUpdatingVisibility}
+            title={
+              user.is_public
+                ? "Профиль виден всем в поиске"
+                : "Профиль виден только внутри компании"
+            }
+          >
+            <span className="profile__visibility-icon">
+              {user.is_public ? "🌍" : "🔒"}
+            </span>
+            <span className="profile__visibility-text">
+              {isUpdatingVisibility
+                ? "..."
+                : user.is_public
+                ? "Публичный"
+                : "Приватный"}
+            </span>
+          </button>
         </div>
       </header>
 

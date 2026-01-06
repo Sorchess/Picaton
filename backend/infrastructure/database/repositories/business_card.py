@@ -51,6 +51,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             "ai_generated_bio": card.ai_generated_bio,
             "embedding": card.embedding,
             "completeness": card.completeness,
+            "is_public": card.is_public,
         }
 
     def _from_document(self, doc: dict) -> BusinessCard:
@@ -91,6 +92,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             ai_generated_bio=doc.get("ai_generated_bio"),
             embedding=doc.get("embedding", []),
             completeness=doc.get("completeness", 0),
+            is_public=doc.get("is_public", True),
         )
 
     async def get_by_id(self, card_id: UUID) -> BusinessCard | None:
@@ -148,36 +150,40 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
         return result.modified_count > 0
 
     async def search_by_tags(
-        self, tags: list[str], limit: int = 20
+        self, tags: list[str], limit: int = 20, public_only: bool = True
     ) -> list[BusinessCard]:
         """Поиск карточек по тегам."""
         normalized_tags = [tag.lower().strip() for tag in tags]
-        cursor = self._collection.find(
-            {
-                "search_tags": {"$in": normalized_tags},
-                "is_active": True,
-            }
-        ).limit(limit)
+        query = {
+            "search_tags": {"$in": normalized_tags},
+            "is_active": True,
+        }
+        if public_only:
+            query["is_public"] = True
+        cursor = self._collection.find(query).limit(limit)
 
         cards = []
         async for doc in cursor:
             cards.append(self._from_document(doc))
         return cards
 
-    async def search_by_text(self, query: str, limit: int = 20) -> list[BusinessCard]:
+    async def search_by_text(
+        self, query: str, limit: int = 20, public_only: bool = True
+    ) -> list[BusinessCard]:
         """Полнотекстовый поиск карточек."""
         query_lower = query.lower().strip()
-        cursor = self._collection.find(
-            {
-                "is_active": True,
-                "$or": [
-                    {"display_name": {"$regex": query_lower, "$options": "i"}},
-                    {"bio": {"$regex": query_lower, "$options": "i"}},
-                    {"title": {"$regex": query_lower, "$options": "i"}},
-                    {"search_tags": {"$regex": query_lower, "$options": "i"}},
-                ],
-            }
-        ).limit(limit)
+        match_query = {
+            "is_active": True,
+            "$or": [
+                {"display_name": {"$regex": query_lower, "$options": "i"}},
+                {"bio": {"$regex": query_lower, "$options": "i"}},
+                {"title": {"$regex": query_lower, "$options": "i"}},
+                {"search_tags": {"$regex": query_lower, "$options": "i"}},
+            ],
+        }
+        if public_only:
+            match_query["is_public"] = True
+        cursor = self._collection.find(match_query).limit(limit)
 
         cards = []
         async for doc in cursor:
@@ -185,7 +191,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
         return cards
 
     async def search_by_bio_keywords(
-        self, keywords: list[str], limit: int = 20
+        self, keywords: list[str], limit: int = 20, public_only: bool = True
     ) -> list[BusinessCard]:
         """Поиск карточек по ключевым словам в bio."""
         # Создаём regex паттерны для каждого ключевого слова
@@ -203,12 +209,13 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
         if not or_conditions:
             return []
 
-        cursor = self._collection.find(
-            {
-                "is_active": True,
-                "$or": or_conditions,
-            }
-        ).limit(limit)
+        match_query = {
+            "is_active": True,
+            "$or": or_conditions,
+        }
+        if public_only:
+            match_query["is_public"] = True
+        cursor = self._collection.find(match_query).limit(limit)
 
         cards = []
         async for doc in cursor:
@@ -218,3 +225,11 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
     async def count_by_owner(self, owner_id: UUID) -> int:
         """Количество карточек у пользователя."""
         return await self._collection.count_documents({"owner_id": str(owner_id)})
+
+    async def update_visibility_by_owner(self, owner_id: UUID, is_public: bool) -> int:
+        """Обновить видимость всех карточек пользователя."""
+        result = await self._collection.update_many(
+            {"owner_id": str(owner_id)},
+            {"$set": {"is_public": is_public}},
+        )
+        return result.modified_count

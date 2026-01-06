@@ -98,6 +98,10 @@ class BusinessCard(Entity):
     # Полнота карточки
     completeness: int = field(default=0)
 
+    # Видимость карточки (наследуется от пользователя)
+    # Приватные карточки видны только внутри компании
+    is_public: bool = field(default=True)
+
     def __post_init__(self) -> None:
         """Валидация данных при создании сущности."""
         if self.title:

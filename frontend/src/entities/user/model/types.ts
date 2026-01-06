@@ -47,6 +47,7 @@ export interface User {
   contacts: ContactInfo[];
   random_facts: string[];
   profile_completeness: number;
+  is_public: boolean;
   created_at?: string;
   updated_at?: string;
 }

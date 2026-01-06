@@ -74,6 +74,14 @@ class UserContactDelete(BaseModel):
     value: str
 
 
+class ProfileVisibilityUpdate(BaseModel):
+    """Обновление видимости профиля."""
+
+    is_public: bool = Field(
+        description="True - публичный профиль (виден всем), False - приватный (только внутри компании)"
+    )
+
+
 class TagInfo(BaseModel):
     """Информация о теге."""
 
@@ -102,6 +110,7 @@ class UserResponse(BaseModel):
     contacts: list[ContactInfo]
     random_facts: list[str]
     profile_completeness: int
+    is_public: bool = True
 
 
 class UserPublicResponse(BaseModel):

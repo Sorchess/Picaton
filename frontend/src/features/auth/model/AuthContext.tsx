@@ -85,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         contacts: [],
         random_facts: [],
         profile_completeness: 0,
+        is_public: true,
       });
     } catch (error) {
       throw error;

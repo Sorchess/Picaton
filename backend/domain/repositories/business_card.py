@@ -46,21 +46,28 @@ class BusinessCardRepositoryInterface(ABC):
 
     @abstractmethod
     async def search_by_tags(
-        self, tags: list[str], limit: int = 20
+        self, tags: list[str], limit: int = 20, public_only: bool = True
     ) -> list[BusinessCard]:
         """Поиск карточек по тегам."""
         pass
 
     @abstractmethod
-    async def search_by_text(self, query: str, limit: int = 20) -> list[BusinessCard]:
+    async def search_by_text(
+        self, query: str, limit: int = 20, public_only: bool = True
+    ) -> list[BusinessCard]:
         """Полнотекстовый поиск карточек."""
         pass
 
     @abstractmethod
     async def search_by_bio_keywords(
-        self, keywords: list[str], limit: int = 20
+        self, keywords: list[str], limit: int = 20, public_only: bool = True
     ) -> list[BusinessCard]:
         """Поиск карточек по ключевым словам в bio."""
+        pass
+
+    @abstractmethod
+    async def update_visibility_by_owner(self, owner_id: UUID, is_public: bool) -> int:
+        """Обновить видимость всех карточек пользователя. Возвращает количество обновлённых."""
         pass
 
     @abstractmethod

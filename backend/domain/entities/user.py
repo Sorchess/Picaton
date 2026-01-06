@@ -78,6 +78,10 @@ class User(Entity):
     # Полнота профиля
     profile_completeness: int = field(default=0)
 
+    # Видимость профиля (публичный или приватный)
+    # Приватный профиль виден только внутри компании
+    is_public: bool = field(default=True)
+
     def __post_init__(self) -> None:
         """Валидация данных при создании сущности."""
         if self.email:

@@ -85,6 +85,18 @@ class UserService:
         )
         return await self._user_repository.update(user)
 
+    async def update_visibility(self, user_id: UUID, is_public: bool) -> User:
+        """
+        Изменить видимость профиля.
+
+        Args:
+            user_id: ID пользователя
+            is_public: True - публичный профиль, False - приватный (только внутри компании)
+        """
+        user = await self.get_user(user_id)
+        user.is_public = is_public
+        return await self._user_repository.update(user)
+
     async def add_random_fact(self, user_id: UUID, fact: str) -> User:
         """Добавить рандомный факт о пользователе."""
         user = await self.get_user(user_id)

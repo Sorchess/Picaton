@@ -169,6 +169,21 @@ class BusinessCardService:
 
         return await self._card_repository.set_primary(owner_id, card_id)
 
+    async def update_visibility_for_owner(self, owner_id: UUID, is_public: bool) -> int:
+        """
+        Обновить видимость всех карточек пользователя.
+
+        Args:
+            owner_id: ID владельца карточек
+            is_public: True - публичные (видны в поиске), False - приватные (только в компании)
+
+        Returns:
+            Количество обновлённых карточек
+        """
+        return await self._card_repository.update_visibility_by_owner(
+            owner_id, is_public
+        )
+
     # ============ Контакты ============
 
     async def add_contact(
