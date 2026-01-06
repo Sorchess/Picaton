@@ -74,8 +74,12 @@ export function EmailModal({
       const response = await userApi.verifyEmailCode(userId, code);
       onEmailUpdated(response.email);
       onClose();
-    } catch (err) {
-      setError("Неверный или истёкший код. Попробуйте ещё раз.");
+    } catch (err: unknown) {
+      // Попробуем получить детальную ошибку от сервера
+      const errorMessage =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail || "Неверный или истёкший код. Попробуйте ещё раз.";
+      setError(errorMessage);
       console.error("Failed to verify code:", err);
     } finally {
       setIsLoading(false);

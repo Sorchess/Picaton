@@ -17,7 +17,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
-  refreshUser: () => Promise<void>;
+  refreshUser: (showLoading?: boolean) => Promise<void>;
   requestMagicLink: (email: string) => Promise<void>;
   verifyMagicLink: (token: string) => Promise<void>;
   telegramLogin: (data: TelegramAuthData) => Promise<void>;
@@ -29,11 +29,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshUser = useCallback(async () => {
+  const refreshUser = useCallback(async (showLoading = false) => {
     if (!authApi.isAuthenticated()) {
       setUser(null);
       setIsLoading(false);
       return;
+    }
+
+    // Показываем loading только при явном запросе или если user ещё не загружен
+    if (showLoading) {
+      setIsLoading(true);
     }
 
     try {
@@ -48,16 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refreshUser();
+    refreshUser(true); // При первой загрузке показываем loading
   }, [refreshUser]);
 
   const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);
     try {
       await authApi.login(credentials);
-      await refreshUser();
+      // Получаем данные пользователя без дополнительного loading
+      const userData = await authApi.getMe();
+      setUser(userData);
     } catch (error) {
-      setIsLoading(false);
       throw error;
     } finally {
       setIsLoading(false);
@@ -107,8 +113,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await authApi.verifyMagicLink({ token });
-      // Получаем полные данные пользователя с сервера
-      await refreshUser();
+      // Получаем полные данные пользователя с сервера (без отдельного loading)
+      const userData = await authApi.getMe();
+      setUser(userData);
     } finally {
       setIsLoading(false);
     }
@@ -118,8 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await authApi.telegramAuth(data);
-      // Получаем полные данные пользователя с сервера
-      await refreshUser();
+      // Получаем полные данные пользователя с сервера (без отдельного loading)
+      const userData = await authApi.getMe();
+      setUser(userData);
     } finally {
       setIsLoading(false);
     }

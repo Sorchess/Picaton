@@ -1,5 +1,6 @@
 """Сервис верификации email."""
 
+import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
@@ -7,6 +8,8 @@ from uuid import UUID
 from domain.repositories.email_verification import EmailVerificationRepositoryInterface
 from domain.repositories.user import UserRepositoryInterface
 from domain.exceptions.user import UserNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 class EmailVerificationError(Exception):
@@ -79,15 +82,32 @@ class EmailVerificationService:
         Raises:
             EmailVerificationError: Неверный или истёкший код
         """
+        logger.info(f"Verifying code for user {user_id}, code: {code}")
+
         # Получаем запись верификации
         result = await self._verification_repo.get_verification(user_id, code)
+        logger.info(f"Verification result: {result}")
+
         if not result:
             raise EmailVerificationError("Неверный код подтверждения")
 
         email, expires_at = result
+        logger.info(
+            f"Email: {email}, expires_at: {expires_at}, type: {type(expires_at)}"
+        )
+
+        # MongoDB возвращает naive datetime в UTC, добавляем timezone перед сравнением
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
 
         # Проверяем срок действия
-        if datetime.now(timezone.utc) > expires_at:
+        now = datetime.now(timezone.utc)
+
+        logger.info(
+            f"Now: {now}, expires_at: {expires_at}, expired: {now > expires_at}"
+        )
+
+        if now > expires_at:
             await self._verification_repo.delete_verification(user_id)
             raise EmailVerificationError("Код подтверждения истёк")
 

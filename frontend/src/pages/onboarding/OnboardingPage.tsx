@@ -69,13 +69,11 @@ export function OnboardingPage() {
 
       setStep("complete");
 
-      // Обновляем данные пользователя в контексте
-      await refreshUser();
-
-      // Автоматический переход на главную через 2 секунды
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      // Показываем сообщение об успехе, затем обновляем данные пользователя
+      // что вызовет автоматический переход в AuthenticatedApp
+      setTimeout(async () => {
+        await refreshUser();
+      }, 1500);
     } catch (err) {
       console.error("Error updating profile:", err);
       setError("Не удалось сохранить данные. Попробуйте ещё раз.");
