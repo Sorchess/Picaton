@@ -89,6 +89,7 @@ class CompanyMemberResponse(BaseModel):
     id: UUID
     user: MemberUserInfo
     role: CompanyRole
+    selected_card_id: UUID | None = None
     joined_at: datetime
 
 
@@ -146,6 +147,23 @@ class DeclineInvitationRequest(BaseModel):
     """Запрос на отклонение приглашения."""
 
     token: str = Field(..., description="Токен приглашения")
+
+
+# ==================== Card Selection ====================
+
+
+class SetSelectedCardRequest(BaseModel):
+    """Запрос на установку выбранной визитки для компании."""
+
+    card_id: UUID | None = Field(None, description="ID визитки (или None для сброса)")
+
+
+class CompanyCardAssignment(BaseModel):
+    """Информация о выбранной визитке для компании."""
+
+    company_id: UUID
+    company_name: str
+    selected_card_id: UUID | None = None
 
 
 # ==================== Generic ====================

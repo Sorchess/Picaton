@@ -22,56 +22,67 @@ logger = logging.getLogger(__name__)
 # Исключения
 class CompanyError(Exception):
     """Базовая ошибка компании."""
+
     pass
 
 
 class CompanyNotFoundError(CompanyError):
     """Компания не найдена."""
+
     pass
 
 
 class CompanyAlreadyExistsError(CompanyError):
     """Компания с таким доменом уже существует."""
+
     pass
 
 
 class MemberNotFoundError(CompanyError):
     """Член компании не найден."""
+
     pass
 
 
 class AlreadyMemberError(CompanyError):
     """Пользователь уже является членом компании."""
+
     pass
 
 
 class InvitationNotFoundError(CompanyError):
     """Приглашение не найдено."""
+
     pass
 
 
 class InvitationExpiredError(CompanyError):
     """Приглашение истекло."""
+
     pass
 
 
 class InvitationAlreadyExistsError(CompanyError):
     """Приглашение для этого email уже существует."""
+
     pass
 
 
 class PermissionDeniedError(CompanyError):
     """Недостаточно прав."""
+
     pass
 
 
 class CannotRemoveOwnerError(CompanyError):
     """Нельзя удалить владельца."""
+
     pass
 
 
 class CannotChangeOwnRoleError(CompanyError):
     """Нельзя изменить свою роль."""
+
     pass
 
 
@@ -169,11 +180,13 @@ class CompanyService:
         for membership in memberships:
             company = await self._company_repo.get_by_id(membership.company_id)
             if company and company.is_active:
-                result.append({
-                    "company": company,
-                    "role": membership.role,
-                    "joined_at": membership.joined_at,
-                })
+                result.append(
+                    {
+                        "company": company,
+                        "role": membership.role,
+                        "joined_at": membership.joined_at,
+                    }
+                )
         return result
 
     async def update_company(
@@ -207,7 +220,9 @@ class CompanyService:
         member = await self._member_repo.get_by_company_and_user(company_id, user_id)
 
         if not member or member.role not in (CompanyRole.OWNER, CompanyRole.ADMIN):
-            raise PermissionDeniedError("Только владелец или администратор может редактировать компанию")
+            raise PermissionDeniedError(
+                "Только владелец или администратор может редактировать компанию"
+            )
 
         if name is not None:
             company.update_name(name)
@@ -278,12 +293,15 @@ class CompanyService:
         for m in memberships:
             user = await self._user_repo.get_by_id(m.user_id)
             if user:
-                result.append({
-                    "id": m.id,
-                    "user": user,
-                    "role": m.role,
-                    "joined_at": m.joined_at,
-                })
+                result.append(
+                    {
+                        "id": m.id,
+                        "user": user,
+                        "role": m.role,
+                        "selected_card_id": m.selected_card_id,
+                        "joined_at": m.joined_at,
+                    }
+                )
         return result
 
     async def update_member_role(
@@ -310,14 +328,18 @@ class CompanyService:
             MemberNotFoundError: Член не найден
             CannotChangeOwnRoleError: Нельзя изменить свою роль
         """
-        admin_member = await self._member_repo.get_by_company_and_user(company_id, admin_user_id)
+        admin_member = await self._member_repo.get_by_company_and_user(
+            company_id, admin_user_id
+        )
         if not admin_member or admin_member.role != CompanyRole.OWNER:
             raise PermissionDeniedError("Только владелец может изменять роли")
 
         if member_user_id == admin_user_id:
             raise CannotChangeOwnRoleError("Нельзя изменить свою роль")
 
-        target_member = await self._member_repo.get_by_company_and_user(company_id, member_user_id)
+        target_member = await self._member_repo.get_by_company_and_user(
+            company_id, member_user_id
+        )
         if not target_member:
             raise MemberNotFoundError("Пользователь не является членом компании")
 
@@ -350,11 +372,20 @@ class CompanyService:
             MemberNotFoundError: Член не найден
             CannotRemoveOwnerError: Нельзя удалить владельца
         """
-        admin_member = await self._member_repo.get_by_company_and_user(company_id, admin_user_id)
-        if not admin_member or admin_member.role not in (CompanyRole.OWNER, CompanyRole.ADMIN):
-            raise PermissionDeniedError("Только владелец или администратор может удалять членов")
+        admin_member = await self._member_repo.get_by_company_and_user(
+            company_id, admin_user_id
+        )
+        if not admin_member or admin_member.role not in (
+            CompanyRole.OWNER,
+            CompanyRole.ADMIN,
+        ):
+            raise PermissionDeniedError(
+                "Только владелец или администратор может удалять членов"
+            )
 
-        target_member = await self._member_repo.get_by_company_and_user(company_id, member_user_id)
+        target_member = await self._member_repo.get_by_company_and_user(
+            company_id, member_user_id
+        )
         if not target_member:
             raise MemberNotFoundError("Пользователь не является членом компании")
 
@@ -362,11 +393,18 @@ class CompanyService:
             raise CannotRemoveOwnerError("Нельзя удалить владельца компании")
 
         # Админ не может удалить другого админа
-        if admin_member.role == CompanyRole.ADMIN and target_member.role == CompanyRole.ADMIN:
-            raise PermissionDeniedError("Администратор не может удалить другого администратора")
+        if (
+            admin_member.role == CompanyRole.ADMIN
+            and target_member.role == CompanyRole.ADMIN
+        ):
+            raise PermissionDeniedError(
+                "Администратор не может удалить другого администратора"
+            )
 
         result = await self._member_repo.delete(target_member.id)
-        logger.info(f"Member {member_user_id} removed from company {company_id} by {admin_user_id}")
+        logger.info(
+            f"Member {member_user_id} removed from company {company_id} by {admin_user_id}"
+        )
         return result
 
     async def leave_company(self, company_id: UUID, user_id: UUID) -> bool:
@@ -397,6 +435,71 @@ class CompanyService:
         logger.info(f"User {user_id} left company {company_id}")
         return result
 
+    async def set_selected_card(
+        self,
+        company_id: UUID,
+        user_id: UUID,
+        card_id: UUID | None,
+    ) -> dict:
+        """
+        Установить выбранную визитку для отображения в компании.
+
+        Args:
+            company_id: ID компании
+            user_id: ID пользователя
+            card_id: ID визитки (или None для сброса)
+
+        Returns:
+            Словарь с информацией о компании и выбранной визитке
+
+        Raises:
+            MemberNotFoundError: Не является членом компании
+        """
+        member = await self._member_repo.get_by_company_and_user(company_id, user_id)
+        if not member:
+            raise MemberNotFoundError("Вы не являетесь членом этой компании")
+
+        member.set_selected_card(card_id)
+        await self._member_repo.update(member)
+
+        company = await self._company_repo.get_by_id(company_id)
+
+        logger.info(
+            f"User {user_id} set selected card {card_id} for company {company_id}"
+        )
+
+        return {
+            "company_id": company_id,
+            "company_name": company.name if company else "",
+            "selected_card_id": card_id,
+        }
+
+    async def get_user_card_assignments(self, user_id: UUID) -> list[dict]:
+        """
+        Получить информацию о выбранных визитках пользователя для всех компаний.
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            Список словарей с информацией о компаниях и выбранных визитках
+        """
+        memberships = await self._member_repo.get_by_user(user_id)
+        result = []
+
+        for member in memberships:
+            company = await self._company_repo.get_by_id(member.company_id)
+            if company:
+                result.append(
+                    {
+                        "company_id": company.id,
+                        "company_name": company.name,
+                        "selected_card_id": member.selected_card_id,
+                    }
+                )
+
+        return result
+
     # ==================== Приглашения ====================
 
     async def create_invitation(
@@ -425,11 +528,15 @@ class CompanyService:
             InvitationAlreadyExistsError: Приглашение уже отправлено
         """
         company = await self.get_company(company_id)
-        
+
         # Проверяем права приглашающего
-        inviter = await self._member_repo.get_by_company_and_user(company_id, invited_by_id)
+        inviter = await self._member_repo.get_by_company_and_user(
+            company_id, invited_by_id
+        )
         if not inviter or not inviter.can_invite():
-            raise PermissionDeniedError("Только владелец или администратор может приглашать")
+            raise PermissionDeniedError(
+                "Только владелец или администратор может приглашать"
+            )
 
         # Проверяем, не является ли уже членом
         existing_user = await self._user_repo.get_by_email(email.lower())
@@ -441,11 +548,15 @@ class CompanyService:
                 raise AlreadyMemberError("Пользователь уже является членом компании")
 
         # Проверяем существующее приглашение
-        existing_invitation = await self._invitation_repo.get_pending_by_email_and_company(
-            email, company_id
+        existing_invitation = (
+            await self._invitation_repo.get_pending_by_email_and_company(
+                email, company_id
+            )
         )
         if existing_invitation:
-            raise InvitationAlreadyExistsError("Приглашение для этого email уже отправлено")
+            raise InvitationAlreadyExistsError(
+                "Приглашение для этого email уже отправлено"
+            )
 
         # Генерируем токен
         token = secrets.token_urlsafe(INVITATION_TOKEN_LENGTH)
@@ -479,12 +590,18 @@ class CompanyService:
             if not inv.is_expired():
                 company = await self._company_repo.get_by_id(inv.company_id)
                 if company:
-                    inviter = await self._user_repo.get_by_id(inv.invited_by_id) if inv.invited_by_id else None
-                    result.append({
-                        "invitation": inv,
-                        "company": company,
-                        "invited_by": inviter,
-                    })
+                    inviter = (
+                        await self._user_repo.get_by_id(inv.invited_by_id)
+                        if inv.invited_by_id
+                        else None
+                    )
+                    result.append(
+                        {
+                            "invitation": inv,
+                            "company": company,
+                            "invited_by": inviter,
+                        }
+                    )
         return result
 
     async def get_company_invitations(
@@ -503,9 +620,13 @@ class CompanyService:
         """
         member = await self._member_repo.get_by_company_and_user(company_id, user_id)
         if not member or not member.can_manage_members():
-            raise PermissionDeniedError("Только владелец или администратор может просматривать приглашения")
+            raise PermissionDeniedError(
+                "Только владелец или администратор может просматривать приглашения"
+            )
 
-        return await self._invitation_repo.get_by_company(company_id, status, skip, limit)
+        return await self._invitation_repo.get_by_company(
+            company_id, status, skip, limit
+        )
 
     async def accept_invitation(self, token: str, user: User) -> CompanyMember:
         """
@@ -537,10 +658,14 @@ class CompanyService:
 
         # Проверяем email
         if invitation.email.lower() != user.email.lower():
-            raise PermissionDeniedError("Это приглашение предназначено для другого email")
+            raise PermissionDeniedError(
+                "Это приглашение предназначено для другого email"
+            )
 
         # Проверяем, не член ли уже
-        existing = await self._member_repo.get_by_company_and_user(invitation.company_id, user.id)
+        existing = await self._member_repo.get_by_company_and_user(
+            invitation.company_id, user.id
+        )
         if existing:
             raise AlreadyMemberError("Вы уже являетесь членом компании")
 
@@ -556,7 +681,9 @@ class CompanyService:
         )
         member = await self._member_repo.create(member)
 
-        logger.info(f"User {user.id} accepted invitation to company {invitation.company_id}")
+        logger.info(
+            f"User {user.id} accepted invitation to company {invitation.company_id}"
+        )
         return member
 
     async def decline_invitation(self, token: str, user: User) -> bool:
@@ -575,12 +702,16 @@ class CompanyService:
             raise InvitationNotFoundError("Приглашение не найдено")
 
         if invitation.email.lower() != user.email.lower():
-            raise PermissionDeniedError("Это приглашение предназначено для другого email")
+            raise PermissionDeniedError(
+                "Это приглашение предназначено для другого email"
+            )
 
         invitation.decline()
         await self._invitation_repo.update(invitation)
 
-        logger.info(f"User {user.id} declined invitation to company {invitation.company_id}")
+        logger.info(
+            f"User {user.id} declined invitation to company {invitation.company_id}"
+        )
         return True
 
     async def cancel_invitation(
@@ -606,7 +737,9 @@ class CompanyService:
             invitation.company_id, admin_user_id
         )
         if not admin_member or not admin_member.can_manage_members():
-            raise PermissionDeniedError("Только владелец или администратор может отменять приглашения")
+            raise PermissionDeniedError(
+                "Только владелец или администратор может отменять приглашения"
+            )
 
         invitation.cancel()
         await self._invitation_repo.update(invitation)
@@ -637,7 +770,9 @@ class CompanyService:
             old_invitation.company_id, admin_user_id
         )
         if not admin_member or not admin_member.can_invite():
-            raise PermissionDeniedError("Только владелец или администратор может переотправлять приглашения")
+            raise PermissionDeniedError(
+                "Только владелец или администратор может переотправлять приглашения"
+            )
 
         # Отменяем старое
         old_invitation.cancel()

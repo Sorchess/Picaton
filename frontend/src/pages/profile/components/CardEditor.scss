@@ -631,6 +631,44 @@
     margin: 0 0 24px;
   }
 
+  &__modal-warning {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  &__modal-warning-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  &__modal-warning-content {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+
+    strong {
+      color: #f59e0b;
+    }
+  }
+
+  &__modal-warning-list {
+    margin: 8px 0 8px 20px;
+    padding: 0;
+    list-style-type: disc;
+
+    li {
+      margin: 4px 0;
+      color: #fbbf24;
+      font-weight: 500;
+    }
+  }
+
   &__modal-actions {
     display: flex;
     gap: 12px;

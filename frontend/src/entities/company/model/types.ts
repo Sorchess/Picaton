@@ -37,6 +37,7 @@ export interface CompanyMember {
     avatar_url: string | null;
   };
   role: CompanyRole;
+  selected_card_id: string | null;
   joined_at: string;
 }
 
@@ -65,6 +66,17 @@ export interface InvitationWithCompany {
   status: InvitationStatus;
   created_at: string;
   expires_at: string | null;
+}
+
+// Card selection
+export interface CompanyCardAssignment {
+  company_id: string;
+  company_name: string;
+  selected_card_id: string | null;
+}
+
+export interface SetSelectedCardRequest {
+  card_id: string | null;
 }
 
 // Request types

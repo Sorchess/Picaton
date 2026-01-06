@@ -5,6 +5,7 @@ import type {
   CompanyInvitation,
   CompanyRole,
 } from "@/entities/company";
+import type { BusinessCard } from "@/entities/business-card";
 import {
   roleLabels,
   canManageMembers,
@@ -32,6 +33,10 @@ interface CompanyDetailProps {
   isLoadingMembers: boolean;
   isLoadingInvitations: boolean;
   currentUserId?: string;
+  // Визитки для выбора
+  userCards?: BusinessCard[];
+  selectedCardId?: string | null;
+  onSelectCard?: (cardId: string | null) => Promise<void>;
   onBack: () => void;
   onInvite: (email: string, role: CompanyRole) => Promise<void>;
   onCancelInvitation: (invitationId: string) => Promise<void>;
@@ -53,6 +58,9 @@ export function CompanyDetail({
   isLoadingMembers,
   isLoadingInvitations,
   currentUserId,
+  userCards = [],
+  selectedCardId,
+  onSelectCard,
   onBack,
   onInvite,
   onCancelInvitation,
@@ -68,6 +76,8 @@ export function CompanyDetail({
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCardSelectModalOpen, setIsCardSelectModalOpen] = useState(false);
+  const [isSelectingCard, setIsSelectingCard] = useState(false);
 
   const [inviteForm, setInviteForm] = useState({
     email: "",
@@ -111,6 +121,19 @@ export function CompanyDetail({
       setIsSaving(false);
     }
   };
+
+  const handleSelectCard = async (cardId: string | null) => {
+    if (!onSelectCard) return;
+    setIsSelectingCard(true);
+    try {
+      await onSelectCard(cardId);
+      setIsCardSelectModalOpen(false);
+    } finally {
+      setIsSelectingCard(false);
+    }
+  };
+
+  const selectedCard = userCards.find((c) => c.id === selectedCardId);
 
   const pendingInvitations = invitations.filter(
     (inv) => inv.status === "pending"
@@ -167,6 +190,36 @@ export function CompanyDetail({
             </button>
           )}
         </nav>
+
+        {/* Секция выбора визитки */}
+        {userCards.length > 0 && (
+          <div className="company-detail__card-select">
+            <Typography variant="small" color="secondary">
+              Моя визитка в компании:
+            </Typography>
+            <button
+              className="company-detail__card-btn"
+              onClick={() => setIsCardSelectModalOpen(true)}
+            >
+              {selectedCard ? (
+                <>
+                  <span className="company-detail__card-icon">📇</span>
+                  <span className="company-detail__card-name">
+                    {selectedCard.title}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="company-detail__card-icon">➕</span>
+                  <span className="company-detail__card-name">
+                    Выбрать визитку
+                  </span>
+                </>
+              )}
+              <span className="company-detail__card-arrow">›</span>
+            </button>
+          </div>
+        )}
 
         <div className="company-detail__sidebar-footer">
           <Tag
@@ -472,6 +525,60 @@ export function CompanyDetail({
               {isSaving ? "Удаление..." : "Удалить"}
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Card Select Modal */}
+      <Modal
+        isOpen={isCardSelectModalOpen}
+        onClose={() => setIsCardSelectModalOpen(false)}
+        title="Выберите визитку"
+        size="md"
+      >
+        <div className="card-select-modal">
+          <Typography variant="body" color="secondary">
+            Выберите визитку, которую будут видеть участники компании{" "}
+            <strong>{company.company.name}</strong>
+          </Typography>
+          <div className="card-select-modal__list">
+            {userCards.map((card) => (
+              <button
+                key={card.id}
+                className={`card-select-modal__item ${
+                  selectedCardId === card.id
+                    ? "card-select-modal__item--selected"
+                    : ""
+                }`}
+                onClick={() => handleSelectCard(card.id)}
+                disabled={isSelectingCard}
+              >
+                <div className="card-select-modal__item-icon">📇</div>
+                <div className="card-select-modal__item-info">
+                  <span className="card-select-modal__item-title">
+                    {card.title}
+                    {card.is_primary && (
+                      <span className="card-select-modal__item-badge">★</span>
+                    )}
+                  </span>
+                  <span className="card-select-modal__item-bio">
+                    {card.ai_generated_bio || card.bio || "Без описания"}
+                  </span>
+                </div>
+                {selectedCardId === card.id && (
+                  <span className="card-select-modal__item-check">✓</span>
+                )}
+              </button>
+            ))}
+          </div>
+          {selectedCardId && (
+            <button
+              className="card-select-modal__clear"
+              onClick={() => handleSelectCard(null)}
+              disabled={isSelectingCard}
+            >
+              Снять выбор
+            </button>
+          )}
         </div>
       </Modal>
     </div>

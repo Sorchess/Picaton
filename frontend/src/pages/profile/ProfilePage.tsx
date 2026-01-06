@@ -4,6 +4,8 @@ import { getFullName } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
+import type { CompanyCardAssignment } from "@/entities/company";
+import { companyApi } from "@/entities/company";
 import { useAuth } from "@/features/auth";
 import { AvatarUpload } from "@/features/avatar-upload";
 import { QrModal } from "@/features/qr-modal";
@@ -22,6 +24,11 @@ export function ProfilePage() {
   // Cards state
   const [cards, setCards] = useState<BusinessCard[]>([]);
   const [isLoadingCards, setIsLoadingCards] = useState(true);
+
+  // Company card assignments
+  const [cardAssignments, setCardAssignments] = useState<
+    CompanyCardAssignment[]
+  >([]);
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
@@ -63,10 +70,28 @@ export function ProfilePage() {
     }
   }, [authUser?.id]);
 
+  const loadCardAssignments = useCallback(async () => {
+    try {
+      const assignments = await companyApi.getMyCardAssignments();
+      setCardAssignments(assignments);
+    } catch {
+      // Ignore errors
+    }
+  }, []);
+
+  // Получить компании, которые используют данную визитку
+  const getCompaniesUsingCard = useCallback(
+    (cardId: string): CompanyCardAssignment[] => {
+      return cardAssignments.filter((a) => a.selected_card_id === cardId);
+    },
+    [cardAssignments]
+  );
+
   useEffect(() => {
     loadUser();
     loadCards();
-  }, [loadUser, loadCards]);
+    loadCardAssignments();
+  }, [loadUser, loadCards, loadCardAssignments]);
 
   // Открытие редактора карточки
   const handleOpenCard = (card: BusinessCard) => {
@@ -205,6 +230,7 @@ export function ProfilePage() {
       <CardEditor
         card={editingCard}
         user={user}
+        usedByCompanies={getCompaniesUsingCard(editingCard.id)}
         onBack={handleBackToOverview}
         onCardUpdate={handleCardUpdate}
         onCardDelete={handleCardDelete}
@@ -285,6 +311,7 @@ export function ProfilePage() {
               <CardPreview
                 key={card.id}
                 card={card}
+                usedByCompanies={getCompaniesUsingCard(card.id)}
                 onClick={() => handleOpenCard(card)}
                 onShare={handleShareCard}
               />

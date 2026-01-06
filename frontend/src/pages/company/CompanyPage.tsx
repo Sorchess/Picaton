@@ -6,10 +6,13 @@ import {
   type CompanyInvitation,
   type InvitationWithCompany,
   type CompanyRole,
+  type CompanyCardAssignment,
   companyApi,
   roleLabels,
   canManageMembers,
 } from "@/entities/company";
+import type { BusinessCard } from "@/entities/business-card";
+import { businessCardApi } from "@/entities/business-card";
 import { Button, Modal, Input, Loader, Typography } from "@/shared";
 import { CompanyList, CompanyDetail } from "./components";
 import "./CompanyPage.scss";
@@ -68,6 +71,10 @@ export function CompanyPage() {
   const [myInvitations, setMyInvitations] = useState<InvitationWithCompany[]>(
     []
   );
+
+  // Визитки пользователя
+  const [userCards, setUserCards] = useState<BusinessCard[]>([]);
+  const [cardAssignments, setCardAssignments] = useState<CompanyCardAssignment[]>([]);
 
   // Модалка создания
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -149,10 +156,59 @@ export function CompanyPage() {
     []
   );
 
+  // Загрузка визиток пользователя
+  const loadUserCards = useCallback(async () => {
+    if (!authUser?.id) return;
+    try {
+      const response = await businessCardApi.getAll(authUser.id);
+      setUserCards(response.cards);
+    } catch (err) {
+      console.error("Ошибка загрузки визиток:", err);
+    }
+  }, [authUser?.id]);
+
+  // Загрузка связей визиток с компаниями
+  const loadCardAssignments = useCallback(async () => {
+    try {
+      const data = await companyApi.getMyCardAssignments();
+      setCardAssignments(data);
+    } catch (err) {
+      console.error("Ошибка загрузки связей визиток:", err);
+    }
+  }, []);
+
+  // Получить выбранную визитку для компании
+  const getSelectedCardId = (companyId: string): string | null => {
+    const assignment = cardAssignments.find((a) => a.company_id === companyId);
+    return assignment?.selected_card_id || null;
+  };
+
+  // Обработчик выбора визитки
+  const handleSelectCard = async (companyId: string, cardId: string | null) => {
+    try {
+      const result = await companyApi.setSelectedCard(companyId, cardId);
+      setCardAssignments((prev) => {
+        const idx = prev.findIndex((a) => a.company_id === companyId);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = result;
+          return updated;
+        }
+        return [...prev, result];
+      });
+      showSuccess(cardId ? "Визитка выбрана" : "Выбор визитки снят");
+    } catch (err) {
+      showError(parseApiError(err));
+      throw err;
+    }
+  };
+
   useEffect(() => {
     loadCompanies();
     loadMyInvitations();
-  }, [loadCompanies, loadMyInvitations]);
+    loadUserCards();
+    loadCardAssignments();
+  }, [loadCompanies, loadMyInvitations, loadUserCards, loadCardAssignments]);
 
   // При выборе компании - переход на детальную страницу
   const handleSelectCompany = (company: CompanyWithRole) => {
@@ -384,6 +440,11 @@ export function CompanyPage() {
           isLoadingMembers={isLoadingMembers}
           isLoadingInvitations={isLoadingInvitations}
           currentUserId={authUser?.id}
+          userCards={userCards}
+          selectedCardId={getSelectedCardId(selectedCompany.company.id)}
+          onSelectCard={(cardId) =>
+            handleSelectCard(selectedCompany.company.id, cardId)
+          }
           onBack={handleBackToList}
           onInvite={handleInvite}
           onCancelInvitation={handleCancelInvitation}

@@ -99,17 +99,22 @@ class MongoCompanyMemberRepository(CompanyMemberRepositoryInterface):
             "company_id": str(member.company_id),
             "user_id": str(member.user_id),
             "role": member.role.value,
+            "selected_card_id": (
+                str(member.selected_card_id) if member.selected_card_id else None
+            ),
             "joined_at": member.joined_at,
             "updated_at": member.updated_at,
         }
 
     def _from_document(self, doc: dict) -> CompanyMember:
         """Преобразовать документ MongoDB в сущность."""
+        selected_card_id = doc.get("selected_card_id")
         return CompanyMember(
             id=UUID(doc["_id"]),
             company_id=UUID(doc["company_id"]),
             user_id=UUID(doc["user_id"]),
             role=CompanyRole(doc.get("role", "member")),
+            selected_card_id=UUID(selected_card_id) if selected_card_id else None,
             joined_at=doc.get("joined_at", datetime.now(timezone.utc)),
             updated_at=doc.get("updated_at", datetime.now(timezone.utc)),
         )

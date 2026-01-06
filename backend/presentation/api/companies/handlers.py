@@ -19,6 +19,8 @@ from presentation.api.companies.schemas import (
     AcceptInvitationRequest,
     DeclineInvitationRequest,
     MessageResponse,
+    SetSelectedCardRequest,
+    CompanyCardAssignment,
 )
 from infrastructure.dependencies import get_auth_service, get_company_service
 from application.services import (
@@ -294,6 +296,7 @@ async def get_company_members(
                 avatar_url=m["user"].avatar_url,
             ),
             role=m["role"],
+            selected_card_id=m["selected_card_id"],
             joined_at=m["joined_at"],
         )
         for m in members_data
@@ -722,3 +725,57 @@ async def decline_invitation(
         )
 
     return MessageResponse(message="Приглашение отклонено")
+
+
+# ==================== Card Selection ====================
+
+
+@router.get("/card-assignments/my", response_model=list[CompanyCardAssignment])
+async def get_my_card_assignments(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    company_service: CompanyService = Depends(get_company_service),
+):
+    """Получить информацию о выбранных визитках для всех компаний текущего пользователя."""
+    user = await get_current_user_from_token(credentials, auth_service)
+
+    assignments = await company_service.get_user_card_assignments(user.id)
+
+    return [
+        CompanyCardAssignment(
+            company_id=a["company_id"],
+            company_name=a["company_name"],
+            selected_card_id=a["selected_card_id"],
+        )
+        for a in assignments
+    ]
+
+
+@router.patch("/{company_id}/selected-card", response_model=CompanyCardAssignment)
+async def set_selected_card(
+    company_id: UUID,
+    data: SetSelectedCardRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    company_service: CompanyService = Depends(get_company_service),
+):
+    """Установить выбранную визитку для отображения в компании."""
+    user = await get_current_user_from_token(credentials, auth_service)
+
+    try:
+        result = await company_service.set_selected_card(
+            company_id=company_id,
+            user_id=user.id,
+            card_id=data.card_id,
+        )
+    except MemberNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+    return CompanyCardAssignment(
+        company_id=result["company_id"],
+        company_name=result["company_name"],
+        selected_card_id=result["selected_card_id"],
+    )

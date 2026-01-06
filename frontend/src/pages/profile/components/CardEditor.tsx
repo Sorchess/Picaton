@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import type { User, ContactInfo } from "@/entities/user";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
+import type { CompanyCardAssignment } from "@/entities/company";
 import { TagInput } from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import "./CardEditor.scss";
@@ -67,6 +68,7 @@ type EditStep = 1 | 2 | 3;
 interface CardEditorProps {
   card: BusinessCard;
   user: User;
+  usedByCompanies?: CompanyCardAssignment[];
   onBack: () => void;
   onCardUpdate: (card: BusinessCard) => void;
   onCardDelete: (cardId: string) => Promise<void>;
@@ -75,6 +77,7 @@ interface CardEditorProps {
 export function CardEditor({
   card,
   user,
+  usedByCompanies = [],
   onBack,
   onCardUpdate,
   onCardDelete,
@@ -490,6 +493,25 @@ export function CardEditor({
               {selectedCard.is_primary ? "очищена" : "удалена"}. Это действие
               нельзя отменить.
             </p>
+            {usedByCompanies.length > 0 && (
+              <div className="card-editor__modal-warning">
+                <span className="card-editor__modal-warning-icon">⚠️</span>
+                <div className="card-editor__modal-warning-content">
+                  <strong>Внимание!</strong> Эта визитка используется в{" "}
+                  {usedByCompanies.length === 1 ? "компании" : "компаниях"}:
+                  <ul className="card-editor__modal-warning-list">
+                    {usedByCompanies.map((c) => (
+                      <li key={c.company_id}>{c.company_name}</li>
+                    ))}
+                  </ul>
+                  После удаления вам потребуется выбрать другую визитку для{" "}
+                  {usedByCompanies.length === 1
+                    ? "этой компании"
+                    : "этих компаний"}
+                  .
+                </div>
+              </div>
+            )}
             <div className="card-editor__modal-actions">
               <button
                 className="card-editor__btn card-editor__btn--secondary"

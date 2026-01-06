@@ -134,6 +134,9 @@ class CompanyMember(Entity):
     user_id: UUID = field(default=None)
     role: CompanyRole = field(default=CompanyRole.MEMBER)
 
+    # Выбранная визитка для отображения в этой компании
+    selected_card_id: UUID | None = field(default=None)
+
     # Timestamps
     joined_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -161,6 +164,11 @@ class CompanyMember(Entity):
     def update_role(self, new_role: CompanyRole) -> None:
         """Обновить роль."""
         self.role = new_role
+        self.updated_at = datetime.now(timezone.utc)
+
+    def set_selected_card(self, card_id: UUID | None) -> None:
+        """Установить выбранную визитку для компании."""
+        self.selected_card_id = card_id
         self.updated_at = datetime.now(timezone.utc)
 
 

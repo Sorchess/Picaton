@@ -13,6 +13,7 @@ import type {
   MessageResponse,
   CompanyRole,
   InvitationStatus,
+  CompanyCardAssignment,
 } from "./types";
 
 export const companyApi = {
@@ -138,4 +139,20 @@ export const companyApi = {
    */
   declineInvitation: (data: DeclineInvitationRequest) =>
     api.post<MessageResponse>("/companies/invitations/decline", data),
+
+  // ==================== Card Selection ====================
+
+  /**
+   * Получить информацию о выбранных визитках для всех компаний
+   */
+  getMyCardAssignments: () =>
+    api.get<CompanyCardAssignment[]>("/companies/card-assignments/my"),
+
+  /**
+   * Установить выбранную визитку для компании
+   */
+  setSelectedCard: (companyId: string, cardId: string | null) =>
+    api.patch<CompanyCardAssignment>(`/companies/${companyId}/selected-card`, {
+      card_id: cardId,
+    }),
 };

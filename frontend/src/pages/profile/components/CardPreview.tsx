@@ -1,13 +1,20 @@
 import type { BusinessCard } from "@/entities/business-card";
+import type { CompanyCardAssignment } from "@/entities/company";
 import "./CardPreview.scss";
 
 interface CardPreviewProps {
   card: BusinessCard;
+  usedByCompanies?: CompanyCardAssignment[];
   onClick: () => void;
   onShare?: (card: BusinessCard) => void;
 }
 
-export function CardPreview({ card, onClick, onShare }: CardPreviewProps) {
+export function CardPreview({
+  card,
+  usedByCompanies = [],
+  onClick,
+  onShare,
+}: CardPreviewProps) {
   // Расчёт прогресса
   const getProgress = () => {
     let progress = 0;
@@ -37,6 +44,19 @@ export function CardPreview({ card, onClick, onShare }: CardPreviewProps) {
                 <span className="card-preview__badge">★</span>
               )}
             </h3>
+            {usedByCompanies.length > 0 && (
+              <div className="card-preview__companies">
+                {usedByCompanies.map((assignment) => (
+                  <span
+                    key={assignment.company_id}
+                    className="card-preview__company-badge"
+                    title={`Используется в компании "${assignment.company_name}"`}
+                  >
+                    🏢 {assignment.company_name}
+                  </span>
+                ))}
+              </div>
+            )}
             {card.ai_generated_bio ? (
               <p className="card-preview__bio">{card.ai_generated_bio}</p>
             ) : (
