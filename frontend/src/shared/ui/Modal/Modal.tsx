@@ -8,6 +8,10 @@ interface ModalProps {
   title?: string;
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Закрывать при клике на overlay (по умолчанию true) */
+  closeOnOverlayClick?: boolean;
+  /** Закрывать при нажатии Escape (по умолчанию true) */
+  closeOnEscape?: boolean;
 }
 
 export function Modal({
@@ -17,6 +21,8 @@ export function Modal({
   title,
   size = "md",
   className = "",
+  closeOnOverlayClick = true,
+  closeOnEscape = true,
 }: ModalProps) {
   const [isVisible, setIsVisible] = useState(isOpen);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -45,7 +51,7 @@ export function Modal({
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && closeOnEscape) {
         onClose();
       }
     };
@@ -54,7 +60,7 @@ export function Modal({
       window.addEventListener("keydown", handleEscape);
       return () => window.removeEventListener("keydown", handleEscape);
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, closeOnEscape]);
 
   if (!isVisible) return null;
 
@@ -69,8 +75,14 @@ export function Modal({
     .filter(Boolean)
     .join(" ");
 
+  const handleOverlayClick = () => {
+    if (closeOnOverlayClick) {
+      onClose();
+    }
+  };
+
   return (
-    <div className={overlayClassNames} onClick={onClose}>
+    <div className={overlayClassNames} onClick={handleOverlayClick}>
       <div className={modalClassNames} onClick={(e) => e.stopPropagation()}>
         <button className="modal__close" onClick={onClose} aria-label="Закрыть">
           <svg

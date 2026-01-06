@@ -6,6 +6,7 @@ from domain.repositories.company import (
     CompanyMemberRepositoryInterface,
     CompanyInvitationRepositoryInterface,
 )
+from domain.repositories.email_verification import EmailVerificationRepositoryInterface
 
 __all__ = [
     "UserRepositoryInterface",
@@ -14,4 +15,5 @@ __all__ = [
     "CompanyRepositoryInterface",
     "CompanyMemberRepositoryInterface",
     "CompanyInvitationRepositoryInterface",
+    "EmailVerificationRepositoryInterface",
 ]

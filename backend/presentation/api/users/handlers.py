@@ -30,6 +30,9 @@ from presentation.api.users.schemas import (
     UserContactDelete,
     ProfileVisibilityUpdate,
     EmailUpdate,
+    EmailVerificationRequest,
+    EmailVerificationConfirm,
+    EmailVerificationResponse,
     SuggestedTagResponse,
     TagSuggestionsResponse,
     ApplyTagsRequest,
@@ -52,7 +55,9 @@ from infrastructure.dependencies import (
     get_cloudinary_service,
     get_business_card_service,
     get_card_title_generator,
+    get_email_verification_service,
 )
+from application.services.email_verification import EmailVerificationError
 from application.services.contact_sync import HashedContact
 from infrastructure.storage import CloudinaryService
 from infrastructure.storage.cloudinary_service import CloudinaryError, InvalidFileError
@@ -208,19 +213,55 @@ async def update_profile_visibility(
     return _user_to_response(user)
 
 
-@router.patch("/{user_id}/email", response_model=UserResponse)
-async def update_user_email(
+@router.post("/{user_id}/email/send-code", response_model=EmailVerificationResponse)
+async def send_email_verification_code(
     user_id: UUID,
-    data: EmailUpdate,
-    user_service=Depends(get_user_service),
+    data: EmailVerificationRequest,
+    verification_service=Depends(get_email_verification_service),
 ):
     """
-    Обновить email пользователя.
+    Отправить код подтверждения на email.
 
-    Используется для установки реального email после регистрации через Telegram.
+    Генерирует 6-значный код и отправляет его на указанный email.
+    Код действителен 15 минут.
     """
-    user = await user_service.update_email(user_id, data.email)
-    return _user_to_response(user)
+    from application.tasks.email_tasks import (
+        send_email_verification_code as send_code_task,
+    )
+
+    # Создаём код верификации
+    code = await verification_service.send_verification_code(user_id, data.email)
+
+    # Отправляем email с кодом через task
+    await send_code_task.kiq(data.email, code)
+
+    return EmailVerificationResponse(
+        message=f"Код подтверждения отправлен на {data.email}"
+    )
+
+
+@router.post("/{user_id}/email/verify", response_model=EmailVerificationResponse)
+async def verify_email_code(
+    user_id: UUID,
+    data: EmailVerificationConfirm,
+    verification_service=Depends(get_email_verification_service),
+):
+    """
+    Подтвердить email с помощью кода.
+
+    Проверяет 6-значный код и обновляет email пользователя.
+    """
+    try:
+        email = await verification_service.verify_code(user_id, data.code)
+        return EmailVerificationResponse(
+            message="Email успешно подтверждён",
+            email=email,
+        )
+    except EmailVerificationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
 
 # ============ User Profile Contacts ============

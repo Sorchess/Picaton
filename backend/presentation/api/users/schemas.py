@@ -46,6 +46,30 @@ class EmailUpdate(BaseModel):
     email: EmailStr = Field(description="Новый email адрес")
 
 
+class EmailVerificationRequest(BaseModel):
+    """Запрос на отправку кода верификации email."""
+
+    email: EmailStr = Field(description="Email для верификации")
+
+
+class EmailVerificationConfirm(BaseModel):
+    """Подтверждение email с кодом."""
+
+    code: str = Field(
+        min_length=6, max_length=6, description="6-значный код подтверждения"
+    )
+
+
+class EmailVerificationResponse(BaseModel):
+    """Ответ на запрос верификации."""
+
+    message: str = Field(description="Сообщение о результате")
+    email: str | None = Field(
+        default=None,
+        description="Подтверждённый email (только после успешной верификации)",
+    )
+
+
 class ContactInfo(BaseModel):
     """Информация о контакте."""
 

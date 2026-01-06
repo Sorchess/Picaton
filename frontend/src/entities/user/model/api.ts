@@ -214,7 +214,16 @@ export const userApi = {
   updateVisibility: (userId: string, isPublic: boolean) =>
     api.patch<User>(`/users/${userId}/visibility`, { is_public: isPublic }),
 
-  // Обновить email пользователя
-  updateEmail: (userId: string, email: string) =>
-    api.patch<User>(`/users/${userId}/email`, { email }),
+  // Отправить код подтверждения на email
+  sendEmailVerificationCode: (userId: string, email: string) =>
+    api.post<{ message: string }>(`/users/${userId}/email/send-code`, {
+      email,
+    }),
+
+  // Подтвердить email кодом
+  verifyEmailCode: (userId: string, code: string) =>
+    api.post<{ message: string; email: string }>(
+      `/users/${userId}/email/verify`,
+      { code }
+    ),
 };

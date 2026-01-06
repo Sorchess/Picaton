@@ -262,6 +262,151 @@ def _get_magic_link_email_text(magic_link: str, expire_minutes: int = 15) -> str
 """
 
 
+def _get_email_verification_html(code: str, expire_minutes: int = 15) -> str:
+    """
+    Генерирует HTML шаблон письма для верификации email.
+    """
+    return f"""
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подтверждение email - Picaton</title>
+</head>
+<body style="
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #1a1a1a 100%);
+    min-height: 100vh;
+">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #1a1a1a 100%);">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 500px; margin: 0 auto;">
+                    
+                    <!-- Logo -->
+                    <tr>
+                        <td style="text-align: center; padding-bottom: 32px;">
+                            <div style="
+                                display: inline-block;
+                                font-size: 32px;
+                                font-weight: 700;
+                                color: #ffffff;
+                                letter-spacing: -1px;
+                            ">
+                                <span style="color: #ffffff;">Picaton</span>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Card -->
+                    <tr>
+                        <td>
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="
+                                background: rgba(255, 255, 255, 0.03);
+                                border: 1px solid rgba(255, 255, 255, 0.08);
+                                border-radius: 20px;
+                                overflow: hidden;
+                            ">
+                                <!-- Card Header -->
+                                <tr>
+                                    <td style="
+                                        padding: 40px 40px 24px;
+                                        text-align: center;
+                                    ">
+                                        <h1 style="
+                                            margin: 0 0 16px;
+                                            font-size: 24px;
+                                            font-weight: 600;
+                                            color: #ffffff;
+                                        ">Подтверждение email</h1>
+                                        <p style="
+                                            margin: 0;
+                                            font-size: 15px;
+                                            color: rgba(255, 255, 255, 0.6);
+                                            line-height: 1.5;
+                                        ">
+                                            Введите этот код в приложении для подтверждения вашего email адреса
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Verification Code -->
+                                <tr>
+                                    <td style="padding: 0 40px 32px; text-align: center;">
+                                        <div style="
+                                            display: inline-block;
+                                            padding: 20px 40px;
+                                            background: rgba(255, 255, 255, 0.05);
+                                            border: 1px solid rgba(255, 255, 255, 0.1);
+                                            border-radius: 12px;
+                                            font-size: 32px;
+                                            font-weight: 700;
+                                            letter-spacing: 8px;
+                                            color: #ffffff;
+                                            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+                                        ">{code}</div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Expiry Notice -->
+                                <tr>
+                                    <td style="padding: 0 40px 40px; text-align: center;">
+                                        <p style="
+                                            margin: 0;
+                                            font-size: 13px;
+                                            color: rgba(255, 255, 255, 0.4);
+                                        ">
+                                            Код действителен {expire_minutes} минут
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding-top: 32px; text-align: center;">
+                            <p style="
+                                margin: 0;
+                                font-size: 12px;
+                                color: rgba(255, 255, 255, 0.3);
+                            ">
+                                Если вы не запрашивали этот код, просто проигнорируйте это письмо.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+"""
+
+
+def _get_email_verification_text(code: str, expire_minutes: int = 15) -> str:
+    """Текстовая версия письма верификации."""
+    return f"""
+Подтверждение email - Picaton
+
+Ваш код подтверждения: {code}
+
+Введите этот код в приложении для подтверждения вашего email адреса.
+
+Код действителен {expire_minutes} минут.
+
+Если вы не запрашивали этот код, просто проигнорируйте это письмо.
+
+---
+© 2025 Picaton
+"""
+
+
 # Импортируем брокер здесь, после определения всех хелпер-функций
 # чтобы избежать circular import
 from infrastructure.broker import broker
@@ -316,6 +461,54 @@ async def send_magic_link_email(to_email: str, magic_link: str) -> bool:
         return False
     except Exception as e:
         logger.error(f"Failed to send magic link email to {to_email}: {e}")
+        return False
+
+
+@broker.task
+async def send_email_verification_code(to_email: str, code: str) -> bool:
+    """
+    Задача отправки кода верификации email.
+
+    Args:
+        to_email: Email получателя
+        code: 6-значный код подтверждения
+
+    Returns:
+        True если успешно, False при ошибке
+    """
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "🔐 Код подтверждения - Picaton"
+        msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
+        msg["To"] = to_email
+
+        expire_minutes = 15
+
+        text_part = MIMEText(
+            _get_email_verification_text(code, expire_minutes), "plain", "utf-8"
+        )
+        html_part = MIMEText(
+            _get_email_verification_html(code, expire_minutes), "html", "utf-8"
+        )
+
+        msg.attach(text_part)
+        msg.attach(html_part)
+
+        with smtplib.SMTP(settings.email.smtp_host, settings.email.smtp_port) as server:
+            if settings.email.use_tls:
+                server.starttls()
+            if settings.email.smtp_user and settings.email.smtp_password:
+                server.login(settings.email.smtp_user, settings.email.smtp_password)
+            server.sendmail(settings.email.from_email, [to_email], msg.as_string())
+
+        logger.info(f"Verification code email sent to {to_email}")
+        return True
+
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP error sending verification code to {to_email}: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send verification code email to {to_email}: {e}")
         return False
 
 

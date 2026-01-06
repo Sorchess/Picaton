@@ -11,6 +11,7 @@ from infrastructure.database.repositories import (
     MongoCompanyRepository,
     MongoCompanyMemberRepository,
     MongoCompanyInvitationRepository,
+    MongoEmailVerificationRepository,
 )
 from infrastructure.database.repositories.pending_hash import MongoPendingHashRepository
 from domain.repositories import (
@@ -20,6 +21,7 @@ from domain.repositories import (
     CompanyRepositoryInterface,
     CompanyMemberRepositoryInterface,
     CompanyInvitationRepositoryInterface,
+    EmailVerificationRepositoryInterface,
 )
 from domain.repositories.pending_hash import PendingHashRepositoryInterface
 from application.services import (
@@ -45,6 +47,7 @@ from application.services.local_tags import LocalTagsGenerator
 from application.services.ai_search import AISearchService
 from application.services.card_title import CardTitleGenerator
 from application.services.telegram_auth import TelegramAuthService
+from application.services.email_verification import EmailVerificationService
 from infrastructure.llm.groq_client import GroqClient
 from infrastructure.llm.local_llm_client import LocalLLMClient
 from infrastructure.storage import CloudinaryService
@@ -94,12 +97,22 @@ def get_pending_hash_repository(
     return MongoPendingHashRepository(db["pending_hashes"])
 
 
+def get_email_verification_repository(
+    db: Database,
+) -> EmailVerificationRepositoryInterface:
+    """Получить репозиторий верификации email."""
+    return MongoEmailVerificationRepository(db["email_verifications"])
+
+
 UserRepository = Annotated[UserRepositoryInterface, Depends(get_user_repository)]
 ContactRepository = Annotated[
     SavedContactRepositoryInterface, Depends(get_contact_repository)
 ]
 PendingHashRepository = Annotated[
     PendingHashRepositoryInterface, Depends(get_pending_hash_repository)
+]
+EmailVerificationRepository = Annotated[
+    EmailVerificationRepositoryInterface, Depends(get_email_verification_repository)
 ]
 
 
@@ -328,6 +341,17 @@ def get_telegram_auth_service(
         access_token_expire_minutes=settings.jwt.access_token_expire_minutes,
         cloudinary_service=cloudinary_service,
         card_repository=card_repo,
+    )
+
+
+def get_email_verification_service(
+    verification_repo: EmailVerificationRepository,
+    user_repo: UserRepository,
+) -> EmailVerificationService:
+    """Получить сервис верификации email."""
+    return EmailVerificationService(
+        verification_repository=verification_repo,
+        user_repository=user_repo,
     )
 
 
