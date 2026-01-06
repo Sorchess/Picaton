@@ -296,6 +296,13 @@
     background: var(--color-glass-bg-hover);
   }
 
+  &--has-card {
+    &:hover {
+      border-color: rgba(139, 92, 246, 0.4);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
+    }
+  }
+
   &__info {
     flex: 1;
     min-width: 0;
@@ -304,6 +311,19 @@
       font-weight: 500;
       margin-bottom: 2px;
     }
+  }
+
+  &__card-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #a78bfa;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &--has-card:hover &__card-hint {
+    opacity: 1;
   }
 
   &__actions {

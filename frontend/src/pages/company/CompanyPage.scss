@@ -793,3 +793,76 @@
     }
   }
 }
+
+// View card modal
+.view-card-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-glass-border);
+  }
+
+  &__icon {
+    font-size: 2.5rem;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__tag {
+    padding: 6px 12px;
+    background: linear-gradient(
+      135deg,
+      rgba(99, 102, 241, 0.15),
+      rgba(139, 92, 246, 0.15)
+    );
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #a78bfa;
+  }
+
+  &__contacts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__contact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 10px;
+  }
+
+  &__contact-type {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: capitalize;
+    min-width: 80px;
+  }
+
+  &__contact-value {
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+  }
+}

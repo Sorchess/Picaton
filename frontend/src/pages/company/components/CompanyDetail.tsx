@@ -37,6 +37,8 @@ interface CompanyDetailProps {
   userCards?: BusinessCard[];
   selectedCardId?: string | null;
   onSelectCard?: (cardId: string | null) => Promise<void>;
+  // Просмотр визитки участника
+  onViewMemberCard?: (userId: string, cardId: string) => void;
   onBack: () => void;
   onInvite: (email: string, role: CompanyRole) => Promise<void>;
   onCancelInvitation: (invitationId: string) => Promise<void>;
@@ -61,6 +63,7 @@ export function CompanyDetail({
   userCards = [],
   selectedCardId,
   onSelectCard,
+  onViewMemberCard,
   onBack,
   onInvite,
   onCancelInvitation,
@@ -164,33 +167,6 @@ export function CompanyDetail({
           </div>
         </div>
 
-        <nav className="company-detail__nav">
-          <button
-            className={`company-detail__nav-item ${
-              activeTab === "members" ? "company-detail__nav-item--active" : ""
-            }`}
-            onClick={() => setActiveTab("members")}
-          >
-            <span className="company-detail__nav-icon">👥</span>
-            <span>Участники</span>
-            <span className="company-detail__nav-count">{members.length}</span>
-          </button>
-
-          {canManageMembers(company.role) && (
-            <button
-              className={`company-detail__nav-item ${
-                activeTab === "settings"
-                  ? "company-detail__nav-item--active"
-                  : ""
-              }`}
-              onClick={() => setActiveTab("settings")}
-            >
-              <span className="company-detail__nav-icon">⚙️</span>
-              <span>Настройки</span>
-            </button>
-          )}
-        </nav>
-
         {/* Секция выбора визитки */}
         {userCards.length > 0 && (
           <div className="company-detail__card-select">
@@ -220,6 +196,33 @@ export function CompanyDetail({
             </button>
           </div>
         )}
+
+        <nav className="company-detail__nav">
+          <button
+            className={`company-detail__nav-item ${
+              activeTab === "members" ? "company-detail__nav-item--active" : ""
+            }`}
+            onClick={() => setActiveTab("members")}
+          >
+            <span className="company-detail__nav-icon">👥</span>
+            <span>Участники</span>
+            <span className="company-detail__nav-count">{members.length}</span>
+          </button>
+
+          {canManageMembers(company.role) && (
+            <button
+              className={`company-detail__nav-item ${
+                activeTab === "settings"
+                  ? "company-detail__nav-item--active"
+                  : ""
+              }`}
+              onClick={() => setActiveTab("settings")}
+            >
+              <span className="company-detail__nav-icon">⚙️</span>
+              <span>Настройки</span>
+            </button>
+          )}
+        </nav>
 
         <div className="company-detail__sidebar-footer">
           <Tag
@@ -287,7 +290,23 @@ export function CompanyDetail({
             ) : (
               <div className="company-detail__members-list">
                 {members.map((member) => (
-                  <div key={member.id} className="member-card">
+                  <div
+                    key={member.id}
+                    className={`member-card ${
+                      member.selected_card_id ? "member-card--has-card" : ""
+                    }`}
+                    onClick={() => {
+                      if (member.selected_card_id && onViewMemberCard) {
+                        onViewMemberCard(
+                          member.user.id,
+                          member.selected_card_id
+                        );
+                      }
+                    }}
+                    style={{
+                      cursor: member.selected_card_id ? "pointer" : "default",
+                    }}
+                  >
                     <Avatar
                       src={member.user.avatar_url || undefined}
                       initials={`${member.user.first_name.charAt(
@@ -302,6 +321,11 @@ export function CompanyDetail({
                       <Typography variant="small" color="secondary">
                         {member.user.email}
                       </Typography>
+                      {member.selected_card_id && (
+                        <span className="member-card__card-hint">
+                          📇 Нажмите, чтобы посмотреть визитку
+                        </span>
+                      )}
                     </div>
                     <Tag
                       size="sm"
@@ -312,7 +336,10 @@ export function CompanyDetail({
                     {canChangeRoles(company.role) &&
                       member.user.id !== currentUserId &&
                       member.role !== "owner" && (
-                        <div className="member-card__actions">
+                        <div
+                          className="member-card__actions"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <select
                             value={member.role}
                             onChange={(e) =>

@@ -11,7 +11,10 @@ import {
   roleLabels,
   canManageMembers,
 } from "@/entities/company";
-import type { BusinessCard } from "@/entities/business-card";
+import type {
+  BusinessCard,
+  BusinessCardPublic,
+} from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import { Button, Modal, Input, Loader, Typography } from "@/shared";
 import { CompanyList, CompanyDetail } from "./components";
@@ -74,7 +77,16 @@ export function CompanyPage() {
 
   // Визитки пользователя
   const [userCards, setUserCards] = useState<BusinessCard[]>([]);
-  const [cardAssignments, setCardAssignments] = useState<CompanyCardAssignment[]>([]);
+  const [cardAssignments, setCardAssignments] = useState<
+    CompanyCardAssignment[]
+  >([]);
+
+  // Просмотр визитки участника
+  const [viewingCardId, setViewingCardId] = useState<string | null>(null);
+  const [viewingCard, setViewingCard] = useState<BusinessCardPublic | null>(
+    null
+  );
+  const [isLoadingViewCard, setIsLoadingViewCard] = useState(false);
 
   // Модалка создания
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -201,6 +213,27 @@ export function CompanyPage() {
       showError(parseApiError(err));
       throw err;
     }
+  };
+
+  // Просмотр визитки участника
+  const handleViewMemberCard = async (userId: string, cardId: string) => {
+    void userId; // userId можно использовать для дополнительной информации
+    setViewingCardId(cardId);
+    setIsLoadingViewCard(true);
+    try {
+      const card = await businessCardApi.getPublic(cardId);
+      setViewingCard(card);
+    } catch (err) {
+      showError("Не удалось загрузить визитку");
+      setViewingCardId(null);
+    } finally {
+      setIsLoadingViewCard(false);
+    }
+  };
+
+  const closeViewCard = () => {
+    setViewingCardId(null);
+    setViewingCard(null);
   };
 
   useEffect(() => {
@@ -445,6 +478,7 @@ export function CompanyPage() {
           onSelectCard={(cardId) =>
             handleSelectCard(selectedCompany.company.id, cardId)
           }
+          onViewMemberCard={handleViewMemberCard}
           onBack={handleBackToList}
           onInvite={handleInvite}
           onCancelInvitation={handleCancelInvitation}
@@ -454,6 +488,88 @@ export function CompanyPage() {
           onUpdateCompany={handleUpdateCompany}
           onDeleteCompany={handleDeleteCompany}
         />
+
+        {/* Модалка просмотра визитки участника */}
+        <Modal
+          isOpen={!!viewingCardId}
+          onClose={closeViewCard}
+          title="Визитка участника"
+          size="md"
+        >
+          {isLoadingViewCard ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "40px",
+              }}
+            >
+              <Loader />
+            </div>
+          ) : viewingCard ? (
+            <div className="view-card-modal">
+              <div className="view-card-modal__header">
+                <span className="view-card-modal__icon">📇</span>
+                <div>
+                  <Typography variant="h3">{viewingCard.title}</Typography>
+                  <Typography variant="body">
+                    {viewingCard.display_name}
+                  </Typography>
+                </div>
+              </div>
+              {viewingCard.ai_generated_bio && (
+                <div className="view-card-modal__section">
+                  <Typography variant="small" color="secondary">
+                    О себе
+                  </Typography>
+                  <Typography variant="body">
+                    {viewingCard.ai_generated_bio}
+                  </Typography>
+                </div>
+              )}
+              {viewingCard.tags && viewingCard.tags.length > 0 && (
+                <div className="view-card-modal__section">
+                  <Typography variant="small" color="secondary">
+                    Навыки
+                  </Typography>
+                  <div className="view-card-modal__tags">
+                    {viewingCard.tags.map((tag) => (
+                      <span key={tag.id} className="view-card-modal__tag">
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {viewingCard.contacts &&
+                viewingCard.contacts.filter((c) => c.is_visible).length > 0 && (
+                  <div className="view-card-modal__section">
+                    <Typography variant="small" color="secondary">
+                      Контакты
+                    </Typography>
+                    <div className="view-card-modal__contacts">
+                      {viewingCard.contacts
+                        .filter((c) => c.is_visible)
+                        .map((contact, idx) => (
+                          <div key={idx} className="view-card-modal__contact">
+                            <span className="view-card-modal__contact-type">
+                              {contact.type}
+                            </span>
+                            <span className="view-card-modal__contact-value">
+                              {contact.value}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+            </div>
+          ) : (
+            <Typography variant="body" color="secondary">
+              Визитка не найдена
+            </Typography>
+          )}
+        </Modal>
       </div>
     );
   }
