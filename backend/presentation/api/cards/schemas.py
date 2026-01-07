@@ -172,3 +172,26 @@ class CardQRCodeResponse(BaseModel):
 
     image_base64: str
     card_id: UUID
+
+
+# ============ Text Tags Generation (Groq) ============
+
+
+class TextTagGenerationRequest(BaseModel):
+    """Запрос на генерацию тегов из произвольного текста."""
+
+    text: str = Field(
+        min_length=10,
+        max_length=1000,
+        examples=["Я занимаюсь веб-разработкой, работаю с React и Python..."],
+    )
+
+
+class TextTagGenerationResponse(BaseModel):
+    """Ответ с сгенерированными тегами из текста."""
+
+    suggestions: list[str] = Field(
+        description="Список предложенных search_tags",
+        examples=[["веб-разработка", "react", "python", "frontend"]],
+    )
+    source_text: str = Field(description="Исходный текст, из которого генерировались теги")

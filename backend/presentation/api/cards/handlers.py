@@ -20,12 +20,15 @@ from presentation.api.cards.schemas import (
     CardSuggestedTag,
     CardTagSuggestionsResponse,
     CardQRCodeResponse,
+    TextTagGenerationRequest,
+    TextTagGenerationResponse,
 )
 from infrastructure.dependencies import (
     get_business_card_service,
     get_groq_bio_service,
     get_ai_tags_service,
     get_qrcode_service,
+    get_groq_text_tags_service,
 )
 from application.services.business_card import (
     BusinessCardService,
@@ -470,6 +473,50 @@ async def suggest_tags_for_card(
         raise HTTPException(status_code=404, detail="Card not found")
     except CardAccessDeniedError:
         raise HTTPException(status_code=403, detail="Access denied")
+
+
+@router.post("/{card_id}/generate-tags-from-text", response_model=TextTagGenerationResponse)
+async def generate_tags_from_text(
+    card_id: UUID,
+    data: TextTagGenerationRequest,
+    owner_id: UUID = Query(..., description="ID владельца"),
+    card_service: BusinessCardService = Depends(get_business_card_service),
+    text_tags_service=Depends(get_groq_text_tags_service),
+):
+    """
+    Сгенерировать search_tags из произвольного текста через Groq AI.
+
+    Используется когда пользователь хочет описать свои навыки в свободной форме
+    и получить список тегов для выбора.
+
+    Отличается от suggest-tags тем что:
+    - suggest-tags генерирует теги из bio карточки
+    - generate-tags-from-text генерирует теги из произвольного текста (отдельное поле)
+
+    Пример:
+    - Input: "Я занимаюсь веб-разработкой, работаю с React и Python..."
+    - Output: ["веб-разработка", "react", "python", "frontend", "backend", ...]
+    """
+    try:
+        card = await card_service.get_card(card_id)
+
+        if card.owner_id != owner_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Генерируем теги из текста через Groq
+        tags = await text_tags_service.generate_tags_from_text(data.text)
+
+        return TextTagGenerationResponse(
+            suggestions=tags,
+            source_text=data.text,
+        )
+
+    except BusinessCardNotFoundError:
+        raise HTTPException(status_code=404, detail="Card not found")
+    except CardAccessDeniedError:
+        raise HTTPException(status_code=403, detail="Access denied")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка генерации тегов: {str(e)}")
 
 
 # ============ Clear Content ============

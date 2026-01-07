@@ -48,6 +48,9 @@ from application.services.ai_search import AISearchService
 from application.services.card_title import CardTitleGenerator
 from application.services.telegram_auth import TelegramAuthService
 from application.services.email_verification import EmailVerificationService
+from application.services.groq_query_classifier import GroqQueryClassifier
+from application.services.groq_task_decomposer import GroqTaskDecomposer
+from application.services.groq_text_tags import GroqTextTagsGenerator
 from infrastructure.llm.groq_client import GroqClient
 from infrastructure.llm.local_llm_client import LocalLLMClient
 from infrastructure.storage import CloudinaryService
@@ -273,14 +276,58 @@ def get_ai_search_service() -> AISearchService:
     return AISearchService(groq_client)
 
 
+def get_groq_query_classifier() -> GroqQueryClassifier:
+    """
+    Получить сервис классификации запросов (task/skill).
+
+    Используется для определения типа поискового запроса:
+    - TASK: задача/проблема (например "создать сайт")
+    - SKILL: навык/технология (например "python", "react разработчик")
+    """
+    groq_client = GroqClient()
+    return GroqQueryClassifier(groq_client)
+
+
+def get_groq_task_decomposer() -> GroqTaskDecomposer:
+    """
+    Получить сервис декомпозиции задач в теги.
+
+    Используется для преобразования описания задачи в список навыков:
+    "Нужно создать сайт" → ["веб-разработчик", "frontend", "html", "css", ...]
+    """
+    groq_client = GroqClient()
+    return GroqTaskDecomposer(groq_client)
+
+
+def get_groq_text_tags_service() -> GroqTextTagsGenerator:
+    """
+    Получить сервис генерации тегов из произвольного текста.
+
+    Используется когда пользователь описывает свои навыки в свободной форме:
+    "Я занимаюсь веб-разработкой, работаю с React и Python..."
+    → ["веб-разработка", "react", "python", "frontend", "backend", ...]
+    """
+    groq_client = GroqClient()
+    return GroqTextTagsGenerator(groq_client)
+
+
 def get_search_service(
     user_repo: UserRepository,
     card_repo: BusinessCardRepository,
     contact_repo: ContactRepository,
     ai_search: AISearchService = Depends(get_ai_search_service),
+    query_classifier: GroqQueryClassifier = Depends(get_groq_query_classifier),
+    task_decomposer: GroqTaskDecomposer = Depends(get_groq_task_decomposer),
 ) -> AssociativeSearchService:
-    """Получить сервис ассоциативного поиска с AI-расширением."""
-    return AssociativeSearchService(user_repo, card_repo, contact_repo, ai_search)
+    """Получить сервис умного поиска с автоопределением типа запроса."""
+    return AssociativeSearchService(
+        user_repo,
+        card_repo,
+        contact_repo,
+        ai_search,
+        query_classifier,
+        task_decomposer,
+    )
 
 
 def get_qrcode_service() -> QRCodeService:

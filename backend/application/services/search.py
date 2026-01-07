@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 from uuid import UUID
 
 from domain.entities.user import User
@@ -7,6 +8,8 @@ from domain.entities.saved_contact import SavedContact
 from domain.repositories.user import UserRepositoryInterface
 from domain.repositories.business_card import BusinessCardRepositoryInterface
 from domain.repositories.saved_contact import SavedContactRepositoryInterface
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -785,9 +788,13 @@ SYNONYMS: dict[str, str] = {
 
 class AssociativeSearchService:
     """
-    Сервис ассоциативного поиска экспертов и контактов.
-    Позволяет искать по ассоциациям, тегам и семантически.
-    Использует AI для интеллектуального расширения запросов.
+    Сервис умного ассоциативного поиска экспертов и контактов.
+
+    Поддерживает:
+    - Автоопределение типа запроса (задача vs навык)
+    - Декомпозицию задач в навыки для поиска специалистов
+    - AI-расширение запросов для релевантного поиска
+    - Ассоциативный поиск по тегам и семантике
     """
 
     def __init__(
@@ -796,12 +803,16 @@ class AssociativeSearchService:
         card_repository: BusinessCardRepositoryInterface,
         contact_repository: SavedContactRepositoryInterface,
         ai_search_service: "AISearchServiceInterface | None" = None,
+        query_classifier: "QueryClassifierInterface | None" = None,
+        task_decomposer: "TaskDecomposerInterface | None" = None,
         embedding_service: "EmbeddingServiceInterface | None" = None,
     ):
         self._user_repository = user_repository
         self._card_repository = card_repository
         self._contact_repository = contact_repository
         self._ai_search_service = ai_search_service
+        self._query_classifier = query_classifier
+        self._task_decomposer = task_decomposer
         self._embedding_service = embedding_service
 
     async def search(
@@ -813,10 +824,15 @@ class AssociativeSearchService:
         include_contacts: bool = True,
     ) -> SearchResult:
         """
-        Выполнить ассоциативный поиск.
+        Выполнить умный поиск с автоопределением типа запроса.
+
+        Алгоритм:
+        1. Классифицировать запрос (TASK или SKILL) через Groq
+        2. Если TASK → декомпозировать задачу в навыки → искать специалистов
+        3. Если SKILL → расширить запрос через AI → искать по тегам
 
         Args:
-            query: Поисковый запрос (теги, ассоциации, имена)
+            query: Поисковый запрос (задача или навыки)
             owner_id: ID владельца для поиска в его контактах
             limit: Максимальное количество результатов
             include_users: Включать ли пользователей/карточки в результат
@@ -824,24 +840,17 @@ class AssociativeSearchService:
 
         Returns:
             SearchResult с найденными карточками и контактами
+
+        Examples:
+            "Нужно создать сайт" → TASK → ["frontend", "html", "css", "react", ...]
+            "python" → SKILL → ["python", "django", "fastapi", ...]
         """
         users = []
         cards = []
         contacts = []
 
-        # Расширяем запрос с помощью AI (приоритет) или статической карты
-        if self._ai_search_service:
-            try:
-                ai_result = await self._ai_search_service.expand_query(query)
-                expanded_tags = ai_result.expanded_tags
-            except Exception:
-                # Fallback на статическое расширение
-                raw_tags = self._extract_tags(query)
-                expanded_tags = self._expand_tags_associatively(raw_tags)
-        else:
-            # Используем статическое расширение
-            raw_tags = self._extract_tags(query)
-            expanded_tags = self._expand_tags_associatively(raw_tags)
+        # Шаг 1: Умная классификация и расширение запроса
+        expanded_tags = await self._smart_expand_query(query)
 
         # Поиск визитных карточек (основной поиск)
         if include_users:
@@ -1017,6 +1026,59 @@ class AssociativeSearchService:
 
         return sorted(suggestions)[:limit]
 
+    async def _smart_expand_query(self, query: str) -> list[str]:
+        """
+        Умное расширение запроса с классификацией типа.
+
+        Алгоритм:
+        1. Если есть классификатор - определяем тип запроса (TASK/SKILL)
+        2. Если TASK и есть декомпозитор - декомпозируем задачу в навыки
+        3. Если SKILL и есть AI search - расширяем через AI
+        4. Fallback: статическое расширение через ASSOCIATIVE_MAP
+
+        Returns:
+            Список расширенных тегов для поиска
+        """
+        from application.services.groq_query_classifier import QueryType
+
+        # Попытка умной классификации через Groq
+        if self._query_classifier and self._task_decomposer:
+            try:
+                query_type = await self._query_classifier.classify_query(query)
+                logger.info(f"Query '{query}' classified as: {query_type}")
+
+                if query_type == QueryType.TASK:
+                    # Это задача - декомпозируем в навыки
+                    tags = await self._task_decomposer.decompose_task(query)
+                    logger.info(f"Task decomposed into {len(tags)} tags: {tags[:5]}...")
+                    return tags
+
+                # Это навык/технология - используем AI расширение
+                if self._ai_search_service:
+                    try:
+                        ai_result = await self._ai_search_service.expand_query(query)
+                        logger.info(f"Query expanded by AI into {len(ai_result.expanded_tags)} tags")
+                        return ai_result.expanded_tags
+                    except Exception as e:
+                        logger.warning(f"AI search expansion failed: {e}")
+
+            except Exception as e:
+                logger.warning(f"Smart query classification failed: {e}")
+
+        # Fallback 1: только AI расширение (без классификации)
+        if self._ai_search_service:
+            try:
+                ai_result = await self._ai_search_service.expand_query(query)
+                return ai_result.expanded_tags
+            except Exception as e:
+                logger.warning(f"AI search expansion failed: {e}")
+
+        # Fallback 2: статическое расширение через ASSOCIATIVE_MAP
+        raw_tags = self._extract_tags(query)
+        expanded_tags = self._expand_tags_associatively(raw_tags)
+        logger.debug(f"Static expansion: {len(expanded_tags)} tags")
+        return expanded_tags
+
 
 class AISearchServiceInterface:
     """Интерфейс сервиса AI-расширения поисковых запросов."""
@@ -1031,4 +1093,20 @@ class EmbeddingServiceInterface:
 
     async def get_embedding(self, text: str) -> list[float]:
         """Получить embedding вектор для текста."""
+        raise NotImplementedError
+
+
+class QueryClassifierInterface:
+    """Интерфейс сервиса классификации поисковых запросов."""
+
+    async def classify_query(self, query: str):
+        """Классифицировать запрос как TASK или SKILL."""
+        raise NotImplementedError
+
+
+class TaskDecomposerInterface:
+    """Интерфейс сервиса декомпозиции задач в навыки."""
+
+    async def decompose_task(self, task: str) -> list[str]:
+        """Разбить задачу на список требуемых навыков."""
         raise NotImplementedError
