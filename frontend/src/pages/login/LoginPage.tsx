@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type FormEvent } from "react";
+import { useState, useEffect, useRef, useCallback, type FormEvent } from "react";
 import { useAuth, TelegramLoginButton } from "@/features/auth";
 import { Typography, Button, Input } from "@/shared";
 import "./AuthPage.scss";
@@ -13,20 +13,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const isVerifyingRef = useRef(false);
 
-  // Проверяем URL на наличие magic link токена
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-
-    if (token && !isVerifyingRef.current) {
-      isVerifyingRef.current = true;
-      // Убираем токен из URL сразу, чтобы избежать повторных запросов при перезагрузке
-      window.history.replaceState({}, "", window.location.pathname);
-      handleVerifyToken(token);
-    }
-  }, []);
-
-  const handleVerifyToken = async (token: string) => {
+  const handleVerifyToken = useCallback(async (token: string) => {
     setView("verifying");
     setError(null);
 
@@ -45,7 +32,23 @@ export function LoginPage() {
         setError("Ошибка при входе. Попробуйте ещё раз.");
       }
     }
-  };
+  }, [verifyMagicLink]);
+
+  // Проверяем URL на наличие magic link токена
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token && !isVerifyingRef.current) {
+      isVerifyingRef.current = true;
+      // Убираем токен из URL сразу, чтобы избежать повторных запросов при перезагрузке
+      window.history.replaceState({}, "", window.location.pathname);
+      // Вызываем через setTimeout чтобы избежать setState в sync effect
+      setTimeout(() => {
+        handleVerifyToken(token);
+      }, 0);
+    }
+  }, [handleVerifyToken]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

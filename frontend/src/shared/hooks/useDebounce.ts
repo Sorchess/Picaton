@@ -53,8 +53,7 @@ export function useDebounce<T>(value: T, delay: number): T {
  *
  * <input onChange={(e) => handleSearch(e.target.value)} />
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
@@ -77,8 +76,8 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
     };
   }, []);
 
-  const debouncedCallback = useCallback(
-    ((...args: Parameters<T>) => {
+  const debouncedCallback = useMemo(() => {
+    const fn = (...args: Parameters<T>) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -86,9 +85,9 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
       timeoutRef.current = setTimeout(() => {
         callbackRef.current(...args);
       }, delay);
-    }) as T,
-    [delay]
-  );
+    };
+    return fn as T;
+  }, [delay]);
 
   return debouncedCallback;
 }
@@ -100,9 +99,8 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
  * @param delay - Задержка в мс
  * @returns Объект с дебаунсированной функцией и методами управления
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDebouncedCallbackWithControl<
-  T extends (...args: any[]) => any
+  T extends (...args: unknown[]) => unknown
 >(
   callback: T,
   delay: number
@@ -148,8 +146,8 @@ export function useDebouncedCallbackWithControl<
     }
   }, []);
 
-  const debouncedCallback = useCallback(
-    ((...args: Parameters<T>) => {
+  const debouncedCallback = useMemo(() => {
+    const fn = (...args: Parameters<T>) => {
       argsRef.current = args;
 
       if (timeoutRef.current) {
@@ -163,9 +161,9 @@ export function useDebouncedCallbackWithControl<
         setIsPending(false);
         timeoutRef.current = undefined;
       }, delay);
-    }) as T,
-    [delay]
-  );
+    };
+    return fn as T;
+  }, [delay]);
 
   return useMemo(
     () => ({

@@ -80,7 +80,7 @@ function AuthenticatedApp() {
       const timer = setTimeout(() => setIsEmailModalOpen(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [isPlaceholderEmail]);
+  }, [isPlaceholderEmail, isEmailModalOpen]);
 
   // Обработка приглашения из URL или сохраненного токена
   useEffect(() => {
@@ -88,71 +88,102 @@ function AuthenticatedApp() {
     const pendingToken = getPendingInviteToken();
     const token = urlToken || pendingToken;
 
-    if (token && !inviteProcessing) {
+    if (!token || inviteProcessing) return;
+
+    // Используем флаг для предотвращения повторных вызовов
+    let cancelled = false;
+
+    const processInvite = async () => {
       setInviteProcessing(true);
       // Очищаем сохраненный токен
       clearPendingInviteToken();
 
-      companyApi
-        .acceptInvitation({ token })
-        .then(() => {
+      try {
+        await companyApi.acceptInvitation({ token });
+        if (!cancelled) {
           setInviteMessage({
             type: "success",
             text: "Вы успешно присоединились к компании!",
           });
           setCurrentPage("company");
-          // Очищаем URL
-          window.history.replaceState({}, "", "/");
-        })
-        .catch((err) => {
+        }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const error = err as { data?: { detail?: string }; message?: string };
           const errorMessage =
-            err?.data?.detail ||
-            err?.message ||
+            error?.data?.detail ||
+            error?.message ||
             "Не удалось принять приглашение";
           setInviteMessage({ type: "error", text: errorMessage });
-          window.history.replaceState({}, "", "/");
-        })
-        .finally(() => {
+        }
+      } finally {
+        if (!cancelled) {
           setInviteProcessing(false);
-        });
-    }
-  }, []);
+        }
+        // Очищаем URL
+        window.history.replaceState({}, "", "/");
+      }
+    };
+
+    processInvite();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [inviteProcessing]);
 
   // Обработка ссылки на пользователя из QR кода
   useEffect(() => {
     const userId = getUserIdFromUrl();
-    if (userId && !isLoadingQrUser && !qrUser) {
+    if (!userId || isLoadingQrUser || qrUser) return;
+
+    let cancelled = false;
+
+    const loadUser = async () => {
       setIsLoadingQrUser(true);
-      userApi
-        .getPublic(userId)
-        .then((userData) => {
+      try {
+        const userData = await userApi.getPublic(userId);
+        if (!cancelled) {
           setQrUser(userData);
           setIsQrModalOpen(true);
-          // Очищаем URL
-          window.history.replaceState({}, "", "/");
-        })
-        .catch((err) => {
+        }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const error = err as { data?: { detail?: string }; message?: string };
           const errorMessage =
-            err?.data?.detail ||
-            err?.message ||
+            error?.data?.detail ||
+            error?.message ||
             "Не удалось загрузить профиль пользователя";
           setInviteMessage({ type: "error", text: errorMessage });
-          window.history.replaceState({}, "", "/");
-        })
-        .finally(() => {
+        }
+      } finally {
+        if (!cancelled) {
           setIsLoadingQrUser(false);
-        });
-    }
-  }, []);
+        }
+        // Очищаем URL
+        window.history.replaceState({}, "", "/");
+      }
+    };
+
+    loadUser();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoadingQrUser, qrUser]);
 
   // Обработка ссылки на карточку из QR кода
   useEffect(() => {
     const cardId = getCardIdFromUrl();
-    if (cardId && !isLoadingQrUser && !qrUser) {
+    if (!cardId || isLoadingQrUser || qrUser) return;
+
+    let cancelled = false;
+
+    const loadCard = async () => {
       setIsLoadingQrUser(true);
-      businessCardApi
-        .getPublic(cardId)
-        .then((cardData) => {
+      try {
+        const cardData = await businessCardApi.getPublic(cardId);
+        if (!cancelled) {
           // Преобразуем данные карточки в формат UserPublic
           const firstName = cardData.display_name
             ? cardData.display_name.split(" ")[0]
@@ -183,20 +214,31 @@ function AuthenticatedApp() {
 
           setQrUser(userData);
           setIsQrModalOpen(true);
-          // Очищаем URL
-          window.history.replaceState({}, "", "/");
-        })
-        .catch((err) => {
+        }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const error = err as { data?: { detail?: string }; message?: string };
           const errorMessage =
-            err?.data?.detail || err?.message || "Не удалось загрузить визитку";
+            error?.data?.detail ||
+            error?.message ||
+            "Не удалось загрузить визитку";
           setInviteMessage({ type: "error", text: errorMessage });
-          window.history.replaceState({}, "", "/");
-        })
-        .finally(() => {
+        }
+      } finally {
+        if (!cancelled) {
           setIsLoadingQrUser(false);
-        });
-    }
-  }, []);
+        }
+        // Очищаем URL
+        window.history.replaceState({}, "", "/");
+      }
+    };
+
+    loadCard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoadingQrUser, qrUser]);
 
   // Автоскрытие сообщения
   useEffect(() => {
@@ -343,7 +385,7 @@ function AuthenticatedApp() {
               // Закрываем модальное окно после сохранения
               setIsQrModalOpen(false);
               setQrUser(null);
-            } catch (err) {
+            } catch {
               setInviteMessage({
                 type: "error",
                 text: "Не удалось сохранить контакт",

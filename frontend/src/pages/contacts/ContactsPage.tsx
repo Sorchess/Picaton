@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import type { SavedContact, UserPublic } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import { businessCardApi } from "@/entities/business-card";
@@ -47,11 +47,7 @@ export function ContactsPage() {
   const [selectedContactForModal, setSelectedContactForModal] =
     useState<SavedContact | null>(null);
 
-  useEffect(() => {
-    loadContacts();
-  }, [authUser?.id]);
-
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     if (!authUser?.id) return;
     setIsLoading(true);
     try {
@@ -62,7 +58,11 @@ export function ContactsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [authUser?.id]);
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
 
   const handleDeleteContact = async (contactId: string) => {
     if (!confirm("Удалить контакт?")) return;
@@ -321,7 +321,7 @@ export function ContactsPage() {
       }
       return getContactFullName(a).localeCompare(getContactFullName(b), "ru");
     });
-  }, [contacts, searchQuery, authUser?.search_tags]);
+  }, [searchQuery, authUser?.search_tags, contactsWithoutSelf]);
 
   const getInitials = (contact: SavedContact) => {
     if (contact.first_name && contact.last_name) {

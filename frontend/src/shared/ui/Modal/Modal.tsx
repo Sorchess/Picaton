@@ -24,30 +24,43 @@ export function Modal({
   closeOnOverlayClick = true,
   closeOnEscape = true,
 }: ModalProps) {
-  const [isVisible, setIsVisible] = useState(isOpen);
+  const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Управляем видимостью и анимацией через отдельные эффекты
   useEffect(() => {
+    let showTimer: ReturnType<typeof setTimeout>;
+    let animationFrame: number;
+    let hideTimer: ReturnType<typeof setTimeout>;
+    
     if (isOpen) {
       // Сначала рендерим элемент (isVisible)
-      setIsVisible(true);
-      // Затем на следующем кадре добавляем класс анимации
-      const frame = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsAnimating(true);
+      showTimer = setTimeout(() => {
+        setIsVisible(true);
+        // Затем на следующем кадре добавляем класс анимации
+        animationFrame = requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setIsAnimating(true);
+          });
         });
-      });
+      }, 0);
       document.body.style.overflow = "hidden";
-      return () => cancelAnimationFrame(frame);
-    } else {
+    } else if (isVisible) {
       // Сначала убираем класс анимации
-      setIsAnimating(false);
-      // Затем после завершения анимации убираем элемент
-      const timer = setTimeout(() => setIsVisible(false), 500);
+      hideTimer = setTimeout(() => {
+        setIsAnimating(false);
+        // Затем после завершения анимации убираем элемент
+        setTimeout(() => setIsVisible(false), 500);
+      }, 0);
       document.body.style.overflow = "";
-      return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+    
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    };
+  }, [isOpen, isVisible]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

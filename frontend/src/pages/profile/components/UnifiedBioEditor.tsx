@@ -82,6 +82,12 @@ export function UnifiedBioEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preGenerationBioRef = useRef<string>("");
   const requestTagsRef = useRef<(text: string) => void>(() => {});
+  const onTagsLoadingRef = useRef(onTagsLoading);
+  
+  // Keep onTagsLoading ref updated
+  useEffect(() => {
+    onTagsLoadingRef.current = onTagsLoading;
+  }, [onTagsLoading]);
 
   // Function to request tags for given text
   const requestTags = useCallback(
@@ -91,11 +97,11 @@ export function UnifiedBioEditor({
           "[BioEditor] Requesting tags for text:",
           text.slice(0, 50) + "..."
         );
-        onTagsLoading?.(true);
+        onTagsLoadingRef.current?.(true);
         const sent = aiWebSocket.send("suggest_tags", { bio_text: text });
         console.log("[BioEditor] Tags request sent:", sent);
         if (!sent) {
-          onTagsLoading?.(false);
+          onTagsLoadingRef.current?.(false);
         }
       } else {
         console.log(
@@ -109,7 +115,7 @@ export function UnifiedBioEditor({
     [wsConnected, minLength]
   );
 
-  // Keep ref updated
+  // Keep requestTags ref updated
   useEffect(() => {
     requestTagsRef.current = requestTags;
   }, [requestTags]);
@@ -184,6 +190,7 @@ export function UnifiedBioEditor({
       unsubTags();
       aiWebSocket.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- callbacks are handled via refs to avoid reconnecting WebSocket
   }, [cardId, ownerId, setBio]);
 
   // Sync with external changes
@@ -191,6 +198,7 @@ export function UnifiedBioEditor({
     if (initialBio !== bio && !isGenerating) {
       reset(initialBio);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only sync when initialBio changes
   }, [initialBio]);
 
   // Debounced tag update

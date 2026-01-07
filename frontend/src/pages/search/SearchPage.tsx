@@ -65,14 +65,7 @@ export function SearchPage() {
   const [selectedUser, setSelectedUser] = useState<UserPublic | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Загрузить сохранённые контакты
-  useEffect(() => {
-    if (authUser?.id) {
-      loadSavedContacts();
-    }
-  }, [authUser?.id]);
-
-  const loadSavedContacts = async () => {
+  const loadSavedContacts = useCallback(async () => {
     if (!authUser?.id) return;
     try {
       const contacts = await userApi.getContacts(authUser.id);
@@ -91,7 +84,14 @@ export function SearchPage() {
     } catch {
       // Игнорируем ошибку загрузки контактов
     }
-  };
+  }, [authUser?.id]);
+
+  // Загрузить сохранённые контакты
+  useEffect(() => {
+    if (authUser?.id) {
+      loadSavedContacts();
+    }
+  }, [authUser?.id, loadSavedContacts]);
 
   const handleSearch = useCallback(
     async (searchQuery?: string) => {

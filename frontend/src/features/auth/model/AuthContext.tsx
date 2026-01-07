@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   useState,
   useEffect,
   useCallback,
@@ -9,21 +7,7 @@ import {
 import type { User } from "@/entities/user";
 import { authApi } from "./api";
 import type { LoginCredentials, RegisterData, TelegramAuthData } from "./types";
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
-  refreshUser: (showLoading?: boolean) => Promise<void>;
-  requestMagicLink: (email: string) => Promise<void>;
-  verifyMagicLink: (token: string) => Promise<void>;
-  telegramLogin: (data: TelegramAuthData) => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext } from "./context";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -63,8 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Получаем данные пользователя без дополнительного loading
       const userData = await authApi.getMe();
       setUser(userData);
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -93,8 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile_completeness: 0,
         is_public: true,
       });
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -151,12 +131,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }

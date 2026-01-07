@@ -34,10 +34,14 @@ export function TelegramSyncModal({
     if (!isOpen) {
       if (pollingRef.current) clearInterval(pollingRef.current);
       if (countdownRef.current) clearInterval(countdownRef.current);
-      setStatus("idle");
-      setError(null);
-      setDeepLink(null);
+      // Используем setTimeout для избежания каскадных рендеров
+      const timer = setTimeout(() => {
+        setStatus("idle");
+        setError(null);
+        setDeepLink(null);
+      }, 0);
       tokenRef.current = null;
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

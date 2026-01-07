@@ -1,15 +1,12 @@
 import {
-  createContext,
-  useContext,
   useState,
   useEffect,
   type ReactNode,
 } from "react";
-import type { Theme, ThemeContextType } from "./types";
+import type { Theme } from "./types";
+import { ThemeContext } from "./context";
 
 const THEME_STORAGE_KEY = "picaton-theme";
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 function getInitialTheme(): Theme {
   if (typeof window !== "undefined") {
@@ -54,12 +51,4 @@ export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps) {
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export function useTheme(): ThemeContextType {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
 }

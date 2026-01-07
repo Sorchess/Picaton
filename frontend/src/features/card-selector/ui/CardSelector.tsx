@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import { Button, Modal, Loader } from "@/shared";
@@ -26,11 +26,7 @@ export function CardSelector({
 
   const MAX_CARDS = 5;
 
-  useEffect(() => {
-    loadCards();
-  }, [ownerId]);
-
-  const loadCards = async () => {
+  const loadCards = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await businessCardApi.getAll(ownerId);
@@ -47,7 +43,11 @@ export function CardSelector({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [ownerId, selectedCardId, onCardSelect]);
+
+  useEffect(() => {
+    loadCards();
+  }, [loadCards]);
 
   const handleCreateCard = async () => {
     if (!newCardTitle.trim()) return;

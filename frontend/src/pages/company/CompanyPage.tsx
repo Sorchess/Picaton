@@ -275,7 +275,7 @@ export function CompanyPage() {
           // Игнорируем ошибку загрузки контактов
         }
       }
-    } catch (err) {
+    } catch {
       showError("Не удалось загрузить визитку");
       setIsViewCardModalOpen(false);
     } finally {
@@ -295,7 +295,7 @@ export function CompanyPage() {
       }
       showSuccess("Контакт сохранен!");
       closeViewCard();
-    } catch (err) {
+    } catch {
       showError("Не удалось сохранить контакт");
     }
   };
@@ -324,7 +324,7 @@ export function CompanyPage() {
         showSuccess("Контакт удален");
         closeViewCard();
       }
-    } catch (err) {
+    } catch {
       showError("Не удалось удалить контакт");
     }
   };
