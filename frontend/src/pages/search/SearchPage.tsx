@@ -414,6 +414,7 @@ export function SearchPage() {
 
       <SpecialistModal
         user={selectedUser}
+        cardId={(selectedUser as UserPublic & { card_id?: string })?.card_id}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSaveContact={handleSaveContactFromModal}

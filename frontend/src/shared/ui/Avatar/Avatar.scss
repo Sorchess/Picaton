@@ -6,6 +6,28 @@
   flex-shrink: 0;
 
   // Размеры
+  &--xs {
+    .avatar__inner {
+      width: 24px;
+      height: 24px;
+      border-radius: $radius-md;
+    }
+
+    .avatar__initials {
+      font-size: 0.625rem;
+    }
+
+    .avatar__status {
+      width: 6px;
+      height: 6px;
+    }
+
+    .avatar__verified {
+      width: 10px;
+      height: 10px;
+    }
+  }
+
   &--sm {
     .avatar__inner {
       width: 40px;

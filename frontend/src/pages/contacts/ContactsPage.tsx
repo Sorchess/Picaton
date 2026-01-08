@@ -804,6 +804,7 @@ export function ContactsPage() {
       {/* User Profile Modal (for registered users with contacts) */}
       <SpecialistModal
         user={selectedUserProfile}
+        cardId={selectedContactForModal?.saved_card_id ?? undefined}
         isOpen={isUserModalOpen}
         onClose={() => {
           setIsUserModalOpen(false);

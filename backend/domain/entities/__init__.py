@@ -6,6 +6,7 @@ from domain.entities.saved_contact import SavedContact
 from domain.entities.tag import Tag
 from domain.entities.business_card import BusinessCard
 from domain.entities.company import Company, CompanyMember, CompanyInvitation
+from domain.entities.skill_endorsement import SkillEndorsement
 
 __all__ = [
     "Entity",
@@ -16,4 +17,5 @@ __all__ = [
     "Company",
     "CompanyMember",
     "CompanyInvitation",
+    "SkillEndorsement",
 ]

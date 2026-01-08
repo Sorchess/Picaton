@@ -605,6 +605,7 @@ export function CompanyPage() {
         {!isLoadingViewCard && (
           <SpecialistModal
             user={viewingUser}
+            cardId={viewingUser?.card_id}
             isOpen={isViewCardModalOpen && !!viewingUser}
             onClose={closeViewCard}
             onSaveContact={handleSaveContactFromCard}

@@ -366,6 +366,7 @@ function AuthenticatedApp() {
       {qrUser && (
         <SpecialistModal
           user={qrUser}
+          cardId={(qrUser as UserPublic & { card_id?: string })?.card_id}
           isOpen={isQrModalOpen}
           onClose={() => {
             setIsQrModalOpen(false);

@@ -12,6 +12,7 @@ from infrastructure.database.repositories import (
     MongoCompanyMemberRepository,
     MongoCompanyInvitationRepository,
     MongoEmailVerificationRepository,
+    MongoSkillEndorsementRepository,
 )
 from infrastructure.database.repositories.pending_hash import MongoPendingHashRepository
 from domain.repositories import (
@@ -22,6 +23,7 @@ from domain.repositories import (
     CompanyMemberRepositoryInterface,
     CompanyInvitationRepositoryInterface,
     EmailVerificationRepositoryInterface,
+    SkillEndorsementRepositoryInterface,
 )
 from domain.repositories.pending_hash import PendingHashRepositoryInterface
 from application.services import (
@@ -48,6 +50,7 @@ from application.services.ai_search import AISearchService
 from application.services.card_title import CardTitleGenerator
 from application.services.telegram_auth import TelegramAuthService
 from application.services.email_verification import EmailVerificationService
+from application.services.skill_endorsement import SkillEndorsementService
 from application.services.groq_query_classifier import GroqQueryClassifier
 from application.services.groq_task_decomposer import GroqTaskDecomposer
 from application.services.groq_text_tags import GroqTextTagsGenerator
@@ -160,6 +163,18 @@ CompanyMemberRepository = Annotated[
 ]
 CompanyInvitationRepository = Annotated[
     CompanyInvitationRepositoryInterface, Depends(get_company_invitation_repository)
+]
+
+
+def get_skill_endorsement_repository(
+    db: Database,
+) -> SkillEndorsementRepositoryInterface:
+    """Получить репозиторий подтверждений навыков."""
+    return MongoSkillEndorsementRepository(db["skill_endorsements"])
+
+
+SkillEndorsementRepository = Annotated[
+    SkillEndorsementRepositoryInterface, Depends(get_skill_endorsement_repository)
 ]
 
 
@@ -410,6 +425,15 @@ def get_company_service(
 ) -> CompanyService:
     """Получить сервис управления компаниями."""
     return CompanyService(company_repo, member_repo, invitation_repo, user_repo)
+
+
+def get_skill_endorsement_service(
+    endorsement_repo: SkillEndorsementRepository,
+    card_repo: BusinessCardRepository,
+    user_repo: UserRepository,
+) -> SkillEndorsementService:
+    """Получить сервис подтверждений навыков."""
+    return SkillEndorsementService(endorsement_repo, card_repo, user_repo)
 
 
 def get_email_service() -> SmtpEmailBackend | None:

@@ -44,3 +44,5 @@ export { Avatar } from "./Avatar";
 export type { AvatarSize } from "./Avatar";
 
 export { TagInput } from "./TagInput";
+
+export { EndorsableSkill } from "./EndorsableSkill";

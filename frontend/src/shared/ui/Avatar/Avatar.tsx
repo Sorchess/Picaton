@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from "react";
 import "./Avatar.scss";
 
-type AvatarSize = "sm" | "md" | "lg" | "xl";
+type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
   /** Инициалы пользователя (если нет изображения) */

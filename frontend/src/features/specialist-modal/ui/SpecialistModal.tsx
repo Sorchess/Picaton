@@ -1,10 +1,15 @@
-import { Modal, Avatar, Button, Tag } from "@/shared";
+import { useState, useEffect, useCallback } from "react";
+import { Modal, Avatar, Button, Tag, EndorsableSkill } from "@/shared";
 import type { UserPublic, ContactInfo } from "@/entities/user";
 import { getFullName } from "@/entities/user";
+import { useAuth } from "@/features/auth";
+import { endorsementApi } from "@/api/endorsementApi";
+import type { SkillWithEndorsements } from "@/api/endorsementApi";
 import "./SpecialistModal.scss";
 
 interface SpecialistModalProps {
   user: UserPublic | null;
+  cardId?: string; // ID карточки для эндорсментов
   isOpen: boolean;
   onClose: () => void;
   onSaveContact?: (user: UserPublic) => void;
@@ -96,20 +101,128 @@ function ContactLink({ contact }: { contact: ContactInfo }) {
 
 export function SpecialistModal({
   user,
+  cardId,
   isOpen,
   onClose,
   onSaveContact,
   onDeleteContact,
   isSaved = false,
 }: SpecialistModalProps) {
+  const { user: authUser } = useAuth();
+  const [skillsWithEndorsements, setSkillsWithEndorsements] = useState<
+    SkillWithEndorsements[]
+  >([]);
+  const [endorseLoading, setEndorseLoading] = useState<string | null>(null);
+  const [, forceUpdate] = useState(0); // Для принудительного ре-рендера
+
+  // Сброс состояния при смене карточки или закрытии
+  useEffect(() => {
+    if (!isOpen) {
+      setSkillsWithEndorsements([]);
+    }
+  }, [isOpen, cardId]);
+
+  // Загрузка навыков с эндорсментами
+  const loadSkillsWithEndorsements = useCallback(async () => {
+    if (!cardId || !isOpen) return;
+
+    try {
+      const data = await endorsementApi.getCardSkills(cardId, authUser?.id);
+      setSkillsWithEndorsements(data.skills);
+    } catch (error) {
+      console.error("Failed to load skill endorsements:", error);
+      // Fallback - skills will be shown without endorsement data
+    }
+  }, [cardId, authUser?.id, isOpen]);
+
+  useEffect(() => {
+    if (isOpen && cardId) {
+      loadSkillsWithEndorsements();
+    }
+  }, [isOpen, cardId, loadSkillsWithEndorsements]);
+
+  // Toggle endorsement
+  const handleToggleEndorse = useCallback(
+    async (tagId: string) => {
+      if (!authUser?.id || !cardId) return;
+
+      setEndorseLoading(tagId);
+      try {
+        const result = await endorsementApi.toggle(authUser.id, cardId, tagId);
+
+        // Update local state immediately - создаём полностью новый массив
+        setSkillsWithEndorsements((prev) => {
+          const newSkills: SkillWithEndorsements[] = [];
+
+          for (const skill of prev) {
+            if (String(skill.tag_id) !== String(tagId)) {
+              // Создаём копию объекта
+              newSkills.push({ ...skill });
+            } else {
+              // Создаём обновлённый список endorsers
+              const updatedEndorsers = [...skill.endorsers];
+
+              if (result.is_endorsed) {
+                // Добавляем текущего пользователя в начало списка
+                const currentUserEndorser = {
+                  id: authUser.id,
+                  name:
+                    `${authUser.first_name || ""} ${
+                      authUser.last_name || ""
+                    }`.trim() || "Вы",
+                  avatar_url: authUser.avatar_url || null,
+                };
+                // Проверяем, нет ли уже в списке
+                if (!updatedEndorsers.some((e) => e.id === authUser.id)) {
+                  updatedEndorsers.unshift(currentUserEndorser);
+                }
+              } else {
+                // Удаляем текущего пользователя из списка
+                const idx = updatedEndorsers.findIndex(
+                  (e) => e.id === authUser.id
+                );
+                if (idx !== -1) updatedEndorsers.splice(idx, 1);
+              }
+
+              // Создаём полностью новый объект
+              newSkills.push({
+                tag_id: skill.tag_id,
+                tag_name: skill.tag_name,
+                tag_category: skill.tag_category,
+                proficiency: skill.proficiency,
+                endorsed_by_current_user: result.is_endorsed,
+                endorsement_count: result.endorsement_count,
+                endorsers: updatedEndorsers.slice(0, 5),
+              });
+            }
+          }
+
+          return newSkills;
+        });
+
+        // Принудительный ре-рендер
+        forceUpdate((n) => n + 1);
+      } catch (error) {
+        console.error("Failed to toggle endorsement:", error);
+      } finally {
+        setEndorseLoading(null);
+      }
+    },
+    [authUser, cardId]
+  );
+
   if (!user) return null;
 
   const fullName = getFullName(user);
   const bio = user.bio || user.ai_generated_bio;
   const contacts = user.contacts || [];
 
-  // Поддержка как объектных тегов (tags), так и строковых (search_tags)
-  const tags =
+  // Проверяем, можно ли лайкать (нельзя лайкать свои навыки)
+  const canEndorse = authUser?.id !== user.id;
+
+  // Если есть данные с эндорсментами - используем их, иначе fallback на обычные теги
+  const hasEndorsementData = skillsWithEndorsements.length > 0;
+  const fallbackTags =
     user.tags && user.tags.length > 0
       ? user.tags
       : (user.search_tags || []).map((name, idx) => ({
@@ -159,15 +272,34 @@ export function SpecialistModal({
         </div>
       )}
 
-      {tags.length > 0 && (
+      {(hasEndorsementData || fallbackTags.length > 0) && (
         <div className="specialist-modal__section">
-          <h3 className="specialist-modal__section-title">Навыки</h3>
+          <h3 className="specialist-modal__section-title">
+            Навыки
+            {canEndorse && hasEndorsementData && (
+              <span className="specialist-modal__section-hint">
+                Нажмите, чтобы подтвердить
+              </span>
+            )}
+          </h3>
           <div className="specialist-modal__tags">
-            {tags.map((tag) => (
-              <Tag key={tag.id} size="sm" variant="default">
-                {tag.name}
-              </Tag>
-            ))}
+            {hasEndorsementData
+              ? // Отображаем навыки с возможностью лайка
+                skillsWithEndorsements.map((skill) => (
+                  <EndorsableSkill
+                    key={`${skill.tag_id}-${skill.endorsement_count}-${skill.endorsed_by_current_user}`}
+                    skill={skill}
+                    onToggleEndorse={handleToggleEndorse}
+                    canEndorse={canEndorse}
+                    isLoading={endorseLoading === skill.tag_id}
+                  />
+                ))
+              : // Fallback - обычные теги без лайков
+                fallbackTags.map((tag) => (
+                  <Tag key={tag.id} size="sm" variant="default">
+                    {tag.name}
+                  </Tag>
+                ))}
           </div>
         </div>
       )}

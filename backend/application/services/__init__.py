@@ -41,6 +41,15 @@ from application.services.company import (
     CannotRemoveOwnerError,
     CannotChangeOwnRoleError,
 )
+from application.services.skill_endorsement import (
+    SkillEndorsementService,
+    EndorsementError,
+    CannotEndorseOwnSkillError,
+    AlreadyEndorsedError,
+    CardNotFoundError,
+    TagNotFoundError,
+    EndorsementNotFoundError,
+)
 
 __all__ = [
     "UserService",
@@ -79,4 +88,11 @@ __all__ = [
     "PermissionDeniedError",
     "CannotRemoveOwnerError",
     "CannotChangeOwnRoleError",
+    "SkillEndorsementService",
+    "EndorsementError",
+    "CannotEndorseOwnSkillError",
+    "AlreadyEndorsedError",
+    "CardNotFoundError",
+    "TagNotFoundError",
+    "EndorsementNotFoundError",
 ]
