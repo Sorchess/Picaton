@@ -16,6 +16,12 @@ from infrastructure.database.repositories.email_verification import (
 from infrastructure.database.repositories.skill_endorsement import (
     MongoSkillEndorsementRepository,
 )
+from infrastructure.database.repositories.company_card import (
+    MongoCompanyCardRepository,
+)
+from infrastructure.database.repositories.company_tag_settings import (
+    MongoCompanyTagSettingsRepository,
+)
 
 __all__ = [
     "MongoUserRepository",
@@ -26,4 +32,6 @@ __all__ = [
     "MongoCompanyInvitationRepository",
     "MongoEmailVerificationRepository",
     "MongoSkillEndorsementRepository",
+    "MongoCompanyCardRepository",
+    "MongoCompanyTagSettingsRepository",
 ]

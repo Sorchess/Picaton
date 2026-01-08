@@ -7,12 +7,13 @@ from uuid import UUID
 
 from domain.entities.company import Company, CompanyMember, CompanyInvitation
 from domain.entities.user import User
-from domain.enums.company import CompanyRole, InvitationStatus
+from domain.enums.company import InvitationStatus
 from domain.repositories.company import (
     CompanyRepositoryInterface,
     CompanyMemberRepositoryInterface,
     CompanyInvitationRepositoryInterface,
 )
+from domain.repositories.company_role import CompanyRoleRepositoryInterface
 from domain.repositories.user import UserRepositoryInterface
 
 
@@ -92,7 +93,12 @@ INVITATION_TOKEN_LENGTH = 32  # Длина токена приглашения
 
 
 class CompanyService:
-    """Сервис управления компаниями."""
+    """
+    Сервис управления компаниями.
+    
+    ПРИМЕЧАНИЕ: Этот сервис использует упрощённые проверки прав для обратной совместимости.
+    Для детального управления правами используйте CompanyRoleService и PermissionChecker.
+    """
 
     def __init__(
         self,
@@ -100,11 +106,43 @@ class CompanyService:
         member_repo: CompanyMemberRepositoryInterface,
         invitation_repo: CompanyInvitationRepositoryInterface,
         user_repo: UserRepositoryInterface,
+        role_repo: CompanyRoleRepositoryInterface | None = None,
     ):
         self._company_repo = company_repo
         self._member_repo = member_repo
         self._invitation_repo = invitation_repo
         self._user_repo = user_repo
+        self._role_repo = role_repo
+
+    async def _is_owner(self, company_id: UUID, user_id: UUID) -> bool:
+        """Проверить, является ли пользователь владельцем компании."""
+        member = await self._member_repo.get_by_company_and_user(company_id, user_id)
+        if not member or not member.role_id:
+            return False
+        
+        if not self._role_repo:
+            return False
+            
+        role = await self._role_repo.get_by_id(member.role_id)
+        return role is not None and role.is_owner_role()
+
+    async def _is_admin_or_higher(self, company_id: UUID, user_id: UUID) -> bool:
+        """Проверить, является ли пользователь админом или владельцем."""
+        member = await self._member_repo.get_by_company_and_user(company_id, user_id)
+        if not member or not member.role_id:
+            return False
+        
+        if not self._role_repo:
+            return False
+            
+        role = await self._role_repo.get_by_id(member.role_id)
+        return role is not None and (role.is_owner_role() or role.is_admin_role())
+
+    async def _get_member_role(self, member: CompanyMember):
+        """Получить роль члена компании."""
+        if not member.role_id or not self._role_repo:
+            return None
+        return await self._role_repo.get_by_id(member.role_id)
 
     async def create_company(
         self,
@@ -150,11 +188,18 @@ class CompanyService:
         )
         company = await self._company_repo.create(company)
 
+        # Создаём системные роли для компании
+        owner_role_id = None
+        if self._role_repo:
+            roles = await self._role_repo.create_system_roles(company.id)
+            # roles[0] = Owner role
+            owner_role_id = roles[0].id if roles else None
+
         # Добавляем владельца как члена с ролью Owner
         owner_member = CompanyMember(
             company_id=company.id,
             user_id=owner.id,
-            role=CompanyRole.OWNER,
+            role_id=owner_role_id,
         )
         await self._member_repo.create(owner_member)
 
@@ -217,9 +262,10 @@ class CompanyService:
             PermissionDeniedError: Недостаточно прав
         """
         company = await self.get_company(company_id)
-        member = await self._member_repo.get_by_company_and_user(company_id, user_id)
-
-        if not member or member.role not in (CompanyRole.OWNER, CompanyRole.ADMIN):
+        
+        # Проверяем права через role_repo или напрямую через компанию
+        is_admin = await self._is_admin_or_higher(company_id, user_id)
+        if not is_admin:
             raise PermissionDeniedError(
                 "Только владелец или администратор может редактировать компанию"
             )
@@ -253,13 +299,16 @@ class CompanyService:
             PermissionDeniedError: Только владелец может удалить компанию
         """
         company = await self.get_company(company_id)
-        member = await self._member_repo.get_by_company_and_user(company_id, user_id)
-
-        if not member or member.role != CompanyRole.OWNER:
+        
+        is_owner = await self._is_owner(company_id, user_id)
+        if not is_owner:
             raise PermissionDeniedError("Только владелец может удалить компанию")
 
         # Удаляем все приглашения
         await self._invitation_repo.delete_by_company(company_id)
+        # Удаляем все роли компании
+        if self._role_repo:
+            await self._role_repo.delete_by_company(company_id)
         # Удаляем всех членов
         await self._member_repo.delete_by_company(company_id)
         # Удаляем компанию
@@ -297,7 +346,9 @@ class CompanyService:
                     {
                         "id": m.id,
                         "user": user,
-                        "role": m.role,
+                        "role_id": m.role_id,
+                        "position": m.position,
+                        "department": m.department,
                         "selected_card_id": m.selected_card_id,
                         "joined_at": m.joined_at,
                     }
@@ -308,16 +359,18 @@ class CompanyService:
         self,
         company_id: UUID,
         member_user_id: UUID,
-        new_role: CompanyRole,
+        new_role_id: UUID,
         admin_user_id: UUID,
     ) -> CompanyMember:
         """
         Изменить роль члена компании.
+        
+        DEPRECATED: Используйте CompanyRoleService.assign_role_to_member()
 
         Args:
             company_id: ID компании
             member_user_id: ID пользователя, роль которого меняем
-            new_role: Новая роль
+            new_role_id: ID новой роли
             admin_user_id: ID пользователя, выполняющего изменение
 
         Returns:
@@ -328,10 +381,8 @@ class CompanyService:
             MemberNotFoundError: Член не найден
             CannotChangeOwnRoleError: Нельзя изменить свою роль
         """
-        admin_member = await self._member_repo.get_by_company_and_user(
-            company_id, admin_user_id
-        )
-        if not admin_member or admin_member.role != CompanyRole.OWNER:
+        is_owner = await self._is_owner(company_id, admin_user_id)
+        if not is_owner:
             raise PermissionDeniedError("Только владелец может изменять роли")
 
         if member_user_id == admin_user_id:
@@ -343,11 +394,13 @@ class CompanyService:
         if not target_member:
             raise MemberNotFoundError("Пользователь не является членом компании")
 
-        # Нельзя назначить кого-то владельцем
-        if new_role == CompanyRole.OWNER:
-            raise PermissionDeniedError("Нельзя назначить нового владельца")
+        # Проверяем, что новая роль не является ролью владельца
+        if self._role_repo:
+            new_role = await self._role_repo.get_by_id(new_role_id)
+            if new_role and new_role.is_owner_role():
+                raise PermissionDeniedError("Нельзя назначить нового владельца")
 
-        target_member.update_role(new_role)
+        target_member.set_role(new_role_id)
         return await self._member_repo.update(target_member)
 
     async def remove_member(
@@ -372,13 +425,8 @@ class CompanyService:
             MemberNotFoundError: Член не найден
             CannotRemoveOwnerError: Нельзя удалить владельца
         """
-        admin_member = await self._member_repo.get_by_company_and_user(
-            company_id, admin_user_id
-        )
-        if not admin_member or admin_member.role not in (
-            CompanyRole.OWNER,
-            CompanyRole.ADMIN,
-        ):
+        is_admin = await self._is_admin_or_higher(company_id, admin_user_id)
+        if not is_admin:
             raise PermissionDeniedError(
                 "Только владелец или администратор может удалять членов"
             )
@@ -389,17 +437,23 @@ class CompanyService:
         if not target_member:
             raise MemberNotFoundError("Пользователь не является членом компании")
 
-        if target_member.role == CompanyRole.OWNER:
+        # Проверяем роль удаляемого
+        target_role = await self._get_member_role(target_member)
+        if target_role and target_role.is_owner_role():
             raise CannotRemoveOwnerError("Нельзя удалить владельца компании")
 
-        # Админ не может удалить другого админа
-        if (
-            admin_member.role == CompanyRole.ADMIN
-            and target_member.role == CompanyRole.ADMIN
-        ):
-            raise PermissionDeniedError(
-                "Администратор не может удалить другого администратора"
-            )
+        # Проверяем иерархию - админ не может удалить другого админа
+        admin_member = await self._member_repo.get_by_company_and_user(
+            company_id, admin_user_id
+        )
+        admin_role = await self._get_member_role(admin_member) if admin_member else None
+        
+        if admin_role and target_role:
+            # Если удаляющий не выше в иерархии
+            if not admin_role.is_higher_than(target_role) and not admin_role.is_owner_role():
+                raise PermissionDeniedError(
+                    "Вы не можете удалить члена с ролью выше или равной вашей"
+                )
 
         result = await self._member_repo.delete(target_member.id)
         logger.info(
@@ -426,7 +480,8 @@ class CompanyService:
         if not member:
             raise MemberNotFoundError("Вы не являетесь членом этой компании")
 
-        if member.role == CompanyRole.OWNER:
+        role = await self._get_member_role(member)
+        if role and role.is_owner_role():
             raise CannotRemoveOwnerError(
                 "Владелец не может покинуть компанию. Сначала передайте права или удалите компанию."
             )

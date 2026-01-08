@@ -10,6 +10,8 @@ from presentation.api.auth.handlers import router as auth_router
 from presentation.api.cards.handlers import router as cards_router
 from presentation.api.cards.websocket import router as cards_ws_router
 from presentation.api.companies.handlers import router as companies_router
+from presentation.api.companies.role_handlers import router as company_roles_router
+from presentation.api.companies.card_handlers import router as company_cards_router
 from presentation.api.endorsements.handlers import router as endorsements_router
 
 origins = [
@@ -63,6 +65,12 @@ def create_app() -> FastAPI:
     app.include_router(cards_router, prefix="/api/cards", tags=["Business Cards"])
     app.include_router(cards_ws_router, prefix="/api", tags=["WebSocket"])
     app.include_router(companies_router, prefix="/api/companies", tags=["Companies"])
+    app.include_router(
+        company_roles_router, prefix="/api/companies", tags=["Company Roles"]
+    )
+    app.include_router(
+        company_cards_router, prefix="/api", tags=["Company Cards"]
+    )
     app.include_router(
         endorsements_router, prefix="/api/endorsements", tags=["Skill Endorsements"]
     )

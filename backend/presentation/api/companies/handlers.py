@@ -39,7 +39,7 @@ from application.services import (
     CannotChangeOwnRoleError,
 )
 from application.tasks import send_company_invitation_email
-from domain.enums.company import CompanyRole, InvitationStatus
+from domain.enums.company import InvitationStatus
 from domain.entities.company import InvalidDomainError, InvalidCompanyNameError
 from settings.config import settings
 

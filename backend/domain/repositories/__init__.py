@@ -6,6 +6,9 @@ from domain.repositories.company import (
     CompanyMemberRepositoryInterface,
     CompanyInvitationRepositoryInterface,
 )
+from domain.repositories.company_role import CompanyRoleRepositoryInterface
+from domain.repositories.company_card import ICompanyCardRepository
+from domain.repositories.company_tag_settings import ICompanyTagSettingsRepository
 from domain.repositories.email_verification import EmailVerificationRepositoryInterface
 from domain.repositories.skill_endorsement import SkillEndorsementRepositoryInterface
 
@@ -16,6 +19,9 @@ __all__ = [
     "CompanyRepositoryInterface",
     "CompanyMemberRepositoryInterface",
     "CompanyInvitationRepositoryInterface",
+    "CompanyRoleRepositoryInterface",
+    "ICompanyCardRepository",
+    "ICompanyTagSettingsRepository",
     "EmailVerificationRepositoryInterface",
     "SkillEndorsementRepositoryInterface",
 ]

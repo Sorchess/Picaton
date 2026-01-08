@@ -50,6 +50,27 @@ from application.services.skill_endorsement import (
     TagNotFoundError,
     EndorsementNotFoundError,
 )
+from application.services.company_role import (
+    CompanyRoleService,
+    RoleError,
+    RoleNotFoundError,
+    RoleAlreadyExistsError,
+    SystemRoleError,
+    RoleInUseError,
+    RoleHierarchyViolationError,
+)
+from application.services.permission_checker import (
+    PermissionChecker,
+    PermissionDeniedError as RolePermissionDeniedError,
+    MemberNotFoundError as RoleMemberNotFoundError,
+)
+from application.services.company_card import (
+    CompanyCardService,
+    CompanyCardNotFoundError,
+    CardAlreadyExistsError,
+    InvalidTagValueError,
+    CompanyTagSettingsService,
+)
 
 __all__ = [
     "UserService",
@@ -95,4 +116,21 @@ __all__ = [
     "CardNotFoundError",
     "TagNotFoundError",
     "EndorsementNotFoundError",
+    # Role services
+    "CompanyRoleService",
+    "RoleError",
+    "RoleNotFoundError",
+    "RoleAlreadyExistsError",
+    "SystemRoleError",
+    "RoleInUseError",
+    "RoleHierarchyViolationError",
+    "PermissionChecker",
+    "RolePermissionDeniedError",
+    "RoleMemberNotFoundError",
+    # Company Card services
+    "CompanyCardService",
+    "CompanyCardNotFoundError",
+    "CardAlreadyExistsError",
+    "InvalidTagValueError",
+    "CompanyTagSettingsService",
 ]

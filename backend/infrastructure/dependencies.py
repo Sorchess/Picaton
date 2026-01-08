@@ -14,6 +14,9 @@ from infrastructure.database.repositories import (
     MongoEmailVerificationRepository,
     MongoSkillEndorsementRepository,
 )
+from infrastructure.database.repositories.company_role import MongoCompanyRoleRepository
+from infrastructure.database.repositories.company_card import MongoCompanyCardRepository
+from infrastructure.database.repositories.company_tag_settings import MongoCompanyTagSettingsRepository
 from infrastructure.database.repositories.pending_hash import MongoPendingHashRepository
 from domain.repositories import (
     UserRepositoryInterface,
@@ -24,7 +27,10 @@ from domain.repositories import (
     CompanyInvitationRepositoryInterface,
     EmailVerificationRepositoryInterface,
     SkillEndorsementRepositoryInterface,
+    ICompanyCardRepository,
+    ICompanyTagSettingsRepository,
 )
+from domain.repositories.company_role import CompanyRoleRepositoryInterface
 from domain.repositories.pending_hash import PendingHashRepositoryInterface
 from application.services import (
     UserService,
@@ -51,6 +57,9 @@ from application.services.card_title import CardTitleGenerator
 from application.services.telegram_auth import TelegramAuthService
 from application.services.email_verification import EmailVerificationService
 from application.services.skill_endorsement import SkillEndorsementService
+from application.services.company_role import CompanyRoleService
+from application.services.permission_checker import PermissionChecker
+from application.services.company_card import CompanyCardService, CompanyTagSettingsService
 from application.services.gigachat_query_classifier import GigaChatQueryClassifier
 from application.services.gigachat_task_decomposer import GigaChatTaskDecomposer
 from application.services.gigachat_text_tags import GigaChatTextTagsGenerator
@@ -166,6 +175,18 @@ CompanyInvitationRepository = Annotated[
 ]
 
 
+def get_company_role_repository(
+    db: Database,
+) -> CompanyRoleRepositoryInterface:
+    """Получить репозиторий ролей компании."""
+    return MongoCompanyRoleRepository(db["company_roles"])
+
+
+CompanyRoleRepository = Annotated[
+    CompanyRoleRepositoryInterface, Depends(get_company_role_repository)
+]
+
+
 def get_skill_endorsement_repository(
     db: Database,
 ) -> SkillEndorsementRepositoryInterface:
@@ -175,6 +196,28 @@ def get_skill_endorsement_repository(
 
 SkillEndorsementRepository = Annotated[
     SkillEndorsementRepositoryInterface, Depends(get_skill_endorsement_repository)
+]
+
+
+def get_company_card_repository(
+    db: Database,
+) -> ICompanyCardRepository:
+    """Получить репозиторий корпоративных карточек."""
+    return MongoCompanyCardRepository(db["company_cards"])
+
+
+def get_company_tag_settings_repository(
+    db: Database,
+) -> ICompanyTagSettingsRepository:
+    """Получить репозиторий настроек тегов компании."""
+    return MongoCompanyTagSettingsRepository(db["company_tag_settings"])
+
+
+CompanyCardRepository = Annotated[
+    ICompanyCardRepository, Depends(get_company_card_repository)
+]
+CompanyTagSettingsRepository = Annotated[
+    ICompanyTagSettingsRepository, Depends(get_company_tag_settings_repository)
 ]
 
 
@@ -422,9 +465,32 @@ def get_company_service(
     member_repo: CompanyMemberRepository,
     invitation_repo: CompanyInvitationRepository,
     user_repo: UserRepository,
+    role_repo: CompanyRoleRepository,
 ) -> CompanyService:
     """Получить сервис управления компаниями."""
-    return CompanyService(company_repo, member_repo, invitation_repo, user_repo)
+    return CompanyService(
+        company_repo, member_repo, invitation_repo, user_repo, role_repo
+    )
+
+
+def get_permission_checker(
+    role_repo: CompanyRoleRepository,
+    member_repo: CompanyMemberRepository,
+) -> PermissionChecker:
+    """Получить сервис проверки прав доступа."""
+    return PermissionChecker(role_repo, member_repo)
+
+
+def get_company_role_service(
+    role_repo: CompanyRoleRepository,
+    company_repo: CompanyRepository,
+    member_repo: CompanyMemberRepository,
+    permission_checker: PermissionChecker = Depends(get_permission_checker),
+) -> CompanyRoleService:
+    """Получить сервис управления ролями в компании."""
+    return CompanyRoleService(
+        role_repo, company_repo, member_repo, permission_checker
+    )
 
 
 def get_skill_endorsement_service(
@@ -434,6 +500,21 @@ def get_skill_endorsement_service(
 ) -> SkillEndorsementService:
     """Получить сервис подтверждений навыков."""
     return SkillEndorsementService(endorsement_repo, card_repo, user_repo)
+
+
+def get_company_tag_settings_service(
+    tag_settings_repo: CompanyTagSettingsRepository,
+) -> CompanyTagSettingsService:
+    """Получить сервис настроек тегов компании."""
+    return CompanyTagSettingsService(tag_settings_repo)
+
+
+def get_company_card_service(
+    card_repo: CompanyCardRepository,
+    tag_settings_repo: CompanyTagSettingsRepository,
+) -> CompanyCardService:
+    """Получить сервис корпоративных карточек."""
+    return CompanyCardService(card_repo, tag_settings_repo)
 
 
 def get_email_service() -> SmtpEmailBackend | None:

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from domain.entities.base import Entity
-from domain.enums.company import CompanyRole, InvitationStatus
+from domain.enums.company import InvitationStatus
 
 
 # Валидация
@@ -123,16 +123,40 @@ class Company(Entity):
         self.updated_at = datetime.now(timezone.utc)
 
 
+# Валидация для CompanyMember
+MAX_POSITION_LENGTH = 100
+MAX_DEPARTMENT_LENGTH = 100
+
+
+class InvalidPositionError(ValueError):
+    """Невалидная должность."""
+    pass
+
+
+class InvalidDepartmentError(ValueError):
+    """Невалидный отдел."""
+    pass
+
+
 @dataclass
 class CompanyMember(Entity):
     """
     Членство пользователя в компании.
     Связывает пользователя с компанией и определяет его роль.
+    
+    Теперь использует role_id для связи с сущностью CompanyRole,
+    что позволяет создавать кастомные роли с гибкими правами.
     """
 
     company_id: UUID = field(default=None)
     user_id: UUID = field(default=None)
-    role: CompanyRole = field(default=CompanyRole.MEMBER)
+    
+    # Ссылка на роль (CompanyRole entity)
+    role_id: UUID | None = field(default=None)
+    
+    # Организационная структура
+    position: str | None = field(default=None)  # Должность (напр. "Senior Developer")
+    department: str | None = field(default=None)  # Отдел (напр. "Engineering")
 
     # Выбранная визитка для отображения в этой компании
     selected_card_id: UUID | None = field(default=None)
@@ -141,29 +165,46 @@ class CompanyMember(Entity):
     joined_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
-    def is_owner(self) -> bool:
-        """Проверить, является ли владельцем."""
-        return self.role == CompanyRole.OWNER
+    def __post_init__(self) -> None:
+        """Валидация данных при создании сущности."""
+        if self.position:
+            self._validate_position(self.position)
+        if self.department:
+            self._validate_department(self.department)
 
-    def is_admin(self) -> bool:
-        """Проверить, является ли администратором."""
-        return self.role == CompanyRole.ADMIN
+    @staticmethod
+    def _validate_position(position: str) -> None:
+        """Валидация должности."""
+        if len(position) > MAX_POSITION_LENGTH:
+            raise InvalidPositionError(
+                f"Должность не должна превышать {MAX_POSITION_LENGTH} символов"
+            )
 
-    def can_manage_members(self) -> bool:
-        """Может ли управлять членами команды."""
-        return self.role in (CompanyRole.OWNER, CompanyRole.ADMIN)
+    @staticmethod
+    def _validate_department(department: str) -> None:
+        """Валидация отдела."""
+        if len(department) > MAX_DEPARTMENT_LENGTH:
+            raise InvalidDepartmentError(
+                f"Отдел не должен превышать {MAX_DEPARTMENT_LENGTH} символов"
+            )
 
-    def can_invite(self) -> bool:
-        """Может ли приглашать новых членов."""
-        return self.role in (CompanyRole.OWNER, CompanyRole.ADMIN)
+    def set_role(self, role_id: UUID) -> None:
+        """Установить роль."""
+        self.role_id = role_id
+        self.updated_at = datetime.now(timezone.utc)
 
-    def can_delete_company(self) -> bool:
-        """Может ли удалить компанию."""
-        return self.role == CompanyRole.OWNER
+    def set_position(self, position: str | None) -> None:
+        """Установить должность."""
+        if position:
+            self._validate_position(position)
+        self.position = position
+        self.updated_at = datetime.now(timezone.utc)
 
-    def update_role(self, new_role: CompanyRole) -> None:
-        """Обновить роль."""
-        self.role = new_role
+    def set_department(self, department: str | None) -> None:
+        """Установить отдел."""
+        if department:
+            self._validate_department(department)
+        self.department = department
         self.updated_at = datetime.now(timezone.utc)
 
     def set_selected_card(self, card_id: UUID | None) -> None:
@@ -181,7 +222,7 @@ class CompanyInvitation(Entity):
 
     company_id: UUID = field(default=None)
     email: str = field(default="")  # Email приглашаемого
-    role: CompanyRole = field(default=CompanyRole.MEMBER)  # Предлагаемая роль
+    role_id: UUID | None = field(default=None)  # ID роли для приглашаемого
 
     # Кто отправил приглашение
     invited_by_id: UUID = field(default=None)

@@ -6,7 +6,7 @@ from uuid import UUID
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from domain.entities.company import Company, CompanyMember, CompanyInvitation
-from domain.enums.company import CompanyRole, InvitationStatus
+from domain.enums.company import InvitationStatus, LegacyCompanyRole
 from domain.repositories.company import (
     CompanyRepositoryInterface,
     CompanyMemberRepositoryInterface,
@@ -98,7 +98,9 @@ class MongoCompanyMemberRepository(CompanyMemberRepositoryInterface):
             "_id": str(member.id),
             "company_id": str(member.company_id),
             "user_id": str(member.user_id),
-            "role": member.role.value,
+            "role_id": str(member.role_id) if member.role_id else None,
+            "position": member.position,
+            "department": member.department,
             "selected_card_id": (
                 str(member.selected_card_id) if member.selected_card_id else None
             ),
@@ -109,11 +111,15 @@ class MongoCompanyMemberRepository(CompanyMemberRepositoryInterface):
     def _from_document(self, doc: dict) -> CompanyMember:
         """Преобразовать документ MongoDB в сущность."""
         selected_card_id = doc.get("selected_card_id")
+        role_id = doc.get("role_id")
+        
         return CompanyMember(
             id=UUID(doc["_id"]),
             company_id=UUID(doc["company_id"]),
             user_id=UUID(doc["user_id"]),
-            role=CompanyRole(doc.get("role", "member")),
+            role_id=UUID(role_id) if role_id else None,
+            position=doc.get("position"),
+            department=doc.get("department"),
             selected_card_id=UUID(selected_card_id) if selected_card_id else None,
             joined_at=doc.get("joined_at", datetime.now(timezone.utc)),
             updated_at=doc.get("updated_at", datetime.now(timezone.utc)),
@@ -197,7 +203,7 @@ class MongoCompanyInvitationRepository(CompanyInvitationRepositoryInterface):
             "_id": str(invitation.id),
             "company_id": str(invitation.company_id),
             "email": invitation.email.lower(),
-            "role": invitation.role.value,
+            "role_id": str(invitation.role_id) if invitation.role_id else None,
             "invited_by_id": (
                 str(invitation.invited_by_id) if invitation.invited_by_id else None
             ),
@@ -214,7 +220,7 @@ class MongoCompanyInvitationRepository(CompanyInvitationRepositoryInterface):
             id=UUID(doc["_id"]),
             company_id=UUID(doc["company_id"]),
             email=doc.get("email", ""),
-            role=CompanyRole(doc.get("role", "member")),
+            role_id=UUID(doc["role_id"]) if doc.get("role_id") else None,
             invited_by_id=(
                 UUID(doc["invited_by_id"]) if doc.get("invited_by_id") else None
             ),
