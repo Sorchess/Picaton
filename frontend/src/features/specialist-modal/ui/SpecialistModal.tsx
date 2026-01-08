@@ -326,12 +326,12 @@ export function SpecialistModal({
       )}
 
       <div className="specialist-modal__actions">
-        {onSaveContact && !isSaved && (
+        {onSaveContact && !isSaved && authUser?.id !== user.id && (
           <Button variant="primary" onClick={() => onSaveContact(user)}>
             Сохранить в контакты
           </Button>
         )}
-        {isSaved && onDeleteContact && (
+        {isSaved && onDeleteContact && authUser?.id !== user.id && (
           <Button
             variant="danger"
             onClick={() =>
