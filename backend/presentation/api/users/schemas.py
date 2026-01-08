@@ -219,6 +219,10 @@ class SearchRequest(BaseModel):
     limit: int = Field(default=20, ge=1, le=100)
     include_users: bool = True
     include_contacts: bool = True
+    company_ids: list[UUID] | None = Field(
+        default=None,
+        description="Фильтр по компаниям. Если указан, ищет только среди членов этих компаний.",
+    )
 
 
 class SearchCardContactInfo(BaseModel):

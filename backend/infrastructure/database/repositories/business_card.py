@@ -243,3 +243,106 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             {"$set": {"avatar_url": avatar_url}},
         )
         return result.modified_count
+
+    async def get_by_ids(self, card_ids: list[UUID]) -> list[BusinessCard]:
+        """Получить карточки по списку ID."""
+        if not card_ids:
+            return []
+        cursor = self._collection.find({"_id": {"$in": [str(cid) for cid in card_ids]}})
+        cards = []
+        async for doc in cursor:
+            cards.append(self._from_document(doc))
+        return cards
+
+    async def search_by_tags_and_ids(
+        self,
+        tags: list[str],
+        card_ids: list[UUID],
+        limit: int = 20,
+        public_only: bool = True,
+    ) -> list[BusinessCard]:
+        """Поиск карточек по тегам среди указанных ID."""
+        if not card_ids:
+            return []
+        normalized_tags = [tag.lower().strip() for tag in tags]
+        query = {
+            "_id": {"$in": [str(cid) for cid in card_ids]},
+            "search_tags": {"$in": normalized_tags},
+            "is_active": True,
+        }
+        if public_only:
+            query["is_public"] = True
+        cursor = self._collection.find(query).limit(limit)
+
+        cards = []
+        async for doc in cursor:
+            cards.append(self._from_document(doc))
+        return cards
+
+    async def search_by_text_and_ids(
+        self,
+        query: str,
+        card_ids: list[UUID],
+        limit: int = 20,
+        public_only: bool = True,
+    ) -> list[BusinessCard]:
+        """Полнотекстовый поиск среди указанных карточек."""
+        if not card_ids:
+            return []
+        query_lower = query.lower().strip()
+        match_query = {
+            "_id": {"$in": [str(cid) for cid in card_ids]},
+            "is_active": True,
+            "$or": [
+                {"display_name": {"$regex": query_lower, "$options": "i"}},
+                {"bio": {"$regex": query_lower, "$options": "i"}},
+                {"title": {"$regex": query_lower, "$options": "i"}},
+                {"search_tags": {"$regex": query_lower, "$options": "i"}},
+            ],
+        }
+        if public_only:
+            match_query["is_public"] = True
+        cursor = self._collection.find(match_query).limit(limit)
+
+        cards = []
+        async for doc in cursor:
+            cards.append(self._from_document(doc))
+        return cards
+
+    async def search_by_bio_keywords_and_ids(
+        self,
+        keywords: list[str],
+        card_ids: list[UUID],
+        limit: int = 20,
+        public_only: bool = True,
+    ) -> list[BusinessCard]:
+        """Поиск карточек по ключевым словам в bio среди указанных ID."""
+        if not card_ids:
+            return []
+        or_conditions = []
+        for keyword in keywords:
+            keyword_lower = keyword.lower().strip()
+            if keyword_lower:
+                or_conditions.append(
+                    {"bio": {"$regex": keyword_lower, "$options": "i"}}
+                )
+                or_conditions.append(
+                    {"ai_generated_bio": {"$regex": keyword_lower, "$options": "i"}}
+                )
+
+        if not or_conditions:
+            return []
+
+        match_query = {
+            "_id": {"$in": [str(cid) for cid in card_ids]},
+            "is_active": True,
+            "$or": or_conditions,
+        }
+        if public_only:
+            match_query["is_public"] = True
+        cursor = self._collection.find(match_query).limit(limit)
+
+        cards = []
+        async for doc in cursor:
+            cards.append(self._from_document(doc))
+        return cards

@@ -56,7 +56,9 @@ from infrastructure.dependencies import (
     get_business_card_service,
     get_card_title_generator,
     get_email_verification_service,
+    get_company_member_repository,
 )
+from domain.repositories.company import CompanyMemberRepositoryInterface
 from application.services.email_verification import EmailVerificationError
 from application.services.contact_sync import HashedContact
 from infrastructure.storage import CloudinaryService
@@ -609,10 +611,15 @@ async def search_experts(
     owner_id: UUID | None = None,
     search_service=Depends(get_search_service),
     user_service=Depends(get_user_service),
+    company_member_repo: CompanyMemberRepositoryInterface = Depends(
+        get_company_member_repository
+    ),
 ):
     """
     Ассоциативный поиск экспертов и контактов.
     Можно искать по тегам, ассоциациям, именам.
+
+    При указании company_ids ищет только среди членов указанных компаний.
 
     Примеры запросов:
     - "бэкенд эксперт" → найдёт Python, Java, Node.js разработчиков
@@ -620,12 +627,25 @@ async def search_experts(
     - "питон" → найдёт Python разработчиков (синоним)
     """
     try:
+        # Собираем card_ids из выбранных компаний
+        company_card_ids = None
+        if data.company_ids:
+            company_card_ids = []
+            for company_id in data.company_ids:
+                members = await company_member_repo.get_by_company(company_id)
+                for member in members:
+                    if member.selected_card_id:
+                        company_card_ids.append(member.selected_card_id)
+            # Убираем дубликаты
+            company_card_ids = list(set(company_card_ids))
+
         result = await search_service.search(
             query=data.query,
             owner_id=owner_id,
             limit=data.limit,
             include_users=data.include_users,
             include_contacts=data.include_contacts,
+            company_card_ids=company_card_ids,
         )
 
         # Получаем данные владельцев карточек для имён

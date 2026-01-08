@@ -74,6 +74,7 @@ export const userApi = {
       include_users?: boolean;
       include_contacts?: boolean;
       owner_id?: string;
+      company_ids?: string[];
     }
   ) =>
     api.post<SearchResult>("/users/search", {
@@ -81,6 +82,7 @@ export const userApi = {
       limit: options?.limit ?? 20,
       include_users: options?.include_users ?? true,
       include_contacts: options?.include_contacts ?? true,
+      company_ids: options?.company_ids ?? null,
     }),
 
   // Сохранить контакт пользователя (или конкретную карточку)

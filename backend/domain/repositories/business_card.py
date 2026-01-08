@@ -81,3 +81,41 @@ class BusinessCardRepositoryInterface(ABC):
     async def count_by_owner(self, owner_id: UUID) -> int:
         """Количество карточек у пользователя."""
         pass
+
+    @abstractmethod
+    async def get_by_ids(self, card_ids: list[UUID]) -> list[BusinessCard]:
+        """Получить карточки по списку ID."""
+        pass
+
+    @abstractmethod
+    async def search_by_tags_and_ids(
+        self,
+        tags: list[str],
+        card_ids: list[UUID],
+        limit: int = 20,
+        public_only: bool = True,
+    ) -> list[BusinessCard]:
+        """Поиск карточек по тегам среди указанных ID."""
+        pass
+
+    @abstractmethod
+    async def search_by_text_and_ids(
+        self,
+        query: str,
+        card_ids: list[UUID],
+        limit: int = 20,
+        public_only: bool = True,
+    ) -> list[BusinessCard]:
+        """Полнотекстовый поиск среди указанных карточек."""
+        pass
+
+    @abstractmethod
+    async def search_by_bio_keywords_and_ids(
+        self,
+        keywords: list[str],
+        card_ids: list[UUID],
+        limit: int = 20,
+        public_only: bool = True,
+    ) -> list[BusinessCard]:
+        """Поиск карточек по ключевым словам в bio среди указанных ID."""
+        pass

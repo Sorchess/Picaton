@@ -822,6 +822,7 @@ class AssociativeSearchService:
         limit: int = 20,
         include_users: bool = True,
         include_contacts: bool = True,
+        company_card_ids: list[UUID] | None = None,
     ) -> SearchResult:
         """
         Выполнить умный поиск с автоопределением типа запроса.
@@ -837,6 +838,7 @@ class AssociativeSearchService:
             limit: Максимальное количество результатов
             include_users: Включать ли пользователей/карточки в результат
             include_contacts: Включать ли сохраненные контакты
+            company_card_ids: Список ID карточек для фильтрации (члены компаний)
 
         Returns:
             SearchResult с найденными карточками и контактами
@@ -854,30 +856,63 @@ class AssociativeSearchService:
 
         # Поиск визитных карточек (основной поиск)
         if include_users:
-            # Сначала ищем по расширенным тегам в search_tags
-            if expanded_tags:
-                cards = await self._card_repository.search_by_tags(expanded_tags, limit)
+            # Если указаны company_card_ids, ищем только среди них
+            if company_card_ids:
+                # Сначала ищем по расширенным тегам в search_tags
+                if expanded_tags:
+                    cards = await self._card_repository.search_by_tags_and_ids(
+                        expanded_tags, company_card_ids, limit
+                    )
 
-            # Поиск по ключевым словам в bio
-            if len(cards) < limit and expanded_tags:
-                bio_results = await self._card_repository.search_by_bio_keywords(
-                    expanded_tags, limit - len(cards)
-                )
-                existing_ids = {c.id for c in cards}
-                for card in bio_results:
-                    if card.id not in existing_ids:
-                        cards.append(card)
+                # Поиск по ключевым словам в bio
+                if len(cards) < limit and expanded_tags:
+                    bio_results = (
+                        await self._card_repository.search_by_bio_keywords_and_ids(
+                            expanded_tags, company_card_ids, limit - len(cards)
+                        )
+                    )
+                    existing_ids = {c.id for c in cards}
+                    for card in bio_results:
+                        if card.id not in existing_ids:
+                            cards.append(card)
 
-            # Если мало результатов, добавляем полнотекстовый поиск
-            if len(cards) < limit:
-                text_results = await self._card_repository.search_by_text(
-                    query, limit - len(cards)
-                )
-                # Добавляем только уникальные
-                existing_ids = {c.id for c in cards}
-                for card in text_results:
-                    if card.id not in existing_ids:
-                        cards.append(card)
+                # Если мало результатов, добавляем полнотекстовый поиск
+                if len(cards) < limit:
+                    text_results = await self._card_repository.search_by_text_and_ids(
+                        query, company_card_ids, limit - len(cards)
+                    )
+                    existing_ids = {c.id for c in cards}
+                    for card in text_results:
+                        if card.id not in existing_ids:
+                            cards.append(card)
+            else:
+                # Стандартный поиск без фильтра по компаниям
+                # Сначала ищем по расширенным тегам в search_tags
+                if expanded_tags:
+                    cards = await self._card_repository.search_by_tags(
+                        expanded_tags, limit
+                    )
+
+                # Поиск по ключевым словам в bio
+                if len(cards) < limit and expanded_tags:
+                    bio_results = await self._card_repository.search_by_bio_keywords(
+                        expanded_tags, limit - len(cards)
+                    )
+                    existing_ids = {c.id for c in cards}
+                    for card in bio_results:
+                        if card.id not in existing_ids:
+                            cards.append(card)
+
+                # Если мало результатов, добавляем полнотекстовый поиск
+                if len(cards) < limit:
+                    text_results = await self._card_repository.search_by_text(
+                        query, limit - len(cards)
+                    )
+                    # Добавляем только уникальные
+                    existing_ids = {c.id for c in cards}
+                    for card in text_results:
+                        if card.id not in existing_ids:
+                            cards.append(card)
 
         # Поиск в сохраненных контактах
         if include_contacts and owner_id:
@@ -1057,7 +1092,9 @@ class AssociativeSearchService:
                 if self._ai_search_service:
                     try:
                         ai_result = await self._ai_search_service.expand_query(query)
-                        logger.info(f"Query expanded by AI into {len(ai_result.expanded_tags)} tags")
+                        logger.info(
+                            f"Query expanded by AI into {len(ai_result.expanded_tags)} tags"
+                        )
                         return ai_result.expanded_tags
                     except Exception as e:
                         logger.warning(f"AI search expansion failed: {e}")
