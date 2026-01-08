@@ -7,12 +7,7 @@ from dataclasses import dataclass
 
 from gigachat import GigaChat
 from gigachat.models import Chat, Messages, MessagesRole
-from gigachat.exceptions import (
-    GigaChatException,
-    AuthenticationError,
-    RateLimitError,
-    ServerError,
-)
+from gigachat.exceptions import GigaChatException
 
 from settings.config import settings
 
@@ -120,29 +115,40 @@ class GigaChatClient:
 
                     return GigaChatResponse(
                         content=response.choices[0].message.content,
-                        tokens_used=response.usage.total_tokens if response.usage else 0,
+                        tokens_used=(
+                            response.usage.total_tokens if response.usage else 0
+                        ),
                         model=response.model or self._model,
                     )
 
-            except RateLimitError as e:
-                logger.warning(f"GigaChat rate limit exceeded: {e}")
-                raise GigaChatError("Rate limit exceeded", status_code=429)
-
-            except AuthenticationError as e:
-                logger.error(f"GigaChat authentication error: {e}")
-                raise GigaChatError("Authentication failed", status_code=401)
-
-            except ServerError as e:
-                if attempt < self.MAX_RETRIES:
-                    logger.warning(
-                        f"GigaChat server error, retrying (attempt {attempt + 1}): {e}"
-                    )
-                    continue
-                raise GigaChatError(f"Server error: {e}", status_code=500)
-
             except GigaChatException as e:
-                logger.error(f"GigaChat API error: {e}")
-                raise GigaChatError(f"API error: {e}")
+                # Check status code from the exception if available
+                status_code = getattr(e, "status_code", None)
+                error_message = str(e)
+
+                # Handle rate limiting (429)
+                if status_code == 429:
+                    logger.warning(f"GigaChat rate limit exceeded: {e}")
+                    raise GigaChatError("Rate limit exceeded", status_code=429)
+
+                # Handle authentication errors (401)
+                elif status_code == 401:
+                    logger.error(f"GigaChat authentication error: {e}")
+                    raise GigaChatError("Authentication failed", status_code=401)
+
+                # Handle server errors (5xx) - retry
+                elif status_code and 500 <= status_code < 600:
+                    if attempt < self.MAX_RETRIES:
+                        logger.warning(
+                            f"GigaChat server error, retrying (attempt {attempt + 1}): {e}"
+                        )
+                        continue
+                    raise GigaChatError(f"Server error: {e}", status_code=status_code)
+
+                # Other API errors
+                else:
+                    logger.error(f"GigaChat API error: {e}")
+                    raise GigaChatError(f"API error: {e}", status_code=status_code)
 
             except Exception as e:
                 logger.error(f"Unexpected error in GigaChat: {e}")
