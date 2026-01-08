@@ -1,9 +1,9 @@
-"""Groq-based tag generator service."""
+"""GigaChat-based tag generator service."""
 
 import logging
 import re
 
-from infrastructure.llm.groq_client import GroqClient, GroqError
+from infrastructure.llm.gigachat_client import GigaChatClient, GigaChatError
 from infrastructure.llm.prompts import (
     TAGS_GENERATION_PROMPT,
     CONTACT_TAGS_PROMPT,
@@ -14,20 +14,20 @@ from .ai_tags import AITagsGeneratorInterface, GeneratedTags, SuggestedTag
 logger = logging.getLogger(__name__)
 
 
-class GroqTagsGenerator(AITagsGeneratorInterface):
+class GigaChatTagsGenerator(AITagsGeneratorInterface):
     """
-    LLM-based tag generator using Groq API.
+    LLM-based tag generator using GigaChat API.
 
     Generates professional tags from bio text or contact notes.
     Falls back to simple extraction if API fails.
     """
 
     def __init__(self):
-        self._client = GroqClient()
+        self._client = GigaChatClient()
 
     async def generate_tags_from_bio(self, bio: str) -> GeneratedTags:
         """
-        Generate tags from user bio using Groq LLM.
+        Generate tags from user bio using GigaChat LLM.
 
         Args:
             bio: User's bio text
@@ -70,8 +70,8 @@ class GroqTagsGenerator(AITagsGeneratorInterface):
                 ],
             )
 
-        except GroqError as e:
-            logger.warning(f"Groq API error in generate_tags_from_bio: {e.message}")
+        except GigaChatError as e:
+            logger.warning(f"GigaChat API error in generate_tags_from_bio: {e.message}")
             return self._fallback_extract_tags(bio)
 
     async def generate_tags_from_notes(self, notes: str) -> list[str]:
@@ -99,8 +99,8 @@ class GroqTagsGenerator(AITagsGeneratorInterface):
 
             return self._clean_tags(tags)[:7]
 
-        except GroqError as e:
-            logger.warning(f"Groq API error in generate_tags_from_notes: {e.message}")
+        except GigaChatError as e:
+            logger.warning(f"GigaChat API error in generate_tags_from_notes: {e.message}")
             return self._fallback_extract_from_notes(notes)
 
     async def generate_tags_from_facts(self, facts: list[str]) -> list[str]:
@@ -130,8 +130,8 @@ class GroqTagsGenerator(AITagsGeneratorInterface):
 
             return self._clean_tags(tags)[:10]
 
-        except GroqError as e:
-            logger.warning(f"Groq API error in generate_tags_from_facts: {e.message}")
+        except GigaChatError as e:
+            logger.warning(f"GigaChat API error in generate_tags_from_facts: {e.message}")
             return self._fallback_extract_tags_simple(facts_text)
 
     def _clean_tags(self, tags: list) -> list[str]:

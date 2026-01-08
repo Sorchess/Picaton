@@ -2,7 +2,7 @@
 
 import logging
 
-from infrastructure.llm.groq_client import GroqClient, GroqError
+from infrastructure.llm.gigachat_client import GigaChatClient, GigaChatError
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class CardTitleGenerator:
 Отвечай ТОЛЬКО названием, без кавычек и пояснений."""
 
     def __init__(self):
-        self._client = GroqClient()
+        self._client = GigaChatClient()
 
     async def generate_title(
         self,
@@ -75,7 +75,7 @@ class CardTitleGenerator:
 
         try:
             if not self._client.is_configured:
-                logger.warning("Groq API not configured, using default title")
+                logger.warning("GigaChat API not configured, using default title")
                 return "Основная"
 
             response = await self._client.complete(
@@ -94,7 +94,7 @@ class CardTitleGenerator:
             logger.info(f"Generated card title: {title}")
             return title
 
-        except GroqError as e:
+        except GigaChatError as e:
             logger.error(f"Failed to generate card title: {e}")
             return "Основная"
         except Exception as e:

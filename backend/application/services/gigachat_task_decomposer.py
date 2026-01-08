@@ -1,5 +1,5 @@
 """
-Сервис декомпозиции задач в список требуемых навыков через Groq.
+Сервис декомпозиции задач в список требуемых навыков через GigaChat.
 Преобразует описание задачи в набор тегов для поиска специалистов.
 """
 
@@ -7,7 +7,7 @@ import json
 import logging
 import re
 
-from infrastructure.llm.groq_client import GroqClient, GroqError
+from infrastructure.llm.gigachat_client import GigaChatClient, GigaChatError
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ TASK_DECOMPOSITION_PROMPT = """Ты эксперт по подбору IT-спе
 """
 
 
-# Fallback маппинг для случаев когда Groq недоступен
+# Fallback маппинг для случаев когда GigaChat недоступен
 TASK_KEYWORD_MAP = {
     # Веб-разработка
     "сайт": ["веб-разработчик", "frontend", "html", "css", "javascript", "react", "верстка", "дизайн"],
@@ -92,7 +92,7 @@ TASK_KEYWORD_MAP = {
 }
 
 
-class GroqTaskDecomposer:
+class GigaChatTaskDecomposer:
     """
     Декомпозирует задачу в список требуемых навыков/технологий.
 
@@ -103,8 +103,8 @@ class GroqTaskDecomposer:
     _cache: dict[str, list[str]] = {}
     _cache_max_size: int = 300
 
-    def __init__(self, groq_client: GroqClient):
-        self._groq = groq_client
+    def __init__(self, gigachat_client: GigaChatClient):
+        self._gigachat = gigachat_client
 
     async def decompose_task(self, task: str) -> list[str]:
         """
@@ -127,14 +127,14 @@ class GroqTaskDecomposer:
             logger.debug(f"Task decomposition cache hit: '{task}'")
             return self._cache[task_lower]
 
-        # Если Groq не сконфигурирован, используем fallback
-        if not self._groq.is_configured:
+        # Если GigaChat не сконфигурирован, используем fallback
+        if not self._gigachat.is_configured:
             result = self._fallback_decompose(task_lower)
-            logger.warning(f"Groq not configured, using fallback for: '{task}'")
+            logger.warning(f"GigaChat not configured, using fallback for: '{task}'")
             return result
 
         try:
-            response = await self._groq.complete(
+            response = await self._gigachat.complete(
                 system_prompt=TASK_DECOMPOSITION_PROMPT.format(task=task),
                 user_prompt=task,
                 max_tokens=200,
@@ -147,8 +147,8 @@ class GroqTaskDecomposer:
             logger.info(f"Task decomposed: '{task}' → {len(tags)} tags")
             return tags
 
-        except GroqError as e:
-            logger.warning(f"Groq error during task decomposition: {e}")
+        except GigaChatError as e:
+            logger.warning(f"GigaChat error during task decomposition: {e}")
             return self._fallback_decompose(task_lower)
         except Exception as e:
             logger.error(f"Unexpected error during task decomposition: {e}")
@@ -199,7 +199,7 @@ class GroqTaskDecomposer:
         """
         Fallback декомпозиция на основе ключевых слов.
 
-        Используется когда Groq недоступен.
+        Используется когда GigaChat недоступен.
         """
         result = set()
 

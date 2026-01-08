@@ -828,7 +828,7 @@ class AssociativeSearchService:
         Выполнить умный поиск с автоопределением типа запроса.
 
         Алгоритм:
-        1. Классифицировать запрос (TASK или SKILL) через Groq
+        1. Классифицировать запрос (TASK или SKILL) через GigaChat
         2. Если TASK → декомпозировать задачу в навыки → искать специалистов
         3. Если SKILL → расширить запрос через AI → искать по тегам
 
@@ -1074,9 +1074,9 @@ class AssociativeSearchService:
         Returns:
             Список расширенных тегов для поиска
         """
-        from application.services.groq_query_classifier import QueryType
+        from application.services.gigachat_query_classifier import QueryType
 
-        # Попытка умной классификации через Groq
+        # Попытка умной классификации через GigaChat
         if self._query_classifier and self._task_decomposer:
             try:
                 query_type = await self._query_classifier.classify_query(query)

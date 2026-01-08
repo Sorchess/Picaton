@@ -1,29 +1,29 @@
-"""Groq-based bio generator service."""
+"""GigaChat-based bio generator service."""
 
 import logging
 
 from domain.entities.user import User
-from infrastructure.llm.groq_client import GroqClient, GroqError
+from infrastructure.llm.gigachat_client import GigaChatClient, GigaChatError
 from infrastructure.llm.prompts import BIO_GENERATION_PROMPT
 from .ai_bio import AIBioGeneratorInterface, GeneratedBio
 
 logger = logging.getLogger(__name__)
 
 
-class GroqBioGenerator(AIBioGeneratorInterface):
+class GigaChatBioGenerator(AIBioGeneratorInterface):
     """
-    LLM-based bio generator using Groq API.
+    LLM-based bio generator using GigaChat API.
 
     Generates professional self-presentation from user data.
     Falls back to simple template if API fails.
     """
 
     def __init__(self):
-        self._client = GroqClient()
+        self._client = GigaChatClient()
 
     async def generate_bio(self, user: User) -> GeneratedBio:
         """
-        Generate professional bio using Groq LLM.
+        Generate professional bio using GigaChat LLM.
 
         Args:
             user: User entity with bio and random facts
@@ -125,8 +125,8 @@ class GroqBioGenerator(AIBioGeneratorInterface):
                 tokens_used=response.tokens_used,
             )
 
-        except GroqError as e:
-            logger.warning(f"Groq API error in generate_bio: {e.message}")
+        except GigaChatError as e:
+            logger.warning(f"GigaChat API error in generate_bio: {e.message}")
             return GeneratedBio(
                 bio=self._fallback_bio(text, name),
                 tokens_used=0,

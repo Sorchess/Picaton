@@ -1,12 +1,12 @@
 """
-Сервис классификации поисковых запросов через Groq.
+Сервис классификации поисковых запросов через GigaChat.
 Определяет тип запроса: задача (task) или навык (skill).
 """
 
 import logging
 from enum import Enum
 
-from infrastructure.llm.groq_client import GroqClient, GroqError
+from infrastructure.llm.gigachat_client import GigaChatClient, GigaChatError
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +33,11 @@ SKILL - если запрос это технология, навык, проф�
 """
 
 
-class GroqQueryClassifier:
+class GigaChatQueryClassifier:
     """
     Классификатор типа поискового запроса.
 
-    Использует Groq LLM для определения является ли запрос:
+    Использует GigaChat LLM для определения является ли запрос:
     - TASK: задачей/проблемой которую нужно решить
     - SKILL: навыком/технологией для поиска специалиста
     """
@@ -46,8 +46,8 @@ class GroqQueryClassifier:
     _cache: dict[str, QueryType] = {}
     _cache_max_size: int = 200
 
-    def __init__(self, groq_client: GroqClient):
-        self._groq = groq_client
+    def __init__(self, gigachat_client: GigaChatClient):
+        self._gigachat = gigachat_client
 
     async def classify_query(self, query: str) -> QueryType:
         """
@@ -79,14 +79,14 @@ class GroqQueryClassifier:
             self._add_to_cache(query_lower, quick_result)
             return quick_result
 
-        # Если Groq не сконфигурирован, используем эвристику
-        if not self._groq.is_configured:
+        # Если GigaChat не сконфигурирован, используем эвристику
+        if not self._gigachat.is_configured:
             result = self._fallback_classify(query_lower)
-            logger.warning(f"Groq not configured, using fallback: '{query}' → {result}")
+            logger.warning(f"GigaChat not configured, using fallback: '{query}' → {result}")
             return result
 
         try:
-            response = await self._groq.complete(
+            response = await self._gigachat.complete(
                 system_prompt=CLASSIFICATION_PROMPT.format(query=query),
                 user_prompt=query,
                 max_tokens=10,
@@ -99,8 +99,8 @@ class GroqQueryClassifier:
             logger.info(f"Query classified: '{query}' → {result}")
             return result
 
-        except GroqError as e:
-            logger.warning(f"Groq error during classification: {e}, using fallback")
+        except GigaChatError as e:
+            logger.warning(f"GigaChat error during classification: {e}, using fallback")
             return self._fallback_classify(query_lower)
         except Exception as e:
             logger.error(f"Unexpected error during classification: {e}")
@@ -141,7 +141,7 @@ class GroqQueryClassifier:
         """
         Fallback классификация на основе эвристики.
 
-        Используется когда Groq недоступен.
+        Используется когда GigaChat недоступен.
         """
         # Проверяем наличие глаголов действия
         task_indicators = [

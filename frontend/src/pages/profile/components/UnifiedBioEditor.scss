@@ -3,20 +3,20 @@
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  background: var(--color-bg-secondary, #f8f9fa);
+  background: var(--color-bg-secondary, #111111);
   border-radius: 12px;
-  border: 1px solid var(--color-border, #e5e7eb);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
   transition: border-color 0.2s ease;
 
   &:focus-within {
-    border-color: var(--color-primary, #6366f1);
+    border-color: var(--color-accent, #6366f1);
   }
 
   &--generating {
-    border-color: var(--color-primary, #6366f1);
+    border-color: var(--color-accent, #6366f1);
     background: linear-gradient(
       135deg,
-      var(--color-bg-secondary, #f8f9fa) 0%,
+      var(--color-bg-secondary, #111111) 0%,
       rgba(99, 102, 241, 0.05) 100%
     );
   }
@@ -37,7 +37,7 @@
       margin: 0;
       font-size: 16px;
       font-weight: 600;
-      color: var(--color-text-primary, #1f2937);
+      color: var(--color-text-primary, #ffffff);
     }
   }
 
@@ -47,8 +47,8 @@
     border-radius: 4px;
 
     &--offline {
-      background: var(--color-danger-bg, #fef2f2);
-      color: var(--color-danger, #ef4444);
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--color-error, #ef4444);
     }
   }
 
@@ -64,16 +64,16 @@
     width: 32px;
     height: 32px;
     padding: 0;
-    border: 1px solid var(--color-border, #e5e7eb);
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
     border-radius: 6px;
-    background: var(--color-bg-primary, #fff);
-    color: var(--color-text-secondary, #6b7280);
+    background: var(--color-bg-tertiary, #1a1a1a);
+    color: var(--color-text-secondary, #a0a0a0);
     cursor: pointer;
     transition: all 0.15s ease;
 
     &:hover:not(:disabled) {
-      background: var(--color-bg-hover, #f3f4f6);
-      color: var(--color-text-primary, #1f2937);
+      background: var(--color-glass-bg-hover, rgba(255, 255, 255, 0.08));
+      color: var(--color-text-primary, #ffffff);
     }
 
     &:disabled {
@@ -85,8 +85,8 @@
   // Error
   &__error {
     padding: 8px 12px;
-    background: var(--color-danger-bg, #fef2f2);
-    color: var(--color-danger, #ef4444);
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-error, #ef4444);
     border-radius: 6px;
     font-size: 13px;
     cursor: pointer;
@@ -105,34 +105,35 @@
     width: 100%;
     min-height: 120px;
     padding: 12px;
-    border: 1px solid var(--color-border, #e5e7eb);
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
     border-radius: 8px;
-    background: var(--color-bg-primary, #fff);
+    background: var(--color-bg-tertiary, #1a1a1a);
     font-size: 14px;
     line-height: 1.5;
-    color: var(--color-text-primary, #1f2937);
+    color: var(--color-text-primary, #ffffff);
     resize: vertical;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     &::placeholder {
-      color: var(--color-text-placeholder, #9ca3af);
+      color: var(--color-text-muted, #666666);
     }
 
     &:focus {
       outline: none;
-      border-color: var(--color-primary, #6366f1);
+      border-color: var(--color-accent, #6366f1);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
 
     &:disabled {
-      background: var(--color-bg-disabled, #f3f4f6);
+      background: var(--color-bg-secondary, #111111);
       cursor: not-allowed;
+      opacity: 0.7;
     }
 
     &--streaming {
       background: linear-gradient(
         135deg,
-        var(--color-bg-primary, #fff) 0%,
+        var(--color-bg-tertiary, #1a1a1a) 0%,
         rgba(99, 102, 241, 0.03) 100%
       );
     }
@@ -145,7 +146,7 @@
     right: 12px;
     width: 2px;
     height: 16px;
-    background: var(--color-primary, #6366f1);
+    background: var(--color-accent, #6366f1);
     animation: blink 1s infinite;
   }
 
@@ -171,7 +172,7 @@
 
   &__char-count {
     font-size: 12px;
-    color: var(--color-text-secondary, #6b7280);
+    color: var(--color-text-secondary, #a0a0a0);
   }
 
   &__hint {
@@ -181,8 +182,8 @@
   &__unsaved {
     font-size: 11px;
     padding: 2px 6px;
-    background: var(--color-warning-bg, #fffbeb);
-    color: var(--color-warning, #f59e0b);
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--color-warning, #fbbf24);
     border-radius: 4px;
   }
 
@@ -223,22 +224,22 @@
     }
 
     &--save {
-      background: var(--color-bg-primary, #fff);
-      color: var(--color-text-primary, #1f2937);
-      border: 1px solid var(--color-border, #e5e7eb);
+      background: var(--color-bg-tertiary, #1a1a1a);
+      color: var(--color-text-primary, #ffffff);
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
 
       &:hover:not(:disabled) {
-        background: var(--color-bg-hover, #f3f4f6);
+        background: var(--color-glass-bg-hover, rgba(255, 255, 255, 0.08));
       }
     }
 
     &--cancel {
-      background: var(--color-danger-bg, #fef2f2);
-      color: var(--color-danger, #ef4444);
-      border: 1px solid var(--color-danger, #ef4444);
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--color-error, #ef4444);
+      border: 1px solid var(--color-error, #ef4444);
 
       &:hover:not(:disabled) {
-        background: var(--color-danger, #ef4444);
+        background: var(--color-error, #ef4444);
         color: #fff;
       }
     }
@@ -255,7 +256,7 @@
   &__progress-bar {
     flex: 1;
     height: 4px;
-    background: var(--color-border, #e5e7eb);
+    background: var(--color-border, rgba(255, 255, 255, 0.1));
     border-radius: 2px;
     overflow: hidden;
   }
@@ -275,21 +276,7 @@
 
   &__progress-text {
     font-size: 12px;
-    color: var(--color-primary, #6366f1);
+    color: var(--color-accent, #6366f1);
     white-space: nowrap;
-  }
-}
-
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-  .unified-bio-editor {
-    --color-bg-primary: #1f2937;
-    --color-bg-secondary: #111827;
-    --color-bg-hover: #374151;
-    --color-bg-disabled: #1f2937;
-    --color-border: #374151;
-    --color-text-primary: #f9fafb;
-    --color-text-secondary: #9ca3af;
-    --color-text-placeholder: #6b7280;
   }
 }

@@ -25,10 +25,10 @@ from presentation.api.cards.schemas import (
 )
 from infrastructure.dependencies import (
     get_business_card_service,
-    get_groq_bio_service,
+    get_gigachat_bio_service,
     get_ai_tags_service,
     get_qrcode_service,
-    get_groq_text_tags_service,
+    get_gigachat_text_tags_service,
 )
 from application.services.business_card import (
     BusinessCardService,
@@ -392,7 +392,7 @@ async def generate_card_bio(
     card_id: UUID,
     owner_id: UUID,
     card_service: BusinessCardService = Depends(get_business_card_service),
-    groq_service=Depends(get_groq_bio_service),
+    gigachat_service=Depends(get_gigachat_bio_service),
 ):
     """Сгенерировать AI-презентацию для карточки."""
     try:
@@ -408,7 +408,7 @@ async def generate_card_bio(
             )
 
         # Генерируем bio с помощью AI
-        generated_bio = await groq_service.generate_from_text(
+        generated_bio = await gigachat_service.generate_from_text(
             bio_text=card.bio,
             name=card.display_name,
             random_facts=card.random_facts,
@@ -481,10 +481,10 @@ async def generate_tags_from_text(
     data: TextTagGenerationRequest,
     owner_id: UUID = Query(..., description="ID владельца"),
     card_service: BusinessCardService = Depends(get_business_card_service),
-    text_tags_service=Depends(get_groq_text_tags_service),
+    text_tags_service=Depends(get_gigachat_text_tags_service),
 ):
     """
-    Сгенерировать search_tags из произвольного текста через Groq AI.
+    Сгенерировать search_tags из произвольного текста через GigaChat AI.
 
     Используется когда пользователь хочет описать свои навыки в свободной форме
     и получить список тегов для выбора.
@@ -503,7 +503,7 @@ async def generate_tags_from_text(
         if card.owner_id != owner_id:
             raise HTTPException(status_code=403, detail="Access denied")
 
-        # Генерируем теги из текста через Groq
+        # Генерируем теги из текста через GigaChat
         tags = await text_tags_service.generate_tags_from_text(data.text)
 
         return TextTagGenerationResponse(

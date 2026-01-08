@@ -174,7 +174,7 @@ class CardQRCodeResponse(BaseModel):
     card_id: UUID
 
 
-# ============ Text Tags Generation (Groq) ============
+# ============ Text Tags Generation (GigaChat) ============
 
 
 class TextTagGenerationRequest(BaseModel):

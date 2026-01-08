@@ -41,13 +41,15 @@ class JWTConfig(BaseSettings):
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
 
 
-class GroqConfig(BaseSettings):
-    """Конфигурация Groq LLM API."""
+class GigaChatConfig(BaseSettings):
+    """Конфигурация GigaChat API от Сбера."""
 
-    api_key: str = ""
-    model: str = "llama-3.3-70b-versatile"
+    credentials: str = ""  # Base64 encoded client_id:client_secret
+    scope: str = "GIGACHAT_API_PERS"  # GIGACHAT_API_PERS или GIGACHAT_API_CORP
+    model: str = "GigaChat"  # GigaChat, GigaChat-Pro, GigaChat-Max
     max_tokens: int = 500
     temperature: float = 0.7
+    verify_ssl_certs: bool = False  # Для разработки без Russian CA cert
 
 
 class LocalLLMConfig(BaseSettings):
@@ -139,7 +141,7 @@ class Config(BaseSettings):
     )
     logging: LoggingConfig = LoggingConfig()
     jwt: JWTConfig = JWTConfig()
-    groq: GroqConfig = GroqConfig()
+    gigachat: GigaChatConfig = GigaChatConfig()
     local_llm: LocalLLMConfig = LocalLLMConfig()
     embedding: EmbeddingConfig = EmbeddingConfig()
     cloudinary: CloudinaryConfig = CloudinaryConfig()

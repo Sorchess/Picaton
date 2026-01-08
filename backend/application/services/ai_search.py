@@ -8,7 +8,7 @@ import logging
 from dataclasses import dataclass
 from functools import lru_cache
 
-from infrastructure.llm.groq_client import GroqClient, GroqError
+from infrastructure.llm.gigachat_client import GigaChatClient, GigaChatError
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +59,8 @@ class AISearchService:
     _cache: dict[str, list[str]] = {}
     _cache_max_size: int = 500
 
-    def __init__(self, groq_client: GroqClient):
-        self._groq = groq_client
+    def __init__(self, gigachat_client: GigaChatClient):
+        self._gigachat = gigachat_client
 
     async def expand_query(self, query: str) -> SearchExpansionResult:
         """
@@ -82,8 +82,8 @@ class AISearchService:
                 from_cache=True,
             )
 
-        # Если Groq не сконфигурирован, возвращаем только оригинальный запрос
-        if not self._groq.is_configured:
+        # Если GigaChat не сконфигурирован, возвращаем только оригинальный запрос
+        if not self._gigachat.is_configured:
             return SearchExpansionResult(
                 original_query=query,
                 expanded_tags=[query_lower],
@@ -91,7 +91,7 @@ class AISearchService:
             )
 
         try:
-            response = await self._groq.complete(
+            response = await self._gigachat.complete(
                 system_prompt=SEARCH_EXPANSION_PROMPT,
                 user_prompt=f'Запрос: "{query}"',
                 max_tokens=200,
@@ -110,8 +110,8 @@ class AISearchService:
                 from_cache=False,
             )
 
-        except GroqError as e:
-            logger.warning(f"Groq API error during query expansion: {e}")
+        except GigaChatError as e:
+            logger.warning(f"GigaChat API error during query expansion: {e}")
             return SearchExpansionResult(
                 original_query=query,
                 expanded_tags=[query_lower],

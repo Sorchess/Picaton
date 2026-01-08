@@ -42,8 +42,8 @@ from application.services import (
     CompanyService,
 )
 from application.services.business_card import BusinessCardService
-from application.services.groq_bio import GroqBioGenerator
-from application.services.groq_tags import GroqTagsGenerator
+from application.services.gigachat_bio import GigaChatBioGenerator
+from application.services.gigachat_tags import GigaChatTagsGenerator
 from application.services.local_bio import LocalBioGenerator
 from application.services.local_tags import LocalTagsGenerator
 from application.services.ai_search import AISearchService
@@ -51,10 +51,10 @@ from application.services.card_title import CardTitleGenerator
 from application.services.telegram_auth import TelegramAuthService
 from application.services.email_verification import EmailVerificationService
 from application.services.skill_endorsement import SkillEndorsementService
-from application.services.groq_query_classifier import GroqQueryClassifier
-from application.services.groq_task_decomposer import GroqTaskDecomposer
-from application.services.groq_text_tags import GroqTextTagsGenerator
-from infrastructure.llm.groq_client import GroqClient
+from application.services.gigachat_query_classifier import GigaChatQueryClassifier
+from application.services.gigachat_task_decomposer import GigaChatTaskDecomposer
+from application.services.gigachat_text_tags import GigaChatTextTagsGenerator
+from infrastructure.llm.gigachat_client import GigaChatClient
 from infrastructure.llm.local_llm_client import LocalLLMClient
 from infrastructure.storage import CloudinaryService
 from infrastructure.email import SmtpEmailBackend
@@ -187,13 +187,13 @@ def get_ai_bio_service() -> AIBioGeneratorService:
 
     Приоритет:
     1. Локальная модель (T-lite) если enabled
-    2. Groq API если api_key настроен
+    2. GigaChat API если credentials настроены
     3. Fallback на rule-based генератор
     """
     if settings.local_llm.enabled:
         return AIBioGeneratorService(LocalBioGenerator())
-    if settings.groq.api_key:
-        return AIBioGeneratorService(GroqBioGenerator())
+    if settings.gigachat.credentials:
+        return AIBioGeneratorService(GigaChatBioGenerator())
     return AIBioGeneratorService(AIBioGenerator())
 
 
@@ -203,23 +203,23 @@ def get_ai_tags_service() -> AITagsGeneratorService:
 
     Приоритет:
     1. Локальная модель (T-lite) если enabled
-    2. Groq API если api_key настроен
+    2. GigaChat API если credentials настроены
     3. Fallback на rule-based генератор
     """
     if settings.local_llm.enabled:
         return AITagsGeneratorService(LocalTagsGenerator())
-    if settings.groq.api_key:
-        return AITagsGeneratorService(GroqTagsGenerator())
+    if settings.gigachat.credentials:
+        return AITagsGeneratorService(GigaChatTagsGenerator())
     return AITagsGeneratorService(MockAITagsGenerator())
 
 
-def get_groq_bio_service() -> GroqBioGenerator:
+def get_gigachat_bio_service() -> GigaChatBioGenerator:
     """
-    Получить Groq сервис генерации биографий.
+    Получить GigaChat сервис генерации биографий.
 
     Используется для генерации AI-презентаций для карточек.
     """
-    return GroqBioGenerator()
+    return GigaChatBioGenerator()
 
 
 def get_local_bio_service() -> LocalBioGenerator:
@@ -248,13 +248,13 @@ def get_business_card_service(
     return BusinessCardService(card_repo, user_repo)
 
 
-def get_groq_tags_service() -> GroqTagsGenerator:
+def get_gigachat_tags_service() -> GigaChatTagsGenerator:
     """
-    Получить Groq сервис генерации тегов для контактов.
+    Получить GigaChat сервис генерации тегов для контактов.
 
     Используется для генерации тегов из заметок о контактах.
     """
-    return GroqTagsGenerator()
+    return GigaChatTagsGenerator()
 
 
 def get_card_title_generator() -> CardTitleGenerator:
@@ -287,11 +287,11 @@ def get_contact_service(
 
 def get_ai_search_service() -> AISearchService:
     """Получить AI-сервис для расширения поисковых запросов."""
-    groq_client = GroqClient()
-    return AISearchService(groq_client)
+    gigachat_client = GigaChatClient()
+    return AISearchService(gigachat_client)
 
 
-def get_groq_query_classifier() -> GroqQueryClassifier:
+def get_gigachat_query_classifier() -> GigaChatQueryClassifier:
     """
     Получить сервис классификации запросов (task/skill).
 
@@ -299,22 +299,22 @@ def get_groq_query_classifier() -> GroqQueryClassifier:
     - TASK: задача/проблема (например "создать сайт")
     - SKILL: навык/технология (например "python", "react разработчик")
     """
-    groq_client = GroqClient()
-    return GroqQueryClassifier(groq_client)
+    gigachat_client = GigaChatClient()
+    return GigaChatQueryClassifier(gigachat_client)
 
 
-def get_groq_task_decomposer() -> GroqTaskDecomposer:
+def get_gigachat_task_decomposer() -> GigaChatTaskDecomposer:
     """
     Получить сервис декомпозиции задач в теги.
 
     Используется для преобразования описания задачи в список навыков:
     "Нужно создать сайт" → ["веб-разработчик", "frontend", "html", "css", ...]
     """
-    groq_client = GroqClient()
-    return GroqTaskDecomposer(groq_client)
+    gigachat_client = GigaChatClient()
+    return GigaChatTaskDecomposer(gigachat_client)
 
 
-def get_groq_text_tags_service() -> GroqTextTagsGenerator:
+def get_gigachat_text_tags_service() -> GigaChatTextTagsGenerator:
     """
     Получить сервис генерации тегов из произвольного текста.
 
@@ -322,8 +322,8 @@ def get_groq_text_tags_service() -> GroqTextTagsGenerator:
     "Я занимаюсь веб-разработкой, работаю с React и Python..."
     → ["веб-разработка", "react", "python", "frontend", "backend", ...]
     """
-    groq_client = GroqClient()
-    return GroqTextTagsGenerator(groq_client)
+    gigachat_client = GigaChatClient()
+    return GigaChatTextTagsGenerator(gigachat_client)
 
 
 def get_search_service(
@@ -331,8 +331,8 @@ def get_search_service(
     card_repo: BusinessCardRepository,
     contact_repo: ContactRepository,
     ai_search: AISearchService = Depends(get_ai_search_service),
-    query_classifier: GroqQueryClassifier = Depends(get_groq_query_classifier),
-    task_decomposer: GroqTaskDecomposer = Depends(get_groq_task_decomposer),
+    query_classifier: GigaChatQueryClassifier = Depends(get_gigachat_query_classifier),
+    task_decomposer: GigaChatTaskDecomposer = Depends(get_gigachat_task_decomposer),
 ) -> AssociativeSearchService:
     """Получить сервис умного поиска с автоопределением типа запроса."""
     return AssociativeSearchService(

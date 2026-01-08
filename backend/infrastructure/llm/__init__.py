@@ -1,6 +1,6 @@
 """LLM integration module."""
 
-from .groq_client import GroqClient, GroqResponse
+from .gigachat_client import GigaChatClient, GigaChatResponse
 from .prompts import (
     BIO_GENERATION_PROMPT,
     TAGS_GENERATION_PROMPT,
@@ -8,8 +8,8 @@ from .prompts import (
 )
 
 __all__ = [
-    "GroqClient",
-    "GroqResponse",
+    "GigaChatClient",
+    "GigaChatResponse",
     "BIO_GENERATION_PROMPT",
     "TAGS_GENERATION_PROMPT",
     "CONTACT_TAGS_PROMPT",

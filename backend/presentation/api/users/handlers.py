@@ -51,7 +51,7 @@ from infrastructure.dependencies import (
     get_import_service,
     get_contact_sync_service,
     get_ai_tags_service,
-    get_groq_tags_service,
+    get_gigachat_tags_service,
     get_cloudinary_service,
     get_business_card_service,
     get_card_title_generator,
@@ -74,7 +74,7 @@ router = APIRouter()
 @router.post("/contacts/generate-tags", response_model=GenerateContactTagsResponse)
 async def generate_contact_tags(
     data: GenerateContactTagsRequest,
-    groq_service=Depends(get_groq_tags_service),
+    gigachat_service=Depends(get_gigachat_tags_service),
 ):
     """
     Сгенерировать теги для контакта из заметок с помощью AI.
@@ -83,7 +83,7 @@ async def generate_contact_tags(
     AI анализирует заметки и предлагает теги для облака поиска.
     """
     try:
-        tags = await groq_service.generate_tags_from_notes(data.notes)
+        tags = await gigachat_service.generate_tags_from_notes(data.notes)
         return GenerateContactTagsResponse(tags=tags)
     except Exception as e:
         raise HTTPException(

@@ -1,5 +1,5 @@
 """
-Генерация search_tags из свободного текста через Groq.
+Генерация search_tags из свободного текста через GigaChat.
 Используется для генерации тегов из описания навыков пользователя.
 """
 
@@ -7,7 +7,7 @@ import json
 import logging
 import re
 
-from infrastructure.llm.groq_client import GroqClient, GroqError
+from infrastructure.llm.gigachat_client import GigaChatClient, GigaChatError
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ TEXT_TAGS_GENERATION_PROMPT = """Извлеки профессиональные
 """
 
 
-# Fallback keywords для случаев когда Groq недоступен
+# Fallback keywords для случаев когда GigaChat недоступен
 KEYWORD_TAG_MAP = {
     # Языки программирования
     "python": ["python", "backend"],
@@ -124,7 +124,7 @@ KEYWORD_TAG_MAP = {
 }
 
 
-class GroqTextTagsGenerator:
+class GigaChatTextTagsGenerator:
     """
     Генератор search_tags из произвольного текста.
 
@@ -135,8 +135,8 @@ class GroqTextTagsGenerator:
     _cache: dict[str, list[str]] = {}
     _cache_max_size: int = 200
 
-    def __init__(self, groq_client: GroqClient):
-        self._groq = groq_client
+    def __init__(self, gigachat_client: GigaChatClient):
+        self._gigachat = gigachat_client
 
     async def generate_tags_from_text(self, text: str) -> list[str]:
         """
@@ -160,14 +160,14 @@ class GroqTextTagsGenerator:
             logger.debug(f"Text tags cache hit for: '{text[:50]}...'")
             return self._cache[cache_key]
 
-        # Если Groq не сконфигурирован, используем fallback
-        if not self._groq.is_configured:
+        # Если GigaChat не сконфигурирован, используем fallback
+        if not self._gigachat.is_configured:
             result = self._fallback_extract(text_lower)
-            logger.warning(f"Groq not configured, using fallback for text tags")
+            logger.warning("GigaChat not configured, using fallback for text tags")
             return result
 
         try:
-            response = await self._groq.complete(
+            response = await self._gigachat.complete(
                 system_prompt=TEXT_TAGS_GENERATION_PROMPT.format(text=text),
                 user_prompt=text,
                 max_tokens=200,
@@ -180,8 +180,8 @@ class GroqTextTagsGenerator:
             logger.info(f"Generated {len(tags)} tags from text")
             return tags
 
-        except GroqError as e:
-            logger.warning(f"Groq error during text tags generation: {e}")
+        except GigaChatError as e:
+            logger.warning(f"GigaChat error during text tags generation: {e}")
             return self._fallback_extract(text_lower)
         except Exception as e:
             logger.error(f"Unexpected error during text tags generation: {e}")
@@ -232,7 +232,7 @@ class GroqTextTagsGenerator:
         """
         Fallback извлечение тегов на основе ключевых слов.
 
-        Используется когда Groq недоступен.
+        Используется когда GigaChat недоступен.
         """
         result = set()
 
