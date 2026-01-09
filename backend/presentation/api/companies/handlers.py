@@ -458,7 +458,17 @@ async def get_company_members(
                 email=m["user"].email,
                 avatar_url=m["user"].avatar_url,
             ),
-            role=m["role"],
+            role=(
+                CompanyRoleInfo(
+                    id=m["role"].id,
+                    name=m["role"].name,
+                    color=m["role"].color,
+                    priority=m["role"].priority,
+                    is_system=m["role"].is_system,
+                )
+                if m["role"]
+                else None
+            ),
             selected_card_id=m["selected_card_id"],
             joined_at=m["joined_at"],
         )

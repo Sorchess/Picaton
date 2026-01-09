@@ -345,11 +345,15 @@ class CompanyService:
         for m in memberships:
             user = await self._user_repo.get_by_id(m.user_id)
             if user:
+                # Получаем роль по role_id
+                role = None
+                if m.role_id and self._role_repo:
+                    role = await self._role_repo.get_by_id(m.role_id)
                 result.append(
                     {
                         "id": m.id,
                         "user": user,
-                        "role_id": m.role_id,
+                        "role": role,
                         "position": m.position,
                         "department": m.department,
                         "selected_card_id": m.selected_card_id,

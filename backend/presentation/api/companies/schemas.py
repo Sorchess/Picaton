@@ -101,7 +101,7 @@ class CompanyMemberResponse(BaseModel):
 
     id: UUID
     user: MemberUserInfo
-    role: CompanyRoleInfo
+    role: CompanyRoleInfo | None = None
     selected_card_id: UUID | None = None
     joined_at: datetime
 
