@@ -3,11 +3,13 @@ import type {
   CompanyWithRole,
   CompanyMember,
   CompanyInvitation,
-  CompanyRole,
+  CompanyRoleInfo,
 } from "@/entities/company";
 import type { BusinessCard } from "@/entities/business-card";
 import {
-  roleLabels,
+  getRoleName,
+  getRoleColor,
+  isOwnerRole,
   canManageMembers,
   canInvite,
   canDeleteCompany,
@@ -22,6 +24,7 @@ import {
   Input,
   Loader,
 } from "@/shared";
+import { RoleSelect } from "./RoleSelect";
 import "./CompanyDetail.scss";
 
 type SidebarTab = "members" | "settings";
@@ -39,10 +42,12 @@ interface CompanyDetailProps {
   onSelectCard?: (cardId: string | null) => Promise<void>;
   // Просмотр визитки участника
   onViewMemberCard?: (userId: string, cardId: string) => void;
+  // Доступные роли в компании
+  availableRoles?: CompanyRoleInfo[];
   onBack: () => void;
-  onInvite: (email: string, role: CompanyRole) => Promise<void>;
+  onInvite: (email: string, roleId?: string) => Promise<void>;
   onCancelInvitation: (invitationId: string) => Promise<void>;
-  onChangeRole: (userId: string, newRole: CompanyRole) => Promise<void>;
+  onChangeRole: (userId: string, newRoleId: string) => Promise<void>;
   onRemoveMember: (userId: string) => Promise<void>;
   onLeaveCompany: () => Promise<void>;
   onUpdateCompany: (data: {
@@ -64,6 +69,7 @@ export function CompanyDetail({
   selectedCardId,
   onSelectCard,
   onViewMemberCard,
+  availableRoles = [],
   onBack,
   onInvite,
   onCancelInvitation,
@@ -82,9 +88,14 @@ export function CompanyDetail({
   const [isCardSelectModalOpen, setIsCardSelectModalOpen] = useState(false);
   const [isSelectingCard, setIsSelectingCard] = useState(false);
 
+  // Находим роль Member по умолчанию для приглашений
+  const defaultRole =
+    availableRoles.find((r) => r.name === "Member") ||
+    availableRoles[availableRoles.length - 1];
+
   const [inviteForm, setInviteForm] = useState({
     email: "",
-    role: "member" as CompanyRole,
+    roleId: defaultRole?.id || "",
   });
   const [editForm, setEditForm] = useState({
     name: company.company.name,
@@ -98,8 +109,8 @@ export function CompanyDetail({
     if (!inviteForm.email.trim()) return;
     setIsSaving(true);
     try {
-      await onInvite(inviteForm.email, inviteForm.role);
-      setInviteForm({ email: "", role: "member" });
+      await onInvite(inviteForm.email, inviteForm.roleId || undefined);
+      setInviteForm({ email: "", roleId: defaultRole?.id || "" });
       setIsInviteModalOpen(false);
     } finally {
       setIsSaving(false);
@@ -167,6 +178,50 @@ export function CompanyDetail({
           </div>
         </div>
 
+        {/* Блок с ролью и правами */}
+        <div className="company-detail__role-info">
+          <div
+            className="company-detail__role-badge"
+            style={{
+              backgroundColor: company.role
+                ? `${getRoleColor(company.role)}15`
+                : undefined,
+              borderColor: company.role
+                ? getRoleColor(company.role)
+                : undefined,
+            }}
+          >
+            <span
+              className="company-detail__role-dot"
+              style={{ backgroundColor: getRoleColor(company.role) }}
+            />
+            <span className="company-detail__role-name">
+              {isOwnerRole(company.role) && "👑 "}
+              {getRoleName(company.role)}
+            </span>
+          </div>
+          <div className="company-detail__permissions">
+            {canInvite(company.role) && (
+              <span className="company-detail__perm-item company-detail__perm-item--active">
+                ✓ Приглашения
+              </span>
+            )}
+            {canManageMembers(company.role) && (
+              <span className="company-detail__perm-item company-detail__perm-item--active">
+                ✓ Управление
+              </span>
+            )}
+            {canDeleteCompany(company.role) && (
+              <span className="company-detail__perm-item company-detail__perm-item--active">
+                ✓ Удаление
+              </span>
+            )}
+            {!canInvite(company.role) && (
+              <span className="company-detail__perm-item">Только просмотр</span>
+            )}
+          </div>
+        </div>
+
         <nav className="company-detail__nav">
           <button
             className={`company-detail__nav-item ${
@@ -195,18 +250,12 @@ export function CompanyDetail({
         </nav>
 
         <div className="company-detail__sidebar-footer">
-          <Tag
-            size="sm"
-            variant={company.role === "owner" ? "outline" : "default"}
-          >
-            {roleLabels[company.role]}
-          </Tag>
           {!canDeleteCompany(company.role) && (
             <button
               className="company-detail__leave-btn"
               onClick={onLeaveCompany}
             >
-              Покинуть
+              Покинуть компанию
             </button>
           )}
         </div>
@@ -278,7 +327,30 @@ export function CompanyDetail({
                         <div className="invitation-item__icon">📧</div>
                         <div className="invitation-item__info">
                           <Typography variant="body">{inv.email}</Typography>
-                          <Tag size="sm">{roleLabels[inv.role]}</Tag>
+                          <div className="invitation-item__role">
+                            <span
+                              className="invitation-item__role-dot"
+                              style={{
+                                backgroundColor: getRoleColor(inv.role),
+                              }}
+                            />
+                            <Tag
+                              size="sm"
+                              style={{
+                                backgroundColor: inv.role
+                                  ? `${getRoleColor(inv.role)}15`
+                                  : undefined,
+                                borderColor: inv.role
+                                  ? getRoleColor(inv.role)
+                                  : undefined,
+                                color: inv.role
+                                  ? getRoleColor(inv.role)
+                                  : undefined,
+                              }}
+                            >
+                              {getRoleName(inv.role)}
+                            </Tag>
+                          </div>
                         </div>
                         <button
                           className="invitation-item__cancel"
@@ -337,34 +409,61 @@ export function CompanyDetail({
                         </span>
                       )}
                     </div>
-                    <Tag
-                      size="sm"
-                      variant={member.role === "owner" ? "outline" : "default"}
-                    >
-                      {roleLabels[member.role]}
-                    </Tag>
+                    <div className="member-card__role-badge">
+                      <span
+                        className="member-card__role-dot"
+                        style={{ backgroundColor: getRoleColor(member.role) }}
+                      />
+                      <Tag
+                        size="sm"
+                        variant={
+                          isOwnerRole(member.role) ? "outline" : "default"
+                        }
+                        style={{
+                          backgroundColor: member.role
+                            ? `${getRoleColor(member.role)}15`
+                            : undefined,
+                          borderColor: member.role
+                            ? getRoleColor(member.role)
+                            : undefined,
+                          color: member.role
+                            ? getRoleColor(member.role)
+                            : undefined,
+                        }}
+                      >
+                        {isOwnerRole(member.role) && "👑 "}
+                        {getRoleName(member.role)}
+                      </Tag>
+                    </div>
                     {canChangeRoles(company.role) &&
                       member.user.id !== currentUserId &&
-                      member.role !== "owner" && (
+                      !isOwnerRole(member.role) && (
                         <div
                           className="member-card__actions"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <select
-                            value={member.role}
+                            className="member-card__role-select"
+                            value={member.role?.id || ""}
                             onChange={(e) =>
-                              onChangeRole(
-                                member.user.id,
-                                e.target.value as CompanyRole
-                              )
+                              onChangeRole(member.user.id, e.target.value)
                             }
+                            style={{
+                              borderColor: getRoleColor(member.role),
+                            }}
                           >
-                            <option value="admin">Администратор</option>
-                            <option value="member">Участник</option>
+                            {availableRoles
+                              .filter((r) => !isOwnerRole(r))
+                              .map((role) => (
+                                <option key={role.id} value={role.id}>
+                                  {role.name}
+                                </option>
+                              ))}
                           </select>
                           <button
                             className="member-card__remove"
                             onClick={() => onRemoveMember(member.user.id)}
+                            title="Удалить участника"
                           >
                             ✕
                           </button>
@@ -466,19 +565,13 @@ export function CompanyDetail({
             placeholder="user@example.com"
           />
           <div className="form-field">
-            <label>Роль</label>
-            <select
-              value={inviteForm.role}
-              onChange={(e) =>
-                setInviteForm({
-                  ...inviteForm,
-                  role: e.target.value as CompanyRole,
-                })
-              }
-            >
-              <option value="member">Участник</option>
-              <option value="admin">Администратор</option>
-            </select>
+            <label>Роль для приглашаемого участника</label>
+            <RoleSelect
+              roles={availableRoles}
+              selectedRoleId={inviteForm.roleId}
+              onChange={(roleId) => setInviteForm({ ...inviteForm, roleId })}
+              excludeOwner={true}
+            />
           </div>
           <div className="form-actions">
             <Button variant="ghost" onClick={() => setIsInviteModalOpen(false)}>

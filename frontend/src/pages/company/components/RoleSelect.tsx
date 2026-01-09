@@ -1,0 +1,91 @@
+import type { CompanyRoleInfo } from "@/entities/company";
+import { isOwnerRole } from "@/entities/company";
+import "./RoleSelect.scss";
+
+interface RoleSelectProps {
+  roles: CompanyRoleInfo[];
+  selectedRoleId: string;
+  onChange: (roleId: string) => void;
+  excludeOwner?: boolean;
+  disabled?: boolean;
+  showDescription?: boolean;
+}
+
+// Описания ролей
+function getRoleDescription(role: CompanyRoleInfo): string {
+  const name = role.name.toLowerCase();
+  if (name === "owner" || role.priority === 0) {
+    return "Полный доступ, удаление компании";
+  }
+  if (name === "admin" || role.priority === 1) {
+    return "Управление участниками и настройками";
+  }
+  return "Базовый доступ к компании";
+}
+
+export function RoleSelect({
+  roles,
+  selectedRoleId,
+  onChange,
+  excludeOwner = true,
+  disabled = false,
+  showDescription = true,
+}: RoleSelectProps) {
+  const filteredRoles = excludeOwner
+    ? roles.filter((r) => !isOwnerRole(r))
+    : roles;
+
+  const selectedRole = filteredRoles.find((r) => r.id === selectedRoleId);
+
+  return (
+    <div className="role-select">
+      <div className="role-select__options">
+        {filteredRoles.map((role) => (
+          <button
+            key={role.id}
+            type="button"
+            className={`role-select__option ${
+              selectedRoleId === role.id ? "role-select__option--selected" : ""
+            }`}
+            onClick={() => onChange(role.id)}
+            disabled={disabled}
+            style={
+              {
+                "--role-color": role.color,
+                "--role-color-bg": `${role.color}20`,
+              } as React.CSSProperties
+            }
+          >
+            <span
+              className="role-select__color"
+              style={{ backgroundColor: role.color }}
+            />
+            <div className="role-select__content">
+              <span className="role-select__name">{role.name}</span>
+              {showDescription && (
+                <span className="role-select__desc">
+                  {getRoleDescription(role)}
+                </span>
+              )}
+            </div>
+            {selectedRoleId === role.id && (
+              <span className="role-select__check">✓</span>
+            )}
+          </button>
+        ))}
+      </div>
+      {selectedRole && showDescription && (
+        <div
+          className="role-select__preview"
+          style={{ borderColor: selectedRole.color }}
+        >
+          <span
+            className="role-select__preview-dot"
+            style={{ backgroundColor: selectedRole.color }}
+          />
+          <span>Выбрано: {selectedRole.name}</span>
+        </div>
+      )}
+    </div>
+  );
+}

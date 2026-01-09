@@ -1,5 +1,5 @@
 import type { CompanyWithRole } from "@/entities/company";
-import { roleLabels } from "@/entities/company";
+import { getRoleName, getRoleColor, isOwnerRole } from "@/entities/company";
 import { Typography, Tag, Button } from "@/shared";
 import "./CompanyList.scss";
 
@@ -86,12 +86,28 @@ export function CompanyList({
               )}
             </div>
             <div className="company-card__footer">
-              <Tag
-                size="sm"
-                variant={item.role === "owner" ? "outline" : "default"}
-              >
-                {roleLabels[item.role]}
-              </Tag>
+              <div className="company-card__role">
+                <span
+                  className="company-card__role-dot"
+                  style={{ backgroundColor: getRoleColor(item.role) }}
+                />
+                <Tag
+                  size="sm"
+                  variant={isOwnerRole(item.role) ? "outline" : "default"}
+                  style={{
+                    backgroundColor: item.role
+                      ? `${getRoleColor(item.role)}15`
+                      : undefined,
+                    borderColor: item.role
+                      ? getRoleColor(item.role)
+                      : undefined,
+                    color: item.role ? getRoleColor(item.role) : undefined,
+                  }}
+                >
+                  {isOwnerRole(item.role) && "👑 "}
+                  {getRoleName(item.role)}
+                </Tag>
+              </div>
               <span className="company-card__arrow">→</span>
             </div>
           </div>

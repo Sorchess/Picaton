@@ -1,6 +1,17 @@
 // Типы для компаний
 
-export type CompanyRole = "owner" | "admin" | "member";
+// Новая система ролей - роль как объект
+export interface CompanyRoleInfo {
+  id: string;
+  name: string;
+  color: string;
+  priority: number;
+  is_system: boolean;
+}
+
+// Deprecated: старый тип для обратной совместимости
+export type LegacyCompanyRole = "owner" | "admin" | "member";
+
 export type InvitationStatus =
   | "pending"
   | "accepted"
@@ -23,7 +34,7 @@ export interface Company {
 
 export interface CompanyWithRole {
   company: Company;
-  role: CompanyRole;
+  role: CompanyRoleInfo | null;
   joined_at: string;
 }
 
@@ -36,7 +47,7 @@ export interface CompanyMember {
     email: string;
     avatar_url: string | null;
   };
-  role: CompanyRole;
+  role: CompanyRoleInfo | null;
   selected_card_id: string | null;
   joined_at: string;
 }
@@ -45,7 +56,7 @@ export interface CompanyInvitation {
   id: string;
   company_id: string;
   email: string;
-  role: CompanyRole;
+  role: CompanyRoleInfo | null;
   invited_by_id: string | null;
   status: InvitationStatus;
   created_at: string;
@@ -55,7 +66,7 @@ export interface CompanyInvitation {
 export interface InvitationWithCompany {
   id: string;
   company: Company;
-  role: CompanyRole;
+  role: CompanyRoleInfo | null;
   invited_by: {
     id: string;
     first_name: string;
@@ -98,7 +109,7 @@ export interface UpdateCompanyRequest {
 
 export interface CreateInvitationRequest {
   email: string;
-  role?: CompanyRole;
+  role_id?: string; // ID роли для приглашения
 }
 
 export interface AcceptInvitationRequest {
@@ -115,31 +126,41 @@ export interface MessageResponse {
   success: boolean;
 }
 
-// Role display helpers
-export const roleLabels: Record<CompanyRole, string> = {
-  owner: "Владелец",
-  admin: "Администратор",
-  member: "Участник",
-};
-
-export const roleColors: Record<CompanyRole, string> = {
-  owner: "#f59e0b",
-  admin: "#3b82f6",
-  member: "#6b7280",
-};
-
-export function canManageMembers(role: CompanyRole): boolean {
-  return role === "owner" || role === "admin";
+// Role helper functions
+export function getRoleName(role: CompanyRoleInfo | null): string {
+  if (!role) return "Участник";
+  return role.name;
 }
 
-export function canInvite(role: CompanyRole): boolean {
-  return role === "owner" || role === "admin";
+export function getRoleColor(role: CompanyRoleInfo | null): string {
+  if (!role) return "#6b7280";
+  return role.color;
 }
 
-export function canDeleteCompany(role: CompanyRole): boolean {
-  return role === "owner";
+export function isOwnerRole(role: CompanyRoleInfo | null): boolean {
+  if (!role) return false;
+  return role.is_system && role.priority === 0;
 }
 
-export function canChangeRoles(role: CompanyRole): boolean {
-  return role === "owner";
+export function isAdminRole(role: CompanyRoleInfo | null): boolean {
+  if (!role) return false;
+  return role.is_system && role.priority === 1;
+}
+
+export function canManageMembers(role: CompanyRoleInfo | null): boolean {
+  if (!role) return false;
+  return isOwnerRole(role) || isAdminRole(role);
+}
+
+export function canInvite(role: CompanyRoleInfo | null): boolean {
+  if (!role) return false;
+  return isOwnerRole(role) || isAdminRole(role);
+}
+
+export function canDeleteCompany(role: CompanyRoleInfo | null): boolean {
+  return isOwnerRole(role);
+}
+
+export function canChangeRoles(role: CompanyRoleInfo | null): boolean {
+  return isOwnerRole(role);
 }

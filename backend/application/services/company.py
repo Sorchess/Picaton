@@ -140,10 +140,54 @@ class CompanyService:
         return role is not None and (role.is_owner_role() or role.is_admin_role())
 
     async def _get_member_role(self, member: CompanyMember):
-        """Получить роль члена компании."""
-        if not member.role_id or not self._role_repo:
+        """
+        Получить роль члена компании.
+
+        Если role_id отсутствует (старые данные до миграции),
+        пытается определить роль по владельцу компании.
+        """
+        if not self._role_repo:
             return None
-        return await self._role_repo.get_by_id(member.role_id)
+
+        # Если role_id есть, возвращаем роль по ID
+        if member.role_id:
+            return await self._role_repo.get_by_id(member.role_id)
+
+        # Fallback для старых данных без role_id
+        # Получаем компанию для проверки владельца
+        company = await self._company_repo.get_by_id(member.company_id)
+        if not company:
+            return None
+
+        # Проверяем, есть ли системные роли для этой компании
+        system_roles = await self._role_repo.get_system_roles(member.company_id)
+        if not system_roles:
+            # Создаём системные роли если их нет
+            system_roles = await self._role_repo.create_system_roles(member.company_id)
+
+        # Определяем роль: владелец или обычный член
+        if company.owner_id == member.user_id:
+            # Возвращаем роль владельца (первая в списке с priority=0)
+            owner_role = await self._role_repo.get_owner_role(member.company_id)
+            if owner_role:
+                # Обновляем role_id у члена для будущих запросов
+                member.role_id = owner_role.id
+                await self._member_repo.update(member)
+            return owner_role
+        else:
+            # Возвращаем роль по умолчанию или Member
+            default_role = await self._role_repo.get_default_role(member.company_id)
+            if not default_role:
+                # Получаем роль Member (последняя в системных ролях)
+                for role in system_roles:
+                    if role.name == "Member":
+                        default_role = role
+                        break
+            if default_role:
+                # Обновляем role_id у члена для будущих запросов
+                member.role_id = default_role.id
+                await self._member_repo.update(member)
+            return default_role
 
     async def create_company(
         self,
@@ -683,8 +727,9 @@ class CompanyService:
         Returns:
             Список приглашений
         """
-        member = await self._member_repo.get_by_company_and_user(company_id, user_id)
-        if not member or not member.can_manage_members():
+        # Проверяем права через роль
+        is_admin = await self._is_admin_or_higher(company_id, user_id)
+        if not is_admin:
             raise PermissionDeniedError(
                 "Только владелец или администратор может просматривать приглашения"
             )

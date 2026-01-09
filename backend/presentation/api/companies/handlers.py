@@ -492,7 +492,7 @@ async def update_member_role(
         await company_service.update_member_role(
             company_id=company_id,
             member_user_id=user_id,
-            new_role=data.role,
+            new_role_id=data.role_id,
             admin_user_id=current_user.id,
         )
     except PermissionDeniedError as e:

@@ -11,10 +11,16 @@ import type {
   AcceptInvitationRequest,
   DeclineInvitationRequest,
   MessageResponse,
-  CompanyRole,
   InvitationStatus,
   CompanyCardAssignment,
+  CompanyRoleInfo,
 } from "./types";
+
+// Тип ответа для списка ролей
+interface RolesListResponse {
+  roles: CompanyRoleInfo[];
+  total: number;
+}
 
 export const companyApi = {
   // ==================== Company CRUD ====================
@@ -46,6 +52,14 @@ export const companyApi = {
   delete: (companyId: string) =>
     api.delete<MessageResponse>(`/companies/${companyId}`),
 
+  // ==================== Roles ====================
+
+  /**
+   * Получить роли компании
+   */
+  getRoles: (companyId: string) =>
+    api.get<RolesListResponse>(`/companies/${companyId}/roles`),
+
   // ==================== Members ====================
 
   /**
@@ -59,10 +73,10 @@ export const companyApi = {
   /**
    * Изменить роль члена
    */
-  updateMemberRole: (companyId: string, userId: string, role: CompanyRole) =>
+  updateMemberRole: (companyId: string, userId: string, roleId: string) =>
     api.patch<MessageResponse>(
       `/companies/${companyId}/members/${userId}/role`,
-      { role }
+      { role_id: roleId }
     ),
 
   /**

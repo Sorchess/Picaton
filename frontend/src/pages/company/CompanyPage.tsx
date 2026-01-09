@@ -5,10 +5,10 @@ import {
   type CompanyMember,
   type CompanyInvitation,
   type InvitationWithCompany,
-  type CompanyRole,
+  type CompanyRoleInfo,
   type CompanyCardAssignment,
   companyApi,
-  roleLabels,
+  getRoleName,
   canManageMembers,
 } from "@/entities/company";
 import type {
@@ -68,6 +68,9 @@ export function CompanyPage() {
   // Члены компании
   const [members, setMembers] = useState<CompanyMember[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+
+  // Роли компании
+  const [availableRoles, setAvailableRoles] = useState<CompanyRoleInfo[]>([]);
 
   // Приглашения компании
   const [invitations, setInvitations] = useState<CompanyInvitation[]>([]);
@@ -155,9 +158,19 @@ export function CompanyPage() {
     }
   }, []);
 
+  // Загрузка ролей компании
+  const loadRoles = useCallback(async (companyId: string) => {
+    try {
+      const data = await companyApi.getRoles(companyId);
+      setAvailableRoles(data.roles);
+    } catch (err) {
+      console.error("Ошибка загрузки ролей:", err);
+    }
+  }, []);
+
   // Загрузка приглашений компании
   const loadInvitations = useCallback(
-    async (companyId: string, role: CompanyRole) => {
+    async (companyId: string, role: CompanyRoleInfo | null) => {
       if (!canManageMembers(role)) return;
       setIsLoadingInvitations(true);
       try {
@@ -346,6 +359,7 @@ export function CompanyPage() {
     setSelectedCompany(company);
     setViewMode("detail");
     loadMembers(company.company.id);
+    loadRoles(company.company.id);
     loadInvitations(company.company.id, company.role);
   };
 
@@ -355,6 +369,7 @@ export function CompanyPage() {
     setSelectedCompany(null);
     setMembers([]);
     setInvitations([]);
+    setAvailableRoles([]);
     loadCompanies();
   };
 
@@ -370,9 +385,10 @@ export function CompanyPage() {
         allow_auto_join: createForm.allow_auto_join,
       });
       await loadCompanies();
+      // После создания роль будет загружена через loadRoles
       const newCompanyWithRole: CompanyWithRole = {
         company: newCompany,
-        role: "owner",
+        role: null, // Роль загрузится при открытии компании
         joined_at: new Date().toISOString(),
       };
       setIsCreateModalOpen(false);
@@ -393,12 +409,12 @@ export function CompanyPage() {
   };
 
   // Отправка приглашения
-  const handleInvite = async (email: string, role: CompanyRole) => {
+  const handleInvite = async (email: string, roleId?: string) => {
     if (!selectedCompany) return;
     try {
       await companyApi.createInvitation(selectedCompany.company.id, {
         email,
-        role,
+        role_id: roleId,
       });
       await loadInvitations(selectedCompany.company.id, selectedCompany.role);
       showSuccess("Приглашение отправлено!");
@@ -424,13 +440,13 @@ export function CompanyPage() {
   };
 
   // Изменить роль члена
-  const handleChangeRole = async (userId: string, newRole: CompanyRole) => {
+  const handleChangeRole = async (userId: string, newRoleId: string) => {
     if (!selectedCompany) return;
     try {
       await companyApi.updateMemberRole(
         selectedCompany.company.id,
         userId,
-        newRole
+        newRoleId
       );
       await loadMembers(selectedCompany.company.id);
       showSuccess("Роль изменена");
@@ -577,6 +593,7 @@ export function CompanyPage() {
             handleSelectCard(selectedCompany.company.id, cardId)
           }
           onViewMemberCard={handleViewMemberCard}
+          availableRoles={availableRoles}
           onBack={handleBackToList}
           onInvite={handleInvite}
           onCancelInvitation={handleCancelInvitation}
@@ -653,7 +670,7 @@ export function CompanyPage() {
                     <strong>{inv.company.name}</strong>
                   </Typography>
                   <Typography variant="small" color="secondary">
-                    Роль: {roleLabels[inv.role]}
+                    Роль: {getRoleName(inv.role)}
                     {inv.invited_by &&
                       ` • От: ${inv.invited_by.first_name} ${inv.invited_by.last_name}`}
                   </Typography>
