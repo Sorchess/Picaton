@@ -1,25 +1,58 @@
+// ==================== Roles Manager ====================
+
 .roles-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
   &__loading,
   &__error {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 60px 40px;
     gap: 16px;
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 16px;
+  }
+
+  &__error-icon {
+    font-size: 2.5rem;
+    opacity: 0.7;
   }
 
   &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
 
     h3 {
       font-family: "Syne", sans-serif;
-      font-size: 1.25rem;
-      font-weight: 600;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0;
     }
+  }
+
+  &__header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__create-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__create-icon {
+    font-size: 1.2rem;
+    font-weight: 300;
   }
 
   &__list {
@@ -29,33 +62,37 @@
   }
 }
 
-// Role card
+// ==================== Role Card ====================
+
 .role-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 14px;
+  padding: 18px 22px;
   background: var(--color-glass-bg);
   border: 1px solid var(--color-glass-border);
-  border-radius: 14px;
-  transition: all 0.2s;
+  border-radius: 16px;
   border-left: 4px solid var(--role-color, var(--color-glass-border));
+  transition: all 0.25s ease;
 
   &:hover {
     background: var(--color-glass-bg-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   }
 
-  &__header {
+  &__main {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
   }
 
   &__color {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px var(--role-color-light);
   }
 
   &__info {
@@ -63,43 +100,77 @@
     min-width: 0;
   }
 
+  &__name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
   &__name {
     font-weight: 600;
-    margin-bottom: 2px;
+    font-size: 1rem;
+  }
+
+  &__badge {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    background: var(--role-color-light, var(--color-bg-secondary));
+    border: 1px solid var(--role-color, var(--color-glass-border));
+    border-radius: 20px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  &__description {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    line-height: 1.4;
   }
 
   &__actions {
     display: flex;
     gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &:hover &__actions {
+    opacity: 1;
   }
 
   &__btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-glass-border);
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 
     &:hover {
       background: var(--color-bg-tertiary);
+      transform: scale(1.05);
+    }
+
+    &--edit:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
     }
 
     &--delete:hover {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.35);
     }
   }
 
   &__permissions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-glass-border);
   }
 
   &__perm-badges {
@@ -109,94 +180,296 @@
   }
 
   &__perm-badge {
-    font-size: 0.7rem;
-    padding: 3px 8px;
-    background: var(--role-color-bg, var(--color-bg-secondary));
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    background: var(--role-color-light, var(--color-bg-secondary));
     border: 1px solid var(--role-color, var(--color-glass-border));
-    border-radius: 4px;
+    border-radius: 6px;
     color: var(--color-text-secondary);
 
     &--more {
       background: var(--color-bg-tertiary);
       border-color: var(--color-glass-border);
+      font-weight: 600;
     }
   }
 }
 
-// Role form
+// ==================== Role Form ====================
+
 .role-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
 
   &__row {
     display: flex;
-    gap: 16px;
-    align-items: flex-end;
+    gap: 20px;
+    align-items: flex-start;
 
-    > :first-child {
-      flex: 1;
+    @media (max-width: 600px) {
+      flex-direction: column;
     }
   }
 
-  &__color {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  &__field {
+    flex: 1;
+    min-width: 0;
+  }
 
-    label {
-      font-size: 0.9rem;
-      color: var(--color-text-secondary);
+  &__label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-bottom: 10px;
+  }
+
+  &__color-picker {
+    flex-shrink: 0;
+  }
+
+  &__color-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 200px;
+  }
+
+  &__color-option {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      transform: scale(1.15);
     }
 
+    &--selected {
+      border-color: var(--color-text-primary);
+      box-shadow: 0 0 0 2px var(--color-bg-primary),
+        0 2px 8px rgba(0, 0, 0, 0.2);
+      transform: scale(1.1);
+    }
+  }
+
+  &__color-custom {
+    position: relative;
+    width: 28px;
+    height: 28px;
+
     input[type="color"] {
-      width: 48px;
-      height: 48px;
+      width: 100%;
+      height: 100%;
       border: 2px solid var(--color-glass-border);
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
-      padding: 4px;
-      background: var(--color-bg-tertiary);
+      padding: 0;
+      background: transparent;
 
       &::-webkit-color-swatch-wrapper {
-        padding: 0;
+        padding: 2px;
       }
 
       &::-webkit-color-swatch {
         border: none;
-        border-radius: 6px;
+        border-radius: 4px;
       }
     }
   }
 
   &__notice {
-    padding: 12px 16px;
-    background: rgba(251, 191, 36, 0.1);
-    border: 1px solid rgba(251, 191, 36, 0.3);
-    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 12px;
+
+    &--warning {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    &--info {
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+    }
+
+    strong {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+  }
+
+  &__notice-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  &__error {
+    font-size: 0.85rem;
+    color: #ef4444;
+    margin-top: -8px;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: 8px;
   }
 
   &__actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    padding-top: 12px;
+    padding-top: 16px;
     border-top: 1px solid var(--color-glass-border);
   }
 }
 
-// Delete confirmation
-.role-delete-confirm {
+// ==================== Role Delete ====================
+
+.role-delete {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+
+  &__icon {
+    font-size: 3rem;
+    opacity: 0.8;
+  }
+
+  &__warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 10px;
+    text-align: left;
+    width: 100%;
+  }
+
+  &__warning-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  &__btn {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+
+    &:hover {
+      background: #dc2626 !important;
+      border-color: #dc2626 !important;
+    }
+  }
+
+  .role-form__actions {
+    width: 100%;
+  }
 }
 
-.role-delete-btn {
-  background: #ef4444 !important;
-  border-color: #ef4444 !important;
+// ==================== Toast ====================
 
-  &:hover {
-    background: #dc2626 !important;
+.roles-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+  animation: slideInToast 0.3s ease;
+
+  &--success {
+    background: #22c55e;
+    color: white;
+  }
+
+  &--error {
+    background: #ef4444;
+    color: white;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ==================== Responsive ====================
+
+@media (max-width: 768px) {
+  .roles-manager {
+    gap: 20px;
+
+    &__header {
+      flex-direction: column;
+      align-items: stretch;
+
+      h3 {
+        font-size: 1.25rem;
+      }
+    }
+  }
+
+  .role-card {
+    padding: 16px 18px;
+
+    &__actions {
+      opacity: 1;
+    }
+
+    &__btn {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  .roles-toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
   }
 }

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { PermissionGroupInfo, Permission } from "@/entities/company";
+import { useState, useMemo } from "react";
+import type { Permission, PermissionGroupInfo } from "@/entities/company";
 import { Typography } from "@/shared";
 import "./PermissionEditor.scss";
 
@@ -10,22 +10,25 @@ interface PermissionEditorProps {
   disabled?: boolean;
 }
 
-// Названия групп на русском
-const GROUP_NAMES: Record<string, string> = {
-  company: "🏢 Компания",
-  roles: "👥 Роли",
-  members: "👤 Сотрудники",
-  cards: "📇 Карточки",
-  tags: "🏷️ Теги",
-  organization: "🏛️ Организация",
+// Иконки для групп прав
+const GROUP_ICONS: Record<string, string> = {
+  company: "🏢",
+  roles: "👔",
+  members: "👥",
+  cards: "📇",
+  tags: "🏷️",
+  organization: "🗂️",
 };
 
-// Права которые скрыты (не реализованы)
-const HIDDEN_PERMISSIONS: Permission[] = [
-  "edit_any_card",
-  "delete_any_card",
-  "edit_any_tags",
-];
+// Названия групп
+const GROUP_NAMES: Record<string, string> = {
+  company: "Компания",
+  roles: "Роли",
+  members: "Сотрудники",
+  cards: "Карточки",
+  tags: "Теги",
+  organization: "Организация",
+};
 
 export function PermissionEditor({
   groups,
@@ -36,28 +39,49 @@ export function PermissionEditor({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(groups.map((g) => g.value))
   );
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Фильтруем скрытые права
-  const filteredGroups = groups
-    .map((group) => ({
-      ...group,
-      permissions: group.permissions.filter(
-        (p) => !HIDDEN_PERMISSIONS.includes(p.value)
-      ),
-    }))
-    .filter((g) => g.permissions.length > 0);
+  // Фильтрация прав по поисковому запросу
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery.trim()) return groups;
 
-  // Подсчёт выбранных прав
-  const totalSelected = selectedPermissions.filter(
-    (p) => !HIDDEN_PERMISSIONS.includes(p)
-  ).length;
-  const totalAvailable = filteredGroups.reduce(
-    (sum, g) => sum + g.permissions.length,
-    0
-  );
+    const query = searchQuery.toLowerCase();
+    return groups
+      .map((group) => ({
+        ...group,
+        permissions: group.permissions.filter(
+          (perm) =>
+            perm.name.toLowerCase().includes(query) ||
+            perm.description.toLowerCase().includes(query) ||
+            perm.value.toLowerCase().includes(query)
+        ),
+      }))
+      .filter((group) => group.permissions.length > 0);
+  }, [groups, searchQuery]);
 
-  // Toggle группы (развернуть/свернуть)
-  const toggleGroupExpand = (groupValue: string) => {
+  // Подсчёт выбранных прав в группе
+  const getGroupStats = (group: PermissionGroupInfo) => {
+    const total = group.permissions.length;
+    const selected = group.permissions.filter((p) =>
+      selectedPermissions.includes(p.value)
+    ).length;
+    return { total, selected };
+  };
+
+  // Проверка, все ли права группы выбраны
+  const isGroupFullySelected = (group: PermissionGroupInfo) => {
+    const stats = getGroupStats(group);
+    return stats.selected === stats.total;
+  };
+
+  // Проверка, есть ли хотя бы одно право группы выбрано
+  const isGroupPartiallySelected = (group: PermissionGroupInfo) => {
+    const stats = getGroupStats(group);
+    return stats.selected > 0 && stats.selected < stats.total;
+  };
+
+  // Переключение группы (развернуть/свернуть)
+  const toggleGroupExpanded = (groupValue: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
       if (next.has(groupValue)) {
@@ -69,43 +93,52 @@ export function PermissionEditor({
     });
   };
 
-  // Toggle одного права
-  const togglePermission = (permission: Permission) => {
+  // Переключение всех прав группы
+  const toggleGroupPermissions = (group: PermissionGroupInfo) => {
     if (disabled) return;
 
-    const newPermissions = selectedPermissions.includes(permission)
-      ? selectedPermissions.filter((p) => p !== permission)
-      : [...selectedPermissions, permission];
+    const groupPermissions = group.permissions.map((p) => p.value);
+    const allSelected = isGroupFullySelected(group);
 
-    onChange(newPermissions);
-  };
-
-  // Выбрать/снять все права в группе
-  const toggleGroupAll = (group: PermissionGroupInfo, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (disabled) return;
-
-    const groupPerms = group.permissions
-      .map((p) => p.value)
-      .filter((p) => !HIDDEN_PERMISSIONS.includes(p));
-
-    const allSelected = groupPerms.every((p) =>
-      selectedPermissions.includes(p)
-    );
-
-    let newPermissions: Permission[];
     if (allSelected) {
-      // Снять все права группы
-      newPermissions = selectedPermissions.filter(
-        (p) => !groupPerms.includes(p)
+      // Убрать все права группы
+      onChange(
+        selectedPermissions.filter((p) => !groupPermissions.includes(p))
       );
     } else {
       // Добавить все права группы
-      const toAdd = groupPerms.filter((p) => !selectedPermissions.includes(p));
-      newPermissions = [...selectedPermissions, ...toAdd];
+      const newPermissions = new Set([
+        ...selectedPermissions,
+        ...groupPermissions,
+      ]);
+      onChange(Array.from(newPermissions));
     }
+  };
 
-    onChange(newPermissions);
+  // Переключение одного права
+  const togglePermission = (permission: Permission) => {
+    if (disabled) return;
+
+    if (selectedPermissions.includes(permission)) {
+      onChange(selectedPermissions.filter((p) => p !== permission));
+    } else {
+      onChange([...selectedPermissions, permission]);
+    }
+  };
+
+  // Выбрать все права
+  const selectAll = () => {
+    if (disabled) return;
+    const allPermissions = groups.flatMap((g) =>
+      g.permissions.map((p) => p.value)
+    );
+    onChange(allPermissions);
+  };
+
+  // Снять выбор со всех
+  const deselectAll = () => {
+    if (disabled) return;
+    onChange([]);
   };
 
   return (
@@ -115,80 +148,135 @@ export function PermissionEditor({
       }`}
     >
       <div className="permission-editor__header">
-        <Typography variant="h4">Права доступа</Typography>
-        <Typography variant="small" color="secondary">
-          Выбрано: {totalSelected} из {totalAvailable}
+        <Typography variant="body" className="permission-editor__title">
+          Права доступа ({selectedPermissions.length})
         </Typography>
+        <div className="permission-editor__actions">
+          <button
+            type="button"
+            className="permission-editor__action-btn"
+            onClick={selectAll}
+            disabled={disabled}
+          >
+            Выбрать все
+          </button>
+          <button
+            type="button"
+            className="permission-editor__action-btn"
+            onClick={deselectAll}
+            disabled={disabled}
+          >
+            Снять выбор
+          </button>
+        </div>
+      </div>
+
+      <div className="permission-editor__search">
+        <input
+          type="text"
+          placeholder="Поиск прав..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="permission-editor__search-input"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            className="permission-editor__search-clear"
+            onClick={() => setSearchQuery("")}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       <div className="permission-editor__groups">
         {filteredGroups.map((group) => {
-          const groupPerms = group.permissions.map((p) => p.value);
-          const selectedInGroup = groupPerms.filter((p) =>
-            selectedPermissions.includes(p)
-          ).length;
-          const allSelected =
-            selectedInGroup === groupPerms.length && groupPerms.length > 0;
           const isExpanded = expandedGroups.has(group.value);
+          const stats = getGroupStats(group);
+          const isFullySelected = isGroupFullySelected(group);
+          const isPartiallySelected = isGroupPartiallySelected(group);
 
           return (
             <div key={group.value} className="permission-group">
               <div
-                className="permission-group__header"
-                onClick={() => toggleGroupExpand(group.value)}
+                className={`permission-group__header ${
+                  isExpanded ? "permission-group__header--expanded" : ""
+                }`}
               >
-                <span
-                  className={`permission-group__arrow ${
-                    isExpanded ? "permission-group__arrow--expanded" : ""
-                  }`}
-                >
-                  ▶
-                </span>
-                <span className="permission-group__name">
-                  {GROUP_NAMES[group.value] || group.name}
-                </span>
-                <span className="permission-group__count">
-                  {selectedInGroup}/{groupPerms.length}
-                </span>
                 <button
                   type="button"
-                  className={`permission-group__select-all ${
-                    allSelected ? "permission-group__select-all--active" : ""
-                  }`}
-                  onClick={(e) => toggleGroupAll(group, e)}
-                  disabled={disabled}
+                  className="permission-group__toggle"
+                  onClick={() => toggleGroupExpanded(group.value)}
                 >
-                  {allSelected ? "Снять все" : "Выбрать все"}
+                  <span className="permission-group__arrow">
+                    {isExpanded ? "▼" : "▶"}
+                  </span>
+                  <span className="permission-group__icon">
+                    {GROUP_ICONS[group.value] || "📋"}
+                  </span>
+                  <span className="permission-group__name">
+                    {GROUP_NAMES[group.value] || group.name}
+                  </span>
+                  <span className="permission-group__count">
+                    {stats.selected}/{stats.total}
+                  </span>
                 </button>
+                <label
+                  className={`permission-checkbox ${
+                    isFullySelected ? "permission-checkbox--checked" : ""
+                  } ${
+                    isPartiallySelected ? "permission-checkbox--partial" : ""
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isFullySelected}
+                    onChange={() => toggleGroupPermissions(group)}
+                    disabled={disabled}
+                  />
+                  <span className="permission-checkbox__box">
+                    {isFullySelected && "✓"}
+                    {isPartiallySelected && "−"}
+                  </span>
+                </label>
               </div>
 
               {isExpanded && (
-                <div className="permission-group__list">
+                <div className="permission-group__permissions">
                   {group.permissions.map((perm) => {
                     const isSelected = selectedPermissions.includes(perm.value);
                     return (
-                      <div
+                      <label
                         key={perm.value}
                         className={`permission-item ${
                           isSelected ? "permission-item--selected" : ""
-                        } ${disabled ? "permission-item--disabled" : ""}`}
-                        onClick={() => togglePermission(perm.value)}
+                        }`}
                       >
                         <div
-                          className={`permission-item__checkbox ${
-                            isSelected
-                              ? "permission-item__checkbox--checked"
-                              : ""
+                          className={`permission-checkbox ${
+                            isSelected ? "permission-checkbox--checked" : ""
                           }`}
                         >
-                          {isSelected && "✓"}
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => togglePermission(perm.value)}
+                            disabled={disabled}
+                          />
+                          <span className="permission-checkbox__box">
+                            {isSelected && "✓"}
+                          </span>
                         </div>
                         <div className="permission-item__content">
                           <span className="permission-item__name">
+                            {perm.name}
+                          </span>
+                          <span className="permission-item__description">
                             {perm.description}
                           </span>
                         </div>
-                      </div>
+                      </label>
                     );
                   })}
                 </div>
@@ -198,10 +286,10 @@ export function PermissionEditor({
         })}
       </div>
 
-      {disabled && (
-        <div className="permission-editor__disabled-notice">
-          <Typography variant="small" color="secondary">
-            Права владельца нельзя изменить
+      {filteredGroups.length === 0 && searchQuery && (
+        <div className="permission-editor__empty">
+          <Typography variant="body" color="secondary">
+            Права не найдены
           </Typography>
         </div>
       )}
