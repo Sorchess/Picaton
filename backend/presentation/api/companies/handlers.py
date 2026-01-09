@@ -10,6 +10,7 @@ from presentation.api.companies.schemas import (
     UpdateCompanyRequest,
     CompanyResponse,
     CompanyWithRoleResponse,
+    CompanyRoleInfo,
     CompanyMemberResponse,
     MemberUserInfo,
     UpdateMemberRoleRequest,
@@ -147,7 +148,17 @@ async def get_my_companies(
                 created_at=item["company"].created_at,
                 updated_at=item["company"].updated_at,
             ),
-            role=item["role"],
+            role=(
+                CompanyRoleInfo(
+                    id=item["role"].id,
+                    name=item["role"].name,
+                    color=item["role"].color,
+                    priority=item["role"].priority,
+                    is_system=item["role"].is_system,
+                )
+                if item["role"]
+                else None
+            ),
             joined_at=item["joined_at"],
         )
         for item in companies_data

@@ -6,7 +6,7 @@ from uuid import UUID
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from domain.entities.company import Company, CompanyMember, CompanyInvitation
-from domain.enums.company import InvitationStatus, LegacyCompanyRole
+from domain.enums.company import InvitationStatus
 from domain.repositories.company import (
     CompanyRepositoryInterface,
     CompanyMemberRepositoryInterface,
@@ -112,7 +112,7 @@ class MongoCompanyMemberRepository(CompanyMemberRepositoryInterface):
         """Преобразовать документ MongoDB в сущность."""
         selected_card_id = doc.get("selected_card_id")
         role_id = doc.get("role_id")
-        
+
         return CompanyMember(
             id=UUID(doc["_id"]),
             company_id=UUID(doc["company_id"]),

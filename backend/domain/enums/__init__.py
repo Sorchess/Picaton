@@ -2,7 +2,7 @@
 
 from domain.enums.status import UserStatus
 from domain.enums.contact import ContactType
-from domain.enums.company import LegacyCompanyRole, InvitationStatus
+from domain.enums.company import InvitationStatus
 from domain.enums.permission import (
     Permission,
     PermissionGroup,
@@ -15,7 +15,6 @@ from domain.enums.permission import (
 __all__ = [
     "UserStatus",
     "ContactType",
-    "LegacyCompanyRole",
     "InvitationStatus",
     "Permission",
     "PermissionGroup",

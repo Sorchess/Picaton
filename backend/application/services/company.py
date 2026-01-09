@@ -226,10 +226,12 @@ class CompanyService:
         for membership in memberships:
             company = await self._company_repo.get_by_id(membership.company_id)
             if company and company.is_active:
+                # Получаем роль по role_id
+                role = await self._get_member_role(membership)
                 result.append(
                     {
                         "company": company,
-                        "role": membership.role,
+                        "role": role,
                         "joined_at": membership.joined_at,
                     }
                 )

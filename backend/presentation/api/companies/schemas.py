@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, EmailStr
 
-from domain.enums.company import CompanyRole, InvitationStatus
+from domain.enums.company import InvitationStatus
 
 
 # ==================== Company ====================
@@ -62,11 +62,24 @@ class CompanyResponse(BaseModel):
         from_attributes = True
 
 
+class CompanyRoleInfo(BaseModel):
+    """Информация о роли в компании."""
+
+    id: UUID
+    name: str
+    color: str = "#808080"
+    priority: int = 100
+    is_system: bool = False
+
+    class Config:
+        from_attributes = True
+
+
 class CompanyWithRoleResponse(BaseModel):
     """Компания с ролью пользователя."""
 
     company: CompanyResponse
-    role: CompanyRole
+    role: CompanyRoleInfo | None = None
     joined_at: datetime
 
 
@@ -88,7 +101,7 @@ class CompanyMemberResponse(BaseModel):
 
     id: UUID
     user: MemberUserInfo
-    role: CompanyRole
+    role: CompanyRoleInfo
     selected_card_id: UUID | None = None
     joined_at: datetime
 
@@ -96,7 +109,7 @@ class CompanyMemberResponse(BaseModel):
 class UpdateMemberRoleRequest(BaseModel):
     """Запрос на изменение роли члена."""
 
-    role: CompanyRole = Field(..., description="Новая роль")
+    role_id: UUID = Field(..., description="ID новой роли")
 
 
 # ==================== Invitations ====================
@@ -106,7 +119,9 @@ class CreateInvitationRequest(BaseModel):
     """Запрос на создание приглашения."""
 
     email: EmailStr = Field(..., description="Email приглашаемого")
-    role: CompanyRole = Field(CompanyRole.MEMBER, description="Роль в компании")
+    role_id: UUID | None = Field(
+        None, description="ID роли в компании (None = роль по умолчанию)"
+    )
 
 
 class InvitationResponse(BaseModel):
@@ -115,7 +130,7 @@ class InvitationResponse(BaseModel):
     id: UUID
     company_id: UUID
     email: str
-    role: CompanyRole
+    role: CompanyRoleInfo
     invited_by_id: UUID | None = None
     status: InvitationStatus
     created_at: datetime
@@ -130,7 +145,7 @@ class InvitationWithCompanyResponse(BaseModel):
 
     id: UUID
     company: CompanyResponse
-    role: CompanyRole
+    role: CompanyRoleInfo
     invited_by: MemberUserInfo | None = None
     status: InvitationStatus
     token: str
