@@ -13,14 +13,12 @@ import type {
   MessageResponse,
   InvitationStatus,
   CompanyCardAssignment,
-  CompanyRoleInfo,
+  CompanyRoleFull,
+  RolesListResponse,
+  PermissionsListResponse,
+  CreateRoleRequest,
+  UpdateRoleRequest,
 } from "./types";
-
-// Тип ответа для списка ролей
-interface RolesListResponse {
-  roles: CompanyRoleInfo[];
-  total: number;
-}
 
 export const companyApi = {
   // ==================== Company CRUD ====================
@@ -55,10 +53,50 @@ export const companyApi = {
   // ==================== Roles ====================
 
   /**
+   * Получить все доступные права
+   */
+  getPermissions: () =>
+    api.get<PermissionsListResponse>("/companies/permissions"),
+
+  /**
    * Получить роли компании
    */
   getRoles: (companyId: string) =>
     api.get<RolesListResponse>(`/companies/${companyId}/roles`),
+
+  /**
+   * Получить роль по ID
+   */
+  getRole: (companyId: string, roleId: string) =>
+    api.get<CompanyRoleFull>(`/companies/${companyId}/roles/${roleId}`),
+
+  /**
+   * Создать новую роль
+   */
+  createRole: (companyId: string, data: CreateRoleRequest) =>
+    api.post<CompanyRoleFull>(`/companies/${companyId}/roles`, data),
+
+  /**
+   * Обновить роль
+   */
+  updateRole: (companyId: string, roleId: string, data: UpdateRoleRequest) =>
+    api.put<CompanyRoleFull>(`/companies/${companyId}/roles/${roleId}`, data),
+
+  /**
+   * Удалить роль
+   */
+  deleteRole: (
+    companyId: string,
+    roleId: string,
+    replacementRoleId?: string
+  ) => {
+    const params = replacementRoleId
+      ? `?replacement_role_id=${replacementRoleId}`
+      : "";
+    return api.delete<MessageResponse>(
+      `/companies/${companyId}/roles/${roleId}${params}`
+    );
+  },
 
   // ==================== Members ====================
 

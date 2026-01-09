@@ -602,6 +602,7 @@ export function CompanyPage() {
           onLeaveCompany={handleLeaveCompany}
           onUpdateCompany={handleUpdateCompany}
           onDeleteCompany={handleDeleteCompany}
+          onRolesChange={() => loadRoles(selectedCompany.company.id)}
         />
 
         {/* Модалка просмотра визитки участника */}

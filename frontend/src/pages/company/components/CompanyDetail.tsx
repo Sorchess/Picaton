@@ -25,9 +25,10 @@ import {
   Loader,
 } from "@/shared";
 import { RoleSelect } from "./RoleSelect";
+import { RolesManager } from "./RolesManager";
 import "./CompanyDetail.scss";
 
-type SidebarTab = "members" | "settings";
+type SidebarTab = "members" | "roles" | "settings";
 
 interface CompanyDetailProps {
   company: CompanyWithRole;
@@ -56,6 +57,7 @@ interface CompanyDetailProps {
     allow_auto_join: boolean;
   }) => Promise<void>;
   onDeleteCompany: () => Promise<void>;
+  onRolesChange?: () => void;
 }
 
 export function CompanyDetail({
@@ -78,6 +80,7 @@ export function CompanyDetail({
   onLeaveCompany,
   onUpdateCompany,
   onDeleteCompany,
+  onRolesChange,
 }: CompanyDetailProps) {
   // isLoadingInvitations используется для отображения загрузки приглашений
   void isLoadingInvitations;
@@ -87,6 +90,9 @@ export function CompanyDetail({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCardSelectModalOpen, setIsCardSelectModalOpen] = useState(false);
   const [isSelectingCard, setIsSelectingCard] = useState(false);
+
+  // Проверка права на управление ролями
+  const canManageRolesCheck = canChangeRoles(company.role);
 
   // Находим роль Member по умолчанию для приглашений
   const defaultRole =
@@ -233,6 +239,18 @@ export function CompanyDetail({
             <span>Участники</span>
             <span className="company-detail__nav-count">{members.length}</span>
           </button>
+
+          {canManageRolesCheck && (
+            <button
+              className={`company-detail__nav-item ${
+                activeTab === "roles" ? "company-detail__nav-item--active" : ""
+              }`}
+              onClick={() => setActiveTab("roles")}
+            >
+              <span className="company-detail__nav-icon">🎭</span>
+              <span>Роли</span>
+            </button>
+          )}
 
           {canManageMembers(company.role) && (
             <button
@@ -473,6 +491,16 @@ export function CompanyDetail({
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === "roles" && canManageRolesCheck && (
+          <div className="company-detail__roles">
+            <RolesManager
+              companyId={company.company.id}
+              canManageRoles={canManageRolesCheck}
+              onRolesChange={onRolesChange}
+            />
           </div>
         )}
 

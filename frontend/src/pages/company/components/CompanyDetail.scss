@@ -414,6 +414,16 @@
     gap: 12px;
   }
 
+  // Roles section
+  &__roles {
+    h2 {
+      font-family: "Syne", sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 32px;
+    }
+  }
+
   // Settings section
   &__settings {
     h2 {

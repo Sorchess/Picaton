@@ -9,6 +9,88 @@ export interface CompanyRoleInfo {
   is_system: boolean;
 }
 
+// Полная информация о роли (для редактирования)
+export interface CompanyRoleFull {
+  id: string;
+  company_id: string;
+  name: string;
+  color: string;
+  priority: number;
+  permissions: Permission[];
+  is_system: boolean;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Права доступа
+export type Permission =
+  | "manage_company"
+  | "delete_company"
+  | "view_company_settings"
+  | "manage_roles"
+  | "assign_roles"
+  | "view_roles"
+  | "invite_members"
+  | "remove_members"
+  | "view_members"
+  | "manage_invitations"
+  | "edit_own_card"
+  | "edit_any_card"
+  | "view_cards"
+  | "delete_any_card"
+  | "manage_company_tags"
+  | "edit_own_tags"
+  | "edit_any_tags"
+  | "assign_position"
+  | "assign_department"
+  | "manage_departments"
+  | "manage_positions";
+
+export type PermissionGroup =
+  | "company"
+  | "roles"
+  | "members"
+  | "cards"
+  | "tags"
+  | "organization";
+
+export interface PermissionInfo {
+  value: Permission;
+  name: string;
+  description: string;
+  group: PermissionGroup;
+}
+
+export interface PermissionGroupInfo {
+  value: PermissionGroup;
+  name: string;
+  permissions: PermissionInfo[];
+}
+
+export interface PermissionsListResponse {
+  groups: PermissionGroupInfo[];
+  all_permissions: PermissionInfo[];
+}
+
+export interface RolesListResponse {
+  roles: CompanyRoleFull[];
+  total: number;
+}
+
+export interface CreateRoleRequest {
+  name: string;
+  color?: string;
+  permissions?: Permission[];
+  priority?: number;
+}
+
+export interface UpdateRoleRequest {
+  name?: string;
+  color?: string;
+  permissions?: Permission[];
+}
+
 // Deprecated: старый тип для обратной совместимости
 export type LegacyCompanyRole = "owner" | "admin" | "member";
 
