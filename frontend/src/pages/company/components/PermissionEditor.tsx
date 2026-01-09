@@ -1,6 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type { Permission, PermissionGroupInfo } from "@/entities/company";
-import { Typography } from "@/shared";
 import "./PermissionEditor.scss";
 
 interface PermissionEditorProps {
@@ -10,7 +9,7 @@ interface PermissionEditorProps {
   disabled?: boolean;
 }
 
-// Иконки для групп прав
+// Иконки для групп
 const GROUP_ICONS: Record<string, string> = {
   company: "🏢",
   roles: "👔",
@@ -25,9 +24,19 @@ const GROUP_NAMES: Record<string, string> = {
   company: "Компания",
   roles: "Роли",
   members: "Сотрудники",
-  cards: "Карточки",
+  cards: "Визитки",
   tags: "Теги",
-  organization: "Организация",
+  organization: "Структура",
+};
+
+// Описания групп
+const GROUP_DESCRIPTIONS: Record<string, string> = {
+  company: "Управление настройками компании",
+  roles: "Создание и назначение ролей",
+  members: "Приглашение и управление сотрудниками",
+  cards: "Работа с визитками",
+  tags: "Управление тегами и навыками",
+  organization: "Должности и отделы",
 };
 
 export function PermissionEditor({
@@ -36,263 +45,232 @@ export function PermissionEditor({
   onChange,
   disabled = false,
 }: PermissionEditorProps) {
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(groups.map((g) => g.value))
+  const [activeGroup, setActiveGroup] = useState<string>(
+    groups[0]?.value || ""
   );
-  const [searchQuery, setSearchQuery] = useState("");
 
-  // Фильтрация прав по поисковому запросу
-  const filteredGroups = useMemo(() => {
-    if (!searchQuery.trim()) return groups;
+  // Текущая активная группа
+  const currentGroup = useMemo(
+    () => groups.find((g) => g.value === activeGroup) || groups[0],
+    [groups, activeGroup]
+  );
 
-    const query = searchQuery.toLowerCase();
-    return groups
-      .map((group) => ({
-        ...group,
-        permissions: group.permissions.filter(
-          (perm) =>
-            perm.name.toLowerCase().includes(query) ||
-            perm.description.toLowerCase().includes(query) ||
-            perm.value.toLowerCase().includes(query)
-        ),
-      }))
-      .filter((group) => group.permissions.length > 0);
-  }, [groups, searchQuery]);
-
-  // Подсчёт выбранных прав в группе
-  const getGroupStats = (group: PermissionGroupInfo) => {
-    const total = group.permissions.length;
-    const selected = group.permissions.filter((p) =>
-      selectedPermissions.includes(p.value)
-    ).length;
-    return { total, selected };
-  };
-
-  // Проверка, все ли права группы выбраны
-  const isGroupFullySelected = (group: PermissionGroupInfo) => {
-    const stats = getGroupStats(group);
-    return stats.selected === stats.total;
-  };
-
-  // Проверка, есть ли хотя бы одно право группы выбрано
-  const isGroupPartiallySelected = (group: PermissionGroupInfo) => {
-    const stats = getGroupStats(group);
-    return stats.selected > 0 && stats.selected < stats.total;
-  };
-
-  // Переключение группы (развернуть/свернуть)
-  const toggleGroupExpanded = (groupValue: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupValue)) {
-        next.delete(groupValue);
-      } else {
-        next.add(groupValue);
-      }
-      return next;
+  // Статистика по группам
+  const groupStats = useMemo(() => {
+    const stats: Record<string, { selected: number; total: number }> = {};
+    groups.forEach((group) => {
+      const total = group.permissions.length;
+      const selected = group.permissions.filter((p) =>
+        selectedPermissions.includes(p.value)
+      ).length;
+      stats[group.value] = { total, selected };
     });
-  };
+    return stats;
+  }, [groups, selectedPermissions]);
 
-  // Переключение всех прав группы
-  const toggleGroupPermissions = (group: PermissionGroupInfo) => {
-    if (disabled) return;
+  // Общая статистика
+  const totalStats = useMemo(() => {
+    const total = groups.reduce((acc, g) => acc + g.permissions.length, 0);
+    return { total, selected: selectedPermissions.length };
+  }, [groups, selectedPermissions]);
 
-    const groupPermissions = group.permissions.map((p) => p.value);
-    const allSelected = isGroupFullySelected(group);
+  // Переключение права
+  const togglePermission = useCallback(
+    (permission: Permission) => {
+      if (disabled) return;
+      if (selectedPermissions.includes(permission)) {
+        onChange(selectedPermissions.filter((p) => p !== permission));
+      } else {
+        onChange([...selectedPermissions, permission]);
+      }
+    },
+    [disabled, selectedPermissions, onChange]
+  );
 
-    if (allSelected) {
-      // Убрать все права группы
-      onChange(
-        selectedPermissions.filter((p) => !groupPermissions.includes(p))
-      );
-    } else {
-      // Добавить все права группы
-      const newPermissions = new Set([
-        ...selectedPermissions,
-        ...groupPermissions,
-      ]);
-      onChange(Array.from(newPermissions));
-    }
-  };
+  // Выбрать все в группе
+  const selectAllInGroup = useCallback(() => {
+    if (disabled || !currentGroup) return;
+    const groupPerms = currentGroup.permissions.map((p) => p.value);
+    const newPerms = [...new Set([...selectedPermissions, ...groupPerms])];
+    onChange(newPerms);
+  }, [disabled, currentGroup, selectedPermissions, onChange]);
 
-  // Переключение одного права
-  const togglePermission = (permission: Permission) => {
-    if (disabled) return;
-
-    if (selectedPermissions.includes(permission)) {
-      onChange(selectedPermissions.filter((p) => p !== permission));
-    } else {
-      onChange([...selectedPermissions, permission]);
-    }
-  };
+  // Снять все в группе
+  const deselectAllInGroup = useCallback(() => {
+    if (disabled || !currentGroup) return;
+    const groupPerms = currentGroup.permissions.map((p) => p.value);
+    onChange(selectedPermissions.filter((p) => !groupPerms.includes(p)));
+  }, [disabled, currentGroup, selectedPermissions, onChange]);
 
   // Выбрать все права
-  const selectAll = () => {
+  const selectAll = useCallback(() => {
     if (disabled) return;
-    const allPermissions = groups.flatMap((g) =>
-      g.permissions.map((p) => p.value)
-    );
-    onChange(allPermissions);
-  };
+    const all = groups.flatMap((g) => g.permissions.map((p) => p.value));
+    onChange(all);
+  }, [disabled, groups, onChange]);
 
-  // Снять выбор со всех
-  const deselectAll = () => {
+  // Снять все права
+  const deselectAll = useCallback(() => {
     if (disabled) return;
     onChange([]);
-  };
+  }, [disabled, onChange]);
+
+  if (!groups || groups.length === 0) {
+    return (
+      <div className="perm-editor perm-editor--empty">
+        <div className="perm-editor__empty-state">
+          <span className="perm-editor__empty-icon">🔐</span>
+          <p>Нет доступных прав</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`permission-editor ${
-        disabled ? "permission-editor--disabled" : ""
-      }`}
-    >
-      <div className="permission-editor__header">
-        <Typography variant="body" className="permission-editor__title">
-          Права доступа ({selectedPermissions.length})
-        </Typography>
-        <div className="permission-editor__actions">
+    <div className={`perm-editor ${disabled ? "perm-editor--disabled" : ""}`}>
+      {/* Боковое меню */}
+      <div className="perm-editor__sidebar">
+        <div className="perm-editor__sidebar-header">
+          <div className="perm-editor__sidebar-title">Категории</div>
+          <div className="perm-editor__sidebar-stats">
+            {totalStats.selected}/{totalStats.total}
+          </div>
+        </div>
+
+        <div className="perm-editor__sidebar-list">
+          {groups.map((group) => {
+            const stats = groupStats[group.value];
+            const isActive = activeGroup === group.value;
+            const isComplete = stats.selected === stats.total;
+            const hasSelected = stats.selected > 0;
+
+            return (
+              <button
+                key={group.value}
+                type="button"
+                className={`perm-editor__sidebar-item ${
+                  isActive ? "perm-editor__sidebar-item--active" : ""
+                } ${isComplete ? "perm-editor__sidebar-item--complete" : ""}`}
+                onClick={() => setActiveGroup(group.value)}
+              >
+                <span className="perm-editor__sidebar-icon">
+                  {GROUP_ICONS[group.value] || "📋"}
+                </span>
+                <span className="perm-editor__sidebar-name">
+                  {GROUP_NAMES[group.value] || group.name}
+                </span>
+                <span
+                  className={`perm-editor__sidebar-badge ${
+                    hasSelected ? "perm-editor__sidebar-badge--has" : ""
+                  } ${isComplete ? "perm-editor__sidebar-badge--full" : ""}`}
+                >
+                  {stats.selected}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="perm-editor__sidebar-footer">
           <button
             type="button"
-            className="permission-editor__action-btn"
+            className="perm-editor__sidebar-btn perm-editor__sidebar-btn--select"
             onClick={selectAll}
             disabled={disabled}
           >
-            Выбрать все
+            ✓ Все права
           </button>
           <button
             type="button"
-            className="permission-editor__action-btn"
+            className="perm-editor__sidebar-btn perm-editor__sidebar-btn--clear"
             onClick={deselectAll}
             disabled={disabled}
           >
-            Снять выбор
+            ✕ Сбросить
           </button>
         </div>
       </div>
 
-      <div className="permission-editor__search">
-        <input
-          type="text"
-          placeholder="Поиск прав..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="permission-editor__search-input"
-        />
-        {searchQuery && (
-          <button
-            type="button"
-            className="permission-editor__search-clear"
-            onClick={() => setSearchQuery("")}
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      <div className="permission-editor__groups">
-        {filteredGroups.map((group) => {
-          const isExpanded = expandedGroups.has(group.value);
-          const stats = getGroupStats(group);
-          const isFullySelected = isGroupFullySelected(group);
-          const isPartiallySelected = isGroupPartiallySelected(group);
-
-          return (
-            <div key={group.value} className="permission-group">
-              <div
-                className={`permission-group__header ${
-                  isExpanded ? "permission-group__header--expanded" : ""
-                }`}
-              >
+      {/* Основная область */}
+      <div className="perm-editor__main">
+        {currentGroup && (
+          <>
+            {/* Заголовок категории */}
+            <div className="perm-editor__header">
+              <div className="perm-editor__header-info">
+                <div className="perm-editor__header-icon">
+                  {GROUP_ICONS[currentGroup.value] || "📋"}
+                </div>
+                <div className="perm-editor__header-text">
+                  <h4 className="perm-editor__header-title">
+                    {GROUP_NAMES[currentGroup.value] || currentGroup.name}
+                  </h4>
+                  <p className="perm-editor__header-desc">
+                    {GROUP_DESCRIPTIONS[currentGroup.value] || ""}
+                  </p>
+                </div>
+              </div>
+              <div className="perm-editor__header-actions">
                 <button
                   type="button"
-                  className="permission-group__toggle"
-                  onClick={() => toggleGroupExpanded(group.value)}
+                  className="perm-editor__header-btn"
+                  onClick={selectAllInGroup}
+                  disabled={disabled}
                 >
-                  <span className="permission-group__arrow">
-                    {isExpanded ? "▼" : "▶"}
-                  </span>
-                  <span className="permission-group__icon">
-                    {GROUP_ICONS[group.value] || "📋"}
-                  </span>
-                  <span className="permission-group__name">
-                    {GROUP_NAMES[group.value] || group.name}
-                  </span>
-                  <span className="permission-group__count">
-                    {stats.selected}/{stats.total}
-                  </span>
+                  Выбрать все
                 </button>
-                <label
-                  className={`permission-checkbox ${
-                    isFullySelected ? "permission-checkbox--checked" : ""
-                  } ${
-                    isPartiallySelected ? "permission-checkbox--partial" : ""
-                  }`}
+                <button
+                  type="button"
+                  className="perm-editor__header-btn"
+                  onClick={deselectAllInGroup}
+                  disabled={disabled}
                 >
-                  <input
-                    type="checkbox"
-                    checked={isFullySelected}
-                    onChange={() => toggleGroupPermissions(group)}
-                    disabled={disabled}
-                  />
-                  <span className="permission-checkbox__box">
-                    {isFullySelected && "✓"}
-                    {isPartiallySelected && "−"}
-                  </span>
-                </label>
+                  Снять все
+                </button>
               </div>
+            </div>
 
-              {isExpanded && (
-                <div className="permission-group__permissions">
-                  {group.permissions.map((perm) => {
-                    const isSelected = selectedPermissions.includes(perm.value);
-                    return (
-                      <label
-                        key={perm.value}
-                        className={`permission-item ${
-                          isSelected ? "permission-item--selected" : ""
+            {/* Список прав */}
+            <div className="perm-editor__permissions">
+              {currentGroup.permissions.map((perm) => {
+                const isChecked = selectedPermissions.includes(perm.value);
+                return (
+                  <div
+                    key={perm.value}
+                    className={`perm-card ${
+                      isChecked ? "perm-card--checked" : ""
+                    }`}
+                    onClick={() => togglePermission(perm.value)}
+                  >
+                    <div className="perm-card__checkbox">
+                      <div
+                        className={`perm-card__check ${
+                          isChecked ? "perm-card__check--on" : ""
                         }`}
                       >
-                        <div
-                          className={`permission-checkbox ${
-                            isSelected ? "permission-checkbox--checked" : ""
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => togglePermission(perm.value)}
-                            disabled={disabled}
-                          />
-                          <span className="permission-checkbox__box">
-                            {isSelected && "✓"}
-                          </span>
-                        </div>
-                        <div className="permission-item__content">
-                          <span className="permission-item__name">
-                            {perm.name}
-                          </span>
-                          <span className="permission-item__description">
-                            {perm.description}
-                          </span>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
+                        {isChecked && (
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <div className="perm-card__content">
+                      <div className="perm-card__name">{perm.name}</div>
+                      <div className="perm-card__desc">{perm.description}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </>
+        )}
       </div>
-
-      {filteredGroups.length === 0 && searchQuery && (
-        <div className="permission-editor__empty">
-          <Typography variant="body" color="secondary">
-            Права не найдены
-          </Typography>
-        </div>
-      )}
     </div>
   );
 }
