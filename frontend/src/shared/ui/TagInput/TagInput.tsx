@@ -8,6 +8,7 @@ interface TagInputProps {
   placeholder?: string;
   maxTags?: number;
   suggestions?: string[];
+  fallbackSuggestions?: string[];
   onGenerateSuggestions?: () => void;
   isLoadingSuggestions?: boolean;
   label?: string;
@@ -21,6 +22,7 @@ export function TagInput({
   placeholder = "Добавьте тег...",
   maxTags = 15,
   suggestions = [],
+  fallbackSuggestions = [],
   onGenerateSuggestions,
   isLoadingSuggestions = false,
   label,
@@ -67,6 +69,20 @@ export function TagInput({
     (s) => !value.includes(s.toLowerCase())
   );
 
+  // Filter out already added tags from fallback suggestions
+  const filteredFallbackSuggestions = fallbackSuggestions.filter(
+    (s) => !value.includes(s.toLowerCase())
+  );
+
+  // Show AI suggestions if available, otherwise show fallback (no loading bar)
+  const displaySuggestions =
+    filteredSuggestions.length > 0
+      ? filteredSuggestions
+      : filteredFallbackSuggestions;
+
+  const suggestionsLabel =
+    filteredSuggestions.length > 0 ? "AI предложения:" : "Из вашего описания:";
+
   return (
     <div className={`tag-input ${error ? "tag-input--error" : ""}`}>
       {label && <label className="tag-input__label">{label}</label>}
@@ -112,21 +128,20 @@ export function TagInput({
 
       {error && <span className="tag-input__error">{error}</span>}
 
-      {/* AI Suggestions - show loading indicator or suggestions */}
-      {isLoadingSuggestions ? (
-        <div className="tag-input__progress">
-          <div className="tag-input__progress-bar">
-            <div className="tag-input__progress-fill" />
-          </div>
-          <span className="tag-input__progress-text">
-            AI анализирует текст...
-          </span>
-        </div>
-      ) : filteredSuggestions.length > 0 ? (
+      {/* Tag suggestions - show AI suggestions or fallback suggestions (no loading bar) */}
+      {displaySuggestions.length > 0 && (
         <div className="tag-input__suggestions">
-          <span className="tag-input__suggestions-label">Предложения:</span>
+          <span className="tag-input__suggestions-label">
+            {suggestionsLabel}
+            {isLoadingSuggestions && (
+              <span className="tag-input__loading-hint">
+                {" "}
+                (AI генерирует...)
+              </span>
+            )}
+          </span>
           <div className="tag-input__suggestions-list">
-            {filteredSuggestions.map((suggestion) => (
+            {displaySuggestions.map((suggestion) => (
               <button
                 key={suggestion}
                 type="button"
@@ -138,7 +153,7 @@ export function TagInput({
             ))}
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* Generate button */}
       {onGenerateSuggestions && (

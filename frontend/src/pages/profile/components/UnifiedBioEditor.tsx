@@ -37,6 +37,8 @@ export interface UnifiedBioEditorProps {
   onTagsUpdate?: (tags: string[]) => void;
   /** Callback при изменении статуса загрузки тегов */
   onTagsLoading?: (isLoading: boolean) => void;
+  /** Callback при изменении текста bio (для быстрого извлечения тегов) */
+  onBioTextChange?: (text: string) => void;
   /** Минимальная длина bio для активации AI */
   minLength?: number;
   /** Максимальная длина bio */
@@ -51,6 +53,7 @@ export function UnifiedBioEditor({
   onError,
   onTagsUpdate,
   onTagsLoading,
+  onBioTextChange,
   minLength = 20,
   maxLength = 2000,
 }: UnifiedBioEditorProps) {
@@ -83,7 +86,7 @@ export function UnifiedBioEditor({
   const preGenerationBioRef = useRef<string>("");
   const requestTagsRef = useRef<(text: string) => void>(() => {});
   const onTagsLoadingRef = useRef(onTagsLoading);
-  
+
   // Keep onTagsLoading ref updated
   useEffect(() => {
     onTagsLoadingRef.current = onTagsLoading;
@@ -201,6 +204,11 @@ export function UnifiedBioEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only sync when initialBio changes
   }, [initialBio]);
 
+  // Notify parent about current bio text (for quick tag extraction)
+  useEffect(() => {
+    onBioTextChange?.(bio);
+  }, [bio, onBioTextChange]);
+
   // Debounced tag update
   const debouncedTagUpdate = useDebouncedCallback(requestTags, 1500);
 
@@ -212,9 +220,11 @@ export function UnifiedBioEditor({
         setBio(newValue);
         debouncedTagUpdate(newValue);
         setError(null);
+        // Notify parent about bio text change for quick tag extraction
+        onBioTextChange?.(newValue);
       }
     },
-    [setBio, debouncedTagUpdate, maxLength]
+    [setBio, debouncedTagUpdate, maxLength, onBioTextChange]
   );
 
   // AI Improve - saves current bio first, then generates

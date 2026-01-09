@@ -130,6 +130,25 @@
   &__suggestions-label {
     font-size: 12px;
     color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__loading-hint {
+    color: var(--color-accent, #6366f1);
+    font-style: italic;
+    animation: pulse-hint 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-hint {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 
   &__suggestions-list {

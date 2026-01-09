@@ -3,7 +3,7 @@ import type { User, ContactInfo } from "@/entities/user";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import type { CompanyCardAssignment } from "@/entities/company";
-import { TagInput } from "@/shared";
+import { TagInput, useDebounce, extractTagsFromBio } from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import "./CardEditor.scss";
 
@@ -92,6 +92,27 @@ export function CardEditor({
   const [aiTagSuggestions, setAiTagSuggestions] = useState<string[]>([]);
   const [isApplyingTags, setIsApplyingTags] = useState(false);
   const [hasFetchedSuggestions, setHasFetchedSuggestions] = useState(false);
+
+  // Current bio text being edited (for quick tag extraction)
+  const [currentBioText, setCurrentBioText] = useState<string>(
+    card.ai_generated_bio || card.bio || ""
+  );
+
+  // Debounce bio text - wait 500ms after user stops typing for quick suggestions
+  const debouncedBioText = useDebounce(currentBioText, 500);
+
+  // Clear AI suggestions when bio text changes (to avoid showing outdated suggestions)
+  useEffect(() => {
+    // Reset AI suggestions when user is actively typing
+    setAiTagSuggestions([]);
+  }, [currentBioText]);
+
+  // Quick local suggestions extracted from debounced bio text (shown after pause in typing)
+  const quickSuggestions = useMemo(() => {
+    const tags = extractTagsFromBio(debouncedBioText, 12);
+    console.log("[CardEditor] Quick suggestions from text:", tags);
+    return tags;
+  }, [debouncedBioText]);
 
   // Tag editing state
   const [profileTags, setProfileTags] = useState<string[]>(
@@ -320,6 +341,7 @@ export function CardEditor({
           onError={setError}
           onTagsUpdate={setAiTagSuggestions}
           onTagsLoading={setIsGeneratingTags}
+          onBioTextChange={setCurrentBioText}
         />
 
         {/* Step 2: Tags */}
@@ -355,6 +377,7 @@ export function CardEditor({
               onChange={handleTagsChange}
               placeholder="Добавьте тег..."
               suggestions={aiTagSuggestions}
+              fallbackSuggestions={quickSuggestions}
               isLoadingSuggestions={isGeneratingTags}
               maxTags={15}
               disabled={!selectedCard.ai_generated_bio || isApplyingTags}
