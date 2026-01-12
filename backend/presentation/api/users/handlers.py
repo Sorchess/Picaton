@@ -57,8 +57,10 @@ from infrastructure.dependencies import (
     get_card_title_generator,
     get_email_verification_service,
     get_company_member_repository,
+    get_business_card_repository,
 )
 from domain.repositories.company import CompanyMemberRepositoryInterface
+from domain.repositories.business_card import BusinessCardRepositoryInterface
 from application.services.email_verification import EmailVerificationError
 from application.services.contact_sync import HashedContact
 from infrastructure.storage import CloudinaryService
@@ -614,6 +616,7 @@ async def search_experts(
     company_member_repo: CompanyMemberRepositoryInterface = Depends(
         get_company_member_repository
     ),
+    card_repo: BusinessCardRepositoryInterface = Depends(get_business_card_repository),
 ):
     """
     Ассоциативный поиск экспертов и контактов.
@@ -635,7 +638,14 @@ async def search_experts(
                 members = await company_member_repo.get_by_company(company_id)
                 for member in members:
                     if member.selected_card_id:
+                        # Если у члена выбрана конкретная карточка, используем её
                         company_card_ids.append(member.selected_card_id)
+                    else:
+                        # Если карточка не выбрана, берём все карточки этого пользователя
+                        user_cards = await card_repo.get_by_owner(member.user_id)
+                        for card in user_cards:
+                            if card.is_active:
+                                company_card_ids.append(card.id)
             # Убираем дубликаты
             company_card_ids = list(set(company_card_ids))
 

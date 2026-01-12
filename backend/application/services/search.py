@@ -857,7 +857,8 @@ class AssociativeSearchService:
         # Поиск визитных карточек (основной поиск)
         if include_users:
             # Если указаны company_card_ids, ищем только среди них
-            if company_card_ids:
+            # Используем 'is not None' чтобы пустой список [] не приводил к поиску среди всех
+            if company_card_ids is not None:
                 # Сначала ищем по расширенным тегам в search_tags
                 if expanded_tags:
                     cards = await self._card_repository.search_by_tags_and_ids(
