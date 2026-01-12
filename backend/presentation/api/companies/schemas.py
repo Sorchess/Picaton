@@ -130,7 +130,7 @@ class InvitationResponse(BaseModel):
     id: UUID
     company_id: UUID
     email: str
-    role: CompanyRoleInfo
+    role: CompanyRoleInfo | None = None
     invited_by_id: UUID | None = None
     status: InvitationStatus
     created_at: datetime
@@ -145,7 +145,7 @@ class InvitationWithCompanyResponse(BaseModel):
 
     id: UUID
     company: CompanyResponse
-    role: CompanyRoleInfo
+    role: CompanyRoleInfo | None = None
     invited_by: MemberUserInfo | None = None
     status: InvitationStatus
     token: str

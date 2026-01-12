@@ -615,7 +615,7 @@ class CompanyService:
         self,
         company_id: UUID,
         email: str,
-        role: CompanyRole,
+        role_id: UUID | None,
         invited_by_id: UUID,
     ) -> CompanyInvitation:
         """
@@ -624,7 +624,7 @@ class CompanyService:
         Args:
             company_id: ID компании
             email: Email приглашаемого
-            role: Предлагаемая роль
+            role_id: ID роли для приглашаемого (None = роль по умолчанию)
             invited_by_id: ID приглашающего
 
         Returns:
@@ -639,10 +639,8 @@ class CompanyService:
         company = await self.get_company(company_id)
 
         # Проверяем права приглашающего
-        inviter = await self._member_repo.get_by_company_and_user(
-            company_id, invited_by_id
-        )
-        if not inviter or not inviter.can_invite():
+        is_admin = await self._is_admin_or_higher(company_id, invited_by_id)
+        if not is_admin:
             raise PermissionDeniedError(
                 "Только владелец или администратор может приглашать"
             )
@@ -671,10 +669,18 @@ class CompanyService:
         token = secrets.token_urlsafe(INVITATION_TOKEN_LENGTH)
         expires_at = datetime.now(timezone.utc) + timedelta(days=INVITATION_EXPIRE_DAYS)
 
+        # Если role_id не указан, используем роль Member по умолчанию
+        if role_id is None:
+            system_roles = await self._role_repo.get_system_roles(company_id)
+            for role in system_roles:
+                if role.name == "Member":
+                    role_id = role.id
+                    break
+
         invitation = CompanyInvitation(
             company_id=company_id,
             email=email.lower(),
-            role=role,
+            role_id=role_id,
             invited_by_id=invited_by_id,
             token=token,
             expires_at=expires_at,
@@ -783,11 +789,11 @@ class CompanyService:
         invitation.accept()
         await self._invitation_repo.update(invitation)
 
-        # Создаём членство
+        # Создаём членство с role_id из приглашения
         member = CompanyMember(
             company_id=invitation.company_id,
             user_id=user.id,
-            role=invitation.role,
+            role_id=invitation.role_id,
         )
         member = await self._member_repo.create(member)
 
@@ -876,10 +882,10 @@ class CompanyService:
         if not old_invitation:
             raise InvitationNotFoundError("Приглашение не найдено")
 
-        admin_member = await self._member_repo.get_by_company_and_user(
+        is_admin = await self._is_admin_or_higher(
             old_invitation.company_id, admin_user_id
         )
-        if not admin_member or not admin_member.can_invite():
+        if not is_admin:
             raise PermissionDeniedError(
                 "Только владелец или администратор может переотправлять приглашения"
             )
@@ -888,11 +894,11 @@ class CompanyService:
         old_invitation.cancel()
         await self._invitation_repo.update(old_invitation)
 
-        # Создаём новое
+        # Создаём новое с тем же role_id
         return await self.create_invitation(
             company_id=old_invitation.company_id,
             email=old_invitation.email,
-            role=old_invitation.role,
+            role_id=old_invitation.role_id,
             invited_by_id=admin_user_id,
         )
 

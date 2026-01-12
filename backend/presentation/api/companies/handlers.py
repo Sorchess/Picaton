@@ -23,7 +23,12 @@ from presentation.api.companies.schemas import (
     SetSelectedCardRequest,
     CompanyCardAssignment,
 )
-from infrastructure.dependencies import get_auth_service, get_company_service
+from infrastructure.dependencies import (
+    get_auth_service,
+    get_company_service,
+    get_company_role_repository,
+)
+from domain.repositories.company_role import CompanyRoleRepositoryInterface
 from application.services import (
     AuthService,
     InvalidTokenError,
@@ -175,6 +180,7 @@ async def get_my_invitations(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     auth_service: AuthService = Depends(get_auth_service),
     company_service: CompanyService = Depends(get_company_service),
+    role_repo: CompanyRoleRepositoryInterface = Depends(get_company_role_repository),
 ):
     """Получить ожидающие приглашения для текущего пользователя."""
     user = await get_current_user_from_token(credentials, auth_service)
@@ -188,6 +194,11 @@ async def get_my_invitations(
         inv = item["invitation"]
         company = item["company"]
         inviter = item.get("invited_by")
+
+        # Загружаем роль по role_id
+        role = None
+        if inv.role_id:
+            role = await role_repo.get_by_id(inv.role_id)
 
         result.append(
             InvitationWithCompanyResponse(
@@ -204,7 +215,17 @@ async def get_my_invitations(
                     created_at=company.created_at,
                     updated_at=company.updated_at,
                 ),
-                role=inv.role,
+                role=(
+                    CompanyRoleInfo(
+                        id=role.id,
+                        name=role.name,
+                        color=role.color,
+                        priority=role.priority,
+                        is_system=role.is_system,
+                    )
+                    if role
+                    else None
+                ),
                 invited_by=(
                     MemberUserInfo(
                         id=inviter.id,
@@ -590,6 +611,7 @@ async def create_invitation(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     auth_service: AuthService = Depends(get_auth_service),
     company_service: CompanyService = Depends(get_company_service),
+    role_repo: CompanyRoleRepositoryInterface = Depends(get_company_role_repository),
 ):
     """Создать приглашение в компанию (для владельца/админа)."""
     user = await get_current_user_from_token(credentials, auth_service)
@@ -598,12 +620,17 @@ async def create_invitation(
         invitation = await company_service.create_invitation(
             company_id=company_id,
             email=data.email,
-            role=data.role,
+            role_id=data.role_id,
             invited_by_id=user.id,
         )
 
         # Получаем данные компании для email
         company = await company_service.get_company(company_id)
+
+        # Получаем роль по role_id
+        role = None
+        if invitation.role_id:
+            role = await role_repo.get_by_id(invitation.role_id)
 
         # Отправляем email с приглашением
         invitation_link = company_service.generate_invitation_link(
@@ -615,7 +642,7 @@ async def create_invitation(
             to_email=data.email,
             company_name=company.name,
             inviter_name=user.full_name or user.email,
-            role=data.role.value,
+            role=role.name if role else "Member",
             invitation_link=invitation_link,
         )
 
@@ -644,7 +671,17 @@ async def create_invitation(
         id=invitation.id,
         company_id=invitation.company_id,
         email=invitation.email,
-        role=invitation.role,
+        role=(
+            CompanyRoleInfo(
+                id=role.id,
+                name=role.name,
+                color=role.color,
+                priority=role.priority,
+                is_system=role.is_system,
+            )
+            if role
+            else None
+        ),
         invited_by_id=invitation.invited_by_id,
         status=invitation.status,
         created_at=invitation.created_at,
@@ -661,6 +698,7 @@ async def get_company_invitations(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     auth_service: AuthService = Depends(get_auth_service),
     company_service: CompanyService = Depends(get_company_service),
+    role_repo: CompanyRoleRepositoryInterface = Depends(get_company_role_repository),
 ):
     """Получить приглашения компании (для владельца/админа)."""
     user = await get_current_user_from_token(credentials, auth_service)
@@ -679,19 +717,36 @@ async def get_company_invitations(
             detail=str(e),
         )
 
-    return [
-        InvitationResponse(
-            id=inv.id,
-            company_id=inv.company_id,
-            email=inv.email,
-            role=inv.role,
-            invited_by_id=inv.invited_by_id,
-            status=inv.status,
-            created_at=inv.created_at,
-            expires_at=inv.expires_at,
+    # Загружаем роли для всех приглашений
+    result = []
+    for inv in invitations:
+        role = None
+        if inv.role_id:
+            role = await role_repo.get_by_id(inv.role_id)
+        result.append(
+            InvitationResponse(
+                id=inv.id,
+                company_id=inv.company_id,
+                email=inv.email,
+                role=(
+                    CompanyRoleInfo(
+                        id=role.id,
+                        name=role.name,
+                        color=role.color,
+                        priority=role.priority,
+                        is_system=role.is_system,
+                    )
+                    if role
+                    else None
+                ),
+                invited_by_id=inv.invited_by_id,
+                status=inv.status,
+                created_at=inv.created_at,
+                expires_at=inv.expires_at,
+            )
         )
-        for inv in invitations
-    ]
+
+    return result
 
 
 @router.delete(
@@ -733,6 +788,7 @@ async def resend_invitation(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     auth_service: AuthService = Depends(get_auth_service),
     company_service: CompanyService = Depends(get_company_service),
+    role_repo: CompanyRoleRepositoryInterface = Depends(get_company_role_repository),
 ):
     """Переотправить приглашение (для владельца/админа)."""
     user = await get_current_user_from_token(credentials, auth_service)
@@ -742,6 +798,11 @@ async def resend_invitation(
 
         # Получаем данные компании для email
         company = await company_service.get_company(company_id)
+
+        # Получаем роль по role_id
+        role = None
+        if invitation.role_id:
+            role = await role_repo.get_by_id(invitation.role_id)
 
         # Отправляем email с новым приглашением
         invitation_link = company_service.generate_invitation_link(
@@ -753,7 +814,7 @@ async def resend_invitation(
             to_email=invitation.email,
             company_name=company.name,
             inviter_name=user.full_name or user.email,
-            role=invitation.role.value,
+            role=role.name if role else "Member",
             invitation_link=invitation_link,
         )
 
@@ -772,7 +833,17 @@ async def resend_invitation(
         id=invitation.id,
         company_id=invitation.company_id,
         email=invitation.email,
-        role=invitation.role,
+        role=(
+            CompanyRoleInfo(
+                id=role.id,
+                name=role.name,
+                color=role.color,
+                priority=role.priority,
+                is_system=role.is_system,
+            )
+            if role
+            else None
+        ),
         invited_by_id=invitation.invited_by_id,
         status=invitation.status,
         created_at=invitation.created_at,
