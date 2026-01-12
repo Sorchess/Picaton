@@ -1,0 +1,244 @@
+.ideas-swipe-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 1rem;
+  background: var(--bg-primary);
+  overflow: hidden;
+
+  &--loading,
+  &--error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  &__nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__stack {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+  }
+
+  &__empty {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+}
+
+.swipe-card {
+  position: absolute;
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &--top {
+    z-index: 10;
+  }
+
+  &__content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 400px;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+
+    &--placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-primary);
+      color: white;
+      font-weight: 600;
+    }
+  }
+
+  &__author-name {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  &__stats {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  &__description {
+    color: var(--text-secondary);
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+  }
+
+  &__skills {
+    margin-top: auto;
+  }
+
+  &__skills-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+.swipe-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 1rem 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-radius: 8px;
+  z-index: 20;
+  pointer-events: none;
+
+  &--like {
+    right: 2rem;
+    background: rgba(76, 217, 100, 0.9);
+    color: white;
+  }
+
+  &--dislike {
+    left: 2rem;
+    background: rgba(255, 59, 48, 0.9);
+    color: white;
+  }
+}
+
+.swipe-action {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &--dislike {
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
+  }
+
+  &--like {
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(76, 217, 100, 0.3);
+  }
+
+  &--super {
+    background: linear-gradient(135deg, #ffd700, #ffa500);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    color: white;
+  }
+}
+
+.match-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+
+  &__content {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+}

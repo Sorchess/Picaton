@@ -9,6 +9,7 @@ import {
   LoginPage,
   OnboardingPage,
   CompanyPage,
+  CollaborationPage,
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
 import { SpecialistModal } from "./features/specialist-modal";
@@ -352,6 +353,7 @@ function AuthenticatedApp() {
 
       <main className="app__main">
         {currentPage === "search" && <SearchPage />}
+        {currentPage === "collaboration" && <CollaborationPage />}
         {currentPage === "contacts" && <ContactsPage />}
         {currentPage === "profile" && <ProfilePage />}
         {currentPage === "company" && <CompanyPage />}

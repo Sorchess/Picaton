@@ -1,7 +1,7 @@
 import { Switcher, type SwitcherOption } from "@/shared";
 import "./PageSwitcher.scss";
 
-type PageType = "search" | "contacts" | "profile" | "company";
+type PageType = "search" | "collaboration" | "contacts" | "profile" | "company";
 
 interface PageSwitcherProps {
   value: PageType;
@@ -23,6 +23,30 @@ const pageOptions: SwitcherOption[] = [
       >
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.3-4.3" />
+      </svg>
+    ),
+  },
+  {
+    value: "collaboration",
+    label: "Коллаб",
+    icon: (
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="M12 2v1" />
+        <path d="M12 21v1" />
+        <path d="m4.93 4.93.71.71" />
+        <path d="m18.36 18.36.71.71" />
+        <path d="M2 12h1" />
+        <path d="M21 12h1" />
+        <path d="m4.93 19.07.71-.71" />
+        <path d="m18.36 5.64.71-.71" />
+        <circle cx="12" cy="12" r="4" />
       </svg>
     ),
   },

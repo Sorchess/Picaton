@@ -22,6 +22,15 @@ from infrastructure.database.repositories.company_card import (
 from infrastructure.database.repositories.company_tag_settings import (
     MongoCompanyTagSettingsRepository,
 )
+from infrastructure.database.repositories.idea import MongoIdeaRepository
+from infrastructure.database.repositories.idea_swipe import MongoIdeaSwipeRepository
+from infrastructure.database.repositories.project import MongoProjectRepository
+from infrastructure.database.repositories.project_member import (
+    MongoProjectMemberRepository,
+)
+from infrastructure.database.repositories.chat_message import (
+    MongoChatMessageRepository,
+)
 
 __all__ = [
     "MongoUserRepository",
@@ -34,4 +43,10 @@ __all__ = [
     "MongoSkillEndorsementRepository",
     "MongoCompanyCardRepository",
     "MongoCompanyTagSettingsRepository",
+    # Ideas & Projects
+    "MongoIdeaRepository",
+    "MongoIdeaSwipeRepository",
+    "MongoProjectRepository",
+    "MongoProjectMemberRepository",
+    "MongoChatMessageRepository",
 ]

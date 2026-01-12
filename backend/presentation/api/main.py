@@ -13,6 +13,13 @@ from presentation.api.companies.handlers import router as companies_router
 from presentation.api.companies.role_handlers import router as company_roles_router
 from presentation.api.companies.card_handlers import router as company_cards_router
 from presentation.api.endorsements.handlers import router as endorsements_router
+from presentation.api.ideas import router as ideas_router
+from presentation.api.projects import router as projects_router
+from presentation.api.chat import (
+    router as chat_router,
+    chat_global_router,
+    ws_router as chat_ws_router,
+)
 
 origins = [
     "http://localhost",
@@ -74,6 +81,13 @@ def create_app() -> FastAPI:
     app.include_router(
         endorsements_router, prefix="/api/endorsements", tags=["Skill Endorsements"]
     )
+
+    # Ideas and Projects
+    app.include_router(ideas_router, prefix="/api", tags=["Ideas"])
+    app.include_router(projects_router, prefix="/api", tags=["Projects"])
+    app.include_router(chat_router, prefix="/api", tags=["Chat"])
+    app.include_router(chat_global_router, prefix="/api", tags=["Chat"])
+    app.include_router(chat_ws_router, prefix="/api", tags=["WebSocket"])
 
     return app
 

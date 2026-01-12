@@ -1,7 +1,11 @@
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from jose import jwt
+from jose.exceptions import ExpiredSignatureError, JWTError
 
 from infrastructure.database.client import mongodb_client, MongoDBClient
 from infrastructure.database.repositories import (
@@ -13,11 +17,22 @@ from infrastructure.database.repositories import (
     MongoCompanyInvitationRepository,
     MongoEmailVerificationRepository,
     MongoSkillEndorsementRepository,
+    MongoIdeaRepository,
+    MongoIdeaSwipeRepository,
+    MongoProjectRepository,
+    MongoProjectMemberRepository,
+    MongoChatMessageRepository,
 )
 from infrastructure.database.repositories.company_role import MongoCompanyRoleRepository
 from infrastructure.database.repositories.company_card import MongoCompanyCardRepository
-from infrastructure.database.repositories.company_tag_settings import MongoCompanyTagSettingsRepository
+from infrastructure.database.repositories.company_tag_settings import (
+    MongoCompanyTagSettingsRepository,
+)
 from infrastructure.database.repositories.pending_hash import MongoPendingHashRepository
+from infrastructure.database.repositories.idea_comment import MongoIdeaCommentRepository
+from infrastructure.database.repositories.gamification import (
+    MongoGamificationRepository,
+)
 from domain.repositories import (
     UserRepositoryInterface,
     SavedContactRepositoryInterface,
@@ -29,9 +44,16 @@ from domain.repositories import (
     SkillEndorsementRepositoryInterface,
     ICompanyCardRepository,
     ICompanyTagSettingsRepository,
+    IdeaRepositoryInterface,
+    IdeaSwipeRepositoryInterface,
+    ProjectRepositoryInterface,
+    ProjectMemberRepositoryInterface,
+    ChatMessageRepositoryInterface,
 )
 from domain.repositories.company_role import CompanyRoleRepositoryInterface
 from domain.repositories.pending_hash import PendingHashRepositoryInterface
+from domain.repositories.idea_comment import IdeaCommentRepositoryInterface
+from domain.repositories.gamification import GamificationRepositoryInterface
 from application.services import (
     UserService,
     SavedContactService,
@@ -59,15 +81,61 @@ from application.services.email_verification import EmailVerificationService
 from application.services.skill_endorsement import SkillEndorsementService
 from application.services.company_role import CompanyRoleService
 from application.services.permission_checker import PermissionChecker
-from application.services.company_card import CompanyCardService, CompanyTagSettingsService
+from application.services.company_card import (
+    CompanyCardService,
+    CompanyTagSettingsService,
+)
 from application.services.gigachat_query_classifier import GigaChatQueryClassifier
 from application.services.gigachat_task_decomposer import GigaChatTaskDecomposer
 from application.services.gigachat_text_tags import GigaChatTextTagsGenerator
+from application.services.idea import IdeaService
+from application.services.swipe import SwipeService
+from application.services.project import ProjectService
+from application.services.chat import ChatService
+from application.services.ai_team_matching import AITeamMatchingService
+from application.services.ai_prd_generator import AIPRDGeneratorService
+from application.services.gamification import GamificationService
 from infrastructure.llm.gigachat_client import GigaChatClient
 from infrastructure.llm.local_llm_client import LocalLLMClient
+from infrastructure.llm.embedding_service import EmbeddingService
 from infrastructure.storage import CloudinaryService
 from infrastructure.email import SmtpEmailBackend
 from settings.config import settings
+
+
+# ==================== Security ====================
+
+
+security = HTTPBearer()
+
+
+async def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> UUID:
+    """Получить ID текущего пользователя из JWT токена."""
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            settings.jwt.secret_key,
+            algorithms=[settings.jwt.algorithm],
+        )
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
+        return UUID(user_id)
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired",
+        )
+    except (JWTError, ValueError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+        )
 
 
 # ==================== База данных ====================
@@ -488,9 +556,7 @@ def get_company_role_service(
     permission_checker: PermissionChecker = Depends(get_permission_checker),
 ) -> CompanyRoleService:
     """Получить сервис управления ролями в компании."""
-    return CompanyRoleService(
-        role_repo, company_repo, member_repo, permission_checker
-    )
+    return CompanyRoleService(role_repo, company_repo, member_repo, permission_checker)
 
 
 def get_skill_endorsement_service(
@@ -536,3 +602,143 @@ def get_email_service() -> SmtpEmailBackend | None:
 
 
 EmailServiceDep = Annotated[SmtpEmailBackend | None, Depends(get_email_service)]
+
+
+# ==================== Идеи и Проекты ====================
+
+
+def get_idea_repository(
+    db: Database,
+) -> IdeaRepositoryInterface:
+    """Получить репозиторий идей."""
+    return MongoIdeaRepository(db["ideas"])
+
+
+def get_idea_swipe_repository(
+    db: Database,
+) -> IdeaSwipeRepositoryInterface:
+    """Получить репозиторий свайпов идей."""
+    return MongoIdeaSwipeRepository(db["idea_swipes"])
+
+
+def get_project_repository(
+    db: Database,
+) -> ProjectRepositoryInterface:
+    """Получить репозиторий проектов."""
+    return MongoProjectRepository(db["projects"], db["project_members"])
+
+
+def get_project_member_repository(
+    db: Database,
+) -> ProjectMemberRepositoryInterface:
+    """Получить репозиторий участников проектов."""
+    return MongoProjectMemberRepository(db["project_members"])
+
+
+def get_chat_message_repository(
+    db: Database,
+) -> ChatMessageRepositoryInterface:
+    """Получить репозиторий сообщений чата."""
+    return MongoChatMessageRepository(db["chat_messages"])
+
+
+def get_idea_comment_repository(
+    db: Database,
+) -> IdeaCommentRepositoryInterface:
+    """Получить репозиторий комментариев к идеям."""
+    return MongoIdeaCommentRepository(db["idea_comments"])
+
+
+def get_gamification_repository(
+    db: Database,
+) -> GamificationRepositoryInterface:
+    """Получить репозиторий геймификации."""
+    return MongoGamificationRepository(db["gamification"], db)
+
+
+IdeaRepository = Annotated[IdeaRepositoryInterface, Depends(get_idea_repository)]
+IdeaSwipeRepository = Annotated[
+    IdeaSwipeRepositoryInterface, Depends(get_idea_swipe_repository)
+]
+ProjectRepository = Annotated[
+    ProjectRepositoryInterface, Depends(get_project_repository)
+]
+ProjectMemberRepository = Annotated[
+    ProjectMemberRepositoryInterface, Depends(get_project_member_repository)
+]
+ChatMessageRepository = Annotated[
+    ChatMessageRepositoryInterface, Depends(get_chat_message_repository)
+]
+IdeaCommentRepository = Annotated[
+    IdeaCommentRepositoryInterface, Depends(get_idea_comment_repository)
+]
+GamificationRepository = Annotated[
+    GamificationRepositoryInterface, Depends(get_gamification_repository)
+]
+
+
+def get_embedding_service() -> EmbeddingService:
+    """Получить сервис эмбеддингов."""
+    return EmbeddingService()
+
+
+def get_idea_service(
+    idea_repo: IdeaRepository,
+    swipe_repo: IdeaSwipeRepository,
+) -> IdeaService:
+    """Получить сервис идей."""
+    return IdeaService(idea_repo, swipe_repo)
+
+
+def get_swipe_service(
+    swipe_repo: IdeaSwipeRepository,
+    idea_repo: IdeaRepository,
+) -> SwipeService:
+    """Получить сервис свайпов."""
+    return SwipeService(swipe_repo, idea_repo)
+
+
+def get_project_service(
+    project_repo: ProjectRepository,
+    member_repo: ProjectMemberRepository,
+    idea_repo: IdeaRepository,
+    chat_repo: ChatMessageRepository,
+) -> ProjectService:
+    """Получить сервис проектов."""
+    return ProjectService(project_repo, member_repo, idea_repo, chat_repo)
+
+
+def get_chat_service(
+    message_repo: ChatMessageRepository,
+    member_repo: ProjectMemberRepository,
+) -> ChatService:
+    """Получить сервис чата."""
+    return ChatService(message_repo, member_repo)
+
+
+def get_ai_team_matching_service(
+    user_repo: UserRepository,
+    card_repo: BusinessCardRepository,
+    embedding_service: EmbeddingService = Depends(get_embedding_service),
+) -> AITeamMatchingService:
+    """Получить сервис AI-подбора команды."""
+    gigachat_client = GigaChatClient()
+    return AITeamMatchingService(
+        gigachat_client=gigachat_client,
+        embedding_service=embedding_service,
+        card_repository=card_repo,
+        user_repository=user_repo,
+    )
+
+
+def get_ai_prd_generator_service() -> AIPRDGeneratorService:
+    """Получить сервис AI-генерации PRD."""
+    gigachat_client = GigaChatClient()
+    return AIPRDGeneratorService(gigachat_client)
+
+
+def get_gamification_service(
+    gamification_repo: GamificationRepository,
+) -> GamificationService:
+    """Получить сервис геймификации."""
+    return GamificationService(gamification_repo)
