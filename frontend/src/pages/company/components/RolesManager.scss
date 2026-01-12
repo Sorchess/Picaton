@@ -467,6 +467,23 @@
     }
   }
 
+  .role-form {
+    &__actions {
+      flex-direction: column-reverse;
+      gap: 10px;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .role-delete {
+    &__warning {
+      padding: 12px 14px;
+    }
+  }
+
   .roles-toast {
     left: 16px;
     right: 16px;

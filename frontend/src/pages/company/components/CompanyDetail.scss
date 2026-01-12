@@ -721,11 +721,13 @@
 
     &__sidebar {
       width: 100%;
-      min-height: auto;
+      height: auto;
+      max-height: none;
       position: relative;
       padding: 16px;
       border-right: none;
       border-bottom: 1px solid var(--color-glass-border);
+      overflow: visible;
     }
 
     &__back {
@@ -740,12 +742,32 @@
     &__nav {
       flex-direction: row;
       gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     &__nav-item {
       flex: 1;
+      min-width: 0;
       justify-content: center;
-      padding: 10px;
+      padding: 10px 8px;
+      font-size: 0.85rem;
+
+      span:not(.company-detail__nav-icon):not(.company-detail__nav-count) {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    &__nav-icon {
+      flex-shrink: 0;
     }
 
     &__nav-count {
@@ -762,6 +784,20 @@
 
     &__card-select {
       display: none;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .company-detail {
+    &__nav-item {
+      padding: 8px 6px;
+      font-size: 0.8rem;
+      gap: 6px;
+    }
+
+    &__nav-icon {
+      font-size: 1rem;
     }
   }
 }
