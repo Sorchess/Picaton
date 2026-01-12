@@ -35,15 +35,6 @@ services:
     networks:
       - app-network
 
-  maildev:
-    image: maildev/maildev
-    container_name: maildev
-    ports:
-      - "1080:1080"
-      - "1025:1025"
-    networks:
-      - app-network
-
   rabbitmq:
     image: rabbitmq:3-management-alpine
     hostname: rabbitmq
@@ -72,12 +63,12 @@ services:
     container_name: taskiq-worker
     env_file:
       - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: "python -m taskiq worker infrastructure.broker.broker:broker --fs-discover --tasks-pattern application/tasks/*.py"
     depends_on:
       rabbitmq:
         condition: service_healthy
-      maildev:
-        condition: service_started
     networks:
       - app-network
 
@@ -91,6 +82,8 @@ services:
       - "app_service=api"
     env_file:
       - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${API__PORT}:8000"
     command: "python -m uvicorn --factory presentation.api.main:create_app --host 0.0.0.0 --port 8000"

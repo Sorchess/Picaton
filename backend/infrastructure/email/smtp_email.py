@@ -1,7 +1,9 @@
 import logging
 import smtplib
+import uuid
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate
 
 from email.message import EmailMessage
 
@@ -29,6 +31,13 @@ class SmtpEmailBackend:
         self.from_name = from_name
         self.use_tls = use_tls
 
+    def _generate_message_id(self) -> str:
+        """Генерирует уникальный Message-ID для email."""
+        domain = (
+            self.from_email.split("@")[-1] if "@" in self.from_email else "picaton.com"
+        )
+        return f"<{uuid.uuid4()}@{domain}>"
+
     def _create_message(self, email: EmailMessage) -> MIMEMultipart:
         """Создаёт MIME сообщение."""
         msg = MIMEMultipart("alternative")
@@ -39,6 +48,9 @@ class SmtpEmailBackend:
             msg["To"] = ", ".join(email.to)
         else:
             msg["To"] = email.to
+
+        msg["Message-ID"] = self._generate_message_id()
+        msg["Date"] = formatdate(localtime=True)
 
         # Текстовая версия (fallback)
         if email.body_text:

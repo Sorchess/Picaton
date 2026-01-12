@@ -2,10 +2,24 @@
 
 import logging
 import smtplib
+import uuid
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate
 
 from settings.config import settings
+
+
+def _generate_message_id() -> str:
+    """Генерирует уникальный Message-ID для email."""
+    domain = (
+        settings.email.from_email.split("@")[-1]
+        if "@" in settings.email.from_email
+        else "picaton.com"
+    )
+    return f"<{uuid.uuid4()}@{domain}>"
+
 
 # Импорт брокера в конце модуля после определения функций
 # чтобы избежать circular import
@@ -431,6 +445,8 @@ async def send_magic_link_email(to_email: str, magic_link: str) -> bool:
         msg["Subject"] = "🔐 Вход в Picaton"
         msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
         msg["To"] = to_email
+        msg["Message-ID"] = _generate_message_id()
+        msg["Date"] = formatdate(localtime=True)
 
         # Добавляем текстовую и HTML версии
         expire_minutes = settings.magic_link.expire_minutes
@@ -481,6 +497,8 @@ async def send_email_verification_code(to_email: str, code: str) -> bool:
         msg["Subject"] = "🔐 Код подтверждения - Picaton"
         msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
         msg["To"] = to_email
+        msg["Message-ID"] = _generate_message_id()
+        msg["Date"] = formatdate(localtime=True)
 
         expire_minutes = 15
 
@@ -590,6 +608,8 @@ async def send_welcome_email(to_email: str, user_name: str) -> bool:
         msg["Subject"] = "🎉 Добро пожаловать в Picaton!"
         msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
         msg["To"] = to_email
+        msg["Message-ID"] = _generate_message_id()
+        msg["Date"] = formatdate(localtime=True)
 
         msg.attach(
             MIMEText(f"Добро пожаловать в Picaton, {user_name}!", "plain", "utf-8")
@@ -852,6 +872,8 @@ async def send_company_invitation_email(
         msg["Subject"] = f"🤝 {inviter_name} приглашает вас в {company_name}"
         msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
         msg["To"] = to_email
+        msg["Message-ID"] = _generate_message_id()
+        msg["Date"] = formatdate(localtime=True)
 
         text_part = MIMEText(text.strip(), "plain", "utf-8")
         html_part = MIMEText(html, "html", "utf-8")
