@@ -7,10 +7,20 @@ import { businessCardApi } from "@/entities/business-card";
 import type { CompanyCardAssignment } from "@/entities/company";
 import { companyApi } from "@/entities/company";
 import { useAuth } from "@/features/auth";
-import { AvatarUpload } from "@/features/avatar-upload";
 import { QrModal } from "@/features/qr-modal";
 import { Loader, Button, Modal } from "@/shared";
-import { CardEditor, CardPreview } from "./components";
+import {
+  CardEditor,
+  CardPreview,
+  ProfileHeroBlock,
+  RoleTabs,
+  ProfileInfoCard,
+  SocialTrustCard,
+  ProfileTopBar,
+  CheckIcon,
+  UsersIcon,
+} from "./components";
+import type { RoleTab } from "./components";
 import "./ProfilePage.scss";
 
 type ViewMode = "overview" | "edit-card";
@@ -42,6 +52,10 @@ export function ProfilePage() {
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [qrCardName, setQrCardName] = useState<string | undefined>();
+
+  // Active role for tabs
+  const [activeRoleId, setActiveRoleId] = useState("personal");
 
   const loadUser = useCallback(async () => {
     if (!authUser?.id) return;
@@ -84,7 +98,7 @@ export function ProfilePage() {
     (cardId: string): CompanyCardAssignment[] => {
       return cardAssignments.filter((a) => a.selected_card_id === cardId);
     },
-    [cardAssignments]
+    [cardAssignments],
   );
 
   useEffect(() => {
@@ -103,7 +117,6 @@ export function ProfilePage() {
   const handleBackToOverview = () => {
     setViewMode("overview");
     setEditingCard(null);
-    // Перезагружаем карточки для актуализации данных
     loadCards();
   };
 
@@ -111,7 +124,7 @@ export function ProfilePage() {
   const handleCardUpdate = (updatedCard: BusinessCard) => {
     setEditingCard(updatedCard);
     setCards((prev) =>
-      prev.map((c) => (c.id === updatedCard.id ? updatedCard : c))
+      prev.map((c) => (c.id === updatedCard.id ? updatedCard : c)),
     );
   };
 
@@ -122,12 +135,10 @@ export function ProfilePage() {
     const cardToDelete = cards.find((c) => c.id === cardId);
 
     if (cardToDelete?.is_primary) {
-      // Для основной карточки - очищаем содержимое
       const clearedCard = await businessCardApi.clearContent(cardId, user.id);
       setCards((prev) => prev.map((c) => (c.id === cardId ? clearedCard : c)));
       handleBackToOverview();
     } else {
-      // Для обычной карточки - удаляем полностью
       await businessCardApi.delete(cardId, user.id);
       setCards((prev) => prev.filter((c) => c.id !== cardId));
       handleBackToOverview();
@@ -145,7 +156,6 @@ export function ProfilePage() {
       setCards([...cards, newCard]);
       setNewCardTitle("");
       setShowCreateModal(false);
-      // Сразу открываем для редактирования
       handleOpenCard(newCard);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка создания карточки");
@@ -154,38 +164,21 @@ export function ProfilePage() {
     }
   };
 
-  // Загрузка аватара
-  const handleAvatarUpload = useCallback(
-    async (file: File) => {
-      if (!user) throw new Error("User not loaded");
-      const result = await userApi.uploadAvatar(user.id, file);
-      setUser({ ...user, avatar_url: result.avatar_url });
-      return result;
-    },
-    [user]
-  );
+  // QR код профиля
+  const handleShareProfile = async () => {
+    if (!user) return;
 
-  // QR код карточки
-  const [qrCardName, setQrCardName] = useState<string | undefined>();
+    const primaryCard = cards.find((c) => c.is_primary) || cards[0];
 
-  // Visibility toggle
-  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
-
-  const handleVisibilityToggle = async () => {
-    if (!user || isUpdatingVisibility) return;
-    setIsUpdatingVisibility(true);
-    try {
-      const updatedUser = await userApi.updateVisibility(
-        user.id,
-        !user.is_public
-      );
-      setUser(updatedUser);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Ошибка изменения видимости"
-      );
-    } finally {
-      setIsUpdatingVisibility(false);
+    if (primaryCard) {
+      try {
+        const qr = await businessCardApi.getQRCode(primaryCard.id);
+        setQrCodeImage(qr.image_base64);
+        setQrCardName(getFullName(user));
+        setShowQrModal(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Ошибка генерации QR");
+      }
     }
   };
 
@@ -197,6 +190,59 @@ export function ProfilePage() {
       setShowQrModal(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка генерации QR");
+    }
+  };
+
+  // Generate roles from user data
+  const generateRoles = useCallback((): RoleTab[] => {
+    const roles: RoleTab[] = [{ id: "personal", name: "Личный", emoji: "🔥" }];
+
+    cards.forEach((card) => {
+      if (!card.is_primary && card.title) {
+        roles.push({
+          id: card.id,
+          name: card.title,
+          emoji: "🌟",
+        });
+      }
+    });
+
+    return roles;
+  }, [cards]);
+
+  // Extract user roles for display
+  const getUserRoles = useCallback((): string[] => {
+    const roles: string[] = [];
+
+    if (user?.position) {
+      roles.push(user.position);
+    }
+
+    if (user?.tags && user.tags.length > 0) {
+      user.tags.slice(0, 3).forEach((tag) => {
+        roles.push(tag.name);
+      });
+    }
+
+    if (roles.length === 0) {
+      roles.push("Пользователь");
+    }
+
+    return roles;
+  }, [user]);
+
+  // Format birth date
+  const formatBirthDate = (dateStr?: string | null): string | undefined => {
+    if (!dateStr) return undefined;
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("ru-RU", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    } catch {
+      return undefined;
     }
   };
 
@@ -238,7 +284,42 @@ export function ProfilePage() {
     );
   }
 
-  // Overview mode
+  // Skills count
+  const skillsCount = user.tags?.length || 0;
+  // Recommendations count (can be fetched from API later)
+  const recommendationsCount = 120;
+  // User level (based on profile completeness)
+  const userLevel = Math.floor(user.profile_completeness / 4) + 1;
+
+  // Trust items
+  const trustItems = [
+    {
+      id: "skills",
+      icon: <CheckIcon />,
+      title: "Подтвержденные скиллы",
+      subtitle: `${skillsCount} подтверждений`,
+      variant: "blue" as const,
+      onClick: () => {},
+    },
+    {
+      id: "contacts",
+      icon: <UsersIcon />,
+      title: "Совместных контактов",
+      subtitle: `${cards.length * 10} контактов`,
+      variant: "purple" as const,
+      onClick: () => {},
+    },
+  ];
+
+  // Hobbies (from tags or mock data)
+  const hobbies =
+    user.search_tags?.slice(0, 5).map((tag, i) => ({
+      id: `hobby-${i}`,
+      icon: "❤️",
+      name: tag,
+    })) || [];
+
+  // Overview mode - new Figma design
   return (
     <div className="profile">
       {/* Toast для ошибок */}
@@ -248,88 +329,89 @@ export function ProfilePage() {
         </div>
       )}
 
-      {/* Шапка профиля */}
-      <header className="profile__header">
-        <div className="profile__user">
-          <AvatarUpload
-            currentAvatarUrl={user.avatar_url}
-            onUpload={handleAvatarUpload}
-            size={80}
-            name={getFullName(user)}
-            showHint={false}
-          />
-          <div className="profile__user-info">
-            <h1>{getFullName(user)}</h1>
-            <span className="profile__email">{user.email}</span>
-          </div>
-        </div>
+      {/* Top Bar */}
+      <ProfileTopBar
+        onLeftClick={() => {
+          /* Navigate to settings */
+        }}
+        onRightClick={handleShareProfile}
+      />
 
-        {/* Переключатель видимости */}
-        <div className="profile__visibility">
-          <button
-            className={`profile__visibility-toggle ${
-              user.is_public
-                ? "profile__visibility-toggle--public"
-                : "profile__visibility-toggle--private"
-            }`}
-            onClick={handleVisibilityToggle}
-            disabled={isUpdatingVisibility}
-            title={
-              user.is_public
-                ? "Профиль виден всем в поиске"
-                : "Профиль виден только внутри компании"
+      {/* Content */}
+      <div className="profile__content">
+        {/* Hero Block */}
+        <ProfileHeroBlock
+          name={getFullName(user)}
+          avatarUrl={user.avatar_url}
+          roles={getUserRoles()}
+          skillsCount={skillsCount}
+          recommendationsCount={recommendationsCount}
+          level={userLevel}
+        />
+
+        {/* Role Tabs */}
+        <RoleTabs
+          roles={generateRoles()}
+          activeRoleId={activeRoleId}
+          onChange={setActiveRoleId}
+        />
+
+        {/* Info Card */}
+        <ProfileInfoCard
+          phone={user.contacts?.find((c) => c.type === "phone")?.value}
+          username={user.telegram_username || undefined}
+          onUsernameClick={() => {
+            if (user.telegram_username) {
+              navigator.clipboard.writeText(`@${user.telegram_username}`);
             }
-          >
-            <span className="profile__visibility-icon">
-              {user.is_public ? "🌍" : "🔒"}
-            </span>
-            <span className="profile__visibility-text">
-              {isUpdatingVisibility
-                ? "..."
-                : user.is_public
-                ? "Публичный"
-                : "Приватный"}
-            </span>
-          </button>
-        </div>
-      </header>
+          }}
+          birthDate={formatBirthDate(user.created_at)}
+          hobbies={hobbies}
+        />
 
-      {/* Секция карточек */}
-      <section className="profile__cards-section">
-        <div className="profile__cards-header">
-          <h2>📇 Мои визитки</h2>
-          <span className="profile__cards-count">{cards.length} / 5</span>
-        </div>
+        {/* Social Trust Card */}
+        <SocialTrustCard items={trustItems} />
 
-        {isLoadingCards ? (
-          <div className="profile__cards-loading">
-            <Loader />
-          </div>
-        ) : (
-          <div className="profile__cards-list">
-            {cards.map((card) => (
-              <CardPreview
-                key={card.id}
-                card={card}
-                usedByCompanies={getCompaniesUsingCard(card.id)}
-                onClick={() => handleOpenCard(card)}
-                onShare={handleShareCard}
-              />
-            ))}
+        {/* Cards Section */}
+        {activeRoleId !== "personal" && (
+          <section className="profile__cards-section">
+            <div className="profile__cards-header">
+              <h2>📇 Мои визитки</h2>
+              <span className="profile__cards-count">{cards.length} / 5</span>
+            </div>
 
-            {/* Кнопка создания новой карточки */}
-            {cards.length < 5 && (
-              <button
-                className="profile__add-card"
-                onClick={() => setShowCreateModal(true)}
-              >
-                <span className="profile__add-card-icon">+</span>
-                <span className="profile__add-card-text">Создать визитку</span>
-              </button>
+            {isLoadingCards ? (
+              <div className="profile__cards-loading">
+                <Loader />
+              </div>
+            ) : (
+              <div className="profile__cards-list">
+                {cards.map((card) => (
+                  <CardPreview
+                    key={card.id}
+                    card={card}
+                    usedByCompanies={getCompaniesUsingCard(card.id)}
+                    onClick={() => handleOpenCard(card)}
+                    onShare={handleShareCard}
+                  />
+                ))}
+
+                {cards.length < 5 && (
+                  <button
+                    className="profile__add-card"
+                    onClick={() => setShowCreateModal(true)}
+                  >
+                    <span className="profile__add-card-icon">+</span>
+                    <span className="profile__add-card-text">
+                      Создать визитку
+                    </span>
+                  </button>
+                )}
+              </div>
             )}
-          </div>
+          </section>
         )}
-      </section>
+      </div>
 
       {/* Модалка создания карточки */}
       <Modal

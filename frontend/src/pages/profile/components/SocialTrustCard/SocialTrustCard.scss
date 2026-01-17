@@ -1,0 +1,127 @@
+.social-trust-card {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background: #242424;
+  border: 1px solid #303030;
+  border-radius: 24px;
+  overflow: hidden;
+
+  &__title {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    padding: 6px;
+    margin-bottom: 8px;
+  }
+
+  &__items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 76px;
+    padding: 11px 14px 11px 10px;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: scale(1.01);
+    }
+
+    &--blue {
+      background: rgba(0, 129, 255, 0.1);
+    }
+
+    &--purple {
+      background: rgba(170, 0, 255, 0.1);
+    }
+
+    &--green {
+      background: rgba(56, 128, 40, 0.1);
+    }
+
+    &--orange {
+      background: rgba(255, 149, 0, 0.1);
+    }
+  }
+
+  &__item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    flex-shrink: 0;
+
+    svg {
+      color: #242424;
+    }
+
+    &--blue {
+      background: #0081ff;
+    }
+
+    &--purple {
+      background: #a0f;
+    }
+
+    &--green {
+      background: #388028;
+    }
+
+    &--orange {
+      background: #ff9500;
+    }
+  }
+
+  &__item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    margin-left: 12px;
+  }
+
+  &__item-title {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 12px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  &__item-subtitle {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 12px;
+    color: #6f7884;
+  }
+
+  &__item-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    color: #6f7884;
+    flex-shrink: 0;
+  }
+}

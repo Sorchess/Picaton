@@ -1,0 +1,60 @@
+.role-tabs {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 2px;
+  background: #242424;
+  border-radius: 41px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &__tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 27px;
+    padding: 0 14px;
+    border-radius: 54px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 12px;
+
+    &:hover:not(&--active) {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &--active {
+      background: rgba(223, 223, 223, 0.1);
+      border: 1px solid rgba(157, 157, 157, 0.1);
+
+      .role-tabs__name {
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+  }
+
+  &__name {
+    color: rgba(255, 255, 255, 0.6);
+    transition: color 0.2s ease;
+  }
+
+  &__emoji {
+    color: #242424;
+    font-size: 12px;
+  }
+}

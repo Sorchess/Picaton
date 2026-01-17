@@ -1,0 +1,1 @@
+export { ProfileHeroBlock } from "./ProfileHeroBlock";

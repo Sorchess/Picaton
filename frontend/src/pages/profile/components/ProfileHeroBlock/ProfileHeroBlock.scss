@@ -1,0 +1,211 @@
+.profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 241px;
+  padding-bottom: 10px;
+  border-radius: 24px;
+  position: relative;
+
+  // Floating emojis container
+  &__emojis {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &__emoji {
+    position: absolute;
+    font-size: 24px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &-blur {
+      position: absolute;
+      filter: blur(10px);
+      opacity: 0.5;
+    }
+
+    &-main {
+      position: relative;
+    }
+
+    // Position variations
+    &--1 {
+      top: 16px;
+      left: 55px;
+      transform: rotate(-15deg);
+    }
+
+    &--2 {
+      top: 45px;
+      right: 100px;
+      transform: rotate(-15deg);
+    }
+
+    &--3 {
+      top: 88px;
+      right: 120px;
+      transform: rotate(-15deg);
+    }
+
+    &--4 {
+      top: 63px;
+      right: 40px;
+      transform: rotate(-15deg);
+    }
+
+    &--5 {
+      top: 82px;
+      left: 50px;
+      transform: rotate(30deg);
+      font-size: 29px;
+    }
+
+    &--6 {
+      top: 20px;
+      right: 60px;
+      transform: rotate(-15deg);
+      font-size: 29px;
+    }
+  }
+
+  // Avatar with glow effect
+  &__avatar {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 20px;
+
+    .avatar {
+      width: 89px;
+      height: 91px;
+
+      &__inner {
+        border-radius: 85px;
+      }
+    }
+  }
+
+  &__avatar-glow {
+    position: absolute;
+    top: 0;
+    left: -1.5px;
+    width: 89px;
+    height: 91px;
+    border-radius: 85px;
+    filter: blur(15px);
+    opacity: 0.5;
+    background: inherit;
+    z-index: -1;
+  }
+
+  // Name and roles
+  &__info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    z-index: 2;
+    margin-bottom: 20px;
+  }
+
+  &__name {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+  }
+
+  &__roles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  &__role {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 12px;
+    color: #6f7884;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__dot {
+    width: 5px;
+    height: 5px;
+    background: #6f7884;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  // Stats badges
+  &__stats {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    z-index: 2;
+  }
+
+  &__stat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 27px;
+    padding: 0 14px;
+    border-radius: 54px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+
+    &--skills {
+      background: rgba(0, 129, 255, 0.1);
+      border-color: rgba(0, 129, 255, 0.1);
+      color: #0081ff;
+    }
+
+    &--recommendations {
+      background: rgba(143, 64, 200, 0.1);
+      border-color: rgba(143, 64, 200, 0.1);
+      color: #8f40c8;
+    }
+
+    &--level {
+      background: rgba(56, 128, 40, 0.1);
+      border-color: rgba(56, 128, 40, 0.1);
+      color: #388028;
+    }
+  }
+}

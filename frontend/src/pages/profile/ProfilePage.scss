@@ -1,11 +1,10 @@
 .profile {
   min-height: 100vh;
-  padding: 24px 24px 80px;
+  padding: 0 20px 100px;
   width: 100%;
-  max-width: 800px;
-  min-width: 320px;
+  max-width: 393px;
   margin: 0 auto;
-  background: var(--color-bg-primary);
+  background: linear-gradient(180deg, #090909 0%, #090909 100%);
 
   // Loading & Error states
   &__loading,
@@ -19,17 +18,26 @@
     text-align: center;
 
     p {
-      color: var(--color-text-secondary);
+      color: rgba(255, 255, 255, 0.6);
+      font-family:
+        -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+        sans-serif;
+      font-size: 14px;
     }
 
     button {
       padding: 12px 24px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border: none;
-      border-radius: 10px;
-      color: white;
+      background: rgba(0, 129, 255, 0.2);
+      border: 1px solid rgba(0, 129, 255, 0.3);
+      border-radius: 14px;
+      color: #0081ff;
       font-weight: 600;
       cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(0, 129, 255, 0.3);
+      }
     }
   }
 
@@ -41,12 +49,15 @@
     transform: translateX(-50%);
     padding: 12px 24px;
     background: rgba(239, 68, 68, 0.9);
-    border-radius: 10px;
+    border-radius: 14px;
     color: white;
-    font-size: 0.9rem;
+    font-size: 14px;
     z-index: 1000;
     cursor: pointer;
     animation: slideDown 0.3s ease;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
   }
 
   @keyframes slideDown {
@@ -60,142 +71,46 @@
     }
   }
 
-  // Header
-  &__header {
+  // Content area
+  &__content {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-    padding: 24px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 16px;
-  }
-
-  &__user {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  &__user-info {
-    h1 {
-      font-family: "Syne", sans-serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--color-text-primary);
-      margin: 0 0 4px;
-    }
-  }
-
-  &__email {
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
-  }
-
-  // Visibility toggle
-  &__visibility {
-    flex-shrink: 0;
-  }
-
-  &__visibility-toggle {
-    display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
-    padding: 10px 16px;
-    border: 1px solid var(--color-glass-border);
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: var(--color-glass-bg);
-    color: var(--color-text-secondary);
-
-    &:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    &--public {
-      background: rgba(34, 197, 94, 0.1);
-      border-color: rgba(34, 197, 94, 0.3);
-      color: #22c55e;
-
-      &:hover:not(:disabled) {
-        background: rgba(34, 197, 94, 0.15);
-      }
-    }
-
-    &--private {
-      background: rgba(251, 146, 60, 0.1);
-      border-color: rgba(251, 146, 60, 0.3);
-      color: #fb923c;
-
-      &:hover:not(:disabled) {
-        background: rgba(251, 146, 60, 0.15);
-      }
-    }
-  }
-
-  &__visibility-icon {
-    font-size: 1rem;
-  }
-
-  &__visibility-text {
-    font-size: 0.85rem;
-  }
-
-  &__qr-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 10px;
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      background: var(--color-glass-bg-hover);
-      color: var(--color-text-primary);
-    }
+    width: 100%;
   }
 
   // Cards Section
   &__cards-section {
-    margin-top: 24px;
+    margin-top: 16px;
+    padding: 16px;
+    background: #242424;
+    border: 1px solid #303030;
+    border-radius: 24px;
   }
 
   &__cards-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 
     h2 {
-      font-family: "Syne", sans-serif;
-      font-size: 1.25rem;
+      font-family:
+        -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+        sans-serif;
+      font-size: 16px;
       font-weight: 600;
-      color: var(--color-text-primary);
+      color: rgba(255, 255, 255, 0.9);
       margin: 0;
     }
   }
 
   &__cards-count {
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
-    padding: 4px 12px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 20px;
+    font-size: 12px;
+    color: #6f7884;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
   }
 
   &__cards-loading {
@@ -207,7 +122,7 @@
   &__cards-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 
   // Add card button
@@ -216,20 +131,21 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
-    padding: 24px;
+    padding: 20px;
     background: transparent;
-    border: 2px dashed var(--color-glass-border);
+    border: 2px dashed #303030;
     border-radius: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
 
     &:hover {
-      border-color: rgba(139, 92, 246, 0.5);
-      background: rgba(139, 92, 246, 0.05);
+      border-color: rgba(0, 129, 255, 0.5);
+      background: rgba(0, 129, 255, 0.05);
 
       .profile__add-card-icon {
         transform: scale(1.1);
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background: rgba(0, 129, 255, 0.2);
+        color: #0081ff;
       }
     }
   }
@@ -240,18 +156,21 @@
     justify-content: center;
     width: 40px;
     height: 40px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #303030;
     border-radius: 50%;
-    color: var(--color-text-secondary);
-    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 20px;
     transition: all 0.3s ease;
   }
 
   &__add-card-text {
-    font-size: 1rem;
+    font-size: 14px;
     font-weight: 500;
-    color: var(--color-text-secondary);
+    color: rgba(255, 255, 255, 0.6);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
   }
 
   // Create modal
@@ -262,30 +181,35 @@
   }
 
   &__create-hint {
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
     line-height: 1.5;
     margin: 0;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
   }
 
   &__create-input {
     width: 100%;
     padding: 14px 18px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 12px;
-    color: var(--color-text-primary);
-    font-size: 1rem;
+    background: #242424;
+    border: 1px solid #303030;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
     transition: all 0.2s;
 
     &::placeholder {
-      color: var(--color-text-muted);
+      color: rgba(255, 255, 255, 0.4);
     }
 
     &:focus {
       outline: none;
-      border-color: rgba(139, 92, 246, 0.5);
-      background: var(--color-glass-bg-hover);
+      border-color: rgba(0, 129, 255, 0.5);
     }
   }
 
@@ -297,29 +221,8 @@
 }
 
 // Responsive
-@media (max-width: 600px) {
+@media (max-width: 430px) {
   .profile {
-    padding: 24px 16px 60px;
-
-    &__header {
-      flex-direction: column;
-      gap: 16px;
-      text-align: center;
-    }
-
-    &__user {
-      flex-direction: column;
-    }
-
-    &__qr-btn {
-      width: 100%;
-      justify-content: center;
-    }
-
-    &__cards-header {
-      flex-direction: column;
-      gap: 12px;
-      align-items: flex-start;
-    }
+    padding: 0 16px 100px;
   }
 }
