@@ -8,7 +8,9 @@
   flex-direction: column;
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 
   &--loading {
     align-items: center;
@@ -222,8 +224,8 @@
     left: 0;
     right: 0;
     z-index: 100;
-    padding: 8px 16px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
     background: none;
     border-top: none;
 
@@ -241,7 +243,7 @@
       .switcher__option {
         flex: 1;
         flex-direction: column;
-        padding: 8px 4px;
+        padding: 12px 4px;
         gap: 4px;
       }
 
@@ -250,7 +252,7 @@
       }
 
       .switcher__option-icon {
-        font-size: 20px;
+        font-size: 22px;
       }
     }
   }

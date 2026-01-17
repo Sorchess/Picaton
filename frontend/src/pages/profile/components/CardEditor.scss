@@ -10,13 +10,13 @@
   &__top-bar {
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 50;
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
     padding: 10px 0;
-    background: transparent;
+    background: #090909;
   }
 
   &__top-btn {
@@ -892,6 +892,10 @@
 [data-theme="light"] {
   .card-editor {
     background: linear-gradient(180deg, #f8faf8 0%, #f8faf8 100%);
+
+    &__top-bar {
+      background: #f8faf8;
+    }
 
     &__top-btn {
       background: rgba(33, 160, 56, 0.1);
