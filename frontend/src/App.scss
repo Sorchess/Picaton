@@ -224,9 +224,8 @@
     z-index: 100;
     padding: 8px 16px;
     padding-bottom: max(8px, env(safe-area-inset-bottom));
-    background: var(--color-glass-bg);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--color-glass-border);
+    background: none;
+    border-top: none;
 
     @media (max-width: 768px) {
       display: flex;

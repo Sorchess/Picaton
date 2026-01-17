@@ -1,91 +1,107 @@
 .card-editor {
   min-height: 100vh;
-  padding: 24px 24px 80px;
+  padding: 0 20px 100px;
   width: 100%;
-  max-width: 800px;
-  min-width: 320px;
+  max-width: 393px;
   margin: 0 auto;
-  background: var(--color-bg-primary);
+  background: linear-gradient(180deg, #090909 0%, #090909 100%);
 
-  // Header
-  &__header {
+  // Top Bar
+  &__top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  &__header-top {
-    display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
+    width: 100%;
+    padding: 10px 0;
+    background: transparent;
   }
 
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 10px;
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: fit-content;
-
-    &:hover {
-      background: var(--color-glass-bg-hover);
-      color: var(--color-text-primary);
-    }
-  }
-
-  &__delete-btn {
+  &__top-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 10px;
-    color: #ef4444;
+    width: 42px;
+    height: 42px;
+    background: rgba(63, 63, 63, 0.5);
+    border: none;
+    border-radius: 40px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.08);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    color: white;
 
     &:hover {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: rgba(239, 68, 68, 0.5);
+      background: rgba(63, 63, 63, 0.7);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &--danger {
+      background: rgba(205, 43, 43, 0.3);
+      color: #cd2b2b;
+
+      &:hover {
+        background: rgba(205, 43, 43, 0.5);
+      }
     }
   }
 
-  &__title-section {
+  &__top-center {
     display: flex;
     align-items: center;
-    gap: 12px;
-
-    h1 {
-      font-family: "Syne", sans-serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--color-text-primary);
-      margin: 0;
-    }
+    gap: 8px;
   }
 
-  &__badge {
-    padding: 4px 10px;
-    background: linear-gradient(
-      135deg,
-      rgba(251, 191, 36, 0.2),
-      rgba(245, 158, 11, 0.2)
-    );
-    border: 1px solid rgba(251, 191, 36, 0.4);
-    border-radius: 20px;
-    color: #fbbf24;
-    font-size: 0.75rem;
-    font-weight: 600;
+  &__edit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 31px;
+    padding: 0 16px;
+    background: rgba(223, 223, 223, 0.1);
+    border: 1px solid rgba(157, 157, 157, 0.1);
+    border-radius: 54px;
+    color: rgba(255, 255, 255, 0.9);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    cursor: default;
+  }
+
+  &__save-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 31px;
+    height: 31px;
+    background: rgba(56, 128, 40, 0.2);
+    border: none;
+    border-radius: 50%;
+    color: #388028;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(56, 128, 40, 0.3);
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   // Toast
@@ -96,12 +112,15 @@
     transform: translateX(-50%);
     padding: 12px 24px;
     background: rgba(239, 68, 68, 0.9);
-    border-radius: 10px;
+    border-radius: 14px;
     color: white;
-    font-size: 0.9rem;
+    font-size: 14px;
     z-index: 1000;
     cursor: pointer;
     animation: slideDown 0.3s ease;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
   }
 
   @keyframes slideDown {
@@ -115,228 +134,390 @@
     }
   }
 
-  // Progress
-  &__progress {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding: 16px 20px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 12px;
-  }
-
-  &__progress-bar {
-    flex: 1;
-    height: 8px;
-    background: var(--color-glass-border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  &__progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #6366f1, #8b5cf6, #10b981);
-    border-radius: 4px;
-    transition: width 0.5s ease;
-  }
-
-  &__progress-text {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    white-space: nowrap;
-  }
-
-  // Content
+  // Content area
   &__content {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 8px;
+    width: 100%;
   }
 
-  // Sections
-  &__section {
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 16px;
-    padding: 24px;
-    transition: all 0.3s ease;
-
-    &--active {
-      border-color: rgba(139, 92, 246, 0.4);
-      box-shadow: 0 0 30px rgba(139, 92, 246, 0.1);
-    }
-
-    &--done {
-      border-color: rgba(16, 185, 129, 0.3);
-    }
-
-    &--ai {
-      background: linear-gradient(
-        135deg,
-        rgba(99, 102, 241, 0.08),
-        rgba(139, 92, 246, 0.08)
-      );
-      border-color: rgba(139, 92, 246, 0.2);
-    }
-
-    &--tags {
-      background: linear-gradient(
-        135deg,
-        rgba(16, 185, 129, 0.05),
-        rgba(59, 130, 246, 0.05)
-      );
-      border-color: rgba(59, 130, 246, 0.15);
-    }
-  }
-
-  &__section-header {
+  // Hero Section
+  &__hero {
     display: flex;
-    gap: 16px;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+  }
+
+  &__avatar {
+    position: relative;
     margin-bottom: 20px;
 
-    h2 {
-      font-family: "Syne", sans-serif;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--color-text-primary);
-      margin: 0 0 4px;
-    }
+    .avatar {
+      width: 89px;
+      height: 91px;
 
-    p {
-      font-size: 0.85rem;
-      color: var(--color-text-secondary);
-      margin: 0;
+      &__inner {
+        border-radius: 85px;
+      }
     }
   }
 
-  &__step {
+  &__avatar-glow {
+    position: absolute;
+    top: 0;
+    left: -1.5px;
+    width: 89px;
+    height: 91px;
+    border-radius: 85px;
+    filter: blur(15px);
+    opacity: 0.5;
+    background: inherit;
+    z-index: -1;
+  }
+
+  &__info {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  &__name {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+  }
+
+  &__roles {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border-radius: 50%;
-    color: white;
-    font-weight: 700;
-    font-size: 0.9rem;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-
-    &--done {
-      background: linear-gradient(135deg, #10b981, #059669);
-    }
-  }
-
-  &__section-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 16px;
-  }
-
-  &__char-count {
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-  }
-
-  &__char-hint {
-    color: rgba(251, 191, 36, 0.8);
-  }
-
-  // Textarea
-  &__textarea {
+    gap: 10px;
     width: 100%;
+  }
+
+  &__role {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 12px;
+    color: #6f7884;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__dot {
+    width: 5px;
+    height: 5px;
+    background: #6f7884;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    padding: 0 10px;
+    background: rgba(251, 191, 36, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 20px;
+    color: #fbbf24;
+    font-size: 11px;
+    font-weight: 600;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+  }
+
+  // Card sections
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     padding: 16px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 12px;
-    color: var(--color-text-primary);
-    font-size: 1rem;
-    line-height: 1.6;
-    resize: vertical;
-    min-height: 120px;
-    transition: all 0.2s;
+    background: #242424;
+    border: 1px solid #303030;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__field-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+
+  &__label {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0 6px;
+  }
+
+  &__value {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0 6px;
+  }
+
+  &__placeholder {
+    color: rgba(255, 255, 255, 0.3);
+    font-style: italic;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #303030;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 16px;
+    transition: all 0.2s ease;
 
     &::placeholder {
-      color: var(--color-text-muted);
+      color: rgba(255, 255, 255, 0.3);
     }
 
     &:focus {
       outline: none;
-      border-color: rgba(139, 92, 246, 0.5);
-      background: var(--color-glass-bg-hover);
+      border-color: rgba(0, 129, 255, 0.5);
+      background: rgba(255, 255, 255, 0.08);
     }
   }
 
-  // Buttons
-  &__btn {
-    display: inline-flex;
+  &__textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #303030;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 100px;
+    transition: all 0.2s ease;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: rgba(0, 129, 255, 0.5);
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__divider {
+    width: 100%;
+    height: 1px;
+    background: #303030;
+    border-radius: 55px;
+  }
+
+  &__icon {
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 10px;
-    font-size: 0.95rem;
+    width: 24px;
+    height: 24px;
+    color: rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  // Section Header
+  &__section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+  }
+
+  &__section-title {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
     font-weight: 600;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+  }
+
+  &__section-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    background: rgba(0, 129, 255, 0.15);
+    border: none;
+    border-radius: 20px;
+    color: #0081ff;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 12px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(0, 129, 255, 0.25);
+    }
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
+  }
 
-    &--primary {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
+  // Tags
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    padding: 0 6px;
+  }
 
-      &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-      }
+  &__tag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 27px;
+    padding: 0 14px;
+    background: rgba(0, 129, 255, 0.1);
+    border: 1px solid rgba(0, 129, 255, 0.2);
+    border-radius: 54px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 12px;
+    color: #0081ff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(0, 129, 255, 0.2);
     }
 
-    &--secondary {
-      background: var(--color-glass-bg);
-      border: 1px solid var(--color-glass-border);
-      color: var(--color-text-primary);
-
-      &:hover:not(:disabled) {
-        background: var(--color-glass-bg-hover);
-      }
-    }
-
-    &--danger {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: white;
-
-      &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
-      }
-    }
-
-    &--full {
-      width: 100%;
-    }
-
-    &--pulse {
-      animation: pulse-button 2s infinite;
+    &--remove {
+      padding-right: 10px;
     }
   }
 
-  @keyframes pulse-button {
-    0%,
-    100% {
-      box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.5);
+  &__tag-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    margin-left: 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
     }
-    50% {
-      box-shadow: 0 0 0 12px rgba(139, 92, 246, 0);
+  }
+
+  &__tag-add {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #303030;
+    color: rgba(255, 255, 255, 0.6);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  // AI Button
+  &__ai-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.2),
+      rgba(99, 102, 241, 0.2)
+    );
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 14px;
+    color: #a78bfa;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.3),
+        rgba(99, 102, 241, 0.3)
+      );
+      border-color: rgba(139, 92, 246, 0.5);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 
@@ -344,7 +525,7 @@
     width: 16px;
     height: 16px;
     border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
+    border-top-color: currentColor;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -355,76 +536,21 @@
     }
   }
 
-  // Presentation
-  &__presentation {
-    padding: 20px;
-    background: var(--color-glass-bg);
-    border-radius: 12px;
-    margin-bottom: 16px;
-    min-height: 120px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: all 0.3s ease;
-
-    p {
-      color: var(--color-text-primary);
-      font-size: 1rem;
-      line-height: 1.7;
-      margin: 0;
-    }
-
-    &--empty {
-      text-align: center;
-      padding: 32px 20px;
-      align-items: center;
-
-      p {
-        color: var(--color-text-secondary);
-        font-size: 0.9rem;
-      }
-    }
-
-    &--locked {
-      opacity: 0.6;
-    }
-  }
-
-  &__presentation-icon {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 12px;
-  }
-
-  // Tags
-  &__tag-editor {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  &__saving {
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
-    font-style: italic;
-  }
-
-  // Contacts
+  // Contacts List
   &__contacts-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 8px;
   }
 
   &__contact-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 10px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #303030;
+    border-radius: 14px;
   }
 
   &__contact-icon {
@@ -476,111 +602,185 @@
     }
   }
 
+  &__contact-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
   &__contact-type {
-    font-size: 0.85rem;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
     font-weight: 500;
-    color: var(--color-text-secondary);
-    min-width: 90px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
   }
 
   &__contact-value {
-    flex: 1;
-    font-size: 0.9rem;
-    color: var(--color-text-primary);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
     word-break: break-all;
   }
 
   &__contact-delete {
-    padding: 6px 10px;
-    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(205, 43, 43, 0.1);
     border: none;
-    color: var(--color-text-secondary);
+    border-radius: 50%;
+    color: #cd2b2b;
     cursor: pointer;
-    font-size: 0.85rem;
-    opacity: 0.6;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
 
     &:hover {
-      opacity: 1;
-      color: #ef4444;
+      background: rgba(205, 43, 43, 0.2);
     }
   }
 
+  // Contact Form
   &__contact-form {
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #303030;
+    border-radius: 14px;
   }
 
   &__contact-form-row {
     display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 10px;
   }
 
   &__select {
-    padding: 12px 16px;
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: 10px;
-    color: var(--color-text-primary);
-    font-size: 0.9rem;
-    min-width: 130px;
+    flex: 0 0 120px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #303030;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
     cursor: pointer;
 
     &:focus {
       outline: none;
-      border-color: var(--color-primary);
-    }
-  }
-
-  &__input {
-    flex: 1;
-    padding: 12px 16px;
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: 10px;
-    color: var(--color-text-primary);
-    font-size: 0.9rem;
-
-    &::placeholder {
-      color: var(--color-text-muted);
+      border-color: rgba(0, 129, 255, 0.5);
     }
 
-    &:focus {
-      outline: none;
-      border-color: var(--color-primary);
+    option {
+      background: #242424;
+      color: rgba(255, 255, 255, 0.9);
     }
   }
 
   &__contact-form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
+    gap: 10px;
   }
 
-  // Complete message
-  &__complete {
-    padding: 20px;
-    background: linear-gradient(
-      135deg,
-      rgba(16, 185, 129, 0.15),
-      rgba(59, 130, 246, 0.1)
-    );
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    border-radius: 12px;
-    color: #10b981;
-    font-size: 1rem;
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 14px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
     font-weight: 500;
-    text-align: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--primary {
+      background: rgba(0, 129, 255, 0.2);
+      border: 1px solid rgba(0, 129, 255, 0.3);
+      color: #0081ff;
+
+      &:hover:not(:disabled) {
+        background: rgba(0, 129, 255, 0.3);
+      }
+    }
+
+    &--secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #303030;
+      color: rgba(255, 255, 255, 0.7);
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    &--danger {
+      background: rgba(205, 43, 43, 0.2);
+      border: 1px solid rgba(205, 43, 43, 0.3);
+      color: #cd2b2b;
+
+      &:hover:not(:disabled) {
+        background: rgba(205, 43, 43, 0.3);
+      }
+    }
+
+    &--full {
+      width: 100%;
+    }
+  }
+
+  // Add Contact Button
+  &__add-contact {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 2px dashed #303030;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.5);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: rgba(0, 129, 255, 0.5);
+      color: #0081ff;
+      background: rgba(0, 129, 255, 0.05);
+    }
   }
 
   // Modal
   &__modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -590,11 +790,11 @@
   }
 
   &__modal {
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 20px;
-    padding: 32px;
-    max-width: 400px;
+    background: #1a1a1a;
+    border: 1px solid #303030;
+    border-radius: 24px;
+    padding: 24px;
+    max-width: 350px;
     width: 100%;
     text-align: center;
     animation: modalSlideIn 0.2s ease;
@@ -612,44 +812,52 @@
   }
 
   &__modal-icon {
-    font-size: 3rem;
+    font-size: 48px;
     margin-bottom: 16px;
   }
 
   &__modal-title {
-    font-family: "Syne", sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
     margin: 0 0 12px;
   }
 
   &__modal-text {
-    font-size: 0.95rem;
-    color: var(--color-text-secondary);
-    line-height: 1.6;
-    margin: 0 0 24px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.5;
+    margin: 0 0 20px;
   }
 
   &__modal-warning {
     display: flex;
     gap: 12px;
-    padding: 16px;
+    padding: 14px;
     background: rgba(245, 158, 11, 0.1);
     border: 1px solid rgba(245, 158, 11, 0.3);
-    border-radius: 12px;
-    margin-bottom: 24px;
+    border-radius: 14px;
+    margin-bottom: 20px;
     text-align: left;
   }
 
   &__modal-warning-icon {
-    font-size: 1.5rem;
+    font-size: 20px;
     flex-shrink: 0;
   }
 
   &__modal-warning-content {
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
     line-height: 1.5;
 
     strong {
@@ -658,7 +866,7 @@
   }
 
   &__modal-warning-list {
-    margin: 8px 0 8px 20px;
+    margin: 8px 0 8px 16px;
     padding: 0;
     list-style-type: disc;
 
@@ -671,45 +879,361 @@
 
   &__modal-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     justify-content: center;
 
     .card-editor__btn {
       flex: 1;
-      max-width: 150px;
+    }
+  }
+}
+
+// Light theme
+[data-theme="light"] {
+  .card-editor {
+    background: linear-gradient(180deg, #f8faf8 0%, #f8faf8 100%);
+
+    &__top-btn {
+      background: rgba(33, 160, 56, 0.1);
+      color: #21a038;
+      box-shadow: 0px 0px 20px rgba(33, 160, 56, 0.1);
+
+      &:hover {
+        background: rgba(33, 160, 56, 0.18);
+      }
+
+      &--danger {
+        background: rgba(205, 43, 43, 0.1);
+        color: #cd2b2b;
+
+        &:hover {
+          background: rgba(205, 43, 43, 0.2);
+        }
+      }
+    }
+
+    &__edit-btn {
+      background: rgba(33, 160, 56, 0.1);
+      border-color: rgba(33, 160, 56, 0.15);
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__save-btn {
+      background: rgba(33, 160, 56, 0.15);
+      color: #21a038;
+
+      &:hover {
+        background: rgba(33, 160, 56, 0.25);
+      }
+    }
+
+    &__name {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__role {
+      color: #7a8a7a;
+    }
+
+    &__dot {
+      background: #7a8a7a;
+    }
+
+    &__card {
+      background: #ffffff;
+      border-color: rgba(33, 160, 56, 0.15);
+    }
+
+    &__label {
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    &__value {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__placeholder {
+      color: rgba(0, 0, 0, 0.3);
+    }
+
+    &__input,
+    &__textarea {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(33, 160, 56, 0.2);
+      color: rgba(0, 0, 0, 0.9);
+
+      &::placeholder {
+        color: rgba(0, 0, 0, 0.3);
+      }
+
+      &:focus {
+        border-color: rgba(33, 160, 56, 0.5);
+        background: rgba(0, 0, 0, 0.05);
+      }
+    }
+
+    &__divider {
+      background: rgba(33, 160, 56, 0.15);
+    }
+
+    &__icon {
+      color: rgba(0, 0, 0, 0.7);
+    }
+
+    &__section-title {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__section-action {
+      background: rgba(33, 160, 56, 0.1);
+      color: #21a038;
+
+      &:hover {
+        background: rgba(33, 160, 56, 0.18);
+      }
+    }
+
+    &__tag {
+      background: rgba(33, 160, 56, 0.1);
+      border-color: rgba(33, 160, 56, 0.2);
+      color: #21a038;
+
+      &:hover {
+        background: rgba(33, 160, 56, 0.18);
+      }
+    }
+
+    &__tag-add {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(33, 160, 56, 0.2);
+      color: rgba(0, 0, 0, 0.5);
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: rgba(0, 0, 0, 0.8);
+      }
+    }
+
+    &__contact-item {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(33, 160, 56, 0.15);
+    }
+
+    &__contact-type {
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    &__contact-value {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__contact-form {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(33, 160, 56, 0.15);
+    }
+
+    &__select {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(33, 160, 56, 0.2);
+      color: rgba(0, 0, 0, 0.9);
+
+      option {
+        background: #ffffff;
+        color: rgba(0, 0, 0, 0.9);
+      }
+    }
+
+    &__btn {
+      &--primary {
+        background: rgba(33, 160, 56, 0.1);
+        border-color: rgba(33, 160, 56, 0.25);
+        color: #21a038;
+
+        &:hover:not(:disabled) {
+          background: rgba(33, 160, 56, 0.18);
+        }
+      }
+
+      &--secondary {
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(33, 160, 56, 0.2);
+        color: rgba(0, 0, 0, 0.7);
+
+        &:hover:not(:disabled) {
+          background: rgba(0, 0, 0, 0.05);
+        }
+      }
+    }
+
+    &__add-contact {
+      border-color: rgba(33, 160, 56, 0.3);
+      color: rgba(0, 0, 0, 0.5);
+
+      &:hover {
+        border-color: rgba(33, 160, 56, 0.5);
+        color: #21a038;
+        background: rgba(33, 160, 56, 0.05);
+      }
+    }
+
+    &__modal {
+      background: #ffffff;
+      border-color: rgba(33, 160, 56, 0.15);
+    }
+
+    &__modal-title {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__modal-text {
+      color: rgba(0, 0, 0, 0.6);
     }
   }
 }
 
 // Responsive
-@media (max-width: 600px) {
+@media (max-width: 430px) {
   .card-editor {
-    padding: 16px 16px 60px;
-
-    &__section {
-      padding: 20px;
-    }
-
-    &__section-header {
-      flex-direction: column;
-      text-align: center;
-    }
-
-    &__step {
-      margin: 0 auto;
-    }
-
-    &__section-footer {
-      flex-direction: column;
-      gap: 12px;
-    }
+    padding: 0 16px 100px;
 
     &__contact-form-row {
       flex-direction: column;
     }
 
     &__select {
-      min-width: 100%;
+      flex: none;
+      width: 100%;
+    }
+  }
+}
+
+// TagInput overrides for CardEditor context
+.card-editor__card {
+  .tag-input {
+    &__label {
+      display: none;
+    }
+
+    &__container {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: #303030;
+      border-radius: 14px;
+      padding: 10px 14px;
+      min-height: auto;
+
+      &:focus-within {
+        border-color: rgba(0, 129, 255, 0.5);
+        box-shadow: none;
+      }
+    }
+
+    &__tag {
+      background: rgba(0, 129, 255, 0.1);
+      border: 1px solid rgba(0, 129, 255, 0.2);
+      color: #0081ff;
+      border-radius: 54px;
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+
+    &__tag-remove {
+      width: 18px;
+      height: 18px;
+      font-size: 14px;
+      opacity: 0.6;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+
+    &__input {
+      color: rgba(255, 255, 255, 0.9);
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    &__suggestions {
+      margin-top: 8px;
+    }
+
+    &__suggestions-label {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    &__suggestion {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: #303030;
+      border-radius: 54px;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 4px 12px;
+      font-size: 12px;
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.3);
+        color: #a78bfa;
+      }
+    }
+
+    &__progress-bar {
+      background: #303030;
+    }
+
+    &__progress-text {
+      color: #a78bfa;
+    }
+  }
+}
+
+// Light theme TagInput overrides
+[data-theme="light"] {
+  .card-editor__card {
+    .tag-input {
+      &__container {
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(33, 160, 56, 0.2);
+
+        &:focus-within {
+          border-color: rgba(33, 160, 56, 0.5);
+        }
+      }
+
+      &__tag {
+        background: rgba(33, 160, 56, 0.1);
+        border-color: rgba(33, 160, 56, 0.2);
+        color: #21a038;
+      }
+
+      &__input {
+        color: rgba(0, 0, 0, 0.9);
+
+        &::placeholder {
+          color: rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      &__suggestions-label {
+        color: rgba(0, 0, 0, 0.5);
+      }
+
+      &__suggestion {
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(33, 160, 56, 0.2);
+        color: rgba(0, 0, 0, 0.6);
+
+        &:hover {
+          background: rgba(139, 92, 246, 0.1);
+          border-color: rgba(139, 92, 246, 0.25);
+          color: #8b5cf6;
+        }
+      }
+
+      &__progress-bar {
+        background: rgba(33, 160, 56, 0.15);
+      }
     }
   }
 }

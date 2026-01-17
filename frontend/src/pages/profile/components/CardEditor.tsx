@@ -95,7 +95,7 @@ export function CardEditor({
 
   // Current bio text being edited (for quick tag extraction)
   const [currentBioText, setCurrentBioText] = useState<string>(
-    card.ai_generated_bio || card.bio || ""
+    card.ai_generated_bio || card.bio || "",
   );
 
   // Debounce bio text - wait 500ms after user stops typing for quick suggestions
@@ -116,7 +116,7 @@ export function CardEditor({
 
   // Tag editing state
   const [profileTags, setProfileTags] = useState<string[]>(
-    card.search_tags || []
+    card.search_tags || [],
   );
 
   // Contact form state
@@ -170,7 +170,7 @@ export function CardEditor({
     try {
       const result = await businessCardApi.suggestTags(
         selectedCard.id,
-        user.id
+        user.id,
       );
       setAiTagSuggestions(result.suggestions.map((t: SuggestedTag) => t.name));
     } catch {
@@ -188,7 +188,7 @@ export function CardEditor({
       // Сбросить флаг для обновления тегов
       setHasFetchedSuggestions(false);
     },
-    [onCardUpdate]
+    [onCardUpdate],
   );
 
   // Изменение тегов
@@ -200,19 +200,19 @@ export function CardEditor({
         const updated = await businessCardApi.updateSearchTags(
           selectedCard.id,
           user.id,
-          newTags
+          newTags,
         );
         setSelectedCard(updated);
         onCardUpdate(updated);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Ошибка сохранения тегов"
+          err instanceof Error ? err.message : "Ошибка сохранения тегов",
         );
       } finally {
         setIsApplyingTags(false);
       }
     },
-    [user.id, selectedCard.id, onCardUpdate]
+    [user.id, selectedCard.id, onCardUpdate],
   );
 
   // Добавление контакта
@@ -228,7 +228,7 @@ export function CardEditor({
           type: newContactType,
           value: newContactValue.trim(),
           is_visible: true,
-        }
+        },
       );
       setSelectedCard(updated);
       onCardUpdate(updated);
@@ -236,7 +236,7 @@ export function CardEditor({
       setShowContactForm(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Ошибка добавления контакта"
+        err instanceof Error ? err.message : "Ошибка добавления контакта",
       );
     } finally {
       setIsSavingContact(false);
@@ -250,7 +250,7 @@ export function CardEditor({
         selectedCard.id,
         user.id,
         contact.type,
-        contact.value
+        contact.value,
       );
       setSelectedCard(updated);
       onCardUpdate(updated);
@@ -265,50 +265,77 @@ export function CardEditor({
     );
   };
 
+  // Формируем полное имя пользователя
+  const userDisplayName = [user.first_name, user.last_name]
+    .filter(Boolean)
+    .join(" ");
+
+  // Генерируем роли пользователя
+  const generateRoles = () => {
+    const roles: string[] = [];
+    if (selectedCard.title) {
+      roles.push(selectedCard.title);
+    }
+    if (user.position) {
+      roles.push(user.position);
+    }
+    return roles.length > 0 ? roles : ["Пользователь"];
+  };
+
   return (
     <div className="card-editor">
-      {/* Header */}
-      <header className="card-editor__header">
-        <div className="card-editor__header-top">
-          <button className="card-editor__back" onClick={onBack}>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Назад
-          </button>
-          <button
-            className="card-editor__delete-btn"
-            onClick={() => setShowDeleteConfirm(true)}
-            title={
-              selectedCard.is_primary ? "Очистить визитку" : "Удалить визитку"
-            }
+      {/* Top Bar */}
+      <div className="card-editor__top-bar">
+        <button className="card-editor__top-btn" onClick={onBack}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" />
-            </svg>
-          </button>
-        </div>
-        <div className="card-editor__title-section">
-          <h1>📇 {selectedCard.title}</h1>
-          {selectedCard.is_primary && (
-            <span className="card-editor__badge">Основная</span>
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div className="card-editor__top-center">
+          <span className="card-editor__edit-btn">Изменить</span>
+          {isComplete && (
+            <button className="card-editor__save-btn" title="Сохранено">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </button>
           )}
         </div>
-      </header>
+
+        <button
+          className="card-editor__top-btn card-editor__top-btn--danger"
+          onClick={() => setShowDeleteConfirm(true)}
+          title={
+            selectedCard.is_primary ? "Очистить визитку" : "Удалить визитку"
+          }
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" />
+          </svg>
+        </button>
+      </div>
 
       {/* Toast */}
       {error && (
@@ -317,99 +344,111 @@ export function CardEditor({
         </div>
       )}
 
-      {/* Progress */}
-      <div className="card-editor__progress">
-        <div className="card-editor__progress-bar">
+      {/* Hero Section */}
+      <div className="card-editor__hero">
+        <div className="card-editor__avatar">
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt={userDisplayName}
+              style={{
+                width: 89,
+                height: 91,
+                borderRadius: 85,
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 89,
+                height: 91,
+                borderRadius: 85,
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 32,
+                color: "white",
+                fontWeight: 600,
+              }}
+            >
+              {user.first_name?.[0]?.toUpperCase() || "?"}
+            </div>
+          )}
           <div
-            className="card-editor__progress-fill"
-            style={{ width: `${progressPercent}%` }}
+            className="card-editor__avatar-glow"
+            style={{
+              background: user.avatar_url
+                ? `url(${user.avatar_url}) center/cover`
+                : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
           />
         </div>
-        <span className="card-editor__progress-text">
-          {isComplete ? "✅ Карточка готова!" : `${progressPercent}% заполнено`}
-        </span>
+
+        <div className="card-editor__info">
+          <h1 className="card-editor__name">{userDisplayName || "—"}</h1>
+          <div className="card-editor__roles">
+            {generateRoles().map((role, index) => (
+              <span key={index} className="card-editor__role">
+                {index > 0 && <span className="card-editor__dot" />}
+                {role}
+              </span>
+            ))}
+            {selectedCard.is_primary && (
+              <span className="card-editor__badge">Основная</span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Content */}
       <div className="card-editor__content">
-        {/* Step 1: Bio (UnifiedBioEditor) */}
-        <UnifiedBioEditor
-          card={selectedCard}
-          userId={user.id}
-          isActive={currentStep === 1}
-          onCardUpdate={handleBioUpdate}
-          onError={setError}
-          onTagsUpdate={setAiTagSuggestions}
-          onTagsLoading={setIsGeneratingTags}
-          onBioTextChange={setCurrentBioText}
-        />
+        {/* Bio Section */}
+        <div className="card-editor__card">
+          <UnifiedBioEditor
+            card={selectedCard}
+            userId={user.id}
+            isActive={currentStep === 1}
+            onCardUpdate={handleBioUpdate}
+            onError={setError}
+            onTagsUpdate={setAiTagSuggestions}
+            onTagsLoading={setIsGeneratingTags}
+            onBioTextChange={setCurrentBioText}
+          />
+        </div>
 
-        {/* Step 2: Tags */}
-        <section
-          className={`card-editor__section card-editor__section--tags ${
-            currentStep === 2 ? "card-editor__section--active" : ""
-          } ${
-            selectedCard.tags && selectedCard.tags.length > 0
-              ? "card-editor__section--done"
-              : ""
-          }`}
-        >
+        {/* Tags Section */}
+        <div className="card-editor__card">
           <div className="card-editor__section-header">
-            <span
-              className={`card-editor__step ${
-                selectedCard.tags && selectedCard.tags.length > 0
-                  ? "card-editor__step--done"
-                  : ""
-              }`}
-            >
-              {selectedCard.tags && selectedCard.tags.length > 0 ? "✓" : "2"}
-            </span>
-            <div>
-              <h2>Навыки и теги</h2>
-              <p>AI предложит теги на основе описания</p>
-            </div>
-          </div>
-
-          <div className="card-editor__tag-editor">
-            <TagInput
-              label="Ваши навыки"
-              value={profileTags}
-              onChange={handleTagsChange}
-              placeholder="Добавьте тег..."
-              suggestions={aiTagSuggestions}
-              fallbackSuggestions={quickSuggestions}
-              isLoadingSuggestions={isGeneratingTags}
-              maxTags={15}
-              disabled={!selectedCard.ai_generated_bio || isApplyingTags}
-            />
-            {isApplyingTags && (
-              <span className="card-editor__saving">Сохранение...</span>
+            <h2 className="card-editor__section-title">Навыки и теги</h2>
+            {isGeneratingTags && (
+              <span className="card-editor__section-action">
+                <span className="card-editor__spinner" /> AI анализ...
+              </span>
             )}
           </div>
-        </section>
 
-        {/* Step 3: Contacts */}
-        <section
-          className={`card-editor__section card-editor__section--contacts ${
-            (selectedCard.contacts?.length ?? 0) > 0
-              ? "card-editor__section--done"
-              : ""
-          }`}
-        >
+          <TagInput
+            label=""
+            value={profileTags}
+            onChange={handleTagsChange}
+            placeholder="Добавьте тег..."
+            suggestions={aiTagSuggestions}
+            fallbackSuggestions={quickSuggestions}
+            isLoadingSuggestions={isGeneratingTags}
+            maxTags={15}
+            disabled={!selectedCard.ai_generated_bio || isApplyingTags}
+          />
+          {isApplyingTags && (
+            <span className="card-editor__section-action">Сохранение...</span>
+          )}
+        </div>
+
+        {/* Contacts Section */}
+        <div className="card-editor__card">
           <div className="card-editor__section-header">
-            <span
-              className={`card-editor__step ${
-                (selectedCard.contacts?.length ?? 0) > 0
-                  ? "card-editor__step--done"
-                  : ""
-              }`}
-            >
-              {(selectedCard.contacts?.length ?? 0) > 0 ? "✓" : "3"}
-            </span>
-            <div>
-              <h2>Контакты</h2>
-              <p>Как с вами связаться</p>
-            </div>
+            <h2 className="card-editor__section-title">Контакты</h2>
           </div>
 
           {selectedCard.contacts && selectedCard.contacts.length > 0 && (
@@ -419,17 +458,28 @@ export function CardEditor({
                   <span
                     className={`card-editor__contact-icon card-editor__contact-icon--${contact.type.toLowerCase()}`}
                   />
-                  <span className="card-editor__contact-type">
-                    {getContactLabel(contact.type)}
-                  </span>
-                  <span className="card-editor__contact-value">
-                    {contact.value}
-                  </span>
+                  <div className="card-editor__contact-info">
+                    <span className="card-editor__contact-type">
+                      {getContactLabel(contact.type)}
+                    </span>
+                    <span className="card-editor__contact-value">
+                      {contact.value}
+                    </span>
+                  </div>
                   <button
                     className="card-editor__contact-delete"
                     onClick={() => handleDeleteContact(contact as ContactInfo)}
                   >
-                    ✕
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               ))}
@@ -473,26 +523,35 @@ export function CardEditor({
                   onClick={handleAddContact}
                   disabled={!newContactValue.trim() || isSavingContact}
                 >
-                  {isSavingContact ? "..." : "Добавить"}
+                  {isSavingContact ? (
+                    <>
+                      <span className="card-editor__spinner" /> Добавление...
+                    </>
+                  ) : (
+                    "Добавить"
+                  )}
                 </button>
               </div>
             </div>
           ) : (
             <button
-              className="card-editor__btn card-editor__btn--primary card-editor__btn--full"
+              className="card-editor__add-contact"
               onClick={() => setShowContactForm(true)}
             >
-              ➕ Добавить контакт
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Добавить контакт
             </button>
           )}
-        </section>
-
-        {/* Complete message */}
-        {isComplete && (
-          <div className="card-editor__complete">
-            🎉 Карточка полностью заполнена и готова!
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Delete confirmation modal */}
@@ -551,7 +610,7 @@ export function CardEditor({
                     await onCardDelete(selectedCard.id);
                   } catch (err) {
                     setError(
-                      err instanceof Error ? err.message : "Ошибка удаления"
+                      err instanceof Error ? err.message : "Ошибка удаления",
                     );
                     setIsDeleting(false);
                     setShowDeleteConfirm(false);
@@ -564,8 +623,8 @@ export function CardEditor({
                     ? "Очистка..."
                     : "Удаление..."
                   : selectedCard.is_primary
-                  ? "Очистить"
-                  : "Удалить"}
+                    ? "Очистить"
+                    : "Удалить"}
               </button>
             </div>
           </div>
