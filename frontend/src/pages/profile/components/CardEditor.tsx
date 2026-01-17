@@ -138,19 +138,6 @@ export function CardEditor({
     return 3;
   }, [selectedCard, profileTags]);
 
-  // Расчёт прогресса (3 секции: bio 33%, tags 33%, contacts 34%)
-  const progressPercent = useMemo(() => {
-    let progress = 0;
-    if (selectedCard.ai_generated_bio) progress += 33;
-    if (profileTags.length > 0) progress += 33;
-    if (selectedCard.contacts && selectedCard.contacts.length > 0)
-      progress += 34;
-    return progress;
-  }, [selectedCard, profileTags]);
-
-  // Проверка завершённости
-  const isComplete = progressPercent === 100;
-
   // Автоматическая загрузка AI-подсказок для тегов
   useEffect(() => {
     const bioText = selectedCard.ai_generated_bio || selectedCard.bio || "";
@@ -299,24 +286,6 @@ export function CardEditor({
           </svg>
         </button>
 
-        <div className="card-editor__top-center">
-          <span className="card-editor__edit-btn">Изменить</span>
-          {isComplete && (
-            <button className="card-editor__save-btn" title="Сохранено">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-
         <button
           className="card-editor__top-btn card-editor__top-btn--danger"
           onClick={() => setShowDeleteConfirm(true)}
@@ -438,7 +407,7 @@ export function CardEditor({
             fallbackSuggestions={quickSuggestions}
             isLoadingSuggestions={isGeneratingTags}
             maxTags={15}
-            disabled={!selectedCard.ai_generated_bio || isApplyingTags}
+            disabled={isApplyingTags}
           />
           {isApplyingTags && (
             <span className="card-editor__section-action">Сохранение...</span>

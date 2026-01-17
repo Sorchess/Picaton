@@ -68,7 +68,7 @@ export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
         <Avatar
           src={avatarUrl || undefined}
           initials={initials}
-          size="xl"
+          size="lg"
           alt={name}
         />
       </div>
