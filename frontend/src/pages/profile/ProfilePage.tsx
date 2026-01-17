@@ -11,7 +11,6 @@ import { QrModal } from "@/features/qr-modal";
 import { Loader, Button, Modal } from "@/shared";
 import {
   CardEditor,
-  CardPreview,
   ProfileHeroBlock,
   RoleTabs,
   ProfileInfoCard,
@@ -33,7 +32,6 @@ export function ProfilePage() {
 
   // Cards state
   const [cards, setCards] = useState<BusinessCard[]>([]);
-  const [isLoadingCards, setIsLoadingCards] = useState(true);
 
   // Company card assignments
   const [cardAssignments, setCardAssignments] = useState<
@@ -73,14 +71,11 @@ export function ProfilePage() {
 
   const loadCards = useCallback(async () => {
     if (!authUser?.id) return;
-    setIsLoadingCards(true);
     try {
       const response = await businessCardApi.getAll(authUser.id);
       setCards(response.cards);
     } catch {
       // Ignore card loading errors
-    } finally {
-      setIsLoadingCards(false);
     }
   }, [authUser?.id]);
 
@@ -182,21 +177,21 @@ export function ProfilePage() {
     }
   };
 
-  const handleShareCard = async (card: BusinessCard) => {
-    try {
-      const qr = await businessCardApi.getQRCode(card.id);
-      setQrCodeImage(qr.image_base64);
-      setQrCardName(card.title);
-      setShowQrModal(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка генерации QR");
-    }
-  };
-
   // Generate roles from user data
   const generateRoles = useCallback((): RoleTab[] => {
-    const roles: RoleTab[] = [{ id: "personal", name: "Личный", emoji: "🔥" }];
+    const roles: RoleTab[] = [];
 
+    // Добавляем основную (личную) визитку первой
+    const primaryCard = cards.find((c) => c.is_primary);
+    if (primaryCard) {
+      roles.push({
+        id: primaryCard.id,
+        name: "Личный",
+        emoji: "🔥",
+      });
+    }
+
+    // Добавляем остальные визитки
     cards.forEach((card) => {
       if (!card.is_primary && card.title) {
         roles.push({
@@ -210,26 +205,27 @@ export function ProfilePage() {
     return roles;
   }, [cards]);
 
-  // Extract user roles for display
-  const getUserRoles = useCallback((): string[] => {
-    const roles: string[] = [];
+  // Get current selected card based on active role
+  const getSelectedCard = useCallback((): BusinessCard | null => {
+    if (!activeRoleId || cards.length === 0) return null;
+    return cards.find((c) => c.id === activeRoleId) || cards[0];
+  }, [activeRoleId, cards]);
 
-    if (user?.position) {
-      roles.push(user.position);
+  // Set initial active role when cards load
+  useEffect(() => {
+    if (cards.length > 0 && !activeRoleId) {
+      const primaryCard = cards.find((c) => c.is_primary);
+      if (primaryCard) {
+        setActiveRoleId(primaryCard.id);
+      } else {
+        setActiveRoleId(cards[0].id);
+      }
+    } else if (cards.length > 0 && !cards.find((c) => c.id === activeRoleId)) {
+      // If current activeRoleId is not in cards anymore, reset to primary
+      const primaryCard = cards.find((c) => c.is_primary);
+      setActiveRoleId(primaryCard?.id || cards[0].id);
     }
-
-    if (user?.tags && user.tags.length > 0) {
-      user.tags.slice(0, 3).forEach((tag) => {
-        roles.push(tag.name);
-      });
-    }
-
-    if (roles.length === 0) {
-      roles.push("Пользователь");
-    }
-
-    return roles;
-  }, [user]);
+  }, [cards, activeRoleId]);
 
   // Format birth date
   const formatBirthDate = (dateStr?: string | null): string | undefined => {
@@ -284,12 +280,47 @@ export function ProfilePage() {
     );
   }
 
-  // Skills count
-  const skillsCount = user.tags?.length || 0;
+  // Get current selected card
+  const selectedCard = getSelectedCard();
+
+  // Data from selected card (or user data as fallback)
+  const displayName = selectedCard?.display_name || getFullName(user);
+  const displayAvatar = selectedCard?.avatar_url || user.avatar_url;
+  const displayTags = selectedCard?.tags || user.tags || [];
+  const displayContacts = selectedCard?.contacts || user.contacts || [];
+  const displaySearchTags = selectedCard?.search_tags || user.search_tags || [];
+
+  // Skills count from selected card
+  const skillsCount = displayTags.length || 0;
   // Recommendations count (can be fetched from API later)
   const recommendationsCount = 120;
-  // User level (based on profile completeness)
-  const userLevel = Math.floor(user.profile_completeness / 4) + 1;
+  // User level (based on card completeness or profile completeness)
+  const userLevel =
+    Math.floor((selectedCard?.completeness || user.profile_completeness) / 4) +
+    1;
+
+  // Extract roles from selected card's tags
+  const getCardRoles = (): string[] => {
+    const roles: string[] = [];
+
+    // Добавляем title карточки если это не личная
+    if (selectedCard && !selectedCard.is_primary && selectedCard.title) {
+      roles.push(selectedCard.title);
+    }
+
+    // Добавляем теги из карточки
+    if (displayTags.length > 0) {
+      displayTags.slice(0, 3).forEach((tag) => {
+        roles.push(tag.name);
+      });
+    }
+
+    if (roles.length === 0) {
+      roles.push(user.position || "Пользователь");
+    }
+
+    return roles;
+  };
 
   // Trust items
   const trustItems = [
@@ -305,15 +336,15 @@ export function ProfilePage() {
       id: "contacts",
       icon: <UsersIcon />,
       title: "Совместных контактов",
-      subtitle: `${cards.length * 10} контактов`,
+      subtitle: `${displayContacts.length * 10} контактов`,
       variant: "purple" as const,
       onClick: () => {},
     },
   ];
 
-  // Hobbies (from tags or mock data)
+  // Hobbies (from search tags)
   const hobbies =
-    user.search_tags?.slice(0, 5).map((tag, i) => ({
+    displaySearchTags.slice(0, 5).map((tag, i) => ({
       id: `hobby-${i}`,
       icon: "❤️",
       name: tag,
@@ -332,18 +363,20 @@ export function ProfilePage() {
       {/* Top Bar */}
       <ProfileTopBar
         onLeftClick={() => {
-          /* Navigate to settings */
+          if (selectedCard) {
+            handleOpenCard(selectedCard);
+          }
         }}
         onRightClick={handleShareProfile}
       />
 
       {/* Content */}
       <div className="profile__content">
-        {/* Hero Block */}
+        {/* Hero Block - uses selected card data */}
         <ProfileHeroBlock
-          name={getFullName(user)}
-          avatarUrl={user.avatar_url}
-          roles={getUserRoles()}
+          name={displayName}
+          avatarUrl={displayAvatar}
+          roles={getCardRoles()}
           skillsCount={skillsCount}
           recommendationsCount={recommendationsCount}
           level={userLevel}
@@ -356,9 +389,9 @@ export function ProfilePage() {
           onChange={setActiveRoleId}
         />
 
-        {/* Info Card */}
+        {/* Info Card - uses selected card contacts */}
         <ProfileInfoCard
-          phone={user.contacts?.find((c) => c.type === "phone")?.value}
+          phone={displayContacts.find((c) => c.type === "phone")?.value}
           username={user.telegram_username || undefined}
           onUsernameClick={() => {
             if (user.telegram_username) {
@@ -372,44 +405,17 @@ export function ProfilePage() {
         {/* Social Trust Card */}
         <SocialTrustCard items={trustItems} />
 
-        {/* Cards Section */}
-        {activeRoleId !== "personal" && (
-          <section className="profile__cards-section">
-            <div className="profile__cards-header">
-              <h2>📇 Мои визитки</h2>
-              <span className="profile__cards-count">{cards.length} / 5</span>
-            </div>
-
-            {isLoadingCards ? (
-              <div className="profile__cards-loading">
-                <Loader />
-              </div>
-            ) : (
-              <div className="profile__cards-list">
-                {cards.map((card) => (
-                  <CardPreview
-                    key={card.id}
-                    card={card}
-                    usedByCompanies={getCompaniesUsingCard(card.id)}
-                    onClick={() => handleOpenCard(card)}
-                    onShare={handleShareCard}
-                  />
-                ))}
-
-                {cards.length < 5 && (
-                  <button
-                    className="profile__add-card"
-                    onClick={() => setShowCreateModal(true)}
-                  >
-                    <span className="profile__add-card-icon">+</span>
-                    <span className="profile__add-card-text">
-                      Создать визитку
-                    </span>
-                  </button>
-                )}
-              </div>
-            )}
-          </section>
+        {/* Add new card button */}
+        {cards.length < 5 && (
+          <button
+            className="profile__add-card"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <span className="profile__add-card-icon">+</span>
+            <span className="profile__add-card-text">
+              Создать новую визитку
+            </span>
+          </button>
         )}
       </div>
 

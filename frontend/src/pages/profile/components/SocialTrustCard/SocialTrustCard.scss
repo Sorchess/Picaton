@@ -125,3 +125,49 @@
     flex-shrink: 0;
   }
 }
+
+// Light theme
+[data-theme="light"] {
+  .social-trust-card {
+    background: #ffffff;
+    border-color: rgba(33, 160, 56, 0.15);
+
+    &__title {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__item {
+      &--blue {
+        background: rgba(0, 129, 255, 0.08);
+      }
+
+      &--purple {
+        background: rgba(170, 0, 255, 0.08);
+      }
+
+      &--green {
+        background: rgba(56, 128, 40, 0.08);
+      }
+
+      &--orange {
+        background: rgba(255, 149, 0, 0.08);
+      }
+    }
+
+    &__item-icon svg {
+      color: #ffffff;
+    }
+
+    &__item-title {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__item-subtitle {
+      color: #7a8a7a;
+    }
+
+    &__item-chevron {
+      color: #7a8a7a;
+    }
+  }
+}

@@ -117,3 +117,32 @@
     color: inherit;
   }
 }
+
+// Light theme
+[data-theme="light"] {
+  .profile-info-card {
+    background: #ffffff;
+    border-color: rgba(33, 160, 56, 0.15);
+
+    &__label {
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    &__value {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__icon {
+      color: rgba(0, 0, 0, 0.7);
+    }
+
+    &__divider {
+      background: rgba(33, 160, 56, 0.15);
+    }
+
+    &__hobby-tag {
+      background: rgba(205, 43, 43, 0.08);
+      border-color: rgba(205, 43, 43, 0.15);
+    }
+  }
+}

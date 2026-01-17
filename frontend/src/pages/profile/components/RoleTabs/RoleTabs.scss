@@ -58,3 +58,30 @@
     font-size: 12px;
   }
 }
+
+// Light theme
+[data-theme="light"] {
+  .role-tabs {
+    background: #ffffff;
+    border: 1px solid rgba(33, 160, 56, 0.15);
+
+    &__tab {
+      &:hover:not(&--active) {
+        background: rgba(33, 160, 56, 0.05);
+      }
+
+      &--active {
+        background: rgba(33, 160, 56, 0.1);
+        border-color: rgba(33, 160, 56, 0.15);
+
+        .role-tabs__name {
+          color: rgba(0, 0, 0, 0.9);
+        }
+      }
+    }
+
+    &__name {
+      color: rgba(0, 0, 0, 0.5);
+    }
+  }
+}

@@ -173,6 +173,40 @@
       sans-serif;
   }
 
+  // Edit card button
+  &__edit-card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px 20px;
+    background: rgba(0, 129, 255, 0.15);
+    border: 1px solid rgba(0, 129, 255, 0.3);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 16px;
+
+    &:hover {
+      background: rgba(0, 129, 255, 0.25);
+      border-color: rgba(0, 129, 255, 0.5);
+    }
+  }
+
+  &__edit-card-icon {
+    font-size: 18px;
+  }
+
+  &__edit-card-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #0081ff;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+  }
+
   // Create modal
   &__create-modal {
     display: flex;
@@ -224,5 +258,102 @@
 @media (max-width: 430px) {
   .profile {
     padding: 0 16px 100px;
+  }
+}
+
+// Light theme
+[data-theme="light"] {
+  .profile {
+    background: linear-gradient(180deg, #f8faf8 0%, #f8faf8 100%);
+
+    &__loading,
+    &__error {
+      p {
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      button {
+        background: rgba(33, 160, 56, 0.15);
+        border-color: rgba(33, 160, 56, 0.3);
+        color: #21a038;
+
+        &:hover {
+          background: rgba(33, 160, 56, 0.25);
+        }
+      }
+    }
+
+    &__toast {
+      background: rgba(239, 68, 68, 0.95);
+    }
+
+    &__cards-section {
+      background: #ffffff;
+      border-color: rgba(33, 160, 56, 0.15);
+    }
+
+    &__cards-header h2 {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &__cards-count {
+      color: #7a8a7a;
+    }
+
+    &__add-card {
+      border-color: rgba(33, 160, 56, 0.3);
+
+      &:hover {
+        border-color: rgba(33, 160, 56, 0.5);
+        background: rgba(33, 160, 56, 0.05);
+
+        .profile__add-card-icon {
+          background: rgba(33, 160, 56, 0.2);
+          color: #21a038;
+        }
+      }
+    }
+
+    &__add-card-icon {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(33, 160, 56, 0.2);
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    &__add-card-text {
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    &__edit-card-btn {
+      background: rgba(33, 160, 56, 0.1);
+      border-color: rgba(33, 160, 56, 0.25);
+
+      &:hover {
+        background: rgba(33, 160, 56, 0.18);
+        border-color: rgba(33, 160, 56, 0.4);
+      }
+    }
+
+    &__edit-card-text {
+      color: #21a038;
+    }
+
+    &__create-hint {
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    &__create-input {
+      background: #f0f0f0;
+      border-color: rgba(33, 160, 56, 0.2);
+      color: rgba(0, 0, 0, 0.9);
+
+      &::placeholder {
+        color: rgba(0, 0, 0, 0.4);
+      }
+
+      &:focus {
+        border-color: rgba(33, 160, 56, 0.5);
+      }
+    }
   }
 }
