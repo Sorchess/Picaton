@@ -1,0 +1,408 @@
+// ============================================
+// Picaton Design Tokens (from Figma)
+// https://www.figma.com/design/X5sqjCCb0pbYgEhvCTvIzz/Picaton
+// ============================================
+
+// ===========================================
+// COLOR PALETTE
+// ===========================================
+
+// Primary Blue (Gradient)
+$picaton-blue-primary: #017eff;
+$picaton-blue-secondary: #0062ff;
+$picaton-blue-accent: #0081ff;
+$picaton-blue-shadow: rgba(0, 109, 255, 0.3);
+$picaton-blue-light: rgba(1, 126, 255, 0.1);
+
+// Background Colors
+$picaton-bg-white: #ffffff;
+$picaton-bg-light: #fafaff;
+$picaton-bg-screen: #fafaff;
+$picaton-bg-card: #f9faff;
+$picaton-bg-input: #ffffff;
+$picaton-bg-page: linear-gradient(180deg, #edf3ff 0%, #ffffff 100%);
+$picaton-bg-overlay: rgba(0, 0, 0, 0.5);
+
+// Text Colors
+$picaton-text-primary: #000000;
+$picaton-text-secondary: #6c6c6c;
+$picaton-text-tertiary: #96a1af;
+$picaton-text-muted: #6e7a88;
+$picaton-text-placeholder: #96a1af;
+$picaton-text-gray: #676767;
+$picaton-text-white: #ffffff;
+$picaton-text-link: #017eff;
+
+// Border Colors
+$picaton-border-white: #ffffff;
+$picaton-border-light: #e3e7eb;
+$picaton-border-divider: #e3e3e3;
+$picaton-border-input: rgba(0, 0, 0, 0.08);
+
+// Status Colors
+$picaton-success: #10b981;
+$picaton-warning: #f59e0b;
+$picaton-error: #ef4444;
+
+// ===========================================
+// CONVENIENT ALIASES
+// ===========================================
+
+// Color Aliases
+$picaton-white: $picaton-bg-white;
+$picaton-border: $picaton-border-light;
+$picaton-card-bg: $picaton-bg-card;
+
+// Background Secondary (for hover states etc.)
+$picaton-bg-secondary: #f0f2f5;
+
+// ===========================================
+// SHADOWS
+// ===========================================
+
+$picaton-shadow-card: 0px 4px 8px rgba(180, 180, 180, 0.25);
+$picaton-shadow-card-hover: 0px 8px 16px rgba(180, 180, 180, 0.35);
+$picaton-shadow-button: 0px 10px 14px rgba(0, 109, 255, 0.3);
+$picaton-shadow-button-hover: 0px 12px 20px rgba(0, 109, 255, 0.4);
+$picaton-shadow-tab-bar: 0px -10px 14px rgba(216, 216, 216, 0.15);
+$picaton-shadow-input: 0px 2px 4px rgba(0, 0, 0, 0.05);
+$picaton-shadow-modal: 0px 20px 40px rgba(0, 0, 0, 0.15);
+
+// ===========================================
+// GRADIENTS
+// ===========================================
+
+$picaton-gradient-button: linear-gradient(90deg, #017eff 0%, #0062ff 100%);
+$picaton-gradient-button-hover: linear-gradient(90deg, #0070e6 0%, #0058e6 100%);
+$picaton-gradient-button-disabled: linear-gradient(
+  90deg,
+  rgba(1, 126, 255, 0.5) 0%,
+  rgba(0, 98, 255, 0.5) 100%
+);
+$picaton-gradient-page: linear-gradient(180deg, #edf3ff 0%, #ffffff 100%);
+$picaton-gradient-header: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
+$picaton-gradient-completion: linear-gradient(180deg, #e8f4ff 0%, #ffffff 50%);
+
+// ===========================================
+// BORDER RADIUS
+// ===========================================
+
+$picaton-radius-xs: 8px;
+$picaton-radius-sm: 12px;
+$picaton-radius-md: 14px;
+$picaton-radius-lg: 20px;
+$picaton-radius-xl: 22px;
+$picaton-radius-2xl: 24px;
+$picaton-radius-3xl: 32px;
+$picaton-radius-full: 9999px;
+
+// Component-specific radii
+$picaton-radius-input: 14px;
+$picaton-radius-button: 14px;
+$picaton-radius-card: 22px;
+$picaton-radius-card-large: 24px;
+$picaton-radius-tag: 20px;
+$picaton-radius-avatar: 50%;
+$picaton-radius-tab-bar: 28px;
+
+// ===========================================
+// TYPOGRAPHY
+// ===========================================
+
+// Font Family
+$picaton-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+// Font Sizes
+$picaton-font-size-xs: 11px;
+$picaton-font-size-sm: 12px;
+$picaton-font-size-base: 14px;
+$picaton-font-size-md: 16px;
+$picaton-font-size-lg: 18px;
+$picaton-font-size-xl: 20px;
+$picaton-font-size-2xl: 22px;
+$picaton-font-size-3xl: 24px;
+$picaton-font-size-4xl: 28px;
+$picaton-font-size-5xl: 32px;
+
+// Specific font sizes from Figma
+$picaton-font-size-title: 22.909px;
+$picaton-font-size-heading: 20px;
+$picaton-font-size-subheading: 16px;
+$picaton-font-size-body: 14px;
+$picaton-font-size-small: 12px;
+$picaton-font-size-tag: 14px;
+$picaton-font-size-button: 14px;
+$picaton-font-size-emoji: 18.828px;
+$picaton-font-size-tab: 11px;
+
+// Font Weights
+$picaton-font-weight-regular: 400;
+$picaton-font-weight-medium: 500;
+$picaton-font-weight-semibold: 600;
+$picaton-font-weight-bold: 700;
+
+// Font Aliases (for convenience)
+$picaton-font-xs: $picaton-font-size-xs;
+$picaton-font-sm: $picaton-font-size-sm;
+$picaton-font-base: $picaton-font-size-base;
+$picaton-font-md: $picaton-font-size-md;
+$picaton-font-lg: $picaton-font-size-lg;
+$picaton-font-xl: $picaton-font-size-xl;
+
+$picaton-font-regular: $picaton-font-weight-regular;
+$picaton-font-medium: $picaton-font-weight-medium;
+$picaton-font-semibold: $picaton-font-weight-semibold;
+$picaton-font-bold: $picaton-font-weight-bold;
+
+// Line Heights
+$picaton-line-height-tight: 1.2;
+$picaton-line-height-normal: 1.4;
+$picaton-line-height-relaxed: 1.6;
+$picaton-line-height-title: 36px;
+$picaton-line-height-body: 17.464px;
+$picaton-line-height-button: 22px;
+
+// Letter Spacing
+$picaton-letter-spacing-tight: -0.02em;
+$picaton-letter-spacing-normal: 0;
+$picaton-letter-spacing-wide: 0.02em;
+
+// ===========================================
+// SPACING
+// ===========================================
+
+$picaton-spacing-0: 0;
+$picaton-spacing-1: 4px;
+$picaton-spacing-2: 8px;
+$picaton-spacing-3: 12px;
+$picaton-spacing-4: 16px;
+$picaton-spacing-5: 20px;
+$picaton-spacing-6: 24px;
+$picaton-spacing-7: 28px;
+$picaton-spacing-8: 32px;
+$picaton-spacing-10: 40px;
+$picaton-spacing-12: 48px;
+$picaton-spacing-16: 64px;
+
+// Page spacing
+$picaton-spacing-page: 25px;
+$picaton-spacing-page-x: 20px;
+$picaton-spacing-page-y: 24px;
+
+// Component spacing
+$picaton-spacing-card-padding: 16px;
+$picaton-spacing-input-x: 24px;
+$picaton-spacing-input-y: 14px;
+$picaton-spacing-button-x: 24px;
+$picaton-spacing-button-y: 14px;
+$picaton-spacing-form-gap: 22px;
+$picaton-spacing-feature-gap: 20px;
+$picaton-spacing-section-gap: 24px;
+
+// ===========================================
+// COMPONENT SIZES
+// ===========================================
+
+// Screen
+$picaton-screen-width: 393px;
+$picaton-screen-height: 852px;
+$picaton-status-bar-height: 54px;
+$picaton-safe-area-bottom: 34px;
+
+// Tab Bar
+$picaton-tab-bar-height: 84px;
+$picaton-tab-bar-inner-height: 64px;
+$picaton-tab-icon-size: 24px;
+
+// Avatar
+$picaton-avatar-xs: 32px;
+$picaton-avatar-sm: 40px;
+$picaton-avatar-md: 56px;
+$picaton-avatar-lg: 78px;
+$picaton-avatar-xl: 89px;
+$picaton-avatar-2xl: 100px;
+
+// Button
+$picaton-button-height: 50px;
+$picaton-button-height-sm: 40px;
+$picaton-button-min-width: 120px;
+
+// Input
+$picaton-input-height: 50px;
+$picaton-input-height-sm: 44px;
+
+// Progress Bar
+$picaton-progress-height: 4px;
+$picaton-progress-gap: 8px;
+
+// Card
+$picaton-card-min-height: 80px;
+
+// Tag
+$picaton-tag-height: 36px;
+$picaton-tag-padding-x: 16px;
+$picaton-tag-padding-y: 8px;
+
+// ===========================================
+// Z-INDEX
+// ===========================================
+
+$picaton-z-base: 0;
+$picaton-z-dropdown: 100;
+$picaton-z-sticky: 200;
+$picaton-z-header: 300;
+$picaton-z-modal-backdrop: 400;
+$picaton-z-modal: 500;
+$picaton-z-toast: 600;
+$picaton-z-tooltip: 700;
+$picaton-z-tab-bar: 1000;
+
+// ===========================================
+// TRANSITIONS
+// ===========================================
+
+$picaton-transition-fast: 0.15s ease;
+$picaton-transition-base: 0.2s ease;
+$picaton-transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$picaton-transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+$picaton-transition-slow: 0.5s ease;
+
+// Easing functions
+$picaton-ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+$picaton-ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+$picaton-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+$picaton-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// ===========================================
+// BREAKPOINTS (Mobile-first)
+// ===========================================
+
+$picaton-breakpoint-xs: 320px;
+$picaton-breakpoint-sm: 375px;
+$picaton-breakpoint-md: 428px;
+$picaton-breakpoint-lg: 768px;
+$picaton-breakpoint-xl: 1024px;
+$picaton-breakpoint-2xl: 1280px;
+
+// ===========================================
+// MIXINS
+// ===========================================
+
+// Gradient button
+@mixin picaton-button-gradient {
+  background: $picaton-gradient-button;
+  box-shadow: $picaton-shadow-button;
+  border-radius: $picaton-radius-button;
+  color: $picaton-text-white;
+  font-weight: $picaton-font-weight-semibold;
+  transition: all $picaton-transition-smooth;
+
+  &:hover:not(:disabled) {
+    background: $picaton-gradient-button-hover;
+    box-shadow: $picaton-shadow-button-hover;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background: $picaton-gradient-button-disabled;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+// Card style
+@mixin picaton-card {
+  background: $picaton-bg-white;
+  border-radius: $picaton-radius-card;
+  box-shadow: $picaton-shadow-card;
+  transition: box-shadow $picaton-transition-smooth;
+
+  &:hover {
+    box-shadow: $picaton-shadow-card-hover;
+  }
+}
+
+// Input style
+@mixin picaton-input {
+  background: $picaton-bg-input;
+  border: 1px solid $picaton-border-input;
+  border-radius: $picaton-radius-input;
+  padding: $picaton-spacing-input-y $picaton-spacing-input-x;
+  font-size: $picaton-font-size-body;
+  color: $picaton-text-primary;
+  transition: border-color $picaton-transition-fast, box-shadow $picaton-transition-fast;
+
+  &::placeholder {
+    color: $picaton-text-placeholder;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $picaton-blue-primary;
+    box-shadow: 0 0 0 3px $picaton-blue-light;
+  }
+}
+
+// Tag style
+@mixin picaton-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $picaton-tag-padding-y $picaton-tag-padding-x;
+  border-radius: $picaton-radius-tag;
+  font-size: $picaton-font-size-tag;
+  font-weight: $picaton-font-weight-medium;
+  transition: all $picaton-transition-fast;
+}
+
+// Truncate text
+@mixin picaton-truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+// Safe area padding
+@mixin picaton-safe-area-bottom {
+  padding-bottom: max($picaton-safe-area-bottom, env(safe-area-inset-bottom));
+}
+
+// Hide scrollbar
+@mixin picaton-hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Responsive
+@mixin picaton-mobile-only {
+  @media (max-width: #{$picaton-breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin picaton-tablet-up {
+  @media (min-width: $picaton-breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin picaton-desktop-up {
+  @media (min-width: $picaton-breakpoint-xl) {
+    @content;
+  }
+}

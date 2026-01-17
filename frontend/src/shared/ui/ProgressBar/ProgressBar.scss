@@ -1,0 +1,91 @@
+@use "../../styles/variables" as *;
+
+.progress-bar {
+  width: 100%;
+
+  // Info row
+  &__info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  // Step text
+  &__steps {
+    font-size: $picaton-font-sm;
+    font-weight: $picaton-font-medium;
+    color: $picaton-text-secondary;
+  }
+
+  // Percentage text
+  &__percentage {
+    font-size: $picaton-font-sm;
+    font-weight: $picaton-font-semibold;
+    color: $picaton-blue-primary;
+  }
+
+  // Track (background)
+  &__track {
+    height: 6px;
+    background: $picaton-bg-secondary;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  // Fill (progress)
+  &__fill {
+    height: 100%;
+    background: $picaton-gradient-button;
+    border-radius: 3px;
+    transition: width $picaton-transition-base;
+  }
+}
+
+// Progress dots variant
+.progress-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  // Individual dot
+  &__dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    background: $picaton-bg-secondary;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all $picaton-transition-fast;
+
+    &:disabled {
+      cursor: default;
+    }
+
+    &:not(:disabled):hover {
+      background: darken($picaton-bg-secondary, 10%);
+    }
+
+    // Active state
+    &--active {
+      width: 24px;
+      background: $picaton-blue-primary;
+      border-radius: 4px;
+
+      &:not(:disabled):hover {
+        background: $picaton-blue-primary;
+      }
+    }
+
+    // Completed state
+    &--completed {
+      background: rgba($picaton-blue-primary, 0.4);
+
+      &:not(:disabled):hover {
+        background: rgba($picaton-blue-primary, 0.6);
+      }
+    }
+  }
+}

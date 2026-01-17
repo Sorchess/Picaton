@@ -1,0 +1,102 @@
+@use "../../styles/variables" as *;
+
+.privacy-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  text-align: left;
+  background: $picaton-bg-white;
+  border: 2px solid transparent;
+  border-radius: $picaton-radius-card;
+  box-shadow: $picaton-shadow-card;
+  cursor: pointer;
+  transition: all $picaton-transition-smooth;
+
+  &:hover:not(:disabled) {
+    box-shadow: $picaton-shadow-card-hover;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  // Selected state
+  &--selected {
+    border-color: $picaton-blue-primary;
+    background: rgba($picaton-blue-primary, 0.04);
+
+    .privacy-option__check {
+      color: $picaton-blue-primary;
+    }
+  }
+
+  // Disabled state
+  &--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+
+    &:hover {
+      transform: none;
+      box-shadow: $picaton-shadow-card;
+    }
+  }
+
+  // Icon container
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+    background: $picaton-bg-light;
+    border-radius: 12px;
+  }
+
+  // Content
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  // Title
+  &__title {
+    margin: 0 0 4px;
+    font-size: $picaton-font-size-md;
+    font-weight: $picaton-font-weight-semibold;
+    color: $picaton-text-primary;
+    line-height: 1.3;
+  }
+
+  // Description
+  &__description {
+    margin: 0;
+    font-size: $picaton-font-size-sm;
+    font-weight: $picaton-font-weight-regular;
+    color: $picaton-text-secondary;
+    line-height: 1.4;
+  }
+
+  // Check indicator
+  &__check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    color: transparent;
+  }
+}
+
+// List container
+.privacy-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}

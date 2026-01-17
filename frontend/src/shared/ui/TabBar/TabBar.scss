@@ -1,0 +1,94 @@
+@use "../../styles/variables" as *;
+
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: $picaton-z-tab-bar;
+  background: $picaton-bg-white;
+  box-shadow: $picaton-shadow-tab-bar;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: $picaton-tab-bar-inner-height;
+    max-width: $picaton-screen-width;
+    margin: 0 auto;
+    padding: 0 8px;
+  }
+
+  // Tab item
+  &__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    height: 100%;
+    padding: 8px 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all $picaton-transition-fast;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    // Active state
+    &--active {
+      .tab-bar__icon {
+        color: $picaton-blue-primary;
+      }
+
+      .tab-bar__label {
+        color: $picaton-blue-primary;
+        font-weight: $picaton-font-weight-semibold;
+      }
+    }
+  }
+
+  // Icon
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: $picaton-tab-icon-size;
+    height: $picaton-tab-icon-size;
+    color: $picaton-text-secondary;
+    transition: color $picaton-transition-fast;
+  }
+
+  // Label
+  &__label {
+    font-size: $picaton-font-size-tab;
+    font-weight: $picaton-font-weight-medium;
+    color: $picaton-text-secondary;
+    line-height: 1;
+    transition: color $picaton-transition-fast;
+  }
+
+  // Badge
+  &__badge {
+    position: absolute;
+    top: 4px;
+    right: calc(50% - 20px);
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 10px;
+    font-weight: $picaton-font-weight-bold;
+    color: $picaton-text-white;
+    background: $picaton-error;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,49 @@
+@use "../../styles/variables" as *;
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+
+  // Illustration container
+  &__illustration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: $picaton-text-tertiary;
+  }
+
+  // Emoji
+  &__emoji {
+    font-size: 64px;
+    line-height: 1;
+  }
+
+  // Title
+  &__title {
+    margin: 0 0 8px;
+    font-size: $picaton-font-size-lg;
+    font-weight: $picaton-font-weight-semibold;
+    color: $picaton-text-primary;
+    line-height: 1.3;
+  }
+
+  // Description
+  &__description {
+    margin: 0;
+    max-width: 280px;
+    font-size: $picaton-font-size-base;
+    font-weight: $picaton-font-weight-regular;
+    color: $picaton-text-secondary;
+    line-height: 1.5;
+  }
+
+  // Action container
+  &__action {
+    margin-top: 24px;
+  }
+}

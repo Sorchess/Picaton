@@ -1,0 +1,151 @@
+@use "../../styles/variables" as *;
+
+// Page Header
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 12px $picaton-spacing-page-x;
+  background: $picaton-bg-white;
+
+  &--transparent {
+    background: transparent;
+  }
+
+  &--sticky {
+    position: sticky;
+    top: 0;
+    z-index: $picaton-z-header;
+  }
+
+  &__left,
+  &__right {
+    display: flex;
+    align-items: center;
+    min-width: 40px;
+  }
+
+  &__center {
+    flex: 1;
+    text-align: center;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: $picaton-font-size-lg;
+    font-weight: $picaton-font-weight-semibold;
+    color: $picaton-text-primary;
+    line-height: 1.3;
+  }
+
+  &__subtitle {
+    margin: 2px 0 0;
+    font-size: $picaton-font-size-sm;
+    font-weight: $picaton-font-weight-regular;
+    color: $picaton-text-secondary;
+    line-height: 1.3;
+  }
+
+  &__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    color: $picaton-text-primary;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background $picaton-transition-fast;
+
+    &:hover {
+      background: $picaton-bg-light;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+// Onboarding Header
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 12px $picaton-spacing-page-x;
+  background: transparent;
+
+  &__left,
+  &__right {
+    display: flex;
+    align-items: center;
+    min-width: 80px;
+  }
+
+  &__right {
+    justify-content: flex-end;
+  }
+
+  &__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    color: $picaton-text-primary;
+    background: $picaton-bg-white;
+    border: none;
+    border-radius: 12px;
+    box-shadow: $picaton-shadow-card;
+    cursor: pointer;
+    transition: all $picaton-transition-fast;
+
+    &:hover {
+      box-shadow: $picaton-shadow-card-hover;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &__progress {
+    display: flex;
+    align-items: center;
+    gap: $picaton-progress-gap;
+  }
+
+  &__step {
+    width: 32px;
+    height: $picaton-progress-height;
+    background: rgba($picaton-blue-primary, 0.2);
+    border-radius: 2px;
+    transition: all $picaton-transition-smooth;
+
+    &--completed,
+    &--active {
+      background: $picaton-blue-primary;
+    }
+  }
+
+  &__skip {
+    padding: 8px 12px;
+    font-size: $picaton-font-size-base;
+    font-weight: $picaton-font-weight-medium;
+    color: $picaton-text-secondary;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color $picaton-transition-fast;
+
+    &:hover {
+      color: $picaton-text-primary;
+    }
+  }
+}

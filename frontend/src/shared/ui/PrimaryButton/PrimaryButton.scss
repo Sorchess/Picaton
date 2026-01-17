@@ -1,0 +1,177 @@
+@use "../../styles/variables" as *;
+
+.primary-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: $picaton-font-family;
+  font-weight: $picaton-font-weight-semibold;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all $picaton-transition-smooth;
+
+  &:focus-visible {
+    outline: 2px solid $picaton-blue-primary;
+    outline-offset: 2px;
+  }
+
+  // Sizes
+  &--sm {
+    height: 40px;
+    padding: 0 16px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+
+  &--md {
+    height: 50px;
+    padding: 0 24px;
+    font-size: $picaton-font-size-button;
+    border-radius: $picaton-radius-button;
+  }
+
+  &--lg {
+    height: 56px;
+    padding: 0 32px;
+    font-size: 16px;
+    border-radius: 16px;
+  }
+
+  // Variants
+  &--primary {
+    background: $picaton-gradient-button;
+    color: $picaton-text-white;
+    box-shadow: $picaton-shadow-button;
+
+    &:hover:not(:disabled) {
+      background: $picaton-gradient-button-hover;
+      box-shadow: $picaton-shadow-button-hover;
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0px 6px 10px rgba(0, 109, 255, 0.25);
+    }
+
+    &:disabled {
+      background: $picaton-gradient-button-disabled;
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+
+  &--secondary {
+    background: $picaton-bg-card;
+    color: $picaton-blue-primary;
+    box-shadow: $picaton-shadow-card;
+
+    &:hover:not(:disabled) {
+      background: darken(#f9faff, 2%);
+      box-shadow: $picaton-shadow-card-hover;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &--outline {
+    background: transparent;
+    color: $picaton-blue-primary;
+    border: 1.5px solid $picaton-blue-primary;
+
+    &:hover:not(:disabled) {
+      background: $picaton-blue-light;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $picaton-text-secondary;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.05);
+      color: $picaton-text-primary;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // Full width
+  &--full-width {
+    width: 100%;
+  }
+
+  // Loading state
+  &--loading {
+    pointer-events: none;
+
+    .primary-button__text {
+      opacity: 0;
+    }
+  }
+
+  // Elements
+  &__loader {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__spinner {
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &--left {
+      margin-right: -4px;
+    }
+
+    &--right {
+      margin-left: -4px;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

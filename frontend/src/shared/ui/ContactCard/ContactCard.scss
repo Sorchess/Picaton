@@ -1,0 +1,157 @@
+@use "../../styles/variables" as *;
+
+.contact-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: $picaton-bg-white;
+  border-radius: $picaton-radius-card;
+  box-shadow: $picaton-shadow-card;
+  cursor: pointer;
+  transition: all $picaton-transition-smooth;
+
+  &:hover {
+    box-shadow: $picaton-shadow-card-hover;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: $picaton-gradient-button;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  &__avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__avatar-initials {
+    color: $picaton-text-white;
+    font-size: 18px;
+    font-weight: $picaton-font-weight-semibold;
+    text-transform: uppercase;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: $picaton-font-weight-semibold;
+    color: $picaton-text-primary;
+    line-height: 1.3;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__roles {
+    margin: 0;
+    font-size: 13px;
+    color: $picaton-blue-primary;
+    font-weight: $picaton-font-weight-medium;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__companies {
+    margin: 0;
+    font-size: 12px;
+    color: $picaton-text-secondary;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__bio {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: $picaton-text-secondary;
+    line-height: 1.4;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  &__skill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: $picaton-bg-card;
+    border-radius: 12px;
+    font-size: 11px;
+    color: $picaton-text-secondary;
+    font-weight: $picaton-font-weight-medium;
+
+    &--more {
+      background: $picaton-blue-light;
+      color: $picaton-blue-primary;
+    }
+  }
+
+  &__save {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: $picaton-text-tertiary;
+    cursor: pointer;
+    transition: all $picaton-transition-fast;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: $picaton-blue-primary;
+    }
+
+    &--saved {
+      color: #ef4444;
+
+      &:hover {
+        color: #dc2626;
+      }
+    }
+  }
+}
+
+.contact-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

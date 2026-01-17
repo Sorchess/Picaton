@@ -1,0 +1,95 @@
+@use "../../styles/variables" as *;
+
+.search-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  background: $picaton-bg-white;
+  border: 1.5px solid $picaton-border-light;
+  border-radius: $picaton-radius-input;
+  transition: all $picaton-transition-fast;
+
+  &:hover {
+    border-color: darken($picaton-border, 10%);
+  }
+
+  &--focused {
+    border-color: $picaton-blue-primary;
+    box-shadow: 0 0 0 3px rgba($picaton-blue-primary, 0.1);
+  }
+
+  // Search icon
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: $picaton-text-secondary;
+  }
+
+  // Loading spinner
+  &__spinner {
+    width: 20px;
+    height: 20px;
+    color: $picaton-blue-primary;
+    animation: search-spin 1s linear infinite;
+  }
+
+  // Input field
+  &__field {
+    flex: 1;
+    height: 100%;
+    padding: 0;
+    font-family: $picaton-font-family;
+    font-size: $picaton-font-md;
+    font-weight: $picaton-font-regular;
+    color: $picaton-text-primary;
+    background: transparent;
+    border: none;
+    outline: none;
+
+    &::placeholder {
+      color: $picaton-text-tertiary;
+    }
+  }
+
+  // Clear button
+  &__clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    color: $picaton-text-secondary;
+    background: $picaton-bg-secondary;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all $picaton-transition-fast;
+
+    &:hover {
+      color: $picaton-text-primary;
+      background: darken($picaton-bg-secondary, 5%);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+@keyframes search-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
