@@ -52,7 +52,7 @@ export const businessCardApi = {
   addContact: (cardId: string, ownerId: string, data: CardContactAdd) =>
     api.post<BusinessCard>(
       `/cards/${cardId}/contacts?owner_id=${ownerId}`,
-      data
+      data,
     ),
 
   // Обновить видимость контакта
@@ -61,13 +61,13 @@ export const businessCardApi = {
     ownerId: string,
     contactType: string,
     value: string,
-    isVisible: boolean
+    isVisible: boolean,
   ) =>
     api.patch<BusinessCard>(
       `/cards/${cardId}/contacts?owner_id=${ownerId}&contact_type=${encodeURIComponent(
-        contactType
+        contactType,
       )}&value=${encodeURIComponent(value)}`,
-      { is_visible: isVisible }
+      { is_visible: isVisible },
     ),
 
   // Удалить контакт из карточки
@@ -75,12 +75,12 @@ export const businessCardApi = {
     cardId: string,
     ownerId: string,
     contactType: string,
-    value: string
+    value: string,
   ) =>
     api.delete<BusinessCard>(
       `/cards/${cardId}/contacts?owner_id=${ownerId}&contact_type=${encodeURIComponent(
-        contactType
-      )}&value=${encodeURIComponent(value)}`
+        contactType,
+      )}&value=${encodeURIComponent(value)}`,
     ),
 
   // ============ Теги ============
@@ -104,7 +104,7 @@ export const businessCardApi = {
   // Сгенерировать AI-презентацию
   generateBio: (cardId: string, ownerId: string) =>
     api.post<{ bio: string; card_id: string }>(
-      `/cards/${cardId}/generate-bio?owner_id=${ownerId}`
+      `/cards/${cardId}/generate-bio?owner_id=${ownerId}`,
     ),
 
   // Предложить теги из bio (для выбора пользователем)
@@ -122,9 +122,12 @@ export const businessCardApi = {
 
   // ============ QR Code ============
 
-  // Получить QR-код для визитной карточки
-  getQRCode: (cardId: string) =>
-    api.get<{ image_base64: string; card_id: string }>(
-      `/cards/${cardId}/qr-code`
-    ),
+  // Получить QR-код для визитной карточки с опциональным сроком действия
+  getQRCode: (cardId: string, duration?: string) =>
+    api.get<{
+      image_base64: string;
+      card_id: string;
+      token?: string;
+      expires_at?: string;
+    }>(`/cards/${cardId}/qr-code${duration ? `?duration=${duration}` : ""}`),
 };

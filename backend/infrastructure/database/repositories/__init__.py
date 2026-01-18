@@ -31,6 +31,9 @@ from infrastructure.database.repositories.project_member import (
 from infrastructure.database.repositories.chat_message import (
     MongoChatMessageRepository,
 )
+from infrastructure.database.repositories.share_link import (
+    MongoShareLinkRepository,
+)
 
 __all__ = [
     "MongoUserRepository",
@@ -49,4 +52,6 @@ __all__ = [
     "MongoProjectRepository",
     "MongoProjectMemberRepository",
     "MongoChatMessageRepository",
+    # Share Links
+    "MongoShareLinkRepository",
 ]

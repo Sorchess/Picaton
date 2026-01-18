@@ -1,5 +1,6 @@
 """Pydantic schemas для визитных карточек."""
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -167,11 +168,23 @@ class CardTagSuggestionsResponse(BaseModel):
 # ============ QR Code ============
 
 
+class CardQRCodeRequest(BaseModel):
+    """Запрос на генерацию QR-кода карточки."""
+
+    duration: str = Field(
+        default="forever",
+        description="Срок действия ссылки: '1d' (1 день), '1w' (1 неделя), '1m' (1 месяц), 'forever' (бессрочно)",
+        examples=["1d", "1w", "1m", "forever"],
+    )
+
+
 class CardQRCodeResponse(BaseModel):
     """Ответ с QR-кодом карточки."""
 
     image_base64: str
     card_id: UUID
+    token: str | None = None
+    expires_at: datetime | None = None
 
 
 # ============ Text Tags Generation (GigaChat) ============
@@ -194,4 +207,6 @@ class TextTagGenerationResponse(BaseModel):
         description="Список предложенных search_tags",
         examples=[["веб-разработка", "react", "python", "frontend"]],
     )
-    source_text: str = Field(description="Исходный текст, из которого генерировались теги")
+    source_text: str = Field(
+        description="Исходный текст, из которого генерировались теги"
+    )

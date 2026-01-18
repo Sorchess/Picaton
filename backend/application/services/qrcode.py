@@ -1,6 +1,9 @@
 import base64
 import io
+import secrets
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Optional
 from uuid import UUID
 
 import qrcode
@@ -8,6 +11,17 @@ from qrcode.image.pil import PilImage
 
 from domain.entities.user import User
 from domain.entities.business_card import BusinessCard
+from domain.entities.share_link import ShareLink
+from domain.repositories.share_link import ShareLinkRepositoryInterface
+
+
+# Варианты срока действия ссылки (в секундах)
+DURATION_OPTIONS = {
+    "1d": timedelta(days=1),
+    "1w": timedelta(weeks=1),
+    "1m": timedelta(days=30),
+    "forever": None,  # Бессрочная
+}
 
 
 @dataclass
@@ -16,13 +30,20 @@ class QRCodeData:
 
     image_base64: str
     image_format: str = "png"
+    token: Optional[str] = None
+    expires_at: Optional[datetime] = None
 
 
 class QRCodeService:
     """Сервис генерации QR-кодов для обмена контактами."""
 
-    def __init__(self, base_url: str = ""):
+    def __init__(
+        self,
+        base_url: str = "",
+        share_link_repository: Optional[ShareLinkRepositoryInterface] = None,
+    ):
         self._base_url = base_url
+        self._share_link_repo = share_link_repository
 
     def _generate_qr_image(self, data: str) -> str:
         """Генерирует QR-код изображение из данных."""
@@ -113,3 +134,68 @@ class QRCodeService:
         ).decode("utf-8")
 
         return QRCodeData(image_base64=image_base64)
+
+    async def generate_card_qr_with_expiry(
+        self,
+        card_id: UUID,
+        duration: str = "forever",
+    ) -> QRCodeData:
+        """
+        Генерирует QR-код для визитной карточки с ограниченным сроком действия.
+
+        Args:
+            card_id: ID визитной карточки
+            duration: Срок действия ссылки ('1d', '1w', '1m', 'forever')
+
+        Returns:
+            QRCodeData с QR-кодом и информацией о сроке действия
+        """
+        if not self._share_link_repo:
+            # Если репозитория нет, генерируем обычную ссылку
+            return self.generate_card_qr(card_id)
+
+        # Генерируем уникальный токен
+        token = secrets.token_urlsafe(32)
+
+        # Определяем срок действия
+        duration_delta = DURATION_OPTIONS.get(duration)
+        expires_at = None
+        if duration_delta is not None:
+            expires_at = datetime.utcnow() + duration_delta
+
+        # Создаем ссылку в БД
+        share_link = ShareLink(
+            card_id=card_id,
+            token=token,
+            expires_at=expires_at,
+        )
+        await self._share_link_repo.create(share_link)
+
+        # Генерируем QR-код с токеном
+        share_url = f"{self._base_url}/share/{token}"
+        image_base64 = self._generate_qr_image(share_url)
+
+        return QRCodeData(
+            image_base64=image_base64,
+            token=token,
+            expires_at=expires_at,
+        )
+
+    async def get_card_by_token(self, token: str) -> Optional[UUID]:
+        """
+        Получить ID визитки по токену ссылки.
+
+        Returns:
+            ID карточки если ссылка валидна, иначе None
+        """
+        if not self._share_link_repo:
+            return None
+
+        link = await self._share_link_repo.get_by_token(token)
+        if not link or not link.is_valid:
+            return None
+
+        # Увеличиваем счетчик просмотров
+        await self._share_link_repo.increment_views(link.id)
+
+        return link.card_id

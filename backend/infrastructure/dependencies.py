@@ -22,6 +22,7 @@ from infrastructure.database.repositories import (
     MongoProjectRepository,
     MongoProjectMemberRepository,
     MongoChatMessageRepository,
+    MongoShareLinkRepository,
 )
 from infrastructure.database.repositories.company_role import MongoCompanyRoleRepository
 from infrastructure.database.repositories.company_card import MongoCompanyCardRepository
@@ -456,11 +457,17 @@ def get_search_service(
     )
 
 
-def get_qrcode_service() -> QRCodeService:
+def get_qrcode_service(
+    db: AsyncIOMotorDatabase = Depends(get_database),
+) -> QRCodeService:
     """Получить сервис QR-кодов."""
     # Используем frontend URL для ссылок в QR-кодах
     frontend_url = settings.magic_link.frontend_url or settings.api.url
-    return QRCodeService(base_url=frontend_url)
+    share_link_repo = MongoShareLinkRepository(db.share_links)
+    return QRCodeService(
+        base_url=frontend_url,
+        share_link_repository=share_link_repo,
+    )
 
 
 def get_import_service(

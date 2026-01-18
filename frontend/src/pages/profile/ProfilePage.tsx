@@ -170,7 +170,10 @@ export function ProfilePage() {
   };
 
   // Обработка шаринга выбранных визиток
-  const handleShareSelectedCards = async (selectedCardIds: string[]) => {
+  const handleShareSelectedCards = async (
+    selectedCardIds: string[],
+    duration: string,
+  ) => {
     if (selectedCardIds.length === 0) return;
 
     try {
@@ -179,7 +182,10 @@ export function ProfilePage() {
         selectedCardIds.includes(c.id),
       );
       if (firstSelectedCard && user) {
-        const qr = await businessCardApi.getQRCode(firstSelectedCard.id);
+        const qr = await businessCardApi.getQRCode(
+          firstSelectedCard.id,
+          duration,
+        );
         setQrCodeImage(qr.image_base64);
         setQrCardName(firstSelectedCard.title || getFullName(user));
         setShowShareMenu(false);

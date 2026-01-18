@@ -19,6 +19,7 @@ from presentation.api.cards.schemas import (
     CardContactInfo,
     CardSuggestedTag,
     CardTagSuggestionsResponse,
+    CardQRCodeRequest,
     CardQRCodeResponse,
     TextTagGenerationRequest,
     TextTagGenerationResponse,
@@ -475,7 +476,9 @@ async def suggest_tags_for_card(
         raise HTTPException(status_code=403, detail="Access denied")
 
 
-@router.post("/{card_id}/generate-tags-from-text", response_model=TextTagGenerationResponse)
+@router.post(
+    "/{card_id}/generate-tags-from-text", response_model=TextTagGenerationResponse
+)
 async def generate_tags_from_text(
     card_id: UUID,
     data: TextTagGenerationRequest,
@@ -544,20 +547,80 @@ async def clear_card_content(
 @router.get("/{card_id}/qr-code", response_model=CardQRCodeResponse)
 async def get_card_qr_code(
     card_id: UUID,
+    duration: str = Query(
+        default="forever",
+        description="Срок действия ссылки: '1d', '1w', '1m', 'forever'",
+    ),
     card_service: BusinessCardService = Depends(get_business_card_service),
     qrcode_service: QRCodeService = Depends(get_qrcode_service),
 ):
-    """Получить QR-код для визитной карточки."""
+    """Получить QR-код для визитной карточки с указанным сроком действия."""
     try:
         # Проверяем что карточка существует
         card = await card_service.get_card(card_id)
         if not card:
             raise HTTPException(status_code=404, detail="Card not found")
 
-        qr_data = qrcode_service.generate_card_qr(card_id)
+        # Генерируем QR-код с указанным сроком действия
+        qr_data = await qrcode_service.generate_card_qr_with_expiry(card_id, duration)
         return CardQRCodeResponse(
             image_base64=qr_data.image_base64,
             card_id=card_id,
+            token=qr_data.token,
+            expires_at=qr_data.expires_at,
+        )
+    except BusinessCardNotFoundError:
+        raise HTTPException(status_code=404, detail="Card not found")
+
+
+@router.get("/share/{token}", response_model=BusinessCardPublicResponse)
+async def get_card_by_share_token(
+    token: str,
+    card_service: BusinessCardService = Depends(get_business_card_service),
+    qrcode_service: QRCodeService = Depends(get_qrcode_service),
+):
+    """Получить визитную карточку по токену ссылки."""
+    card_id = await qrcode_service.get_card_by_token(token)
+    if not card_id:
+        raise HTTPException(
+            status_code=404,
+            detail="Ссылка не найдена или истек срок её действия",
+        )
+
+    try:
+        card = await card_service.get_card(card_id)
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found")
+
+        return BusinessCardPublicResponse(
+            id=card.id,
+            owner_id=card.owner_id,
+            title=card.title,
+            display_name=card.display_name,
+            avatar_url=card.avatar_url,
+            bio=card.bio,
+            ai_generated_bio=card.ai_generated_bio,
+            tags=[
+                CardTagInfo(
+                    id=tag.id,
+                    name=tag.name,
+                    category=tag.category,
+                    proficiency=tag.proficiency,
+                )
+                for tag in card.tags
+            ],
+            search_tags=card.search_tags,
+            contacts=[
+                CardContactInfo(
+                    type=contact.type.value,
+                    value=contact.value,
+                    is_primary=contact.is_primary,
+                    is_visible=contact.is_visible,
+                )
+                for contact in card.contacts
+                if contact.is_visible
+            ],
+            completeness=card.completeness,
         )
     except BusinessCardNotFoundError:
         raise HTTPException(status_code=404, detail="Card not found")
