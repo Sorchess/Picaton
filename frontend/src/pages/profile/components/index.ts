@@ -11,3 +11,4 @@ export {
   UsersIcon,
 } from "./SocialTrustCard";
 export { ProfileTopBar } from "./ProfileTopBar";
+export { ShareMenu } from "./ShareMenu";

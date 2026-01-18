@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef, useCallback, type FormEvent } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type FormEvent,
+} from "react";
 import { useAuth, TelegramLoginButton } from "@/features/auth";
 import { Typography, Button, Input } from "@/shared";
 import "./AuthPage.scss";
@@ -13,26 +19,29 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const isVerifyingRef = useRef(false);
 
-  const handleVerifyToken = useCallback(async (token: string) => {
-    setView("verifying");
-    setError(null);
+  const handleVerifyToken = useCallback(
+    async (token: string) => {
+      setView("verifying");
+      setError(null);
 
-    try {
-      await verifyMagicLink(token);
-      // URL уже очищен в useEffect, здесь ничего делать не нужно
-    } catch (err: unknown) {
-      const apiErr = err as { status?: number; data?: { detail?: string } };
-      setView("error");
+      try {
+        await verifyMagicLink(token);
+        // URL уже очищен в useEffect, здесь ничего делать не нужно
+      } catch (err: unknown) {
+        const apiErr = err as { status?: number; data?: { detail?: string } };
+        setView("error");
 
-      if (apiErr.status === 410) {
-        setError("Ссылка для входа истекла. Запросите новую.");
-      } else if (apiErr.status === 400) {
-        setError(apiErr.data?.detail || "Невалидная ссылка для входа");
-      } else {
-        setError("Ошибка при входе. Попробуйте ещё раз.");
+        if (apiErr.status === 410) {
+          setError("Ссылка для входа истекла. Запросите новую.");
+        } else if (apiErr.status === 400) {
+          setError(apiErr.data?.detail || "Невалидная ссылка для входа");
+        } else {
+          setError("Ошибка при входе. Попробуйте ещё раз.");
+        }
       }
-    }
-  }, [verifyMagicLink]);
+    },
+    [verifyMagicLink],
+  );
 
   // Проверяем URL на наличие magic link токена
   useEffect(() => {

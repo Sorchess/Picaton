@@ -18,6 +18,7 @@ import {
   ProfileTopBar,
   CheckIcon,
   UsersIcon,
+  ShareMenu,
 } from "./components";
 import type { RoleTab } from "./components";
 import "./ProfilePage.scss";
@@ -51,6 +52,9 @@ export function ProfilePage() {
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [qrCardName, setQrCardName] = useState<string | undefined>();
+
+  // Share menu
+  const [showShareMenu, setShowShareMenu] = useState(false);
 
   // Active role for tabs
   const [activeRoleId, setActiveRoleId] = useState("personal");
@@ -159,21 +163,30 @@ export function ProfilePage() {
     }
   };
 
-  // QR код профиля
-  const handleShareProfile = async () => {
-    if (!user) return;
+  // Открыть меню выбора визиток для шаринга
+  const handleShareProfile = () => {
+    if (!user || cards.length === 0) return;
+    setShowShareMenu(true);
+  };
 
-    const primaryCard = cards.find((c) => c.is_primary) || cards[0];
+  // Обработка шаринга выбранных визиток
+  const handleShareSelectedCards = async (selectedCardIds: string[]) => {
+    if (selectedCardIds.length === 0) return;
 
-    if (primaryCard) {
-      try {
-        const qr = await businessCardApi.getQRCode(primaryCard.id);
+    try {
+      // Для простоты показываем QR первой выбранной визитки
+      const firstSelectedCard = cards.find((c) =>
+        selectedCardIds.includes(c.id),
+      );
+      if (firstSelectedCard && user) {
+        const qr = await businessCardApi.getQRCode(firstSelectedCard.id);
         setQrCodeImage(qr.image_base64);
-        setQrCardName(getFullName(user));
+        setQrCardName(firstSelectedCard.title || getFullName(user));
+        setShowShareMenu(false);
         setShowQrModal(true);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка генерации QR");
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка генерации QR");
     }
   };
 
@@ -455,6 +468,15 @@ export function ProfilePage() {
           </div>
         </div>
       </Modal>
+
+      {/* Share Menu */}
+      <ShareMenu
+        isOpen={showShareMenu}
+        onClose={() => setShowShareMenu(false)}
+        cards={cards}
+        onShare={handleShareSelectedCards}
+        initialSelectedIds={cards.filter((c) => c.is_primary).map((c) => c.id)}
+      />
 
       {/* QR Code Modal */}
       {qrCodeImage && (

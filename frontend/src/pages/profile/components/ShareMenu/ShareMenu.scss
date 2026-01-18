@@ -1,0 +1,351 @@
+.share-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+
+  &--active {
+    opacity: 1;
+  }
+}
+
+.share-menu {
+  width: 100%;
+  max-width: 393px;
+  background: #fff;
+  border-radius: 25px 25px 0 0;
+  padding: 20px;
+  padding-bottom: 40px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+
+  &--active {
+    transform: translateY(0);
+  }
+
+  // QR Code Header
+  &__qr-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  // Tab Switcher
+  &__tabs {
+    display: flex;
+    align-items: center;
+    height: 31px;
+    background: #fff;
+    border-radius: 15.5px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid rgba(157, 157, 157, 0.1);
+  }
+
+  &__tab {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 13.5px;
+
+    &--active {
+      background: rgba(223, 223, 223, 0.1);
+      border: 1px solid rgba(157, 157, 157, 0.1);
+      color: #000;
+    }
+  }
+
+  // Cards List
+  &__cards {
+    background: #f9faff;
+    border-radius: 24px;
+    border: 1px solid #fff;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  &__card {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid #e3e3e3;
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: rgba(0, 129, 255, 0.05);
+    }
+
+    &:active {
+      background: rgba(0, 129, 255, 0.1);
+    }
+  }
+
+  &__card-check {
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__card-check-empty {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e3e3e3;
+    border-radius: 50%;
+  }
+
+  &__card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__card-title {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #000;
+    line-height: 1.4;
+  }
+
+  &__card-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.3;
+  }
+
+  // Add Card Button
+  &__add-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #f9faff;
+    border-top: 1px solid #e3e3e3;
+  }
+
+  &__add-card-text {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #0081ff;
+  }
+
+  &__add-card-btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.6;
+    }
+  }
+
+  // Duration Selector
+  &__duration {
+    margin-bottom: 16px;
+    padding: 0 10px;
+  }
+
+  &__duration-options {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  &__duration-option {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.5);
+
+    &--infinity {
+      font-size: 14px;
+    }
+  }
+
+  &__duration-slider {
+    position: relative;
+    height: 6px;
+    background: transparent;
+  }
+
+  &__duration-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #0081ff;
+    transform: translateY(-50%);
+    border-radius: 1px;
+  }
+
+  &__duration-handle {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 30px;
+    height: 30px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 13px rgba(0, 0, 0, 0.25);
+    transform: translate(50%, -50%);
+    cursor: pointer;
+  }
+
+  // Help Text
+  &__help {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #f9faff;
+    border-radius: 25px;
+  }
+
+  &__help-text {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #676767;
+  }
+
+  &__share-btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 13px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: scale(1.1);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Dark theme support
+[data-theme="dark"] {
+  .share-menu {
+    background: #1a1a1a;
+
+    &__tabs {
+      background: #2a2a2a;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &__tab {
+      color: rgba(255, 255, 255, 0.6);
+
+      &--active {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+    }
+
+    &__cards {
+      background: #2a2a2a;
+      border-color: #333;
+    }
+
+    &__card {
+      border-color: #333;
+
+      &:hover {
+        background: rgba(0, 129, 255, 0.1);
+      }
+    }
+
+    &__card-check-empty {
+      border-color: #444;
+    }
+
+    &__card-title {
+      color: #fff;
+    }
+
+    &__card-arrow {
+      svg path {
+        stroke: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    &__add-card {
+      background: #2a2a2a;
+      border-color: #333;
+    }
+
+    &__duration-option {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    &__duration-handle {
+      background: #333;
+    }
+
+    &__help {
+      background: #2a2a2a;
+    }
+
+    &__help-text {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+}

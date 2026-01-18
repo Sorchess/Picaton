@@ -44,7 +44,7 @@ export const authApi = {
 
   // Magic Link (Passwordless)
   requestMagicLink: async (
-    data: MagicLinkRequest
+    data: MagicLinkRequest,
   ): Promise<MagicLinkResponse> => {
     return api.post<MagicLinkResponse>("/auth/magic-link", data);
   },
@@ -72,22 +72,22 @@ export const authApi = {
   },
 
   checkTelegramAuthStatus: async (
-    token: string
+    token: string,
   ): Promise<TelegramAuthStatusResponse> => {
     return api.get<TelegramAuthStatusResponse>(
-      `/auth/telegram/status/${token}`
+      `/auth/telegram/status/${token}`,
     );
   },
 
   // Синхронизация контактов
   syncTelegramContacts: async (
-    contacts: TelegramContact[]
+    contacts: TelegramContact[],
   ): Promise<TelegramContactsSyncResponse> => {
     return api.post<TelegramContactsSyncResponse>(
       "/auth/telegram/sync-contacts",
       {
         contacts,
-      }
+      },
     );
   },
 
@@ -95,15 +95,15 @@ export const authApi = {
   createContactSyncSession: async (): Promise<ContactSyncSessionResponse> => {
     return api.post<ContactSyncSessionResponse>(
       "/auth/telegram/sync-session",
-      {}
+      {},
     );
   },
 
   checkContactSyncStatus: async (
-    token: string
+    token: string,
   ): Promise<ContactSyncStatusResponse> => {
     return api.get<ContactSyncStatusResponse>(
-      `/auth/telegram/sync-status/${token}`
+      `/auth/telegram/sync-status/${token}`,
     );
   },
 };

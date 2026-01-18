@@ -1,9 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-  type ReactNode,
-} from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import type { User } from "@/entities/user";
 import { authApi } from "./api";
 import type { LoginCredentials, RegisterData, TelegramAuthData } from "./types";
