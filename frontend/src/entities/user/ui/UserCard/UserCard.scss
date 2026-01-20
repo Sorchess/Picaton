@@ -197,28 +197,28 @@
 
   // Светлая тема
   &--light {
-    box-shadow: 0 4px 24px rgba(33, 160, 56, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
 
     .user-card__tag {
-      background: rgba(33, 160, 56, 0.1);
-      color: #21a038;
+      background: rgba(40, 115, 237, 0.1);
+      color: #2873ed;
 
       &:hover {
-        background: rgba(33, 160, 56, 0.2);
+        background: rgba(40, 115, 237, 0.18);
       }
     }
 
     .user-card__action:hover:not(:disabled) {
-      background: #21a038;
+      background: #2873ed;
       color: white;
     }
 
     .user-card__action--saved {
-      background: linear-gradient(135deg, #21a038, #1a8a2e);
+      background: linear-gradient(135deg, #2873ed, #1d5fc7);
       color: white;
 
       &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #1a8a2e, #107c10);
+        background: linear-gradient(135deg, #1d5fc7, #1654b3);
         color: white;
       }
     }

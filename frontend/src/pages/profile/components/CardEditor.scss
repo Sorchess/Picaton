@@ -891,19 +891,19 @@
 // Light theme
 [data-theme="light"] {
   .card-editor {
-    background: linear-gradient(180deg, #f8faf8 0%, #f8faf8 100%);
+    background: linear-gradient(180deg, #f5f7fa 0%, #f5f7fa 100%);
 
     &__top-bar {
-      background: #f8faf8;
+      background: #f5f7fa;
     }
 
     &__top-btn {
-      background: rgba(33, 160, 56, 0.1);
-      color: #21a038;
-      box-shadow: 0px 0px 20px rgba(33, 160, 56, 0.1);
+      background: rgba(0, 0, 0, 0.05);
+      color: #585e67;
+      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.05);
 
       &:hover {
-        background: rgba(33, 160, 56, 0.18);
+        background: rgba(0, 0, 0, 0.08);
       }
 
       &--danger {
@@ -917,17 +917,17 @@
     }
 
     &__edit-btn {
-      background: rgba(33, 160, 56, 0.1);
-      border-color: rgba(33, 160, 56, 0.15);
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.08);
       color: rgba(0, 0, 0, 0.9);
     }
 
     &__save-btn {
-      background: rgba(33, 160, 56, 0.15);
-      color: #21a038;
+      background: rgba(40, 115, 237, 0.1);
+      color: #2873ed;
 
       &:hover {
-        background: rgba(33, 160, 56, 0.25);
+        background: rgba(40, 115, 237, 0.18);
       }
     }
 
@@ -936,16 +936,16 @@
     }
 
     &__role {
-      color: #7a8a7a;
+      color: #585e67;
     }
 
     &__dot {
-      background: #7a8a7a;
+      background: #585e67;
     }
 
     &__card {
       background: #ffffff;
-      border-color: rgba(33, 160, 56, 0.15);
+      border-color: rgba(0, 0, 0, 0.08);
     }
 
     &__label {
@@ -963,7 +963,7 @@
     &__input,
     &__textarea {
       background: rgba(0, 0, 0, 0.03);
-      border-color: rgba(33, 160, 56, 0.2);
+      border-color: rgba(0, 0, 0, 0.1);
       color: rgba(0, 0, 0, 0.9);
 
       &::placeholder {
@@ -971,13 +971,13 @@
       }
 
       &:focus {
-        border-color: rgba(33, 160, 56, 0.5);
+        border-color: rgba(40, 115, 237, 0.5);
         background: rgba(0, 0, 0, 0.05);
       }
     }
 
     &__divider {
-      background: rgba(33, 160, 56, 0.15);
+      background: rgba(0, 0, 0, 0.08);
     }
 
     &__icon {
@@ -989,27 +989,27 @@
     }
 
     &__section-action {
-      background: rgba(33, 160, 56, 0.1);
-      color: #21a038;
+      background: rgba(40, 115, 237, 0.1);
+      color: #2873ed;
 
       &:hover {
-        background: rgba(33, 160, 56, 0.18);
+        background: rgba(40, 115, 237, 0.18);
       }
     }
 
     &__tag {
-      background: rgba(33, 160, 56, 0.1);
-      border-color: rgba(33, 160, 56, 0.2);
-      color: #21a038;
+      background: rgba(40, 115, 237, 0.1);
+      border-color: rgba(40, 115, 237, 0.15);
+      color: #2873ed;
 
       &:hover {
-        background: rgba(33, 160, 56, 0.18);
+        background: rgba(40, 115, 237, 0.18);
       }
     }
 
     &__tag-add {
       background: rgba(0, 0, 0, 0.03);
-      border-color: rgba(33, 160, 56, 0.2);
+      border-color: rgba(0, 0, 0, 0.1);
       color: rgba(0, 0, 0, 0.5);
 
       &:hover {
@@ -1020,7 +1020,7 @@
 
     &__contact-item {
       background: rgba(0, 0, 0, 0.02);
-      border-color: rgba(33, 160, 56, 0.15);
+      border-color: rgba(0, 0, 0, 0.08);
     }
 
     &__contact-type {
@@ -1033,12 +1033,12 @@
 
     &__contact-form {
       background: rgba(0, 0, 0, 0.02);
-      border-color: rgba(33, 160, 56, 0.15);
+      border-color: rgba(0, 0, 0, 0.08);
     }
 
     &__select {
       background: rgba(0, 0, 0, 0.03);
-      border-color: rgba(33, 160, 56, 0.2);
+      border-color: rgba(0, 0, 0, 0.1);
       color: rgba(0, 0, 0, 0.9);
 
       option {
@@ -1049,18 +1049,18 @@
 
     &__btn {
       &--primary {
-        background: rgba(33, 160, 56, 0.1);
-        border-color: rgba(33, 160, 56, 0.25);
-        color: #21a038;
+        background: rgba(40, 115, 237, 0.1);
+        border-color: rgba(40, 115, 237, 0.15);
+        color: #2873ed;
 
         &:hover:not(:disabled) {
-          background: rgba(33, 160, 56, 0.18);
+          background: rgba(40, 115, 237, 0.18);
         }
       }
 
       &--secondary {
         background: rgba(0, 0, 0, 0.03);
-        border-color: rgba(33, 160, 56, 0.2);
+        border-color: rgba(0, 0, 0, 0.1);
         color: rgba(0, 0, 0, 0.7);
 
         &:hover:not(:disabled) {
@@ -1070,19 +1070,19 @@
     }
 
     &__add-contact {
-      border-color: rgba(33, 160, 56, 0.3);
+      border-color: rgba(0, 0, 0, 0.1);
       color: rgba(0, 0, 0, 0.5);
 
       &:hover {
-        border-color: rgba(33, 160, 56, 0.5);
-        color: #21a038;
-        background: rgba(33, 160, 56, 0.05);
+        border-color: rgba(40, 115, 237, 0.5);
+        color: #2873ed;
+        background: rgba(40, 115, 237, 0.05);
       }
     }
 
     &__modal {
       background: #ffffff;
-      border-color: rgba(33, 160, 56, 0.15);
+      border-color: rgba(0, 0, 0, 0.08);
     }
 
     &__modal-title {
@@ -1198,17 +1198,17 @@
     .tag-input {
       &__container {
         background: rgba(0, 0, 0, 0.03);
-        border-color: rgba(33, 160, 56, 0.2);
+        border-color: rgba(0, 0, 0, 0.1);
 
         &:focus-within {
-          border-color: rgba(33, 160, 56, 0.5);
+          border-color: rgba(40, 115, 237, 0.5);
         }
       }
 
       &__tag {
-        background: rgba(33, 160, 56, 0.1);
-        border-color: rgba(33, 160, 56, 0.2);
-        color: #21a038;
+        background: rgba(40, 115, 237, 0.1);
+        border-color: rgba(40, 115, 237, 0.15);
+        color: #2873ed;
       }
 
       &__input {
@@ -1225,7 +1225,7 @@
 
       &__suggestion {
         background: rgba(0, 0, 0, 0.03);
-        border-color: rgba(33, 160, 56, 0.2);
+        border-color: rgba(0, 0, 0, 0.1);
         color: rgba(0, 0, 0, 0.6);
 
         &:hover {
@@ -1236,7 +1236,7 @@
       }
 
       &__progress-bar {
-        background: rgba(33, 160, 56, 0.15);
+        background: rgba(40, 115, 237, 0.15);
       }
     }
   }

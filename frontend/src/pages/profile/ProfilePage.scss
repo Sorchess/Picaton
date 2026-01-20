@@ -264,7 +264,7 @@
 // Light theme
 [data-theme="light"] {
   .profile {
-    background: linear-gradient(180deg, #f8faf8 0%, #f8faf8 100%);
+    background: linear-gradient(180deg, #f5f7fa 0%, #f5f7fa 100%);
 
     &__loading,
     &__error {
@@ -273,12 +273,12 @@
       }
 
       button {
-        background: rgba(33, 160, 56, 0.15);
-        border-color: rgba(33, 160, 56, 0.3);
-        color: #21a038;
+        background: rgba(0, 0, 0, 0.05);
+        border-color: rgba(0, 0, 0, 0.1);
+        color: #585e67;
 
         &:hover {
-          background: rgba(33, 160, 56, 0.25);
+          background: rgba(0, 0, 0, 0.08);
         }
       }
     }
@@ -289,7 +289,7 @@
 
     &__cards-section {
       background: #ffffff;
-      border-color: rgba(33, 160, 56, 0.15);
+      border-color: rgba(0, 0, 0, 0.08);
     }
 
     &__cards-header h2 {
@@ -297,26 +297,26 @@
     }
 
     &__cards-count {
-      color: #7a8a7a;
+      color: #585e67;
     }
 
     &__add-card {
-      border-color: rgba(33, 160, 56, 0.3);
+      border-color: rgba(0, 0, 0, 0.1);
 
       &:hover {
-        border-color: rgba(33, 160, 56, 0.5);
-        background: rgba(33, 160, 56, 0.05);
+        border-color: rgba(40, 115, 237, 0.5);
+        background: rgba(40, 115, 237, 0.05);
 
         .profile__add-card-icon {
-          background: rgba(33, 160, 56, 0.2);
-          color: #21a038;
+          background: rgba(40, 115, 237, 0.15);
+          color: #2873ed;
         }
       }
     }
 
     &__add-card-icon {
       background: rgba(0, 0, 0, 0.03);
-      border-color: rgba(33, 160, 56, 0.2);
+      border-color: rgba(0, 0, 0, 0.1);
       color: rgba(0, 0, 0, 0.5);
     }
 
@@ -325,17 +325,17 @@
     }
 
     &__edit-card-btn {
-      background: rgba(33, 160, 56, 0.1);
-      border-color: rgba(33, 160, 56, 0.25);
+      background: rgba(40, 115, 237, 0.1);
+      border-color: rgba(40, 115, 237, 0.15);
 
       &:hover {
-        background: rgba(33, 160, 56, 0.18);
-        border-color: rgba(33, 160, 56, 0.4);
+        background: rgba(40, 115, 237, 0.18);
+        border-color: rgba(40, 115, 237, 0.25);
       }
     }
 
     &__edit-card-text {
-      color: #21a038;
+      color: #2873ed;
     }
 
     &__create-hint {
@@ -344,7 +344,7 @@
 
     &__create-input {
       background: #f0f0f0;
-      border-color: rgba(33, 160, 56, 0.2);
+      border-color: rgba(0, 0, 0, 0.1);
       color: rgba(0, 0, 0, 0.9);
 
       &::placeholder {
@@ -352,7 +352,7 @@
       }
 
       &:focus {
-        border-color: rgba(33, 160, 56, 0.5);
+        border-color: rgba(40, 115, 237, 0.5);
       }
     }
   }

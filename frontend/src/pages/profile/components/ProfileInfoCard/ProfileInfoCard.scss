@@ -122,7 +122,7 @@
 [data-theme="light"] {
   .profile-info-card {
     background: #ffffff;
-    border-color: rgba(33, 160, 56, 0.15);
+    border-color: rgba(0, 0, 0, 0.08);
 
     &__label {
       color: rgba(0, 0, 0, 0.5);
@@ -137,7 +137,7 @@
     }
 
     &__divider {
-      background: rgba(33, 160, 56, 0.15);
+      background: rgba(0, 0, 0, 0.08);
     }
 
     &__hobby-tag {

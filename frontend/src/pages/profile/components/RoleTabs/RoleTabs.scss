@@ -63,16 +63,16 @@
 [data-theme="light"] {
   .role-tabs {
     background: #ffffff;
-    border: 1px solid rgba(33, 160, 56, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.08);
 
     &__tab {
       &:hover:not(&--active) {
-        background: rgba(33, 160, 56, 0.05);
+        background: rgba(0, 0, 0, 0.03);
       }
 
       &--active {
-        background: rgba(33, 160, 56, 0.1);
-        border-color: rgba(33, 160, 56, 0.15);
+        background: rgba(40, 115, 237, 0.1);
+        border-color: rgba(40, 115, 237, 0.15);
 
         .role-tabs__name {
           color: rgba(0, 0, 0, 0.9);

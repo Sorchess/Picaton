@@ -59,55 +59,55 @@
 // Светлая тема
 [data-theme="light"] {
   // Фоны
-  --color-bg-primary: #f8faf8;
-  --color-bg-secondary: #ffffff;
-  --color-bg-tertiary: #eef3ee;
+  --color-bg-primary: #f5f7fa;
+  --color-bg-secondary: rgba(255, 255, 255, 0.6);
+  --color-bg-tertiary: #e8ecf2;
 
   // Тексты
   --color-text-primary: #1a1a1a;
-  --color-text-secondary: #4a5a4a;
-  --color-text-muted: #7a8a7a;
+  --color-text-secondary: #585e67;
+  --color-text-muted: #8a909a;
 
-  // Glass эффекты
-  --color-glass-bg: rgba(33, 160, 56, 0.04);
-  --color-glass-bg-hover: rgba(33, 160, 56, 0.08);
-  --color-glass-border: rgba(33, 160, 56, 0.12);
-  --color-glass-border-hover: rgba(33, 160, 56, 0.25);
-  --color-glass-shadow: rgba(33, 160, 56, 0.15);
-  --color-border: rgba(33, 160, 56, 0.15);
+  // Glass эффекты (нейтральные серые)
+  --color-glass-bg: rgba(0, 0, 0, 0.03);
+  --color-glass-bg-hover: rgba(0, 0, 0, 0.06);
+  --color-glass-border: rgba(0, 0, 0, 0.08);
+  --color-glass-border-hover: rgba(0, 0, 0, 0.12);
+  --color-glass-shadow: rgba(0, 0, 0, 0.08);
+  --color-border: rgba(0, 0, 0, 0.08);
 
-  // Акценты (Сбербанк зеленый)
-  --color-accent: #21a038;
-  --color-accent-hover: #1a8a2e;
+  // Акценты (синий)
+  --color-accent: #2873ed;
+  --color-accent-hover: #1d5fc7;
   --color-text-on-accent: #ffffff;
-  --color-success: #21a038;
+  --color-success: #22c55e;
   --color-error: #ef4444;
   --color-warning: #f59e0b;
 
   // Градиенты
-  --gradient-primary: linear-gradient(135deg, #21a038 0%, #107c10 100%);
+  --gradient-primary: linear-gradient(135deg, #2873ed 0%, #1d5fc7 100%);
   --gradient-glass: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.9) 0%,
-    rgba(230, 233, 230, 0.05) 50%
+    rgba(230, 235, 245, 0.05) 50%
   );
   --gradient-glass-hover: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.95) 0%,
-    rgba(163, 177, 163, 0.05) 60%
+    rgba(200, 215, 240, 0.05) 60%
   );
-  --gradient-button: linear-gradient(135deg, #21a038 0%, #1a8a2e 100%);
+  --gradient-button: linear-gradient(135deg, #2873ed 0%, #1d5fc7 100%);
 
-  // Blob цвета (зеленые оттенки)
-  --color-blob-1: rgba(33, 160, 56, 0.12);
-  --color-blob-2: rgba(33, 160, 56, 0.08);
-  --color-blob-3: rgba(16, 124, 16, 0.1);
-  --color-blob-4: rgba(33, 160, 56, 0.06);
+  // Blob цвета (нейтральные)
+  --color-blob-1: rgba(0, 0, 0, 0.04);
+  --color-blob-2: rgba(0, 0, 0, 0.03);
+  --color-blob-3: rgba(0, 0, 0, 0.035);
+  --color-blob-4: rgba(0, 0, 0, 0.025);
 
   // Прочие
-  --color-cursor-glow: rgba(33, 160, 56, 0.08);
-  --color-grid: rgba(33, 160, 56, 0.15);
-  --color-overlay: rgba(248, 250, 248, 0.9);
-  --color-shadow: rgba(33, 160, 56, 0.15);
-  --color-accent-rgb: 33, 160, 56;
+  --color-cursor-glow: rgba(0, 0, 0, 0.04);
+  --color-grid: rgba(0, 0, 0, 0.08);
+  --color-overlay: rgba(245, 247, 250, 0.9);
+  --color-shadow: rgba(216, 216, 216, 0.3);
+  --color-accent-rgb: 40, 115, 237;
 }

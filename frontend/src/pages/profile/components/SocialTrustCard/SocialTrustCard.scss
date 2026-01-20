@@ -130,7 +130,7 @@
 [data-theme="light"] {
   .social-trust-card {
     background: #ffffff;
-    border-color: rgba(33, 160, 56, 0.15);
+    border-color: rgba(0, 0, 0, 0.08);
 
     &__title {
       color: rgba(0, 0, 0, 0.9);
@@ -163,11 +163,11 @@
     }
 
     &__item-subtitle {
-      color: #7a8a7a;
+      color: #585e67;
     }
 
     &__item-chevron {
-      color: #7a8a7a;
+      color: #585e67;
     }
   }
 }
