@@ -410,6 +410,9 @@ export function ProfilePage() {
 
         {/* Info Card - uses selected card contacts */}
         <ProfileInfoCard
+          bio={selectedCard?.bio || selectedCard?.ai_generated_bio || undefined}
+          contacts={displayContacts}
+          tags={displayTags}
           phone={displayContacts.find((c) => c.type === "phone")?.value}
           username={user.telegram_username || undefined}
           onUsernameClick={() => {

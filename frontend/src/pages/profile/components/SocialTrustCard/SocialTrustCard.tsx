@@ -78,43 +78,52 @@ const ChevronRightIcon = () => (
 );
 
 /**
- * Social Trust card for profile (from Figma design)
+ * Social Trust cards for profile (from Figma design)
+ * Each item is a separate card
  */
 export const SocialTrustCard: FC<SocialTrustCardProps> = ({
   title = "Social Trust",
   items,
   className = "",
 }) => {
-  return (
-    <div className={`social-trust-card ${className}`}>
-      <h3 className="social-trust-card__title">{title}</h3>
+  if (items.length === 0) {
+    return null;
+  }
 
-      <div className="social-trust-card__items">
+  return (
+    <div className={`social-trust-cards ${className}`}>
+      {/* Title */}
+      <div className="social-trust-cards__header">
+        <span className="social-trust-cards__title">{title}</span>
+      </div>
+
+      {/* Trust Items Container */}
+      <div className="social-trust-cards__items">
         {items.map((item) => (
           <div
             key={item.id}
-            className={`social-trust-card__item social-trust-card__item--${item.variant}`}
+            className={`social-trust-cards__card social-trust-cards__card--${item.variant}`}
             onClick={item.onClick}
             role={item.onClick ? "button" : undefined}
             tabIndex={item.onClick ? 0 : undefined}
           >
             <div
-              className={`social-trust-card__item-icon social-trust-card__item-icon--${item.variant}`}
+              className={`social-trust-cards__icon social-trust-cards__icon--${item.variant}`}
             >
               {item.icon}
             </div>
 
-            <div className="social-trust-card__item-content">
-              <span className="social-trust-card__item-title">
+            <div className="social-trust-cards__content">
+              <span className="social-trust-cards__item-title">
                 {item.title}
               </span>
-              <span className="social-trust-card__item-subtitle">
+              <span className="social-trust-cards__item-subtitle">
                 {item.subtitle}
               </span>
             </div>
 
             {item.onClick && (
-              <span className="social-trust-card__item-chevron">
+              <span className="social-trust-cards__chevron">
                 <ChevronRightIcon />
               </span>
             )}

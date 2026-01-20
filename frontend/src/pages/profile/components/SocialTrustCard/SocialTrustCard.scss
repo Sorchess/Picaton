@@ -1,11 +1,18 @@
-.social-trust-card {
+// Social Trust Cards - All items in one card block (Figma design)
+.social-trust-cards {
   display: flex;
   flex-direction: column;
+  background: var(--color-bg-secondary, #242424);
+  border: 1px solid var(--color-border, #303030);
+  border-radius: 25px;
   padding: 10px;
-  background: #242424;
-  border: 1px solid #303030;
-  border-radius: 24px;
-  overflow: hidden;
+  gap: 8px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    padding: 6px;
+  }
 
   &__title {
     font-family:
@@ -13,11 +20,8 @@
       sans-serif;
     font-weight: 500;
     font-size: 16px;
-    line-height: 12px;
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0;
-    padding: 6px;
-    margin-bottom: 8px;
+    line-height: 1.2;
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
   }
 
   &__items {
@@ -26,18 +30,17 @@
     gap: 8px;
   }
 
-  &__item {
+  &__card {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 76px;
+    gap: 12px;
     padding: 11px 14px 11px 10px;
     border-radius: 24px;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover {
-      transform: scale(1.01);
+      opacity: 0.85;
     }
 
     &--blue {
@@ -57,7 +60,7 @@
     }
   }
 
-  &__item-icon {
+  &__icon {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -67,7 +70,7 @@
     flex-shrink: 0;
 
     svg {
-      color: #242424;
+      color: #ffffff;
     }
 
     &--blue {
@@ -87,12 +90,11 @@
     }
   }
 
-  &__item-content {
+  &__content {
     display: flex;
     flex-direction: column;
     gap: 8px;
     flex: 1;
-    margin-left: 12px;
   }
 
   &__item-title {
@@ -101,8 +103,8 @@
       sans-serif;
     font-weight: 600;
     font-size: 14px;
-    line-height: 12px;
-    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.2;
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
   }
 
   &__item-subtitle {
@@ -111,32 +113,33 @@
       sans-serif;
     font-weight: 500;
     font-size: 12px;
-    line-height: 12px;
-    color: #6f7884;
+    line-height: 1.2;
+    color: var(--color-text-muted, #6f7884);
   }
 
-  &__item-chevron {
+  &__chevron {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 14px;
     height: 14px;
-    color: #6f7884;
+    color: var(--color-text-muted, #6f7884);
     flex-shrink: 0;
   }
 }
 
 // Light theme
 [data-theme="light"] {
-  .social-trust-card {
-    background: #ffffff;
-    border-color: rgba(0, 0, 0, 0.08);
+  .social-trust-cards {
+    background: #f9faff;
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
 
     &__title {
       color: rgba(0, 0, 0, 0.9);
     }
 
-    &__item {
+    &__card {
       &--blue {
         background: rgba(0, 129, 255, 0.08);
       }
@@ -154,7 +157,7 @@
       }
     }
 
-    &__item-icon svg {
+    &__icon svg {
       color: #ffffff;
     }
 
@@ -166,7 +169,7 @@
       color: #585e67;
     }
 
-    &__item-chevron {
+    &__chevron {
       color: #585e67;
     }
   }
