@@ -15,13 +15,15 @@
     justify-content: center;
     width: 42px;
     height: 42px;
-    background: rgba(63, 63, 63, 0.5);
-    border: none;
-    border-radius: 40px;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
     cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
 
     &:hover {
       background: rgba(63, 63, 63, 0.7);

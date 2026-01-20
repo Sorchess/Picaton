@@ -25,13 +25,15 @@
     justify-content: center;
     width: 42px;
     height: 42px;
-    background: rgba(63, 63, 63, 0.5);
-    border: none;
-    border-radius: 40px;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
     cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
 
     &:hover {
       background: rgba(63, 63, 63, 0.7);
@@ -944,9 +946,9 @@
     }
 
     &__card {
-      background: #edf3ff;
-      border-color: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+      background: #f9faff;
+      border-color: white;
+      box-shadow: none;
     }
 
     &__label {
@@ -1082,9 +1084,9 @@
     }
 
     &__modal {
-      background: #edf3ff;
-      border-color: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+      background: #f9faff;
+      border-color: white;
+      box-shadow: none;
     }
 
     &__modal-title {
