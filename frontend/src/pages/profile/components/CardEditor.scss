@@ -4,7 +4,7 @@
   width: 100%;
   max-width: 393px;
   margin: 0 auto;
-  background: linear-gradient(180deg, #090909 0%, #090909 100%);
+  background: var(--color-bg-primary, #090909);
 
   // Top Bar
   &__top-bar {
@@ -16,7 +16,7 @@
     justify-content: space-between;
     width: 100%;
     padding: 10px 0;
-    background: #090909;
+    background: var(--color-bg-primary, #090909);
   }
 
   &__top-btn {
@@ -192,7 +192,7 @@
     font-weight: 500;
     font-size: 18px;
     line-height: 12px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     margin: 0;
   }
 
@@ -249,9 +249,9 @@
     flex-direction: column;
     gap: 16px;
     padding: 16px;
-    background: #242424;
-    border: 1px solid #303030;
-    border-radius: 24px;
+    background: var(--color-bg-secondary, #242424);
+    border: 1px solid var(--color-border, #303030);
+    border-radius: 25px;
     overflow: hidden;
   }
 
@@ -278,10 +278,10 @@
     font-family:
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
       sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 12px;
-    color: rgba(255, 255, 255, 0.6);
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
     padding: 0 6px;
   }
 
@@ -289,10 +289,10 @@
     font-family:
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
       sans-serif;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 16px;
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.3;
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     padding: 0 6px;
   }
 
@@ -304,10 +304,10 @@
   &__input {
     width: 100%;
     padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid #303030;
+    background: var(--color-glass-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--color-border, #303030);
     border-radius: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     font-family:
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
       sans-serif;
@@ -315,23 +315,23 @@
     transition: all 0.2s ease;
 
     &::placeholder {
-      color: rgba(255, 255, 255, 0.3);
+      color: var(--color-text-muted, rgba(255, 255, 255, 0.3));
     }
 
     &:focus {
       outline: none;
-      border-color: rgba(0, 129, 255, 0.5);
-      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--color-primary, rgba(0, 129, 255, 0.5));
+      background: var(--color-glass-bg-hover, rgba(255, 255, 255, 0.08));
     }
   }
 
   &__textarea {
     width: 100%;
     padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid #303030;
+    background: var(--color-glass-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--color-border, #303030);
     border-radius: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     font-family:
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
       sans-serif;
@@ -342,12 +342,12 @@
     transition: all 0.2s ease;
 
     &::placeholder {
-      color: rgba(255, 255, 255, 0.3);
+      color: var(--color-text-muted, rgba(255, 255, 255, 0.3));
     }
 
     &:focus {
       outline: none;
-      border-color: rgba(0, 129, 255, 0.5);
+      border-color: var(--color-primary, rgba(0, 129, 255, 0.5));
       background: rgba(255, 255, 255, 0.08);
     }
   }
@@ -355,7 +355,7 @@
   &__divider {
     width: 100%;
     height: 1px;
-    background: #303030;
+    background: var(--color-border, #303030);
     border-radius: 55px;
   }
 
@@ -365,7 +365,7 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     flex-shrink: 0;
 
     svg {
@@ -388,7 +388,7 @@
       sans-serif;
     font-weight: 600;
     font-size: 16px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     margin: 0;
   }
 
@@ -548,8 +548,8 @@
     align-items: center;
     gap: 12px;
     padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #303030;
+    background: var(--color-glass-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--color-border, #303030);
     border-radius: 14px;
   }
 
@@ -615,7 +615,7 @@
       sans-serif;
     font-weight: 500;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
   }
 
   &__contact-value {
@@ -624,7 +624,7 @@
       sans-serif;
     font-weight: 500;
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     word-break: break-all;
   }
 
@@ -653,8 +653,8 @@
     flex-direction: column;
     gap: 12px;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #303030;
+    background: var(--color-glass-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--color-border, #303030);
     border-radius: 14px;
   }
 
@@ -666,10 +666,10 @@
   &__select {
     flex: 0 0 120px;
     padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid #303030;
+    background: var(--color-glass-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--color-border, #303030);
     border-radius: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     font-family:
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
       sans-serif;
@@ -678,12 +678,12 @@
 
     &:focus {
       outline: none;
-      border-color: rgba(0, 129, 255, 0.5);
+      border-color: var(--color-primary, rgba(0, 129, 255, 0.5));
     }
 
     option {
-      background: #242424;
-      color: rgba(255, 255, 255, 0.9);
+      background: var(--color-bg-secondary, #242424);
+      color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     }
   }
 
@@ -725,12 +725,12 @@
     }
 
     &--secondary {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid #303030;
-      color: rgba(255, 255, 255, 0.7);
+      background: var(--color-glass-bg, rgba(255, 255, 255, 0.05));
+      border: 1px solid var(--color-border, #303030);
+      color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
 
       &:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--color-glass-bg-hover, rgba(255, 255, 255, 0.1));
       }
     }
 
@@ -758,9 +758,9 @@
     width: 100%;
     padding: 14px;
     background: transparent;
-    border: 2px dashed #303030;
+    border: 2px dashed var(--color-border, #303030);
     border-radius: 14px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
     font-family:
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
       sans-serif;
@@ -770,8 +770,8 @@
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: rgba(0, 129, 255, 0.5);
-      color: #0081ff;
+      border-color: var(--color-primary, rgba(0, 129, 255, 0.5));
+      color: var(--color-primary, #0081ff);
       background: rgba(0, 129, 255, 0.05);
     }
   }
@@ -790,9 +790,9 @@
   }
 
   &__modal {
-    background: #1a1a1a;
-    border: 1px solid #303030;
-    border-radius: 24px;
+    background: var(--color-bg-tertiary, #1a1a1a);
+    border: 1px solid var(--color-border, #303030);
+    border-radius: 25px;
     padding: 24px;
     max-width: 350px;
     width: 100%;
@@ -822,7 +822,7 @@
       sans-serif;
     font-size: 18px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
     margin: 0 0 12px;
   }
 
@@ -831,7 +831,7 @@
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
       sans-serif;
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-text-secondary, rgba(255, 255, 255, 0.6));
     line-height: 1.5;
     margin: 0 0 20px;
   }
@@ -891,7 +891,7 @@
 // Light theme
 [data-theme="light"] {
   .card-editor {
-    background: linear-gradient(180deg, #f5f7fa 0%, #f5f7fa 100%);
+    background: #f5f7fa;
 
     &__top-bar {
       background: #f5f7fa;
@@ -932,7 +932,7 @@
     }
 
     &__name {
-      color: rgba(0, 0, 0, 0.9);
+      color: #000000;
     }
 
     &__role {
@@ -944,16 +944,17 @@
     }
 
     &__card {
-      background: #ffffff;
-      border-color: rgba(0, 0, 0, 0.08);
+      background: #f9faff;
+      border-color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
     }
 
     &__label {
-      color: rgba(0, 0, 0, 0.5);
+      color: #676767;
     }
 
     &__value {
-      color: rgba(0, 0, 0, 0.9);
+      color: #000000;
     }
 
     &__placeholder {
@@ -985,7 +986,7 @@
     }
 
     &__section-title {
-      color: rgba(0, 0, 0, 0.9);
+      color: #000000;
     }
 
     &__section-action {
@@ -1024,11 +1025,11 @@
     }
 
     &__contact-type {
-      color: rgba(0, 0, 0, 0.5);
+      color: #676767;
     }
 
     &__contact-value {
-      color: rgba(0, 0, 0, 0.9);
+      color: #000000;
     }
 
     &__contact-form {
@@ -1081,16 +1082,17 @@
     }
 
     &__modal {
-      background: #ffffff;
-      border-color: rgba(0, 0, 0, 0.08);
+      background: #f9faff;
+      border-color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
     }
 
     &__modal-title {
-      color: rgba(0, 0, 0, 0.9);
+      color: #000000;
     }
 
     &__modal-text {
-      color: rgba(0, 0, 0, 0.6);
+      color: #676767;
     }
   }
 }
