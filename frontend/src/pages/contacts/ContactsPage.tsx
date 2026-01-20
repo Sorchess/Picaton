@@ -2,20 +2,42 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import type { SavedContact, UserPublic } from "@/entities/user";
 import { userApi } from "@/entities/user";
 import { businessCardApi } from "@/entities/business-card";
+import {
+  companyApi,
+  type CompanyMember,
+  type CompanyWithRole,
+} from "@/entities/company";
 import { useAuth } from "@/features/auth";
 import { ContactImportButton } from "@/features/contact-import";
 import { SpecialistModal } from "@/features/specialist-modal";
-import { Tag, Loader, Typography, Modal, Input } from "@/shared";
+import { Tag, Loader, Typography, Modal, Input, Avatar } from "@/shared";
 import "./ContactsPage.scss";
+
+type TabType = "my" | "company" | "recommendations";
+
+interface ContactCardData {
+  id: string;
+  name: string;
+  position?: string | null;
+  company?: string | null;
+  avatarUrl?: string | null;
+  tags: string[];
+  type: "saved" | "company" | "recommendation";
+  originalData: SavedContact | CompanyMember | UserPublic;
+}
 
 export function ContactsPage() {
   const { user: authUser } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>("my");
   const [contacts, setContacts] = useState<SavedContact[]>([]);
+  const [companyMembers, setCompanyMembers] = useState<CompanyMember[]>([]);
+  const [recommendations, setRecommendations] = useState<UserPublic[]>([]);
+  const [myCompanies, setMyCompanies] = useState<CompanyWithRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContact, setSelectedContact] = useState<SavedContact | null>(
-    null
+    null,
   );
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newContact, setNewContact] = useState({
@@ -60,9 +82,96 @@ export function ContactsPage() {
     }
   }, [authUser?.id]);
 
+  const loadCompanyMembers = useCallback(async () => {
+    try {
+      const companies = await companyApi.getMyCompanies();
+      setMyCompanies(companies);
+
+      // Загружаем членов из всех компаний пользователя
+      const allMembers: CompanyMember[] = [];
+      for (const company of companies) {
+        try {
+          const members = await companyApi.getMembers(company.company.id);
+          // Исключаем текущего пользователя
+          const filteredMembers = members.filter(
+            (m) => m.user.id !== authUser?.id,
+          );
+          allMembers.push(...filteredMembers);
+        } catch {
+          // Игнорируем ошибки для отдельных компаний
+        }
+      }
+      setCompanyMembers(allMembers);
+    } catch {
+      // Нет компаний или ошибка
+      setCompanyMembers([]);
+    }
+  }, [authUser?.id]);
+
+  const loadRecommendations = useCallback(async () => {
+    if (!authUser?.id || !authUser?.search_tags?.length) {
+      setRecommendations([]);
+      return;
+    }
+
+    try {
+      // Ищем пользователей по тегам текущего пользователя
+      const query = authUser.search_tags.slice(0, 3).join(" ");
+      const result = await userApi.search(query, {
+        limit: 20,
+        include_users: true,
+        include_contacts: false,
+      });
+
+      // Исключаем себя и тех, кто уже в контактах
+      const savedUserIds = new Set(
+        contacts.map((c) => c.saved_user_id).filter(Boolean),
+      );
+      const filteredUsers = result.cards
+        .filter(
+          (card) =>
+            card.owner_id !== authUser.id && !savedUserIds.has(card.owner_id),
+        )
+        .slice(0, 10)
+        .map(
+          (card) =>
+            ({
+              id: card.owner_id,
+              first_name: card.owner_first_name,
+              last_name: card.owner_last_name,
+              avatar_url: card.avatar_url,
+              bio: card.bio,
+              ai_generated_bio: card.ai_generated_bio,
+              location: null,
+              position: null,
+              tags: [],
+              search_tags: card.search_tags,
+              contacts: card.contacts.map((c) => ({
+                type: c.type,
+                value: c.value,
+                is_primary: c.is_primary,
+                is_visible: true,
+              })),
+              profile_completeness: card.completeness,
+            }) as UserPublic,
+        );
+
+      setRecommendations(filteredUsers);
+    } catch {
+      setRecommendations([]);
+    }
+  }, [authUser?.id, authUser?.search_tags, contacts]);
+
   useEffect(() => {
     loadContacts();
-  }, [loadContacts]);
+    loadCompanyMembers();
+  }, [loadContacts, loadCompanyMembers]);
+
+  useEffect(() => {
+    if (activeTab === "recommendations") {
+      loadRecommendations();
+    }
+  }, [activeTab, loadRecommendations]);
 
   const handleDeleteContact = async (contactId: string) => {
     if (!confirm("Удалить контакт?")) return;
@@ -101,10 +210,28 @@ export function ContactsPage() {
     }
   };
 
+  // Save recommendation as contact
+  const handleSaveRecommendation = async (user: UserPublic) => {
+    if (!authUser?.id) return;
+    try {
+      await userApi.saveContact(
+        authUser.id,
+        user.id,
+        undefined,
+        user.search_tags,
+      );
+      await loadContacts();
+      setRecommendations((prev) => prev.filter((r) => r.id !== user.id));
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Ошибка сохранения контакта",
+      );
+    }
+  };
+
   // Open user profile for registered users
   const handleOpenUserProfile = async (contact: SavedContact) => {
     if (!contact.saved_user_id) {
-      // For non-registered users, show regular contact modal
       setSelectedContact(contact);
       return;
     }
@@ -112,10 +239,8 @@ export function ContactsPage() {
     try {
       let userData: UserPublic;
 
-      // Если есть сохраненная визитная карточка, загружаем данные из неё
       if (contact.saved_card_id) {
         const cardData = await businessCardApi.getPublic(contact.saved_card_id);
-        // Преобразуем данные карточки в формат UserPublic
         const firstName = cardData.display_name
           ? cardData.display_name.split(" ")[0]
           : contact.first_name;
@@ -142,11 +267,7 @@ export function ContactsPage() {
           profile_completeness: cardData.completeness,
         };
       } else {
-        // Загружаем данные пользователя из API
         const userDataFromApi = await userApi.getPublic(contact.saved_user_id);
-
-        // Если у пользователя нет контактов, но есть в SavedContact - используем их
-        // Если в обоих местах нет - пробуем загрузить карточку пользователя
         let contactsToUse = userDataFromApi.contacts || [];
         let tagsToUse = userDataFromApi.tags || [];
         let searchTagsToUse = userDataFromApi.search_tags || [];
@@ -159,11 +280,10 @@ export function ContactsPage() {
           searchTagsToUse = contact.search_tags;
         }
 
-        // Если всё еще нет контактов, пробуем загрузить основную карточку пользователя
         if (contactsToUse.length === 0) {
           try {
             const primaryCard = await businessCardApi.getPrimary(
-              contact.saved_user_id
+              contact.saved_user_id,
             );
             if (primaryCard) {
               contactsToUse = primaryCard.contacts.map((c) => ({
@@ -183,7 +303,7 @@ export function ContactsPage() {
               }
             }
           } catch {
-            // Ignore error if can't load cards
+            // Ignore
           }
         }
 
@@ -199,18 +319,33 @@ export function ContactsPage() {
       setSelectedContactForModal(contact);
       setIsUserModalOpen(true);
     } catch {
-      // Fallback to regular contact modal if user not found
       setSelectedContact(contact);
     }
   };
 
-  // Удаление контакта из модального окна профиля
+  const handleOpenCompanyMemberProfile = async (member: CompanyMember) => {
+    try {
+      const userData = await userApi.getPublic(member.user.id);
+      setSelectedUserProfile(userData);
+      setSelectedContactForModal(null);
+      setIsUserModalOpen(true);
+    } catch {
+      setError("Не удалось загрузить профиль");
+    }
+  };
+
+  const handleOpenRecommendationProfile = (user: UserPublic) => {
+    setSelectedUserProfile(user);
+    setSelectedContactForModal(null);
+    setIsUserModalOpen(true);
+  };
+
   const handleDeleteContactFromModal = async () => {
     if (!selectedContactForModal) return;
     try {
       await userApi.deleteContact(selectedContactForModal.id);
       setContacts((prev) =>
-        prev.filter((c) => c.id !== selectedContactForModal.id)
+        prev.filter((c) => c.id !== selectedContactForModal.id),
       );
       setIsUserModalOpen(false);
       setSelectedUserProfile(null);
@@ -248,7 +383,7 @@ export function ContactsPage() {
         search_tags: editContactTags.length > 0 ? editContactTags : undefined,
       });
       setContacts((prev) =>
-        prev.map((c) => (c.id === editingContactId ? updated : c))
+        prev.map((c) => (c.id === editingContactId ? updated : c)),
       );
       setIsEditModalOpen(false);
       setEditingContactId(null);
@@ -274,60 +409,7 @@ export function ContactsPage() {
     return contact.name;
   };
 
-  // Контакты без себя
-  const contactsWithoutSelf = useMemo(
-    () => contacts.filter((c) => c.saved_user_id !== authUser?.id),
-    [contacts, authUser?.id]
-  );
-
-  const filteredContacts = useMemo(() => {
-    let result = contactsWithoutSelf;
-
-    // Step 1: Filter by search query
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((contact) => {
-        const fullName = getContactFullName(contact).toLowerCase();
-        return (
-          fullName.includes(q) ||
-          contact.email?.toLowerCase().includes(q) ||
-          contact.phone?.includes(q) ||
-          contact.messenger_value?.toLowerCase().includes(q) ||
-          contact.search_tags.some((tag) => tag.toLowerCase().includes(q))
-        );
-      });
-    }
-
-    // Step 2: Sort by matching tags (DESC), then by name (ASC)
-    const userTags = authUser?.search_tags || [];
-    if (userTags.length === 0) {
-      return result.sort((a, b) =>
-        getContactFullName(a).localeCompare(getContactFullName(b), "ru")
-      );
-    }
-
-    const userTagsSet = new Set(userTags.map((t) => t.toLowerCase()));
-
-    return result.sort((a, b) => {
-      const scoreA = a.search_tags.filter((tag) =>
-        userTagsSet.has(tag.toLowerCase())
-      ).length;
-      const scoreB = b.search_tags.filter((tag) =>
-        userTagsSet.has(tag.toLowerCase())
-      ).length;
-
-      if (scoreB !== scoreA) {
-        return scoreB - scoreA; // Higher score first
-      }
-      return getContactFullName(a).localeCompare(getContactFullName(b), "ru");
-    });
-  }, [searchQuery, authUser?.search_tags, contactsWithoutSelf]);
-
-  const getInitials = (contact: SavedContact) => {
-    if (contact.first_name && contact.last_name) {
-      return (contact.first_name[0] + contact.last_name[0]).toUpperCase();
-    }
-    const name = getContactFullName(contact);
+  const getInitials = (name: string) => {
     const parts = name.split(" ");
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -335,16 +417,130 @@ export function ContactsPage() {
     return name.slice(0, 2).toUpperCase();
   };
 
-  const getMessengerLabel = (type: string | null) => {
-    if (!type) return "";
-    const labels: Record<string, string> = {
-      telegram: "Telegram",
-      whatsapp: "WhatsApp",
-      vk: "ВКонтакте",
-      messenger: "Messenger",
-    };
-    return labels[type] || type;
+  // Контакты без себя
+  const contactsWithoutSelf = useMemo(
+    () => contacts.filter((c) => c.saved_user_id !== authUser?.id),
+    [contacts, authUser?.id],
+  );
+
+  // Transform data to unified card format
+  const transformedContacts: ContactCardData[] = useMemo(() => {
+    if (activeTab === "my") {
+      let result = contactsWithoutSelf;
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter((contact) => {
+          const fullName = getContactFullName(contact).toLowerCase();
+          return (
+            fullName.includes(q) ||
+            contact.email?.toLowerCase().includes(q) ||
+            contact.phone?.includes(q) ||
+            contact.search_tags.some((tag) => tag.toLowerCase().includes(q))
+          );
+        });
+      }
+
+      // Sort by matching tags
+      const userTags = authUser?.search_tags || [];
+      if (userTags.length > 0) {
+        const userTagsSet = new Set(userTags.map((t) => t.toLowerCase()));
+        result = [...result].sort((a, b) => {
+          const scoreA = a.search_tags.filter((tag) =>
+            userTagsSet.has(tag.toLowerCase()),
+          ).length;
+          const scoreB = b.search_tags.filter((tag) =>
+            userTagsSet.has(tag.toLowerCase()),
+          ).length;
+          if (scoreB !== scoreA) return scoreB - scoreA;
+          return getContactFullName(a).localeCompare(
+            getContactFullName(b),
+            "ru",
+          );
+        });
+      }
+
+      return result.map((c) => ({
+        id: c.id,
+        name: getContactFullName(c),
+        position: null,
+        company: null,
+        avatarUrl: null,
+        tags: c.search_tags,
+        type: "saved" as const,
+        originalData: c,
+      }));
+    }
+
+    if (activeTab === "company") {
+      let result = companyMembers;
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter((member) => {
+          const fullName =
+            `${member.user.first_name} ${member.user.last_name}`.toLowerCase();
+          return (
+            fullName.includes(q) || member.user.email?.toLowerCase().includes(q)
+          );
+        });
+      }
+
+      return result.map((m) => {
+        // Find the company this member belongs to
+        const memberCompany = myCompanies.length > 0 ? myCompanies[0] : null;
+        return {
+          id: m.id,
+          name: `${m.user.first_name} ${m.user.last_name}`,
+          position: m.role?.name || null,
+          company: memberCompany?.company.name || null,
+          avatarUrl: m.user.avatar_url,
+          tags: [],
+          type: "company" as const,
+          originalData: m,
+        };
+      });
+    }
+
+    if (activeTab === "recommendations") {
+      return recommendations.map((u) => ({
+        id: u.id,
+        name: `${u.first_name} ${u.last_name}`,
+        position: u.position || null,
+        company: null,
+        avatarUrl: u.avatar_url,
+        tags: u.search_tags,
+        type: "recommendation" as const,
+        originalData: u,
+      }));
+    }
+
+    return [];
+  }, [
+    activeTab,
+    contactsWithoutSelf,
+    companyMembers,
+    recommendations,
+    searchQuery,
+    authUser?.search_tags,
+    myCompanies,
+  ]);
+
+  const handleCardClick = (card: ContactCardData) => {
+    if (card.type === "saved") {
+      handleOpenUserProfile(card.originalData as SavedContact);
+    } else if (card.type === "company") {
+      handleOpenCompanyMemberProfile(card.originalData as CompanyMember);
+    } else if (card.type === "recommendation") {
+      handleOpenRecommendationProfile(card.originalData as UserPublic);
+    }
   };
+
+  const tabs: { id: TabType; label: string }[] = [
+    { id: "my", label: "Мои контакты" },
+    { id: "company", label: "Компания" },
+    { id: "recommendations", label: "Рекомендации" },
+  ];
 
   if (isLoading) {
     return (
@@ -359,59 +555,53 @@ export function ContactsPage() {
 
   return (
     <div className="contacts-page">
-      <div className="contacts-page__header">
-        <div className="contacts-page__title-row">
-          <h1 className="contacts-page__title">
-            Мои <span className="contacts-page__title-accent">контакты</span>
-          </h1>
-          <div className="contacts-page__actions">
-            <ContactImportButton onSyncComplete={() => loadContacts()} />
-            <button
-              className="contacts-page__add-btn"
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Добавить
-            </button>
-          </div>
-        </div>
-
-        <div className="contacts-page__search">
+      {/* Header */}
+      <header className="contacts-page__header">
+        <button className="contacts-page__header-btn" onClick={() => {}}>
           <svg
-            className="contacts-page__search-icon"
-            width="20"
-            height="20"
+            width="24"
+            height="24"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
           >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
           </svg>
-          <input
-            type="text"
-            className="contacts-page__search-input"
-            placeholder="Поиск по контактам..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        </button>
+        <h1 className="contacts-page__title">Контакты</h1>
+        <button
+          className="contacts-page__header-btn"
+          onClick={() => setIsAddModalOpen(true)}
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      </header>
 
-        <div className="contacts-page__stats">
-          <span className="contacts-page__count">
-            {filteredContacts.length} из {contactsWithoutSelf.length} контактов
-          </span>
-        </div>
+      {/* Tabs */}
+      <div className="contacts-page__tabs">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`contacts-page__tab ${activeTab === tab.id ? "contacts-page__tab--active" : ""}`}
+            onClick={() => {
+              setActiveTab(tab.id);
+              setSearchQuery("");
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {error && (
@@ -420,93 +610,113 @@ export function ContactsPage() {
         </div>
       )}
 
-      {filteredContacts.length === 0 ? (
-        <div className="contacts-page__empty">
-          <svg
-            width="64"
-            height="64"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          >
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-          <h3>
-            {contactsWithoutSelf.length === 0
-              ? "Нет контактов"
-              : "Ничего не найдено"}
-          </h3>
-          <p>
-            {contactsWithoutSelf.length === 0
-              ? "Добавляйте экспертов из поиска или создавайте контакты вручную"
-              : "Попробуйте изменить поисковый запрос"}
-          </p>
-        </div>
-      ) : (
-        <div className="contacts-page__grid">
-          {filteredContacts.map((contact) => (
+      {/* Contact List */}
+      <div className="contacts-page__list">
+        {transformedContacts.length === 0 ? (
+          <div className="contacts-page__empty">
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <h3>
+              {activeTab === "my" &&
+                contactsWithoutSelf.length === 0 &&
+                "Нет контактов"}
+              {activeTab === "my" &&
+                contactsWithoutSelf.length > 0 &&
+                "Ничего не найдено"}
+              {activeTab === "company" && "Нет коллег"}
+              {activeTab === "recommendations" && "Нет рекомендаций"}
+            </h3>
+            <p>
+              {activeTab === "my" &&
+                contactsWithoutSelf.length === 0 &&
+                "Добавляйте экспертов из поиска или создавайте контакты вручную"}
+              {activeTab === "my" &&
+                contactsWithoutSelf.length > 0 &&
+                "Попробуйте изменить поисковый запрос"}
+              {activeTab === "company" &&
+                "Присоединитесь к компании, чтобы видеть коллег"}
+              {activeTab === "recommendations" &&
+                "Заполните теги в профиле для получения рекомендаций"}
+            </p>
+          </div>
+        ) : (
+          transformedContacts.map((card) => (
             <div
-              key={contact.id}
+              key={card.id}
               className="contacts-page__card"
-              onClick={() => handleOpenUserProfile(contact)}
+              onClick={() => handleCardClick(card)}
             >
               <div className="contacts-page__card-avatar">
-                {getInitials(contact)}
+                {card.avatarUrl ? (
+                  <Avatar src={card.avatarUrl} alt={card.name} size="lg" />
+                ) : (
+                  <Avatar initials={getInitials(card.name)} size="lg" />
+                )}
               </div>
               <div className="contacts-page__card-info">
-                <h3 className="contacts-page__card-name">
-                  {getContactFullName(contact)}
-                </h3>
-                {contact.email && (
-                  <p className="contacts-page__card-email">{contact.email}</p>
-                )}
-                {contact.phone && (
-                  <p className="contacts-page__card-phone">{contact.phone}</p>
-                )}
-                {contact.messenger_type && contact.messenger_value && (
-                  <p className="contacts-page__card-messenger">
-                    {getMessengerLabel(contact.messenger_type)}:{" "}
-                    {contact.messenger_value}
+                <h3 className="contacts-page__card-name">{card.name}</h3>
+                {(card.position || card.company) && (
+                  <p className="contacts-page__card-position">
+                    {card.position}
+                    {card.position && card.company && <br />}
+                    {card.company}
                   </p>
                 )}
+                {card.tags.length > 0 && (
+                  <div className="contacts-page__card-tags">
+                    {card.tags.slice(0, 4).map((tag) => (
+                      <Tag key={tag} size="sm">
+                        {tag}
+                      </Tag>
+                    ))}
+                    {card.tags.length > 4 && (
+                      <Tag variant="outline" size="sm">
+                        +{card.tags.length - 4}
+                      </Tag>
+                    )}
+                  </div>
+                )}
               </div>
-              {contact.search_tags.length > 0 && (
-                <div className="contacts-page__card-tags">
-                  {contact.search_tags.slice(0, 3).map((tag) => (
-                    <Tag key={tag} size="sm">
-                      {tag}
-                    </Tag>
-                  ))}
-                  {contact.search_tags.length > 3 && (
-                    <Tag variant="outline" size="sm">
-                      +{contact.search_tags.length - 3}
-                    </Tag>
-                  )}
-                </div>
+              {card.type === "recommendation" && (
+                <button
+                  className="contacts-page__card-action"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSaveRecommendation(card.originalData as UserPublic);
+                  }}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
               )}
-              <div className="contacts-page__card-source">
-                {contact.source === "user" && (
-                  <span className="contacts-page__source-badge contacts-page__source-badge--user">
-                    Пользователь
-                  </span>
-                )}
-                {contact.source === "manual" && (
-                  <span className="contacts-page__source-badge contacts-page__source-badge--manual">
-                    Вручную
-                  </span>
-                )}
-                {contact.source === "import" && (
-                  <span className="contacts-page__source-badge contacts-page__source-badge--import">
-                    Импорт
-                  </span>
-                )}
-              </div>
             </div>
-          ))}
+          ))
+        )}
+      </div>
+
+      {/* Import button for "my" tab */}
+      {activeTab === "my" && (
+        <div className="contacts-page__import">
+          <ContactImportButton onSyncComplete={() => loadContacts()} />
         </div>
       )}
 
@@ -519,7 +729,10 @@ export function ContactsPage() {
         {selectedContact && (
           <div className="contacts-page__modal">
             <div className="contacts-page__modal-avatar">
-              {getInitials(selectedContact)}
+              <Avatar
+                initials={getInitials(getContactFullName(selectedContact))}
+                size="xl"
+              />
             </div>
             <h2 className="contacts-page__modal-name">
               {getContactFullName(selectedContact)}
@@ -561,44 +774,6 @@ export function ContactsPage() {
                   </a>
                 </div>
               )}
-              {selectedContact.messenger_type &&
-                selectedContact.messenger_value && (
-                  <div className="contacts-page__modal-row contacts-page__modal-row--messenger">
-                    <span className="contacts-page__messenger-icon">
-                      {selectedContact.messenger_type === "telegram" && "✈️"}
-                      {selectedContact.messenger_type === "whatsapp" && "💬"}
-                      {selectedContact.messenger_type === "vk" && "🔷"}
-                      {selectedContact.messenger_type === "messenger" && "💭"}
-                    </span>
-                    <span>
-                      {getMessengerLabel(selectedContact.messenger_type)}:{" "}
-                      {selectedContact.messenger_value}
-                    </span>
-                  </div>
-                )}
-              {/* Контакты для связи из визитной карточки */}
-              {selectedContact.contacts &&
-                selectedContact.contacts.length > 0 && (
-                  <div className="contacts-page__modal-contacts">
-                    <h4>Контакты для связи</h4>
-                    {selectedContact.contacts.map((contact, idx) => (
-                      <div key={idx} className="contacts-page__modal-row">
-                        <span className="contacts-page__messenger-icon">
-                          {contact.type.toLowerCase() === "telegram" && "✈️"}
-                          {contact.type.toLowerCase() === "whatsapp" && "💬"}
-                          {contact.type.toLowerCase() === "email" && "📧"}
-                          {contact.type.toLowerCase() === "phone" && "📞"}
-                          {contact.type.toLowerCase() === "vk" && "🔷"}
-                          {contact.type.toLowerCase() === "linkedin" && "💼"}
-                          {contact.type.toLowerCase() === "github" && "🐙"}
-                        </span>
-                        <span>
-                          {contact.type}: {contact.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
             </div>
 
             {selectedContact.notes && (
@@ -801,7 +976,7 @@ export function ContactsPage() {
         </div>
       </Modal>
 
-      {/* User Profile Modal (for registered users with contacts) */}
+      {/* User Profile Modal */}
       <SpecialistModal
         user={selectedUserProfile}
         cardId={selectedContactForModal?.saved_card_id ?? undefined}
@@ -811,8 +986,10 @@ export function ContactsPage() {
           setSelectedUserProfile(null);
           setSelectedContactForModal(null);
         }}
-        onDeleteContact={handleDeleteContactFromModal}
-        isSaved={true}
+        onDeleteContact={
+          selectedContactForModal ? handleDeleteContactFromModal : undefined
+        }
+        isSaved={!!selectedContactForModal}
       />
     </div>
   );
