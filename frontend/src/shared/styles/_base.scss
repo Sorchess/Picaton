@@ -10,6 +10,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-y: scroll; // Всегда показывать скроллбар чтобы избежать сдвига контента
 }
 
 body {
@@ -18,7 +19,9 @@ body {
   color: var(--color-text-primary);
   overflow-x: hidden;
   line-height: $line-height-normal;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 a {

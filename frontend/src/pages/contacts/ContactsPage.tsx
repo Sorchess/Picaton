@@ -89,14 +89,21 @@ export function ContactsPage() {
 
       // Загружаем членов из всех компаний пользователя
       const allMembers: CompanyMember[] = [];
+      const seenUserIds = new Set<string>();
+
       for (const company of companies) {
         try {
           const members = await companyApi.getMembers(company.company.id);
-          // Исключаем текущего пользователя
-          const filteredMembers = members.filter(
-            (m) => m.user.id !== authUser?.id,
-          );
-          allMembers.push(...filteredMembers);
+          // Исключаем текущего пользователя и дубликаты
+          for (const member of members) {
+            if (
+              member.user.id !== authUser?.id &&
+              !seenUserIds.has(member.user.id)
+            ) {
+              seenUserIds.add(member.user.id);
+              allMembers.push(member);
+            }
+          }
         } catch {
           // Игнорируем ошибки для отдельных компаний
         }
@@ -558,32 +565,25 @@ export function ContactsPage() {
       {/* Header */}
       <header className="contacts-page__header">
         <button className="contacts-page__header-btn" onClick={() => {}}>
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path
+              d="M3.60742 16.1367L1.24414 17.0449C1.10091 17.097 0.970703 17.0645 0.853516 16.9473C0.742839 16.8301 0.713542 16.6966 0.765625 16.5469L1.72266 14.252L12.709 3.27539L14.584 5.16016L3.60742 16.1367ZM15.5215 4.24219L13.627 2.35742L14.6816 1.3125C14.9421 1.05859 15.2122 0.921875 15.4922 0.902344C15.7721 0.882812 16.0326 0.990234 16.2734 1.22461L16.6543 1.61523C16.8952 1.85612 17.0091 2.11328 16.9961 2.38672C16.9831 2.66016 16.8431 2.93034 16.5762 3.19727L15.5215 4.24219Z"
+              fill="#E3E3E3"
+            />
           </svg>
         </button>
-        <h1 className="contacts-page__title">Контакты</h1>
+        <div className="contacts-page__title-container">
+          <h1 className="contacts-page__title">Контакты</h1>
+        </div>
         <button
           className="contacts-page__header-btn"
           onClick={() => setIsAddModalOpen(true)}
         >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M12 5v14M5 12h14" />
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path
+              d="M9.768 16.0391C9.768 16.332 9.66 16.5859 9.445 16.8008C9.23 17.0156 8.97 17.123 8.664 17.123C8.365 17.123 8.107 17.0156 7.893 16.8008C7.678 16.5859 7.57 16.332 7.57 16.0391V1.86914C7.57 1.56966 7.678 1.3125 7.893 1.09766C8.107 0.882812 8.365 0.775391 8.664 0.775391C8.97 0.775391 9.23 0.882812 9.445 1.09766C9.66 1.3125 9.768 1.56966 9.768 1.86914V16.0391ZM1.584 10.043C1.285 10.043 1.027 9.93883 0.812 9.73047C0.598 9.51562 0.49 9.25521 0.49 8.94922C0.49 8.64974 0.598 8.39258 0.812 8.17773C1.027 7.95638 1.285 7.8457 1.584 7.8457H15.744C16.044 7.8457 16.301 7.95638 16.516 8.17773C16.73 8.39258 16.838 8.64974 16.838 8.94922C16.838 9.25521 16.73 9.51562 16.516 9.73047C16.301 9.93883 16.044 10.043 15.744 10.043H1.584Z"
+              fill="#E3E3E3"
+            />
           </svg>
         </button>
       </header>

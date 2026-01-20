@@ -4,8 +4,11 @@
   min-height: 100vh;
   padding: 0 16px 100px;
   max-width: 480px;
+  width: 100%;
   margin: 0 auto;
   background: var(--color-bg-primary);
+  box-sizing: border-box;
+  overflow-x: hidden;
 
   &--loading {
     display: flex;
@@ -25,25 +28,35 @@
     padding: 16px 0;
     position: sticky;
     top: 0;
-    background: var(--color-bg-primary);
+    background: transparent;
     z-index: 10;
   }
 
   &__header-btn {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
+    background: var(--color-bg-secondary);
     border: none;
-    border-radius: 12px;
+    border-radius: 50%;
     cursor: pointer;
-    color: var(--color-text-primary);
+    color: var(--color-text-secondary);
     transition: all 0.2s;
 
+    svg {
+      width: 18px;
+      height: 18px;
+
+      path {
+        fill: currentColor;
+      }
+    }
+
     &:hover {
-      background: var(--color-glass-bg-hover);
+      background: var(--color-bg-tertiary);
+      color: var(--color-text-primary);
     }
 
     &:active {
@@ -51,22 +64,35 @@
     }
   }
 
+  &__title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    background: var(--color-bg-secondary);
+    border-radius: 16px;
+  }
+
   &__title {
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
     color: var(--color-text-primary);
     margin: 0;
+    white-space: nowrap;
   }
 
   // Tabs
   &__tabs {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    gap: 2px;
     margin-bottom: 20px;
+    padding: 2px;
+    background: var(--color-bg-secondary);
+    border-radius: 15.5px;
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding: 4px 0;
 
     &::-webkit-scrollbar {
       display: none;
@@ -74,31 +100,30 @@
   }
 
   &__tab {
-    flex-shrink: 0;
-    padding: 10px 16px;
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: 20px;
-    font-size: 14px;
+    flex: 1;
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 13.5px;
+    font-size: 13px;
     font-weight: 500;
-    color: var(--color-text-secondary);
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
+    text-align: center;
 
     &:hover {
-      background: var(--color-glass-bg-hover);
-      border-color: var(--color-glass-border-hover);
+      color: var(--color-text-secondary);
     }
 
     &--active {
-      background: var(--color-accent);
-      border-color: var(--color-accent);
-      color: var(--color-text-on-accent);
+      background: var(--color-glass-bg);
+      border: 1px solid var(--color-glass-border);
+      color: var(--color-text-primary);
 
       &:hover {
-        background: var(--color-accent-hover);
-        border-color: var(--color-accent-hover);
+        background: var(--color-glass-bg-hover);
       }
     }
   }
