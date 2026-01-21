@@ -1,8 +1,8 @@
 .card-editor {
   min-height: 100vh;
-  padding: 0 20px 100px;
+  padding: 0 16px 100px;
   width: 100%;
-  max-width: 393px;
+  max-width: 480px;
   margin: 0 auto;
   background: var(--color-bg-primary, #090909);
 
@@ -15,7 +15,7 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 10px 0;
+    padding: 16px 0;
     background: var(--color-bg-primary, #090909);
   }
 
