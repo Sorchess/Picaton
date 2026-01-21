@@ -1,4 +1,4 @@
-import { ContactProfileView } from "@/features/specialist-modal";
+import { ContactProfileView } from "@/features/contact-profile";
 import type { UserPublic } from "@/entities/user";
 import type { SavedContact } from "@/entities/user";
 import { userApi } from "@/entities/user";

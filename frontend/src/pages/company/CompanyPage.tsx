@@ -17,8 +17,6 @@ import type {
 } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import type { UserPublic } from "@/entities/user";
-import { userApi } from "@/entities/user";
-import { SpecialistModal } from "@/features/specialist-modal";
 import { Button, Modal, Input, Loader, Typography } from "@/shared";
 import { CompanyList, CompanyDetail } from "./components";
 import "./CompanyPage.scss";
@@ -53,7 +51,11 @@ function parseApiError(err: unknown): string {
 
 type ViewMode = "list" | "detail";
 
-export function CompanyPage() {
+interface CompanyPageProps {
+  onOpenContact?: (user: UserPublic, cardId?: string) => void;
+}
+
+export function CompanyPage({ onOpenContact }: CompanyPageProps) {
   const { user: authUser } = useAuth();
 
   // View mode
@@ -78,7 +80,7 @@ export function CompanyPage() {
 
   // Мои приглашения
   const [myInvitations, setMyInvitations] = useState<InvitationWithCompany[]>(
-    []
+    [],
   );
 
   // Визитки пользователя
@@ -87,13 +89,8 @@ export function CompanyPage() {
     CompanyCardAssignment[]
   >([]);
 
-  // Просмотр визитки участника
-  const [viewingUser, setViewingUser] = useState<
-    (UserPublic & { card_id?: string }) | null
-  >(null);
-  const [isViewCardModalOpen, setIsViewCardModalOpen] = useState(false);
+  // Состояние загрузки визитки
   const [isLoadingViewCard, setIsLoadingViewCard] = useState(false);
-  const [savedCardIds, setSavedCardIds] = useState<Set<string>>(new Set());
 
   // Модалка создания
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -182,7 +179,7 @@ export function CompanyPage() {
         setIsLoadingInvitations(false);
       }
     },
-    []
+    [],
   );
 
   // Загрузка визиток пользователя
@@ -234,7 +231,7 @@ export function CompanyPage() {
 
   // Конвертация BusinessCardPublic в UserPublic для SpecialistModal
   const cardToUserPublic = (
-    card: BusinessCardPublic
+    card: BusinessCardPublic,
   ): UserPublic & { card_id: string } => {
     const nameParts = card.display_name.split(" ");
     return {
@@ -262,8 +259,9 @@ export function CompanyPage() {
 
   // Просмотр визитки участника
   const handleViewMemberCard = async (userId: string, cardId: string) => {
+    if (!onOpenContact) return;
+
     setIsLoadingViewCard(true);
-    setIsViewCardModalOpen(true);
     try {
       const card = await businessCardApi.getPublic(cardId);
 
@@ -271,80 +269,15 @@ export function CompanyPage() {
       const member = members.find((m) => m.user.id === userId);
       const avatarUrl = card.avatar_url || member?.user.avatar_url || null;
 
-      const userForModal = cardToUserPublic({ ...card, avatar_url: avatarUrl });
-      setViewingUser(userForModal);
+      const userForNav = cardToUserPublic({ ...card, avatar_url: avatarUrl });
 
-      // Проверяем, сохранена ли эта карточка в контактах
-      if (authUser?.id) {
-        try {
-          const contacts = await userApi.getContacts(authUser.id);
-          const savedIds = new Set(
-            contacts
-              .filter((c) => c.saved_card_id)
-              .map((c) => c.saved_card_id as string)
-          );
-          setSavedCardIds(savedIds);
-        } catch {
-          // Игнорируем ошибку загрузки контактов
-        }
-      }
+      // Навигируем на страницу профиля
+      onOpenContact(userForNav, cardId);
     } catch {
       showError("Не удалось загрузить визитку");
-      setIsViewCardModalOpen(false);
     } finally {
       setIsLoadingViewCard(false);
     }
-  };
-
-  // Сохранение контакта из модалки
-  const handleSaveContactFromCard = async (
-    user: UserPublic & { card_id?: string }
-  ) => {
-    if (!authUser?.id) return;
-    try {
-      await userApi.saveContact(authUser.id, user.id, user.card_id);
-      if (user.card_id) {
-        setSavedCardIds((prev) => new Set([...prev, user.card_id!]));
-      }
-      showSuccess("Контакт сохранен!");
-      closeViewCard();
-    } catch {
-      showError("Не удалось сохранить контакт");
-    }
-  };
-
-  // Удаление контакта из модалки
-  const handleDeleteContactFromCard = async (
-    user: UserPublic & { card_id?: string }
-  ) => {
-    if (!authUser?.id) return;
-    try {
-      const contacts = await userApi.getContacts(authUser.id);
-      const contactToDelete = contacts.find(
-        (c) =>
-          (user.card_id && c.saved_card_id === user.card_id) ||
-          c.saved_user_id === user.id
-      );
-      if (contactToDelete) {
-        await userApi.deleteContact(contactToDelete.id);
-        if (user.card_id) {
-          setSavedCardIds((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(user.card_id!);
-            return newSet;
-          });
-        }
-        showSuccess("Контакт удален");
-        closeViewCard();
-      }
-    } catch {
-      showError("Не удалось удалить контакт");
-    }
-  };
-
-  const closeViewCard = () => {
-    setIsViewCardModalOpen(false);
-    setViewingUser(null);
   };
 
   useEffect(() => {
@@ -430,7 +363,7 @@ export function CompanyPage() {
     try {
       await companyApi.cancelInvitation(
         selectedCompany.company.id,
-        invitationId
+        invitationId,
       );
       await loadInvitations(selectedCompany.company.id, selectedCompany.role);
     } catch (err) {
@@ -446,7 +379,7 @@ export function CompanyPage() {
       await companyApi.updateMemberRole(
         selectedCompany.company.id,
         userId,
-        newRoleId
+        newRoleId,
       );
       await loadMembers(selectedCompany.company.id);
       showSuccess("Роль изменена");
@@ -605,35 +538,19 @@ export function CompanyPage() {
           onRolesChange={() => loadRoles(selectedCompany.company.id)}
         />
 
-        {/* Модалка просмотра визитки участника */}
-        {isLoadingViewCard && isViewCardModalOpen && (
-          <Modal isOpen={true} onClose={closeViewCard} title="Загрузка...">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                padding: "40px",
-              }}
-            >
-              <Loader />
-            </div>
-          </Modal>
-        )}
-
-        {!isLoadingViewCard && (
-          <SpecialistModal
-            user={viewingUser}
-            cardId={viewingUser?.card_id}
-            isOpen={isViewCardModalOpen && !!viewingUser}
-            onClose={closeViewCard}
-            onSaveContact={handleSaveContactFromCard}
-            onDeleteContact={handleDeleteContactFromCard}
-            isSaved={
-              viewingUser?.card_id
-                ? savedCardIds.has(viewingUser.card_id)
-                : false
-            }
-          />
+        {/* Индикатор загрузки визитки */}
+        {isLoadingViewCard && (
+          <div
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 1000,
+            }}
+          >
+            <Loader />
+          </div>
         )}
       </div>
     );

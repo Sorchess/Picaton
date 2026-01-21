@@ -13,7 +13,6 @@ import {
   ContactProfilePage,
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
-import { SpecialistModal } from "./features/specialist-modal";
 import { EmailModal } from "./features/email-modal";
 import { companyApi } from "./entities/company";
 import type { UserPublic, SavedContact } from "./entities/user";
@@ -99,10 +98,9 @@ function AuthenticatedApp() {
     setContactProfileData(null);
   };
 
-  // User QR code modal state
-  const [qrUser, setQrUser] = useState<UserPublic | null>(null);
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  // QR code loading state
   const [isLoadingQrUser, setIsLoadingQrUser] = useState(false);
+  const [qrUserLoaded, setQrUserLoaded] = useState(false);
 
   // Email modal state for Telegram users with placeholder email
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -172,7 +170,7 @@ function AuthenticatedApp() {
   // Обработка ссылки на пользователя из QR кода
   useEffect(() => {
     const userId = getUserIdFromUrl();
-    if (!userId || isLoadingQrUser || qrUser) return;
+    if (!userId || isLoadingQrUser || qrUserLoaded) return;
 
     let cancelled = false;
 
@@ -181,8 +179,14 @@ function AuthenticatedApp() {
       try {
         const userData = await userApi.getPublic(userId);
         if (!cancelled) {
-          setQrUser(userData);
-          setIsQrModalOpen(true);
+          // Навигируем на страницу профиля вместо открытия модального окна
+          navigateToContactProfile({
+            user: userData,
+            cardId: undefined,
+            savedContact: null,
+            returnPage: "search",
+          });
+          setQrUserLoaded(true);
         }
       } catch (err: unknown) {
         if (!cancelled) {
@@ -207,12 +211,12 @@ function AuthenticatedApp() {
     return () => {
       cancelled = true;
     };
-  }, [isLoadingQrUser, qrUser]);
+  }, [isLoadingQrUser, qrUserLoaded, navigateToContactProfile]);
 
   // Обработка ссылки на карточку из QR кода
   useEffect(() => {
     const cardId = getCardIdFromUrl();
-    if (!cardId || isLoadingQrUser || qrUser) return;
+    if (!cardId || isLoadingQrUser || qrUserLoaded) return;
 
     let cancelled = false;
 
@@ -249,8 +253,14 @@ function AuthenticatedApp() {
             profile_completeness: cardData.completeness,
           };
 
-          setQrUser(userData);
-          setIsQrModalOpen(true);
+          // Навигируем на страницу профиля вместо открытия модального окна
+          navigateToContactProfile({
+            user: userData,
+            cardId: cardData.id,
+            savedContact: null,
+            returnPage: "search",
+          });
+          setQrUserLoaded(true);
         }
       } catch (err: unknown) {
         if (!cancelled) {
@@ -275,7 +285,7 @@ function AuthenticatedApp() {
     return () => {
       cancelled = true;
     };
-  }, [isLoadingQrUser, qrUser]);
+  }, [isLoadingQrUser, qrUserLoaded, navigateToContactProfile]);
 
   // Автоскрытие сообщения
   useEffect(() => {
@@ -421,7 +431,18 @@ function AuthenticatedApp() {
           />
         )}
         {currentPage === "profile" && <ProfilePage />}
-        {currentPage === "company" && <CompanyPage />}
+        {currentPage === "company" && (
+          <CompanyPage
+            onOpenContact={(user, cardId) =>
+              navigateToContactProfile({
+                user,
+                cardId,
+                savedContact: null,
+                returnPage: "company",
+              })
+            }
+          />
+        )}
         {currentPage === "contact-profile" && contactProfileData && (
           <ContactProfilePage
             user={contactProfileData.user}
@@ -455,40 +476,6 @@ function AuthenticatedApp() {
           onChange={handlePageChange}
         />
       </footer>
-
-      {/* User QR Code Modal */}
-      {qrUser && (
-        <SpecialistModal
-          user={qrUser}
-          cardId={(qrUser as UserPublic & { card_id?: string })?.card_id}
-          isOpen={isQrModalOpen}
-          onClose={() => {
-            setIsQrModalOpen(false);
-            setQrUser(null);
-          }}
-          onSaveContact={async (savedUser) => {
-            if (!user?.id) return;
-            try {
-              // Если есть card_id, передаём его для сохранения конкретной карточки
-              const cardId = (savedUser as UserPublic & { card_id?: string })
-                .card_id;
-              await userApi.saveContact(user.id, savedUser.id, cardId);
-              setInviteMessage({
-                type: "success",
-                text: "Контакт сохранен!",
-              });
-              // Закрываем модальное окно после сохранения
-              setIsQrModalOpen(false);
-              setQrUser(null);
-            } catch {
-              setInviteMessage({
-                type: "error",
-                text: "Не удалось сохранить контакт",
-              });
-            }
-          }}
-        />
-      )}
 
       {/* Email Modal for Telegram users */}
       {user && (
