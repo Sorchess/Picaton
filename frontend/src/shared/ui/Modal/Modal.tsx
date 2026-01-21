@@ -6,7 +6,7 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   title?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "fullscreen";
   className?: string;
   /** Закрывать при клике на overlay (по умолчанию true) */
   closeOnOverlayClick?: boolean;
@@ -32,7 +32,7 @@ export function Modal({
     let showTimer: ReturnType<typeof setTimeout>;
     let animationFrame: number;
     let hideTimer: ReturnType<typeof setTimeout>;
-    
+
     if (isOpen) {
       // Сначала рендерим элемент (isVisible)
       showTimer = setTimeout(() => {
@@ -54,7 +54,7 @@ export function Modal({
       }, 0);
       document.body.style.overflow = "";
     }
-    
+
     return () => {
       clearTimeout(showTimer);
       clearTimeout(hideTimer);
@@ -97,16 +97,22 @@ export function Modal({
   return (
     <div className={overlayClassNames} onClick={handleOverlayClick}>
       <div className={modalClassNames} onClick={(e) => e.stopPropagation()}>
-        <button className="modal__close" onClick={onClose} aria-label="Закрыть">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+        {size !== "fullscreen" && (
+          <button
+            className="modal__close"
+            onClick={onClose}
+            aria-label="Закрыть"
           >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        )}
 
         {title && <h2 className="modal__title">{title}</h2>}
 

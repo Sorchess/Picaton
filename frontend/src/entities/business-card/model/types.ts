@@ -35,6 +35,7 @@ export interface BusinessCardPublic {
   id: string;
   owner_id: string;
   title: string;
+  is_primary?: boolean;
   display_name: string;
   avatar_url: string | null;
   bio: string | null;
