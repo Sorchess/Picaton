@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ContactProfileView } from "@/features/contact-profile";
 import type { UserPublic } from "@/entities/user";
 import type { SavedContact } from "@/entities/user";
@@ -23,6 +24,11 @@ export function ContactProfilePage({
   onContactDeleted,
 }: ContactProfilePageProps) {
   const { user: authUser } = useAuth();
+
+  // Скроллим вверх при открытии страницы
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleSaveContact = async (userToSave: UserPublic) => {
     if (!authUser?.id) return;
