@@ -36,7 +36,6 @@
     transition: all 0.2s;
 
     &:hover {
-      background: rgba(63, 63, 63, 0.7);
       transform: scale(1.05);
     }
 
@@ -893,20 +892,12 @@
 // Light theme
 [data-theme="light"] {
   .card-editor {
-    background: #edf3ff;
 
     &__top-bar {
       background: #edf3ff;
     }
 
     &__top-btn {
-      background: rgba(0, 0, 0, 0.05);
-      color: #585e67;
-      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.05);
-
-      &:hover {
-        background: rgba(0, 0, 0, 0.08);
-      }
 
       &--danger {
         background: rgba(205, 43, 43, 0.1);
