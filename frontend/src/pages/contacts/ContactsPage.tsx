@@ -9,7 +9,6 @@ import {
 } from "@/entities/company";
 import { useAuth } from "@/features/auth";
 import { ContactImportButton } from "@/features/contact-import";
-import { SpecialistModal } from "@/features/specialist-modal";
 import { Tag, Loader, Typography, Modal, Input, Avatar } from "@/shared";
 import "./ContactsPage.scss";
 
@@ -26,7 +25,15 @@ interface ContactCardData {
   originalData: SavedContact | CompanyMember | UserPublic;
 }
 
-export function ContactsPage() {
+interface ContactsPageProps {
+  onOpenContact?: (
+    user: UserPublic,
+    cardId?: string,
+    savedContact?: SavedContact | null,
+  ) => void;
+}
+
+export function ContactsPage({ onOpenContact }: ContactsPageProps) {
   const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("my");
   const [contacts, setContacts] = useState<SavedContact[]>([]);
@@ -61,13 +68,6 @@ export function ContactsPage() {
   });
   const [editContactTags, setEditContactTags] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-
-  // User profile modal state (for registered users)
-  const [selectedUserProfile, setSelectedUserProfile] =
-    useState<UserPublic | null>(null);
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [selectedContactForModal, setSelectedContactForModal] =
-    useState<SavedContact | null>(null);
 
   const loadContacts = useCallback(async () => {
     if (!authUser?.id) return;
@@ -322,9 +322,10 @@ export function ContactsPage() {
         };
       }
 
-      setSelectedUserProfile(userData);
-      setSelectedContactForModal(contact);
-      setIsUserModalOpen(true);
+      // Используем навигацию вместо модального окна
+      if (onOpenContact) {
+        onOpenContact(userData, contact.saved_card_id ?? undefined, contact);
+      }
     } catch {
       setSelectedContact(contact);
     }
@@ -333,32 +334,19 @@ export function ContactsPage() {
   const handleOpenCompanyMemberProfile = async (member: CompanyMember) => {
     try {
       const userData = await userApi.getPublic(member.user.id);
-      setSelectedUserProfile(userData);
-      setSelectedContactForModal(null);
-      setIsUserModalOpen(true);
+      // Используем навигацию вместо модального окна
+      if (onOpenContact) {
+        onOpenContact(userData, undefined, null);
+      }
     } catch {
       setError("Не удалось загрузить профиль");
     }
   };
 
   const handleOpenRecommendationProfile = (user: UserPublic) => {
-    setSelectedUserProfile(user);
-    setSelectedContactForModal(null);
-    setIsUserModalOpen(true);
-  };
-
-  const handleDeleteContactFromModal = async () => {
-    if (!selectedContactForModal) return;
-    try {
-      await userApi.deleteContact(selectedContactForModal.id);
-      setContacts((prev) =>
-        prev.filter((c) => c.id !== selectedContactForModal.id),
-      );
-      setIsUserModalOpen(false);
-      setSelectedUserProfile(null);
-      setSelectedContactForModal(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка удаления контакта");
+    // Используем навигацию вместо модального окна
+    if (onOpenContact) {
+      onOpenContact(user, undefined, null);
     }
   };
 
@@ -975,22 +963,6 @@ export function ContactsPage() {
           </div>
         </div>
       </Modal>
-
-      {/* User Profile Modal */}
-      <SpecialistModal
-        user={selectedUserProfile}
-        cardId={selectedContactForModal?.saved_card_id ?? undefined}
-        isOpen={isUserModalOpen}
-        onClose={() => {
-          setIsUserModalOpen(false);
-          setSelectedUserProfile(null);
-          setSelectedContactForModal(null);
-        }}
-        onDeleteContact={
-          selectedContactForModal ? handleDeleteContactFromModal : undefined
-        }
-        isSaved={!!selectedContactForModal}
-      />
     </div>
   );
 }

@@ -10,12 +10,13 @@ import {
   OnboardingPage,
   CompanyPage,
   CollaborationPage,
+  ContactProfilePage,
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
 import { SpecialistModal } from "./features/specialist-modal";
 import { EmailModal } from "./features/email-modal";
 import { companyApi } from "./entities/company";
-import type { UserPublic } from "./entities/user";
+import type { UserPublic, SavedContact } from "./entities/user";
 import { userApi } from "./entities/user";
 import { businessCardApi } from "./entities/business-card";
 import "./App.scss";
@@ -54,14 +55,49 @@ function clearPendingInviteToken() {
   sessionStorage.removeItem("pendingInviteToken");
 }
 
+// Расширенный тип страницы для поддержки профиля контакта
+type ExtendedPageType = PageType | "contact-profile";
+
+// Контекст для навигации на профиль контакта
+interface ContactProfileNavData {
+  user: UserPublic;
+  cardId?: string;
+  savedContact?: SavedContact | null;
+  returnPage: PageType;
+}
+
 function AuthenticatedApp() {
   const { user, logout, refreshUser } = useAuth();
-  const [currentPage, setCurrentPage] = useState<PageType>("search");
+  const [currentPage, setCurrentPage] = useState<ExtendedPageType>("search");
+  const [previousPage, setPreviousPage] = useState<PageType>("search");
   const [inviteProcessing, setInviteProcessing] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  // Данные для страницы профиля контакта
+  const [contactProfileData, setContactProfileData] =
+    useState<ContactProfileNavData | null>(null);
+
+  // Функция навигации на страницу профиля контакта
+  const navigateToContactProfile = (data: ContactProfileNavData) => {
+    setContactProfileData(data);
+    setPreviousPage(currentPage as PageType);
+    setCurrentPage("contact-profile");
+  };
+
+  // Функция возврата со страницы профиля
+  const navigateBackFromContactProfile = () => {
+    setCurrentPage(contactProfileData?.returnPage || previousPage);
+    setContactProfileData(null);
+  };
+
+  // Функция смены страницы через PageSwitcher
+  const handlePageChange = (page: PageType) => {
+    setCurrentPage(page);
+    setContactProfileData(null);
+  };
 
   // User QR code modal state
   const [qrUser, setQrUser] = useState<UserPublic | null>(null);
@@ -328,7 +364,14 @@ function AuthenticatedApp() {
         </div>
 
         <div className="app__page-switcher app__page-switcher--desktop">
-          <PageSwitcher value={currentPage} onChange={setCurrentPage} />
+          <PageSwitcher
+            value={
+              currentPage === "contact-profile"
+                ? previousPage
+                : (currentPage as PageType)
+            }
+            onChange={handlePageChange}
+          />
         </div>
 
         <div className="app__actions">
@@ -352,16 +395,65 @@ function AuthenticatedApp() {
       </header>
 
       <main className="app__main">
-        {currentPage === "search" && <SearchPage />}
+        {currentPage === "search" && (
+          <SearchPage
+            onOpenContact={(user, cardId) =>
+              navigateToContactProfile({
+                user,
+                cardId,
+                savedContact: null,
+                returnPage: "search",
+              })
+            }
+          />
+        )}
         {currentPage === "collaboration" && <CollaborationPage />}
-        {currentPage === "contacts" && <ContactsPage />}
+        {currentPage === "contacts" && (
+          <ContactsPage
+            onOpenContact={(user, cardId, savedContact) =>
+              navigateToContactProfile({
+                user,
+                cardId,
+                savedContact,
+                returnPage: "contacts",
+              })
+            }
+          />
+        )}
         {currentPage === "profile" && <ProfilePage />}
         {currentPage === "company" && <CompanyPage />}
+        {currentPage === "contact-profile" && contactProfileData && (
+          <ContactProfilePage
+            user={contactProfileData.user}
+            cardId={contactProfileData.cardId}
+            savedContact={contactProfileData.savedContact}
+            onBack={navigateBackFromContactProfile}
+            onContactSaved={() => {
+              setInviteMessage({
+                type: "success",
+                text: "Контакт сохранен!",
+              });
+            }}
+            onContactDeleted={() => {
+              setInviteMessage({
+                type: "success",
+                text: "Контакт удален",
+              });
+            }}
+          />
+        )}
       </main>
 
       {/* Мобильный футер с навигацией */}
       <footer className="app__footer">
-        <PageSwitcher value={currentPage} onChange={setCurrentPage} />
+        <PageSwitcher
+          value={
+            currentPage === "contact-profile"
+              ? previousPage
+              : (currentPage as PageType)
+          }
+          onChange={handlePageChange}
+        />
       </footer>
 
       {/* User QR Code Modal */}

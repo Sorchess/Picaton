@@ -7,14 +7,13 @@ import type {
 import { userApi } from "@/entities/user";
 import { UserCard } from "@/entities/user";
 import { useAuth } from "@/features/auth";
-import { SpecialistModal } from "@/features/specialist-modal";
 import { companyApi, type CompanyWithRole } from "@/entities/company";
 import { Tag, Loader, Typography } from "@/shared";
 import "./SearchPage.scss";
 
 // Адаптер для преобразования SearchCardResult в UserPublic-совместимый объект
 function cardToUserLike(
-  card: SearchCardResult
+  card: SearchCardResult,
 ): UserPublic & { card_id: string } {
   // Используем display_name или имя владельца
   const firstName = card.display_name
@@ -56,20 +55,22 @@ const POPULAR_TAGS = [
   "TypeScript",
 ];
 
-export function SearchPage() {
+interface SearchPageProps {
+  onOpenContact?: (user: UserPublic, cardId?: string) => void;
+}
+
+export function SearchPage({ onOpenContact }: SearchPageProps) {
   const { user: authUser } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedContacts, setSavedContacts] = useState<Set<string>>(new Set());
-  const [selectedUser, setSelectedUser] = useState<UserPublic | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Фильтр по компаниям
   const [myCompanies, setMyCompanies] = useState<CompanyWithRole[]>([]);
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // Загрузка компаний пользователя
@@ -139,7 +140,7 @@ export function SearchPage() {
         setIsLoading(false);
       }
     },
-    [query, selectedCompanyIds]
+    [query, selectedCompanyIds],
   );
 
   // Переключение выбора компании
@@ -166,47 +167,10 @@ export function SearchPage() {
   };
 
   const handleUserClick = (user: UserPublic) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedUser(null);
-  };
-
-  const handleSaveContactFromModal = async (
-    user: UserPublic & { card_id?: string }
-  ) => {
-    await handleAddContact(user);
-    // Закрываем модальное окно после сохранения
-    handleCloseModal();
-  };
-
-  const handleDeleteContactFromModal = async (
-    user: UserPublic & { card_id?: string }
-  ) => {
-    if (!authUser?.id) return;
-    try {
-      // Находим контакт по card_id (приоритет) или user_id
-      const contacts = await userApi.getContacts(authUser.id);
-      const contactToDelete = contacts.find(
-        (c) =>
-          (user.card_id && c.saved_card_id === user.card_id) ||
-          c.saved_user_id === user.id
-      );
-      if (contactToDelete) {
-        await userApi.deleteContact(contactToDelete.id);
-        // Убираем из сохранённых только card_id
-        setSavedContacts((prev) => {
-          const newSet = new Set(prev);
-          if (user.card_id) newSet.delete(user.card_id);
-          return newSet;
-        });
-      }
-      handleCloseModal();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка удаления контакта");
+    // Используем навигацию вместо модального окна
+    if (onOpenContact) {
+      const cardId = (user as UserPublic & { card_id?: string }).card_id;
+      onOpenContact(user, cardId);
     }
   };
 
@@ -225,7 +189,7 @@ export function SearchPage() {
       });
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Ошибка сохранения контакта"
+        err instanceof Error ? err.message : "Ошибка сохранения контакта",
       );
     }
   };
@@ -411,25 +375,6 @@ export function SearchPage() {
           <p>Введите ключевые слова или выберите из популярных тегов</p>
         </div>
       )}
-
-      <SpecialistModal
-        user={selectedUser}
-        cardId={(selectedUser as UserPublic & { card_id?: string })?.card_id}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSaveContact={handleSaveContactFromModal}
-        onDeleteContact={handleDeleteContactFromModal}
-        isSaved={
-          selectedUser
-            ? savedContacts.has(selectedUser.id) ||
-              (selectedUser as UserPublic & { card_id?: string }).card_id
-              ? savedContacts.has(
-                  (selectedUser as UserPublic & { card_id?: string }).card_id!
-                )
-              : false
-            : false
-        }
-      />
     </div>
   );
 }
