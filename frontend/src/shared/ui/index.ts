@@ -7,6 +7,9 @@
 export { Button } from "./Button";
 export type { ButtonVariant, ButtonSize } from "./Button";
 
+export { IconButton } from "./IconButton";
+export type { IconButtonVariant, IconButtonSize } from "./IconButton";
+
 export { Card } from "./Card";
 export type { CardVariant } from "./Card";
 
@@ -83,7 +86,12 @@ export { TabBar, defaultTabs } from "./TabBar";
 export type { TabItem } from "./TabBar";
 
 // Empty States
-export { EmptyState, EmptySearchState, NoResultsState, EmptyContactsState } from "./EmptyState";
+export {
+  EmptyState,
+  EmptySearchState,
+  NoResultsState,
+  EmptyContactsState,
+} from "./EmptyState";
 
 // Page Headers
 export { PageHeader, OnboardingHeader } from "./PageHeader";

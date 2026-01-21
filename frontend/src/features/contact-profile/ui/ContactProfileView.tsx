@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Avatar, Button, Tag, EndorsableSkill } from "@/shared";
+import { Avatar, Button, Tag, EndorsableSkill, IconButton } from "@/shared";
 import type { UserPublic, ContactInfo } from "@/entities/user";
 import { getFullName } from "@/entities/user";
 import {
@@ -360,11 +360,7 @@ export function ContactProfileView({
     <div className="contact-profile-view">
       {/* Top Bar */}
       <div className="contact-profile-view__top-bar">
-        <button
-          className="contact-profile-view__back-btn"
-          onClick={onClose}
-          type="button"
-        >
+        <IconButton onClick={onClose} aria-label="Назад">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M15 18L9 12L15 6"
@@ -374,7 +370,7 @@ export function ContactProfileView({
               strokeLinejoin="round"
             />
           </svg>
-        </button>
+        </IconButton>
         <span className="contact-profile-view__top-title">Профиль</span>
         <div className="contact-profile-view__top-spacer" />
       </div>

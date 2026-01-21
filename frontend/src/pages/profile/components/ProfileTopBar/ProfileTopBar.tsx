@@ -1,4 +1,5 @@
 import type { FC, ReactNode } from "react";
+import { IconButton } from "@/shared";
 import "./ProfileTopBar.scss";
 
 interface ProfileTopBarProps {
@@ -79,23 +80,13 @@ export const ProfileTopBar: FC<ProfileTopBarProps> = ({
 }) => {
   return (
     <div className={`profile-top-bar ${className}`}>
-      <button
-        type="button"
-        className="profile-top-bar__btn"
-        onClick={onLeftClick}
-        aria-label={leftLabel}
-      >
+      <IconButton onClick={onLeftClick} aria-label={leftLabel}>
         {leftIcon}
-      </button>
+      </IconButton>
 
-      <button
-        type="button"
-        className="profile-top-bar__btn"
-        onClick={onRightClick}
-        aria-label={rightLabel}
-      >
+      <IconButton onClick={onRightClick} aria-label={rightLabel}>
         {rightIcon}
-      </button>
+      </IconButton>
     </div>
   );
 };

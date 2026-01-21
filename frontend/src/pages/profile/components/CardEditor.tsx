@@ -3,7 +3,12 @@ import type { User, ContactInfo } from "@/entities/user";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import type { CompanyCardAssignment } from "@/entities/company";
-import { TagInput, useDebounce, extractTagsFromBio } from "@/shared";
+import {
+  TagInput,
+  useDebounce,
+  extractTagsFromBio,
+  IconButton,
+} from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import "./CardEditor.scss";
 
@@ -273,7 +278,7 @@ export function CardEditor({
     <div className="card-editor">
       {/* Top Bar */}
       <div className="card-editor__top-bar">
-        <button className="card-editor__top-btn" onClick={onBack}>
+        <IconButton onClick={onBack} aria-label="Назад">
           <svg
             width="20"
             height="20"
@@ -284,12 +289,12 @@ export function CardEditor({
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-        </button>
+        </IconButton>
 
-        <button
-          className="card-editor__top-btn card-editor__top-btn--danger"
+        <IconButton
+          variant="danger"
           onClick={() => setShowDeleteConfirm(true)}
-          title={
+          aria-label={
             selectedCard.is_primary ? "Очистить визитку" : "Удалить визитку"
           }
         >
@@ -303,7 +308,7 @@ export function CardEditor({
           >
             <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" />
           </svg>
-        </button>
+        </IconButton>
       </div>
 
       {/* Toast */}

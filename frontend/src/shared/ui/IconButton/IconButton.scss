@@ -1,0 +1,130 @@
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  flex-shrink: 0;
+
+  // Размеры
+  &--sm {
+    width: 32px;
+    height: 32px;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &--md {
+    width: 42px;
+    height: 42px;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &--lg {
+    width: 55px;
+    height: 55px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  // Варианты
+  &--default {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+
+    &:hover {
+      opacity: 0.7;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &--ghost {
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    color: var(--color-text-secondary);
+
+    &:hover {
+      background: var(--color-glass-bg-hover);
+      border-color: var(--color-glass-border-hover);
+      color: var(--color-text-primary);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &--elevated {
+    background: #fff;
+    border: none;
+    color: #000;
+    box-shadow: 0 0 13px rgba(0, 0, 0, 0.15);
+
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &--danger {
+    background: rgba(205, 43, 43, 0.3);
+    border: none;
+    color: #cd2b2b;
+
+    &:hover {
+      background: rgba(205, 43, 43, 0.5);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+// Light theme
+[data-theme="light"] {
+  .icon-button {
+    &--default {
+      background: var(--color-bg-secondary);
+      border-color: var(--color-border);
+      color: var(--color-text-secondary);
+    }
+
+    &--ghost {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: var(--color-text-secondary);
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--color-text-primary);
+      }
+    }
+  }
+}

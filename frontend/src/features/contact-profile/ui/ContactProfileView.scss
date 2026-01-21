@@ -17,27 +17,6 @@
     z-index: 10;
   }
 
-  &__back-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--color-text-secondary);
-    transition: all 0.2s;
-
-    &:hover {
-      opacity: 0.7;
-    }
-  }
-
   &__top-title {
     font-family:
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
@@ -542,10 +521,6 @@
 
     &__top-bar {
       background: rgba(245, 245, 245, 0.9);
-    }
-
-    &__back-btn {
-      color: #000000;
     }
 
     &__top-title {
