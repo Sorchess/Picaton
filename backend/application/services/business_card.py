@@ -346,6 +346,23 @@ class BusinessCardService:
         card.remove_random_fact(fact)
         return await self._card_repository.update(card)
 
+    # ============ Emojis ============
+
+    async def set_emojis(
+        self,
+        card_id: UUID,
+        owner_id: UUID,
+        emojis: list[str],
+    ) -> BusinessCard:
+        """Установить эмодзи для декоративного отображения профиля."""
+        card = await self.get_card(card_id)
+
+        if card.owner_id != owner_id:
+            raise CardAccessDeniedError(str(card_id), str(owner_id))
+
+        card.set_emojis(emojis)
+        return await self._card_repository.update(card)
+
     # ============ AI Bio ============
 
     async def set_ai_generated_bio(

@@ -379,7 +379,9 @@ export function ContactProfileView({
       <div className="contact-profile-view__hero">
         {/* Floating emojis decoration */}
         <div className="contact-profile-view__emojis">
-          {["🥁", "📈", "🎸", "🧭", "😍", "🫶"].map((emoji, index) => (
+          {(
+            getActiveCard()?.emojis || ["🥁", "📈", "🎸", "🧭", "😍", "🫶"]
+          ).map((emoji, index) => (
             <span
               key={index}
               className={`contact-profile-view__emoji contact-profile-view__emoji--${index + 1}`}

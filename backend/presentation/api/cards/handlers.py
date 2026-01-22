@@ -23,6 +23,7 @@ from presentation.api.cards.schemas import (
     CardQRCodeResponse,
     TextTagGenerationRequest,
     TextTagGenerationResponse,
+    CardEmojisUpdate,
 )
 from infrastructure.dependencies import (
     get_business_card_service,
@@ -76,6 +77,7 @@ def _card_to_response(card) -> BusinessCardResponse:
         ],
         random_facts=card.random_facts,
         completeness=card.completeness,
+        emojis=card.emojis,
     )
 
 
@@ -110,6 +112,7 @@ def _card_to_public_response(card) -> BusinessCardPublicResponse:
             for c in visible_contacts
         ],
         completeness=card.completeness,
+        emojis=card.emojis,
     )
 
 
@@ -383,6 +386,30 @@ async def add_card_random_fact(
         raise HTTPException(status_code=403, detail="Access denied")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# ============ Emojis ============
+
+
+@router.put("/{card_id}/emojis", response_model=BusinessCardResponse)
+async def update_card_emojis(
+    card_id: UUID,
+    owner_id: UUID,
+    data: CardEmojisUpdate,
+    card_service: BusinessCardService = Depends(get_business_card_service),
+):
+    """Обновить эмодзи карточки для декоративного отображения профиля."""
+    try:
+        card = await card_service.set_emojis(
+            card_id=card_id,
+            owner_id=owner_id,
+            emojis=data.emojis,
+        )
+        return _card_to_response(card)
+    except BusinessCardNotFoundError:
+        raise HTTPException(status_code=404, detail="Card not found")
+    except CardAccessDeniedError:
+        raise HTTPException(status_code=403, detail="Access denied")
 
 
 # ============ AI Bio ============

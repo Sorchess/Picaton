@@ -91,6 +91,14 @@ export const businessCardApi = {
       tags,
     }),
 
+  // ============ Emojis ============
+
+  // Обновить эмодзи профиля
+  updateEmojis: (cardId: string, ownerId: string, emojis: string[]) =>
+    api.put<BusinessCard>(`/cards/${cardId}/emojis?owner_id=${ownerId}`, {
+      emojis,
+    }),
+
   // ============ Random Facts ============
 
   // Добавить рандомный факт

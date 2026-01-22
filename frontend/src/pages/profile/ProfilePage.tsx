@@ -399,6 +399,7 @@ export function ProfilePage() {
           skillsCount={skillsCount}
           recommendationsCount={recommendationsCount}
           level={userLevel}
+          emojis={selectedCard?.emojis}
         />
 
         {/* Role Tabs */}

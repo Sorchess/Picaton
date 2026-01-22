@@ -29,6 +29,7 @@ export interface BusinessCard {
   contacts: CardContactInfo[];
   random_facts: string[];
   completeness: number;
+  emojis: string[];
 }
 
 export interface BusinessCardPublic {
@@ -44,6 +45,7 @@ export interface BusinessCardPublic {
   search_tags: string[];
   contacts: CardContactInfo[];
   completeness: number;
+  emojis: string[];
 }
 
 export interface BusinessCardCreate {

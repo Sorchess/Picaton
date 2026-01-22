@@ -8,6 +8,7 @@ import {
   useDebounce,
   extractTagsFromBio,
   IconButton,
+  AvatarEmojiButton,
 } from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import "./CardEditor.scss";
@@ -130,6 +131,9 @@ export function CardEditor({
   const [newContactValue, setNewContactValue] = useState("");
   const [isSavingContact, setIsSavingContact] = useState(false);
 
+  // Emoji state
+  const [isSavingEmojis, setIsSavingEmojis] = useState(false);
+
   // Sync with prop changes
   useEffect(() => {
     setSelectedCard(card);
@@ -251,6 +255,29 @@ export function CardEditor({
     }
   };
 
+  // Обработка изменения эмодзи
+  const handleEmojisChange = useCallback(
+    async (newEmojis: string[]) => {
+      setIsSavingEmojis(true);
+      try {
+        const updated = await businessCardApi.updateEmojis(
+          selectedCard.id,
+          user.id,
+          newEmojis,
+        );
+        setSelectedCard(updated);
+        onCardUpdate(updated);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Ошибка сохранения эмодзи",
+        );
+      } finally {
+        setIsSavingEmojis(false);
+      }
+    },
+    [user.id, selectedCard.id, onCardUpdate],
+  );
+
   const getContactLabel = (type: string) => {
     return (
       CONTACT_TYPES.find((ct) => ct.type === type.toLowerCase())?.label || type
@@ -357,6 +384,12 @@ export function CardEditor({
                 ? `url(${user.avatar_url}) center/cover`
                 : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             }}
+          />
+          <AvatarEmojiButton
+            selectedEmojis={selectedCard.emojis || []}
+            onChange={handleEmojisChange}
+            disabled={isSavingEmojis}
+            isSaving={isSavingEmojis}
           />
         </div>
 

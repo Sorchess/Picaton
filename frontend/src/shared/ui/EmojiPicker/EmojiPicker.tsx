@@ -1,0 +1,531 @@
+import { useState, useRef, useEffect, type FC } from "react";
+import "./EmojiPicker.scss";
+
+// Популярные эмодзи для быстрого выбора
+const EMOJI_CATEGORIES = {
+  smileys: {
+    label: "Смайлы",
+    emojis: [
+      "😀",
+      "😃",
+      "😄",
+      "😁",
+      "😆",
+      "😅",
+      "🤣",
+      "😂",
+      "🙂",
+      "🙃",
+      "😉",
+      "😊",
+      "😇",
+      "🥰",
+      "😍",
+      "🤩",
+      "😘",
+      "😗",
+      "😚",
+      "😙",
+      "🥲",
+      "😋",
+      "😛",
+      "😜",
+      "🤪",
+      "😝",
+      "🤑",
+      "🤗",
+      "🤭",
+      "🤫",
+      "🤔",
+      "🤐",
+      "🤨",
+      "😐",
+      "😑",
+      "😶",
+      "😏",
+      "😒",
+      "🙄",
+      "😬",
+      "😮‍💨",
+      "🤥",
+      "😌",
+      "😔",
+      "😪",
+      "🤤",
+      "😴",
+      "😷",
+      "🤒",
+      "🤕",
+    ],
+  },
+  gestures: {
+    label: "Жесты",
+    emojis: [
+      "👋",
+      "🤚",
+      "🖐️",
+      "✋",
+      "🖖",
+      "👌",
+      "🤌",
+      "🤏",
+      "✌️",
+      "🤞",
+      "🤟",
+      "🤘",
+      "🤙",
+      "👈",
+      "👉",
+      "👆",
+      "🖕",
+      "👇",
+      "☝️",
+      "👍",
+      "👎",
+      "✊",
+      "👊",
+      "🤛",
+      "🤜",
+      "👏",
+      "🙌",
+      "👐",
+      "🤲",
+      "🤝",
+      "🙏",
+      "✍️",
+      "💪",
+      "🦾",
+      "🦿",
+      "🫶",
+      "🫱",
+      "🫲",
+      "🫳",
+      "🫴",
+    ],
+  },
+  hearts: {
+    label: "Сердечки",
+    emojis: [
+      "❤️",
+      "🧡",
+      "💛",
+      "💚",
+      "💙",
+      "💜",
+      "🖤",
+      "🤍",
+      "🤎",
+      "💔",
+      "❤️‍🔥",
+      "❤️‍🩹",
+      "❣️",
+      "💕",
+      "💞",
+      "💓",
+      "💗",
+      "💖",
+      "💘",
+      "💝",
+    ],
+  },
+  activities: {
+    label: "Активности",
+    emojis: [
+      "⚽",
+      "🏀",
+      "🏈",
+      "⚾",
+      "🥎",
+      "🎾",
+      "🏐",
+      "🏉",
+      "🥏",
+      "🎱",
+      "🪀",
+      "🏓",
+      "🏸",
+      "🏒",
+      "🏑",
+      "🥍",
+      "🏏",
+      "🪃",
+      "🥅",
+      "⛳",
+      "🪁",
+      "🏹",
+      "🎣",
+      "🤿",
+      "🥊",
+      "🥋",
+      "🎽",
+      "🛹",
+      "🛼",
+      "🛷",
+      "⛸️",
+      "🥌",
+      "🎿",
+      "⛷️",
+      "🏂",
+      "🪂",
+      "🏋️",
+      "🤼",
+      "🤸",
+      "⛹️",
+    ],
+  },
+  music: {
+    label: "Музыка",
+    emojis: [
+      "🎵",
+      "🎶",
+      "🎼",
+      "🎤",
+      "🎧",
+      "🎷",
+      "🎸",
+      "🎹",
+      "🎺",
+      "🎻",
+      "🪕",
+      "🥁",
+      "🪘",
+      "🪗",
+      "🎬",
+      "🎭",
+      "🎨",
+      "🎪",
+      "🎫",
+      "🎰",
+    ],
+  },
+  tech: {
+    label: "Технологии",
+    emojis: [
+      "💻",
+      "🖥️",
+      "🖨️",
+      "⌨️",
+      "🖱️",
+      "🖲️",
+      "💽",
+      "💾",
+      "💿",
+      "📀",
+      "📱",
+      "📲",
+      "☎️",
+      "📞",
+      "📟",
+      "📠",
+      "📺",
+      "📻",
+      "🎙️",
+      "🎚️",
+      "🎛️",
+      "🧭",
+      "⏱️",
+      "⏲️",
+      "⏰",
+      "🕰️",
+      "⌛",
+      "⏳",
+      "📡",
+      "🔋",
+    ],
+  },
+  nature: {
+    label: "Природа",
+    emojis: [
+      "🌸",
+      "💮",
+      "🏵️",
+      "🌹",
+      "🥀",
+      "🌺",
+      "🌻",
+      "🌼",
+      "🌷",
+      "🌱",
+      "🪴",
+      "🌲",
+      "🌳",
+      "🌴",
+      "🌵",
+      "🌾",
+      "🌿",
+      "☘️",
+      "🍀",
+      "🍁",
+      "🍂",
+      "🍃",
+      "🪹",
+      "🪺",
+      "🍇",
+      "🍈",
+      "🍉",
+      "🍊",
+      "🍋",
+      "🍌",
+    ],
+  },
+  objects: {
+    label: "Объекты",
+    emojis: [
+      "🎁",
+      "🎈",
+      "🎀",
+      "🪄",
+      "🔮",
+      "🧿",
+      "🎮",
+      "🕹️",
+      "🎲",
+      "🧩",
+      "🧸",
+      "🪆",
+      "🎴",
+      "🃏",
+      "👓",
+      "🕶️",
+      "🥽",
+      "🧳",
+      "👜",
+      "👛",
+      "👝",
+      "💼",
+      "🎒",
+      "🧵",
+      "🪡",
+      "🧶",
+      "👑",
+      "👒",
+      "🎩",
+      "🎓",
+    ],
+  },
+  symbols: {
+    label: "Символы",
+    emojis: [
+      "⭐",
+      "🌟",
+      "✨",
+      "💫",
+      "🔥",
+      "💥",
+      "💢",
+      "💦",
+      "💨",
+      "🕳️",
+      "💣",
+      "💬",
+      "👁️‍🗨️",
+      "🗨️",
+      "🗯️",
+      "💭",
+      "💤",
+      "🔴",
+      "🟠",
+      "🟡",
+      "🟢",
+      "🔵",
+      "🟣",
+      "🟤",
+      "⚫",
+      "⚪",
+      "🟥",
+      "🟧",
+      "🟨",
+      "🟩",
+      "🟦",
+      "🟪",
+      "🟫",
+      "⬛",
+      "⬜",
+      "◼️",
+      "◻️",
+      "🔶",
+      "🔷",
+      "🔸",
+    ],
+  },
+  travel: {
+    label: "Транспорт",
+    emojis: [
+      "🚗",
+      "🚕",
+      "🚙",
+      "🚌",
+      "🚎",
+      "🏎️",
+      "🚓",
+      "🚑",
+      "🚒",
+      "🚐",
+      "🛻",
+      "🚚",
+      "🚛",
+      "🚜",
+      "🏍️",
+      "🛵",
+      "🚲",
+      "🛴",
+      "🛹",
+      "🛼",
+      "✈️",
+      "🛫",
+      "🛬",
+      "🛩️",
+      "🚀",
+      "🛸",
+      "🚁",
+      "🛶",
+      "⛵",
+      "🚤",
+    ],
+  },
+};
+
+// Экспортируем категории для использования в других компонентах
+export { EMOJI_CATEGORIES };
+
+// Дефолтные эмодзи для профиля
+export const DEFAULT_PROFILE_EMOJIS = ["🥁", "📈", "🎸", "🧭", "😍", "🫶"];
+
+interface EmojiPickerProps {
+  /** Выбранные эмодзи (массив из 6) */
+  selectedEmojis: string[];
+  /** Callback при изменении эмодзи */
+  onChange: (emojis: string[]) => void;
+  /** Максимальное количество эмодзи */
+  maxEmojis?: number;
+  /** Отключить редактирование */
+  disabled?: boolean;
+}
+
+export const EmojiPicker: FC<EmojiPickerProps> = ({
+  selectedEmojis,
+  onChange,
+  maxEmojis = 6,
+  disabled = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>("smileys");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Закрытие при клике вне компонента
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+        setEditingIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Обработка выбора эмодзи
+  const handleEmojiSelect = (emoji: string) => {
+    if (editingIndex !== null) {
+      // Заменяем эмодзи в указанной позиции
+      const newEmojis = [...selectedEmojis];
+      newEmojis[editingIndex] = emoji;
+      onChange(newEmojis);
+      setEditingIndex(null);
+      setIsOpen(false);
+    }
+  };
+
+  // Открытие пикера для редактирования конкретной позиции
+  const handleEmojiClick = (index: number) => {
+    if (disabled) return;
+    setEditingIndex(index);
+    setIsOpen(true);
+  };
+
+  // Сброс к дефолтным
+  const handleReset = () => {
+    onChange([...DEFAULT_PROFILE_EMOJIS]);
+    setIsOpen(false);
+    setEditingIndex(null);
+  };
+
+  return (
+    <div className="emoji-picker" ref={pickerRef}>
+      {/* Отображение выбранных эмодзи */}
+      <div className="emoji-picker__selected">
+        <span className="emoji-picker__label">Эмодзи профиля</span>
+        <div className="emoji-picker__emojis">
+          {selectedEmojis.slice(0, maxEmojis).map((emoji, index) => (
+            <button
+              key={index}
+              type="button"
+              className={`emoji-picker__emoji-btn ${editingIndex === index ? "emoji-picker__emoji-btn--active" : ""}`}
+              onClick={() => handleEmojiClick(index)}
+              disabled={disabled}
+              title={`Изменить эмодзи ${index + 1}`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Выпадающий пикер */}
+      {isOpen && (
+        <div className="emoji-picker__dropdown">
+          {/* Заголовок с кнопкой сброса */}
+          <div className="emoji-picker__header">
+            <span className="emoji-picker__title">
+              {editingIndex !== null
+                ? `Выберите эмодзи #${editingIndex + 1}`
+                : "Выберите эмодзи"}
+            </span>
+            <button
+              type="button"
+              className="emoji-picker__reset-btn"
+              onClick={handleReset}
+            >
+              Сбросить
+            </button>
+          </div>
+
+          {/* Табы категорий */}
+          <div className="emoji-picker__categories">
+            {Object.entries(EMOJI_CATEGORIES).map(([key, category]) => (
+              <button
+                key={key}
+                type="button"
+                className={`emoji-picker__category-btn ${activeCategory === key ? "emoji-picker__category-btn--active" : ""}`}
+                onClick={() => setActiveCategory(key)}
+              >
+                {category.emojis[0]}
+              </button>
+            ))}
+          </div>
+
+          {/* Список эмодзи */}
+          <div className="emoji-picker__grid">
+            {EMOJI_CATEGORIES[
+              activeCategory as keyof typeof EMOJI_CATEGORIES
+            ]?.emojis.map((emoji, index) => (
+              <button
+                key={index}
+                type="button"
+                className={`emoji-picker__grid-emoji ${selectedEmojis.includes(emoji) ? "emoji-picker__grid-emoji--selected" : ""}`}
+                onClick={() => handleEmojiSelect(emoji)}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

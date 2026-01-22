@@ -52,6 +52,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             "embedding": card.embedding,
             "completeness": card.completeness,
             "is_public": card.is_public,
+            "emojis": card.emojis,
         }
 
     def _from_document(self, doc: dict) -> BusinessCard:
@@ -93,6 +94,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             embedding=doc.get("embedding", []),
             completeness=doc.get("completeness", 0),
             is_public=doc.get("is_public", True),
+            emojis=doc.get("emojis", ["🥁", "📈", "🎸", "🧭", "😍", "🫶"]),
         )
 
     async def get_by_id(self, card_id: UUID) -> BusinessCard | None:
