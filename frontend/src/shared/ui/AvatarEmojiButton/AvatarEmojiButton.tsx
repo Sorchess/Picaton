@@ -27,16 +27,23 @@ export const AvatarEmojiButton: FC<AvatarEmojiButtonProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>("smileys");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  // Локальный стейт для мгновенного отображения изменений
+  const [localEmojis, setLocalEmojis] = useState<string[]>(selectedEmojis);
   const pickerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Синхронизируем локальный стейт с пропсами
+  useEffect(() => {
+    setLocalEmojis(selectedEmojis);
+  }, [selectedEmojis]);
 
   // Вычисление позиции dropdown
   const updateDropdownPosition = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      const dropdownWidth = 320;
-      const dropdownHeight = 380; // примерная высота dropdown
+      const dropdownWidth = 360; // должно совпадать с SCSS
+      const dropdownHeight = 400; // примерная высота dropdown
 
       // Вычисляем позицию - открываем вниз от кнопки
       let top = rect.bottom + 8;
@@ -102,25 +109,58 @@ export const AvatarEmojiButton: FC<AvatarEmojiButtonProps> = ({
   // Обработка выбора эмодзи
   const handleEmojiSelect = (emoji: string) => {
     if (editingIndex !== null) {
-      // Создаём массив нужной длины и заменяем эмодзи в указанной позиции
+      // Создаём массив нужной длины
       const newEmojis = Array.from(
         { length: maxEmojis },
-        (_, i) => selectedEmojis[i] || "",
+        (_, i) => localEmojis[i] || "",
       );
-      newEmojis[editingIndex] = emoji;
-      // Убираем пустые строки с конца
-      while (newEmojis.length > 0 && newEmojis[newEmojis.length - 1] === "") {
-        newEmojis.pop();
+
+      // Проверяем, есть ли этот эмодзи уже в каком-то слоте
+      const existingIndex = localEmojis.findIndex((e) => e === emoji);
+      if (existingIndex !== -1) {
+        // Эмодзи уже есть - удаляем его и переключаемся на тот слот
+        newEmojis[existingIndex] = "";
+        setLocalEmojis(newEmojis);
+        setEditingIndex(existingIndex);
+
+        // Убираем пустые строки с конца для сохранения
+        const trimmed = [...newEmojis];
+        while (trimmed.length > 0 && trimmed[trimmed.length - 1] === "") {
+          trimmed.pop();
+        }
+        onChange(trimmed);
+        return;
       }
-      onChange(newEmojis);
-      // Переходим к следующему пустому слоту или закрываем
-      const nextEmptyIndex = newEmojis.findIndex(
-        (e, i) => !e && i > editingIndex,
-      );
-      if (nextEmptyIndex !== -1) {
-        setEditingIndex(nextEmptyIndex);
+
+      // Добавляем эмодзи в текущий слот
+      newEmojis[editingIndex] = emoji;
+
+      // Обновляем локальный стейт сразу для мгновенного отображения
+      setLocalEmojis(newEmojis);
+
+      // Убираем пустые строки с конца для сохранения
+      const emojisToSave = [...newEmojis];
+      while (
+        emojisToSave.length > 0 &&
+        emojisToSave[emojisToSave.length - 1] === ""
+      ) {
+        emojisToSave.pop();
+      }
+      onChange(emojisToSave);
+
+      // Переходим к следующему слоту
+      const nextIndex = editingIndex + 1;
+      if (nextIndex < maxEmojis) {
+        setEditingIndex(nextIndex);
       } else {
-        setEditingIndex(null);
+        // Если дошли до конца, ищем первый пустой слот
+        const firstEmptyIndex = newEmojis.findIndex((e) => !e);
+        if (firstEmptyIndex !== -1) {
+          setEditingIndex(firstEmptyIndex);
+        } else {
+          // Все слоты заполнены
+          setEditingIndex(null);
+        }
       }
     }
   };
@@ -132,9 +172,9 @@ export const AvatarEmojiButton: FC<AvatarEmojiButtonProps> = ({
 
   // Очистка эмодзи
   const handleClear = () => {
+    setLocalEmojis([]);
     onChange([]);
-    setIsOpen(false);
-    setEditingIndex(null);
+    setEditingIndex(0); // Начинаем с первого слота после очистки
   };
 
   // Открытие/закрытие попапа
@@ -190,6 +230,8 @@ export const AvatarEmojiButton: FC<AvatarEmojiButtonProps> = ({
               top: dropdownPosition.top,
               left: dropdownPosition.left,
             }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Заголовок */}
             <div className="avatar-emoji-button__header">
@@ -209,10 +251,10 @@ export const AvatarEmojiButton: FC<AvatarEmojiButtonProps> = ({
                 <button
                   key={index}
                   type="button"
-                  className={`avatar-emoji-button__slot ${editingIndex === index ? "avatar-emoji-button__slot--active" : ""} ${!selectedEmojis[index] ? "avatar-emoji-button__slot--empty" : ""}`}
+                  className={`avatar-emoji-button__slot ${editingIndex === index ? "avatar-emoji-button__slot--active" : ""} ${!localEmojis[index] ? "avatar-emoji-button__slot--empty" : ""}`}
                   onClick={() => handleSlotClick(index)}
                 >
-                  {selectedEmojis[index] || "+"}
+                  {localEmojis[index] || "+"}
                 </button>
               ))}
             </div>

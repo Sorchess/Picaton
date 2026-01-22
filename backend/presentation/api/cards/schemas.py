@@ -92,7 +92,7 @@ class BusinessCardResponse(BaseModel):
     contacts: list[CardContactInfo]
     random_facts: list[str]
     completeness: int
-    emojis: list[str] = ["🥁", "📈", "🎸", "🧭", "😍", "🫶"]
+    emojis: list[str] = []
 
 
 class BusinessCardPublicResponse(BaseModel):
@@ -109,7 +109,7 @@ class BusinessCardPublicResponse(BaseModel):
     search_tags: list[str]
     contacts: list[CardContactInfo] = []  # Только is_visible=True
     completeness: int
-    emojis: list[str] = ["🥁", "📈", "🎸", "🧭", "😍", "🫶"]
+    emojis: list[str] = []
 
 
 class BusinessCardListResponse(BaseModel):

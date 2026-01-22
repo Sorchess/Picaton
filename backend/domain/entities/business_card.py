@@ -99,9 +99,7 @@ class BusinessCard(Entity):
     completeness: int = field(default=0)
 
     # Эмодзи для декоративного отображения профиля
-    emojis: list[str] = field(
-        default_factory=lambda: ["🥁", "📈", "🎸", "🧭", "😍", "🫶"]
-    )
+    emojis: list[str] = field(default_factory=list)
 
     # Видимость карточки (наследуется от пользователя)
     # Приватные карточки видны только внутри компании
@@ -227,7 +225,7 @@ class BusinessCard(Entity):
     def set_emojis(self, emojis: list[str]) -> None:
         """Установить эмодзи для профиля (максимум 6)."""
         # Ограничиваем количество эмодзи
-        self.emojis = emojis[:6] if emojis else ["🥁", "📈", "🎸", "🧭", "😍", "🫶"]
+        self.emojis = emojis[:6] if emojis else []
 
     def add_contact(
         self,

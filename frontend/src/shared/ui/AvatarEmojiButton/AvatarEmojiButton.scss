@@ -46,7 +46,7 @@
   }
 
   &__dropdown {
-    width: 320px;
+    width: 360px;
     background: var(--surface, #fff);
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -172,9 +172,9 @@
   &__grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 4px;
+    gap: 6px;
     padding: 12px;
-    max-height: 180px;
+    max-height: 220px;
     overflow-y: auto;
 
     &::-webkit-scrollbar {

@@ -35,7 +35,7 @@ export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
   skillsCount,
   recommendationsCount,
   level,
-  emojis = ["🥁", "📈", "🎸", "🧭", "😍", "🫶"],
+  emojis = [],
   onSkillsClick,
   onRecommendationsClick,
   onLevelClick,
