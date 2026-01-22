@@ -111,8 +111,8 @@ export function EmailModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      closeOnOverlayClick={false}
-      closeOnEscape={false}
+      closeOnOverlayClick={true}
+      closeOnEscape={true}
     >
       <div className="email-modal">
         <div className="email-modal__header">
@@ -142,6 +142,14 @@ export function EmailModal({
             <div className="email-modal__actions">
               <Button type="submit" variant="primary" disabled={isLoading}>
                 {isLoading ? "Отправка..." : "Отправить код"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Позже
               </Button>
             </div>
           </form>

@@ -104,18 +104,22 @@ function AuthenticatedApp() {
 
   // Email modal state for Telegram users with placeholder email
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailModalShown, setEmailModalShown] = useState(false);
 
   // Проверяем placeholder email при входе через Telegram
   const isPlaceholderEmail = user?.email?.includes("@telegram.placeholder");
 
-  // Открываем модалку для ввода email, если email - placeholder
+  // Открываем модалку для ввода email, если email - placeholder (только один раз за сессию)
   useEffect(() => {
-    if (isPlaceholderEmail && !isEmailModalOpen) {
+    if (isPlaceholderEmail && !emailModalShown) {
       // Небольшая задержка для UX
-      const timer = setTimeout(() => setIsEmailModalOpen(true), 500);
+      const timer = setTimeout(() => {
+        setIsEmailModalOpen(true);
+        setEmailModalShown(true);
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isPlaceholderEmail, isEmailModalOpen]);
+  }, [isPlaceholderEmail, emailModalShown]);
 
   // Обработка приглашения из URL или сохраненного токена
   useEffect(() => {
