@@ -25,9 +25,17 @@ type ViewMode = "overview" | "edit-card";
 
 interface ProfilePageProps {
   onShareContact?: (cards: BusinessCard[]) => void;
+  /** Card to open in edit mode on mount */
+  openCardId?: string;
+  /** Callback when card is opened (to clear openCardId) */
+  onCardOpened?: () => void;
 }
 
-export function ProfilePage({ onShareContact }: ProfilePageProps) {
+export function ProfilePage({
+  onShareContact,
+  openCardId,
+  onCardOpened,
+}: ProfilePageProps) {
   const { user: authUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,6 +107,19 @@ export function ProfilePage({ onShareContact }: ProfilePageProps) {
     loadCards();
     loadCardAssignments();
   }, [loadUser, loadCards, loadCardAssignments]);
+
+  // Open card from prop on mount
+  useEffect(() => {
+    if (openCardId && cards.length > 0) {
+      const cardToOpen = cards.find((c) => c.id === openCardId);
+      if (cardToOpen) {
+        setEditingCard(cardToOpen);
+        setViewMode("edit-card");
+        // Clear openCardId after opening
+        onCardOpened?.();
+      }
+    }
+  }, [openCardId, cards, onCardOpened]);
 
   // Открытие редактора карточки
   const handleOpenCard = (card: BusinessCard) => {

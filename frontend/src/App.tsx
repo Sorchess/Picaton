@@ -90,6 +90,11 @@ function AuthenticatedApp() {
   const [shareContactData, setShareContactData] =
     useState<ShareContactNavData | null>(null);
 
+  // ID карточки для открытия на странице профиля
+  const [profileOpenCardId, setProfileOpenCardId] = useState<
+    string | undefined
+  >(undefined);
+
   // Функция навигации на страницу профиля контакта
   const navigateToContactProfile = (data: ContactProfileNavData) => {
     setContactProfileData(data);
@@ -116,11 +121,19 @@ function AuthenticatedApp() {
     setShareContactData(null);
   };
 
+  // Функция перехода к визитке из страницы поделиться
+  const navigateToCardFromShareContact = (cardId: string) => {
+    setProfileOpenCardId(cardId);
+    setCurrentPage("profile");
+    setShareContactData(null);
+  };
+
   // Функция смены страницы через PageSwitcher
   const handlePageChange = (page: PageType) => {
     setCurrentPage(page);
     setContactProfileData(null);
     setShareContactData(null);
+    setProfileOpenCardId(undefined);
   };
 
   // QR code loading state
@@ -467,6 +480,8 @@ function AuthenticatedApp() {
                 returnPage: "profile",
               })
             }
+            openCardId={profileOpenCardId}
+            onCardOpened={() => setProfileOpenCardId(undefined)}
           />
         )}
         {currentPage === "company" && (
@@ -505,6 +520,7 @@ function AuthenticatedApp() {
           <ShareContactPage
             cards={shareContactData.cards}
             onBack={navigateBackFromShareContact}
+            onOpenCard={(card) => navigateToCardFromShareContact(card.id)}
           />
         )}
       </main>
