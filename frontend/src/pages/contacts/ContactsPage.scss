@@ -1,4 +1,5 @@
 @use "../../shared/styles/variables" as *;
+@use "../../shared/styles/mixins/glass" as *;
 
 .contacts-page {
   min-height: 100vh;
@@ -33,6 +34,8 @@
   }
 
   &__title-container {
+    @include liquid-glass-border;
+    @include liquid-glass-default;
     display: flex;
     align-items: center;
     justify-content: center;
