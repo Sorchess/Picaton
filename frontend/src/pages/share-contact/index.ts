@@ -1,0 +1,1 @@
+export { ShareContactPage } from "./ShareContactPage";

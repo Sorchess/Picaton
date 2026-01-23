@@ -11,6 +11,7 @@ import {
   CompanyPage,
   CollaborationPage,
   ContactProfilePage,
+  ShareContactPage,
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
 import { EmailModal } from "./features/email-modal";
@@ -54,14 +55,20 @@ function clearPendingInviteToken() {
   sessionStorage.removeItem("pendingInviteToken");
 }
 
-// Расширенный тип страницы для поддержки профиля контакта
-type ExtendedPageType = PageType | "contact-profile";
+// Расширенный тип страницы для поддержки профиля контакта и страницы поделиться
+type ExtendedPageType = PageType | "contact-profile" | "share-contact";
 
 // Контекст для навигации на профиль контакта
 interface ContactProfileNavData {
   user: UserPublic;
   cardId?: string;
   savedContact?: SavedContact | null;
+  returnPage: PageType;
+}
+
+// Контекст для навигации на страницу поделиться контактом
+interface ShareContactNavData {
+  cards: import("./entities/business-card").BusinessCard[];
   returnPage: PageType;
 }
 
@@ -79,6 +86,10 @@ function AuthenticatedApp() {
   const [contactProfileData, setContactProfileData] =
     useState<ContactProfileNavData | null>(null);
 
+  // Данные для страницы поделиться контактом
+  const [shareContactData, setShareContactData] =
+    useState<ShareContactNavData | null>(null);
+
   // Функция навигации на страницу профиля контакта
   const navigateToContactProfile = (data: ContactProfileNavData) => {
     setContactProfileData(data);
@@ -92,10 +103,24 @@ function AuthenticatedApp() {
     setContactProfileData(null);
   };
 
+  // Функция навигации на страницу поделиться контактом
+  const navigateToShareContact = (data: ShareContactNavData) => {
+    setShareContactData(data);
+    setPreviousPage(currentPage as PageType);
+    setCurrentPage("share-contact");
+  };
+
+  // Функция возврата со страницы поделиться контактом
+  const navigateBackFromShareContact = () => {
+    setCurrentPage(shareContactData?.returnPage || previousPage);
+    setShareContactData(null);
+  };
+
   // Функция смены страницы через PageSwitcher
   const handlePageChange = (page: PageType) => {
     setCurrentPage(page);
     setContactProfileData(null);
+    setShareContactData(null);
   };
 
   // QR code loading state
@@ -434,7 +459,16 @@ function AuthenticatedApp() {
             }
           />
         )}
-        {currentPage === "profile" && <ProfilePage />}
+        {currentPage === "profile" && (
+          <ProfilePage
+            onShareContact={(cards) =>
+              navigateToShareContact({
+                cards,
+                returnPage: "profile",
+              })
+            }
+          />
+        )}
         {currentPage === "company" && (
           <CompanyPage
             onOpenContact={(user, cardId) =>
@@ -467,13 +501,19 @@ function AuthenticatedApp() {
             }}
           />
         )}
+        {currentPage === "share-contact" && shareContactData && (
+          <ShareContactPage
+            cards={shareContactData.cards}
+            onBack={navigateBackFromShareContact}
+          />
+        )}
       </main>
 
       {/* Мобильный футер с навигацией */}
       <footer className="app__footer">
         <PageSwitcher
           value={
-            currentPage === "contact-profile"
+            currentPage === "contact-profile" || currentPage === "share-contact"
               ? previousPage
               : (currentPage as PageType)
           }

@@ -7,7 +7,6 @@ import { businessCardApi } from "@/entities/business-card";
 import type { CompanyCardAssignment } from "@/entities/company";
 import { companyApi } from "@/entities/company";
 import { useAuth } from "@/features/auth";
-import { QrModal } from "@/features/qr-modal";
 import { Loader, Button, Modal } from "@/shared";
 import {
   CardEditor,
@@ -18,14 +17,17 @@ import {
   ProfileTopBar,
   CheckIcon,
   UsersIcon,
-  ShareMenu,
 } from "./components";
 import type { RoleTab } from "./components";
 import "./ProfilePage.scss";
 
 type ViewMode = "overview" | "edit-card";
 
-export function ProfilePage() {
+interface ProfilePageProps {
+  onShareContact?: (cards: BusinessCard[]) => void;
+}
+
+export function ProfilePage({ onShareContact }: ProfilePageProps) {
   const { user: authUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,16 +47,8 @@ export function ProfilePage() {
 
   // Create card modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-
-  // QR code modal
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const [qrCardName, setQrCardName] = useState<string | undefined>();
-
-  // Share menu
-  const [showShareMenu, setShowShareMenu] = useState(false);
 
   // Active role for tabs
   const [activeRoleId, setActiveRoleId] = useState("personal");
@@ -163,37 +157,10 @@ export function ProfilePage() {
     }
   };
 
-  // Открыть меню выбора визиток для шаринга
+  // Открыть страницу шаринга визиток
   const handleShareProfile = () => {
     if (!user || cards.length === 0) return;
-    setShowShareMenu(true);
-  };
-
-  // Обработка шаринга выбранных визиток
-  const handleShareSelectedCards = async (
-    selectedCardIds: string[],
-    duration: string,
-  ) => {
-    if (selectedCardIds.length === 0) return;
-
-    try {
-      // Для простоты показываем QR первой выбранной визитки
-      const firstSelectedCard = cards.find((c) =>
-        selectedCardIds.includes(c.id),
-      );
-      if (firstSelectedCard && user) {
-        const qr = await businessCardApi.getQRCode(
-          firstSelectedCard.id,
-          duration,
-        );
-        setQrCodeImage(qr.image_base64);
-        setQrCardName(firstSelectedCard.title || getFullName(user));
-        setShowShareMenu(false);
-        setShowQrModal(true);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка генерации QR");
-    }
+    onShareContact?.(cards);
   };
 
   // Generate roles from user data
@@ -478,25 +445,6 @@ export function ProfilePage() {
           </div>
         </div>
       </Modal>
-
-      {/* Share Menu */}
-      <ShareMenu
-        isOpen={showShareMenu}
-        onClose={() => setShowShareMenu(false)}
-        cards={cards}
-        onShare={handleShareSelectedCards}
-        initialSelectedIds={cards.filter((c) => c.is_primary).map((c) => c.id)}
-      />
-
-      {/* QR Code Modal */}
-      {qrCodeImage && (
-        <QrModal
-          isOpen={showQrModal}
-          onClose={() => setShowQrModal(false)}
-          qrCodeImage={qrCodeImage}
-          userName={qrCardName || getFullName(user)}
-        />
-      )}
     </div>
   );
 }

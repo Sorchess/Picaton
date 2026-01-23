@@ -1,0 +1,409 @@
+.share-contact-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 100px;
+  // Toast
+  &__toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: rgba(239, 68, 68, 0.9);
+    border-radius: 14px;
+    color: white;
+    font-size: 14px;
+    z-index: 1000;
+    cursor: pointer;
+    animation: slideDown 0.3s ease;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  // Header with back, title, share buttons
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    background: transparent;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  &__header-title {
+    padding: 12px 32px;
+    background: var(--color-bg-secondary);
+    border-radius: 21px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+  }
+
+  // Content area
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  // QR Code header
+  &__qr-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+    color: var(--color-text-primary);
+
+    svg {
+      width: 120px;
+      height: 120px;
+    }
+  }
+
+  // Tab switcher
+  &__tabs {
+    display: flex;
+    background: var(--color-bg-secondary);
+    border-radius: 15.5px;
+    border: 1px solid var(--color-border);
+    padding: 2px;
+  }
+
+  &__tab {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 13.5px;
+    background: transparent;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &--active {
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+    }
+  }
+
+  // Section label
+  &__section-label {
+    padding: 12px 24px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 22.5px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  // Duration label (plain text, not in card)
+  &__duration-label {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-secondary, #676767);
+    margin-left: 10px;
+  }
+
+  // Cards list
+  &__cards {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  &__card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: var(--color-bg-tertiary);
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__card-check {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__card-check-empty {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--color-text-tertiary);
+    box-sizing: border-box;
+  }
+
+  &__card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__card-title {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  &__card-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+  }
+
+  // Add card button
+  &__add-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  &__add-card-text {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0081ff;
+  }
+
+  &__add-card-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  // Duration selector
+  &__duration {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 25px;
+    padding: 16px 20px;
+  }
+
+  &__duration-options {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+
+  &__duration-option {
+    flex: 1;
+    padding: 8px 4px;
+    border: none;
+    background: transparent;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+
+    &--active {
+      color: var(--color-primary, #0081ff);
+      font-weight: 600;
+    }
+
+    &--infinity {
+      font-size: 18px;
+      line-height: 1;
+    }
+  }
+
+  &__duration-slider {
+    position: relative;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 0 12px;
+  }
+
+  &__duration-track {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    height: 3px;
+    background: var(--color-primary, #0081ff);
+    border-radius: 1.5px;
+  }
+
+  &__duration-tick {
+    position: absolute;
+    width: 2px;
+    height: 13px;
+    background: var(--color-primary, #0081ff);
+    border-radius: 1px;
+    transform: translateX(-50%);
+    top: -5px;
+  }
+
+  &__duration-handle {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 12.9px rgba(0, 0, 0, 0.25);
+    border: none;
+    transform: translateX(-50%);
+    cursor: grab;
+    transition: box-shadow 0.2s ease;
+
+    &:active {
+      cursor: grabbing;
+      box-shadow: 0 0 16px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  // Bottom share button
+  &__bottom {
+    margin-top: auto;
+    padding: 20px 0;
+  }
+
+  &__share-button {
+    width: 100%;
+    padding: 16px 24px;
+    background: var(--color-primary, #0081ff);
+    border: none;
+    border-radius: 16px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--color-primary-hover, #0070e0);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // Create card modal
+  &__create-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__create-hint {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
+    color: var(--color-text-secondary, #676767);
+    margin: 0;
+  }
+
+  &__create-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border, #e3e3e3);
+    border-radius: 12px;
+    background: var(--color-bg-secondary, #f9faff);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 16px;
+    color: var(--color-text-primary, #000);
+    outline: none;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      border-color: var(--color-primary, #0081ff);
+    }
+
+    &::placeholder {
+      color: var(--color-text-tertiary, rgba(0, 0, 0, 0.3));
+    }
+  }
+
+  &__create-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+}
