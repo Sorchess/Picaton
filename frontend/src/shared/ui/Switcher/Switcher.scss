@@ -94,7 +94,8 @@
 }
 
 .switcher {
-  @include glass-simple;
+  @include liquid-glass-border;
+  @include liquid-glass-default;
   position: relative;
   display: inline-flex;
   align-items: center;
