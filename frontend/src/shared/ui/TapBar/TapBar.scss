@@ -94,8 +94,7 @@
 }
 
 .tapbar {
-  @include liquid-glass-border;
-  @include liquid-glass-default;
+  @include liquid-glass;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -234,6 +233,6 @@
   }
 
   &:hover {
-    @include liquid-glass-default-hover;
+    @include liquid-glass-hover;
   }
 }

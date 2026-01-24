@@ -10,9 +10,6 @@
   flex-shrink: 0;
   position: relative;
 
-  // iOS 26 liquid glass base
-  @include liquid-glass-border;
-
   // Размеры
   &--sm {
     width: 32px;
@@ -46,10 +43,10 @@
 
   // Варианты
   &--default {
-    @include liquid-glass-default;
+    @include liquid-glass;
 
     &:hover {
-      @include liquid-glass-default-hover;
+      @include liquid-glass-hover;
     }
 
     &:active {
@@ -62,10 +59,10 @@
   }
 
   &--ghost {
-    @include liquid-glass-ghost;
+    @include liquid-glass--ghost;
 
     &:hover {
-      @include liquid-glass-ghost-hover;
+      @include liquid-glass--ghost-hover;
     }
 
     &:active {
@@ -74,22 +71,22 @@
   }
 
   &--elevated {
-    @include liquid-glass-elevated;
+    @include liquid-glass--elevated;
 
     &:hover {
-      @include liquid-glass-elevated-hover;
+      @include liquid-glass--elevated-hover;
     }
 
     &:active {
-      @include liquid-glass-elevated-active;
+      @include liquid-glass--elevated-active;
     }
   }
 
   &--danger {
-    @include liquid-glass-danger;
+    @include liquid-glass--danger;
 
     &:hover {
-      @include liquid-glass-danger-hover;
+      @include liquid-glass--danger-hover;
     }
 
     &:active {

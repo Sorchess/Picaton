@@ -34,15 +34,12 @@
   }
 
   &__title-container {
-    @include liquid-glass-border;
-    @include liquid-glass-default;
+    @include liquid-glass;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 8px 20px;
-    background: var(--color-bg-secondary);
     border-radius: 16px;
-    border: 1px solid var(--color-border);
   }
 
   &__title {
