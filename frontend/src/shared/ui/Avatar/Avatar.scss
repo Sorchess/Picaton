@@ -5,6 +5,19 @@
   position: relative;
   flex-shrink: 0;
 
+    &__glow {
+    position: absolute;
+    top: 0;
+    left: -1.5px;
+    width: 89px;
+    height: 91px;
+    border-radius: 85px;
+    filter: blur(15px);
+    opacity: 0.5;
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    z-index: -1;
+  }
+
   // Размеры
   &--xs {
     .avatar__inner {

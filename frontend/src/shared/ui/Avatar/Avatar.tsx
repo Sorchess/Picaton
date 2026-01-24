@@ -33,6 +33,7 @@ export function Avatar({
 
   return (
     <div className={classNames} {...props}>
+      <div className="avatar__glow" />
       <div className="avatar__inner">
         {src ? (
           <img src={src} alt={alt} className="avatar__image" />

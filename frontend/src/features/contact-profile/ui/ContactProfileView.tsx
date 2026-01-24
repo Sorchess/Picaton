@@ -444,7 +444,7 @@ export function ContactProfileView({
           <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
             <path
               d="M9 1L1 9L9 17"
-              stroke="black"
+              stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -478,7 +478,6 @@ export function ContactProfileView({
 
           {/* Avatar */}
           <div className="contact-profile-view__avatar">
-            <div className="contact-profile-view__avatar-glow" />
             <Avatar
               src={displayAvatar || undefined}
               initials={getInitials(fullName)}
