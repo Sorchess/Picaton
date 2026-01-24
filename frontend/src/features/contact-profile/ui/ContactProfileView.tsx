@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Avatar,
-  Button,
   Tag,
   EndorsableSkill,
   IconButton,
@@ -459,9 +458,9 @@ export function ContactProfileView({
               />
             </svg>
           </IconButton>
-        <div className="contact-profile-view__title-container">
-          <h1 className="contact-profile-view__title">Демонстрация</h1>
-        </div>
+          <div className="contact-profile-view__title-container">
+            <h1 className="contact-profile-view__title">Демонстрация</h1>
+          </div>
           <div className="contact-profile-view__top-spacer" />
         </div>
 
@@ -523,6 +522,76 @@ export function ContactProfileView({
                 {userLevel} Уровень
               </span>
             </div>
+          </div>
+
+          {/* Actions */}
+          <div className="contact-profile-view__actions">
+            {onSaveContact && !isSaved && (
+              <button
+                className="contact-profile-view__action-btn"
+                onClick={() => onSaveContact(user)}
+              >
+                <span>Добавить</span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 3V13M3 8H13"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
+            {isSaved && onDeleteContact && (
+              <button
+                className="contact-profile-view__action-btn contact-profile-view__action-btn--danger"
+                onClick={() =>
+                  (onDeleteContact as (user: UserPublic) => void)(user)
+                }
+              >
+                <span>Удалить</span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 8H13"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            )}
+
+            <button className="contact-profile-view__action-btn">
+              <span>Поделиться</span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 8H13M10 4L14 8L10 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
           </div>
 
           {/* Role Tabs - только если есть больше одной карточки и не в режиме одной карточки */}
@@ -616,28 +685,6 @@ export function ContactProfileView({
               </div>
             </div>
           )}
-        </div>
-
-        {/* Actions */}
-        <div className="contact-profile-view__actions">
-          {onSaveContact && !isSaved && authUser?.id !== user.id && (
-            <Button variant="primary" onClick={() => onSaveContact(user)}>
-              Сохранить в контакты
-            </Button>
-          )}
-          {isSaved && onDeleteContact && authUser?.id !== user.id && (
-            <Button
-              variant="danger"
-              onClick={() =>
-                (onDeleteContact as (user: UserPublic) => void)(user)
-              }
-            >
-              Удалить из контактов
-            </Button>
-          )}
-          <Button variant="ghost" onClick={onClose}>
-            Закрыть
-          </Button>
         </div>
       </div>
     </>

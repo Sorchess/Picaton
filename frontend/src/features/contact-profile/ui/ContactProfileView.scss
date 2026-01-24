@@ -17,7 +17,7 @@
     top: 0;
     z-index: 10;
   }
-  
+
   &__title-container {
     @include liquid-glass;
     display: flex;
@@ -27,7 +27,7 @@
     border-radius: 16px;
   }
 
-    &__title {
+  &__title {
     font-size: 14px;
     font-weight: 500;
     color: var(--color-text-primary);
@@ -80,7 +80,7 @@
       position: relative;
     }
 
-        &--1 {
+    &--1 {
       top: 16px;
       left: 55px;
       transform: rotate(-15deg);
@@ -414,9 +414,43 @@
   // Actions
   &__actions {
     display: flex;
+    justify-content: space-between;
     gap: 12px;
-    padding: 20px 20px 0;
-    margin-top: auto;
+  }
+
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1;
+    padding: 14px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+
+    &:hover {
+      background: var(--color-bg-tertiary);
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    &--danger {
+      background: var(--color-error);
+      &:hover {
+        background: var(--color-glass-bg--danger);
+        border: 1px solid var(--color-glass-border--danger);
+      }
+    }
   }
 
   &__loading {
@@ -426,7 +460,7 @@
     align-items: center;
     justify-content: center;
     background: var(--color-bg-primary);
-    z-index: 100;
+    z-index: 50;
   }
 }
 
