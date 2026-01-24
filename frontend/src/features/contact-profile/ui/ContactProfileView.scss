@@ -1,3 +1,5 @@
+@use "../../../shared/styles/mixins/glass" as *;
+
 .contact-profile-view {
   display: flex;
   flex-direction: column;
@@ -15,14 +17,22 @@
     top: 0;
     z-index: 10;
   }
+  
+  &__title-container {
+    @include liquid-glass;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    border-radius: 16px;
+  }
 
-  &__top-title {
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-weight: 600;
-    font-size: 17px;
-    color: rgba(255, 255, 255, 0.9);
+    &__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin: 0;
+    white-space: nowrap;
   }
 
   &__top-spacer {
@@ -70,21 +80,21 @@
       position: relative;
     }
 
-    &--1 {
+        &--1 {
       top: 16px;
       left: 55px;
       transform: rotate(-15deg);
     }
 
     &--2 {
-      top: 45px;
-      right: 100px;
+      top: 62px;
+      right: 87px;
       transform: rotate(-15deg);
     }
 
     &--3 {
-      top: 88px;
-      right: 120px;
+      top: 70px;
+      left: 102px;
       transform: rotate(-15deg);
     }
 

@@ -437,205 +437,209 @@ export function ContactProfileView({
   const roleTabs = generateRoleTabs();
 
   return (
-    <div className="contact-profile-view">
-      {/* Top Bar */}
-      <div className="contact-profile-view__top-bar">
-        <IconButton onClick={onClose} aria-label="Назад">
-          <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
-            <path
-              d="M9 1L1 9L9 17"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </IconButton>
-        <span className="contact-profile-view__top-title">Профиль</span>
-        <div className="contact-profile-view__top-spacer" />
-      </div>
-
-      {/* Content */}
-      <div className="contact-profile-view__content">
-        {/* Hero Block */}
-        <div className="contact-profile-view__hero">
-          {/* Floating emojis decoration */}
-          <div className="contact-profile-view__emojis">
-            {(getActiveCard()?.emojis || []).map((emoji, index) => (
-              <span
-                key={index}
-                className={`contact-profile-view__emoji contact-profile-view__emoji--${index + 1}`}
-              >
-                <span className="contact-profile-view__emoji-blur">
-                  {emoji}
-                </span>
-                <span className="contact-profile-view__emoji-main">
-                  {emoji}
-                </span>
-              </span>
-            ))}
-          </div>
-
-          {/* Avatar */}
-          <div className="contact-profile-view__avatar">
-            <Avatar
-              src={displayAvatar || undefined}
-              initials={getInitials(fullName)}
-              size="lg"
-              alt={fullName}
-            />
-          </div>
-
-          {/* Name and roles */}
-          <div className="contact-profile-view__info">
-            <h1 className="contact-profile-view__name">{fullName}</h1>
-            <div className="contact-profile-view__roles">
-              {getCardRoles().map((role, index) => (
-                <span key={index} className="contact-profile-view__role">
-                  {index > 0 && (
-                    <span className="contact-profile-view__dot">•</span>
-                  )}
-                  {role}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Stats badges */}
-          <div className="contact-profile-view__stats">
-            <span className="contact-profile-view__stat contact-profile-view__stat--skills">
-              {skillsCount} Skills
-            </span>
-            <span className="contact-profile-view__stat contact-profile-view__stat--recommendations">
-              {recommendationsCount} Рекомендаций
-            </span>
-            <span className="contact-profile-view__stat contact-profile-view__stat--level">
-              {userLevel} Уровень
-            </span>
-          </div>
-        </div>
-
-        {/* Role Tabs - только если есть больше одной карточки и не в режиме одной карточки */}
-        {!singleCardMode && roleTabs.length > 1 && activeCardId && (
-          <Tabs
-            tabs={roleTabs.map((role) => ({
-              id: role.id,
-              label: role.name,
-              icon: role.emoji,
-            }))}
-            activeId={activeCardId}
-            onChange={setActiveCardId}
-            className="contact-profile-view__role-tabs"
-          />
-        )}
-
-        {/* Bio Card */}
-        {bio && (
-          <div className="contact-profile-view__card">
-            <span className="contact-profile-view__card-label">Bio</span>
-            <p className="contact-profile-view__bio-text">{bio}</p>
-          </div>
-        )}
-
-        {/* Skills Card */}
-        {(hasEndorsementData || fallbackTags.length > 0) && (
-          <div className="contact-profile-view__card">
-            <div className="contact-profile-view__card-header">
-              <span className="contact-profile-view__card-label">Skills</span>
-              {canEndorse && hasEndorsementData && (
-                <span className="contact-profile-view__card-hint">
-                  Нажмите, чтобы подтвердить
-                </span>
-              )}
-            </div>
-            <div className="contact-profile-view__tags">
-              {hasEndorsementData
-                ? skillsWithEndorsements.map((skill) => (
-                    <EndorsableSkill
-                      key={`${skill.tag_id}-${skill.endorsement_count}-${skill.endorsed_by_current_user}`}
-                      skill={skill}
-                      onToggleEndorse={handleToggleEndorse}
-                      canEndorse={canEndorse}
-                      isLoading={endorseLoading === skill.tag_id}
-                    />
-                  ))
-                : fallbackTags.map((tag) => (
-                    <Tag key={tag.id} size="sm" variant="default">
-                      {tag.name}
-                    </Tag>
-                  ))}
-            </div>
-          </div>
-        )}
-
-        {/* Contacts Card */}
-        {contacts.length > 0 && (
-          <div className="contact-profile-view__card">
-            <span className="contact-profile-view__card-label">
-              Контакты для связи
-            </span>
-            <div className="contact-profile-view__contacts">
-              {contacts.map((contact, idx) => (
-                <ContactLink key={idx} contact={contact} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {contacts.length === 0 && (
-          <div className="contact-profile-view__card">
-            <p className="contact-profile-view__no-contacts">
-              Пользователь не указал контакты для связи
-            </p>
-          </div>
-        )}
-
-        {/* Hobbies Card */}
-        {hobbies.length > 0 && (
-          <div className="contact-profile-view__card">
-            <span className="contact-profile-view__card-label">Интересы</span>
-            <div className="contact-profile-view__hobbies">
-              {hobbies.map((hobby) => (
-                <span key={hobby.id} className="contact-profile-view__hobby">
-                  <span className="contact-profile-view__hobby-icon">
-                    {hobby.icon}
-                  </span>
-                  {hobby.name}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="contact-profile-view__actions">
-        {onSaveContact && !isSaved && authUser?.id !== user.id && (
-          <Button variant="primary" onClick={() => onSaveContact(user)}>
-            Сохранить в контакты
-          </Button>
-        )}
-        {isSaved && onDeleteContact && authUser?.id !== user.id && (
-          <Button
-            variant="danger"
-            onClick={() =>
-              (onDeleteContact as (user: UserPublic) => void)(user)
-            }
-          >
-            Удалить из контактов
-          </Button>
-        )}
-        <Button variant="ghost" onClick={onClose}>
-          Закрыть
-        </Button>
-      </div>
-
+    <>
       {/* Loading overlay */}
       {isLoadingCards && (
         <div className="contact-profile-view__loading">
           <Loader />
         </div>
       )}
-    </div>
+
+      <div className="contact-profile-view">
+        {/* Top Bar */}
+        <div className="contact-profile-view__top-bar">
+          <IconButton onClick={onClose} aria-label="Назад">
+            <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+              <path
+                d="M9 1L1 9L9 17"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </IconButton>
+        <div className="contact-profile-view__title-container">
+          <h1 className="contact-profile-view__title">Демонстрация</h1>
+        </div>
+          <div className="contact-profile-view__top-spacer" />
+        </div>
+
+        {/* Content */}
+        <div className="contact-profile-view__content">
+          {/* Hero Block */}
+          <div className="contact-profile-view__hero">
+            {/* Floating emojis decoration */}
+            <div className="contact-profile-view__emojis">
+              {(getActiveCard()?.emojis || []).map((emoji, index) => (
+                <span
+                  key={index}
+                  className={`contact-profile-view__emoji contact-profile-view__emoji--${index + 1}`}
+                >
+                  <span className="contact-profile-view__emoji-blur">
+                    {emoji}
+                  </span>
+                  <span className="contact-profile-view__emoji-main">
+                    {emoji}
+                  </span>
+                </span>
+              ))}
+            </div>
+
+            {/* Avatar */}
+            <div className="contact-profile-view__avatar">
+              <Avatar
+                src={displayAvatar || undefined}
+                initials={getInitials(fullName)}
+                size="lg"
+                alt={fullName}
+              />
+            </div>
+
+            {/* Name and roles */}
+            <div className="contact-profile-view__info">
+              <h1 className="contact-profile-view__name">{fullName}</h1>
+              <div className="contact-profile-view__roles">
+                {getCardRoles().map((role, index) => (
+                  <span key={index} className="contact-profile-view__role">
+                    {index > 0 && (
+                      <span className="contact-profile-view__dot">•</span>
+                    )}
+                    {role}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats badges */}
+            <div className="contact-profile-view__stats">
+              <span className="contact-profile-view__stat contact-profile-view__stat--skills">
+                {skillsCount} Skills
+              </span>
+              <span className="contact-profile-view__stat contact-profile-view__stat--recommendations">
+                {recommendationsCount} Рекомендаций
+              </span>
+              <span className="contact-profile-view__stat contact-profile-view__stat--level">
+                {userLevel} Уровень
+              </span>
+            </div>
+          </div>
+
+          {/* Role Tabs - только если есть больше одной карточки и не в режиме одной карточки */}
+          {!singleCardMode && roleTabs.length > 1 && activeCardId && (
+            <Tabs
+              tabs={roleTabs.map((role) => ({
+                id: role.id,
+                label: role.name,
+                icon: role.emoji,
+              }))}
+              activeId={activeCardId}
+              onChange={setActiveCardId}
+              className="contact-profile-view__role-tabs"
+            />
+          )}
+
+          {/* Bio Card */}
+          {bio && (
+            <div className="contact-profile-view__card">
+              <span className="contact-profile-view__card-label">Bio</span>
+              <p className="contact-profile-view__bio-text">{bio}</p>
+            </div>
+          )}
+
+          {/* Skills Card */}
+          {(hasEndorsementData || fallbackTags.length > 0) && (
+            <div className="contact-profile-view__card">
+              <div className="contact-profile-view__card-header">
+                <span className="contact-profile-view__card-label">Skills</span>
+                {canEndorse && hasEndorsementData && (
+                  <span className="contact-profile-view__card-hint">
+                    Нажмите, чтобы подтвердить
+                  </span>
+                )}
+              </div>
+              <div className="contact-profile-view__tags">
+                {hasEndorsementData
+                  ? skillsWithEndorsements.map((skill) => (
+                      <EndorsableSkill
+                        key={`${skill.tag_id}-${skill.endorsement_count}-${skill.endorsed_by_current_user}`}
+                        skill={skill}
+                        onToggleEndorse={handleToggleEndorse}
+                        canEndorse={canEndorse}
+                        isLoading={endorseLoading === skill.tag_id}
+                      />
+                    ))
+                  : fallbackTags.map((tag) => (
+                      <Tag key={tag.id} size="sm" variant="default">
+                        {tag.name}
+                      </Tag>
+                    ))}
+              </div>
+            </div>
+          )}
+
+          {/* Contacts Card */}
+          {contacts.length > 0 && (
+            <div className="contact-profile-view__card">
+              <span className="contact-profile-view__card-label">
+                Контакты для связи
+              </span>
+              <div className="contact-profile-view__contacts">
+                {contacts.map((contact, idx) => (
+                  <ContactLink key={idx} contact={contact} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {contacts.length === 0 && (
+            <div className="contact-profile-view__card">
+              <p className="contact-profile-view__no-contacts">
+                Пользователь не указал контакты для связи
+              </p>
+            </div>
+          )}
+
+          {/* Hobbies Card */}
+          {hobbies.length > 0 && (
+            <div className="contact-profile-view__card">
+              <span className="contact-profile-view__card-label">Интересы</span>
+              <div className="contact-profile-view__hobbies">
+                {hobbies.map((hobby) => (
+                  <span key={hobby.id} className="contact-profile-view__hobby">
+                    <span className="contact-profile-view__hobby-icon">
+                      {hobby.icon}
+                    </span>
+                    {hobby.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="contact-profile-view__actions">
+          {onSaveContact && !isSaved && authUser?.id !== user.id && (
+            <Button variant="primary" onClick={() => onSaveContact(user)}>
+              Сохранить в контакты
+            </Button>
+          )}
+          {isSaved && onDeleteContact && authUser?.id !== user.id && (
+            <Button
+              variant="danger"
+              onClick={() =>
+                (onDeleteContact as (user: UserPublic) => void)(user)
+              }
+            >
+              Удалить из контактов
+            </Button>
+          )}
+          <Button variant="ghost" onClick={onClose}>
+            Закрыть
+          </Button>
+        </div>
+      </div>
+    </>
   );
 }
