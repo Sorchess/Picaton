@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from "react";
-import "./TabBar.scss";
+import "./Switcher.scss";
 
-export interface TabItem {
+export interface SwitcherItem {
   /** Tab identifier */
   id: string;
   /** Tab label */
@@ -16,9 +16,9 @@ export interface TabItem {
   badge?: number;
 }
 
-interface TabBarProps {
+interface SwitcherProps {
   /** Tab items */
-  tabs: TabItem[];
+  tabs: SwitcherItem[];
   /** Current active path */
   currentPath: string;
   /** Navigation handler */
@@ -28,9 +28,14 @@ interface TabBarProps {
 }
 
 /**
- * Bottom tab bar navigation (from Figma)
+ * Bottom navigation switcher (from Figma)
  */
-export const TabBar: FC<TabBarProps> = ({ tabs, currentPath, onNavigate, className = "" }) => {
+export const Switcher: FC<SwitcherProps> = ({
+  tabs,
+  currentPath,
+  onNavigate,
+  className = "",
+}) => {
   const isActive = (path: string) => {
     if (path === "/") {
       return currentPath === "/";
@@ -39,25 +44,25 @@ export const TabBar: FC<TabBarProps> = ({ tabs, currentPath, onNavigate, classNa
   };
 
   return (
-    <nav className={`tab-bar ${className}`}>
-      <div className="tab-bar__inner">
+    <nav className={`switcher ${className}`}>
+      <div className="switcher__inner">
         {tabs.map((tab) => {
           const active = isActive(tab.path);
           return (
             <button
               key={tab.id}
               type="button"
-              className={`tab-bar__item ${active ? "tab-bar__item--active" : ""}`}
+              className={`switcher__item ${active ? "switcher__item--active" : ""}`}
               onClick={() => onNavigate(tab.path)}
               aria-label={tab.label}
               aria-current={active ? "page" : undefined}
             >
-              <span className="tab-bar__icon">
-                {active ? tab.icon : (tab.iconInactive || tab.icon)}
+              <span className="switcher__icon">
+                {active ? tab.icon : tab.iconInactive || tab.icon}
               </span>
-              <span className="tab-bar__label">{tab.label}</span>
+              <span className="switcher__label">{tab.label}</span>
               {tab.badge && tab.badge > 0 && (
-                <span className="tab-bar__badge">
+                <span className="switcher__badge">
                   {tab.badge > 99 ? "99+" : tab.badge}
                 </span>
               )}
@@ -70,7 +75,7 @@ export const TabBar: FC<TabBarProps> = ({ tabs, currentPath, onNavigate, classNa
 };
 
 // Default tabs from Figma design
-export const defaultTabs: TabItem[] = [
+export const defaultTabs: SwitcherItem[] = [
   {
     id: "search",
     label: "Поиск",
@@ -78,7 +83,12 @@ export const defaultTabs: TabItem[] = [
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-        <path d="M16 16L20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path
+          d="M16 16L20 20"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       </svg>
     ),
   },

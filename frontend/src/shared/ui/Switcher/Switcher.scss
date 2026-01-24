@@ -1,6 +1,6 @@
 @use "../../styles/variables" as *;
 
-.tab-bar {
+.switcher {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -43,11 +43,11 @@
 
     // Active state
     &--active {
-      .tab-bar__icon {
+      .switcher__icon {
         color: $picaton-blue-primary;
       }
 
-      .tab-bar__label {
+      .switcher__label {
         color: $picaton-blue-primary;
         font-weight: $picaton-font-weight-semibold;
       }

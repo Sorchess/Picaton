@@ -92,9 +92,9 @@ export { ContactCard, ContactCardList } from "./ContactCard";
 export { PrivacyOption, PrivacyOptionList } from "./PrivacyOption";
 export type { PrivacyLevel } from "./PrivacyOption";
 
-// Tab Bar (bottom navigation)
-export { TabBar, defaultTabs } from "./TabBar";
-export type { TabItem } from "./TabBar";
+// Switcher (bottom navigation)
+export { Switcher, defaultTabs } from "./Switcher";
+export type { SwitcherItem } from "./Switcher";
 
 // Empty States
 export {
