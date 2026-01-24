@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import "./RoleTabs.scss";
+import { Tabs, type Tab } from "@/shared";
 
 export interface RoleTab {
   /** Role id */
@@ -23,6 +23,7 @@ interface RoleTabsProps {
 
 /**
  * Role tabs switcher for profile (from Figma design)
+ * Uses Tabs component from UI kit
  */
 export const RoleTabs: FC<RoleTabsProps> = ({
   roles,
@@ -30,23 +31,20 @@ export const RoleTabs: FC<RoleTabsProps> = ({
   onChange,
   className = "",
 }) => {
+  // Преобразуем roles в формат Tab
+  const tabs: Tab[] = roles.map((role) => ({
+    id: role.id,
+    label: role.name,
+    icon: role.emoji,
+  }));
+
   return (
-    <div className={`role-tabs ${className}`}>
-      {roles.map((role) => {
-        const isActive = role.id === activeRoleId;
-        return (
-          <button
-            key={role.id}
-            type="button"
-            className={`role-tabs__tab ${isActive ? "role-tabs__tab--active" : ""}`}
-            onClick={() => onChange(role.id)}
-          >
-            <span className="role-tabs__name">{role.name}</span>
-            <span className="role-tabs__emoji">{role.emoji}</span>
-          </button>
-        );
-      })}
-    </div>
+    <Tabs
+      tabs={tabs}
+      activeId={activeRoleId}
+      onChange={onChange}
+      className={className}
+    />
   );
 };
 

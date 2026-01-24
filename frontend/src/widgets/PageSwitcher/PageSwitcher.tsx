@@ -1,4 +1,4 @@
-import { Switcher, type SwitcherOption } from "@/shared";
+import { TapBar, type TapBarOption } from "@/shared";
 import "./PageSwitcher.scss";
 
 type PageType = "search" | "collaboration" | "contacts" | "profile" | "company";
@@ -8,7 +8,7 @@ interface PageSwitcherProps {
   onChange: (page: PageType) => void;
 }
 
-const pageOptions: SwitcherOption[] = [
+const pageOptions: TapBarOption[] = [
   {
     value: "search",
     label: "Поиск",
@@ -112,7 +112,7 @@ const pageOptions: SwitcherOption[] = [
 
 export function PageSwitcher({ value, onChange }: PageSwitcherProps) {
   return (
-    <Switcher
+    <TapBar
       options={pageOptions}
       value={value}
       onChange={(val) => onChange(val as PageType)}

@@ -228,67 +228,10 @@
     }
   }
 
-  // Role Tabs
+  // Role Tabs - styles are in Tabs component
   &__role-tabs {
-    display: flex;
-    align-items: center;
-    gap: 2px;
     width: calc(100% - 40px);
     margin: 8px 20px;
-    padding: 2px;
-    background: var(--color-bg-secondary, #1a1a1a);
-    border-radius: 15.5px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  &__role-tab {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 12px;
-    border-radius: 13.5px;
-    background: transparent;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-weight: 500;
-    font-size: 13px;
-    text-align: center;
-    white-space: nowrap;
-
-    &:hover:not(&--active) {
-      color: var(--color-text-secondary, rgba(255, 255, 255, 0.6));
-    }
-
-    &--active {
-      background: var(--color-glass-bg, rgba(255, 255, 255, 0.06));
-      border: 1px solid var(--color-glass-border, rgba(255, 255, 255, 0.1));
-
-      .contact-profile-view__role-tab-name {
-        color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
-      }
-    }
-  }
-
-  &__role-tab-name {
-    color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
-    transition: color 0.2s ease;
-  }
-
-  &__role-tab-emoji {
-    font-size: 12px;
   }
 
   // Content

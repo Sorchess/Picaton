@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Avatar, Button, Tag, EndorsableSkill, IconButton } from "@/shared";
+import {
+  Avatar,
+  Button,
+  Tag,
+  EndorsableSkill,
+  IconButton,
+  Tabs,
+} from "@/shared";
 import type { UserPublic, ContactInfo } from "@/entities/user";
 import { getFullName } from "@/entities/user";
 import {
@@ -431,27 +438,17 @@ export function ContactProfileView({
       </div>
 
       {/* Role Tabs - только если есть больше одной карточки */}
-      {roleTabs.length > 1 && (
-        <div className="contact-profile-view__role-tabs">
-          {roleTabs.map((role) => {
-            const isActive = role.id === activeCardId;
-            return (
-              <button
-                key={role.id}
-                type="button"
-                className={`contact-profile-view__role-tab ${isActive ? "contact-profile-view__role-tab--active" : ""}`}
-                onClick={() => setActiveCardId(role.id)}
-              >
-                <span className="contact-profile-view__role-tab-name">
-                  {role.name}
-                </span>
-                <span className="contact-profile-view__role-tab-emoji">
-                  {role.emoji}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+      {roleTabs.length > 1 && activeCardId && (
+        <Tabs
+          tabs={roleTabs.map((role) => ({
+            id: role.id,
+            label: role.name,
+            icon: role.emoji,
+          }))}
+          activeId={activeCardId}
+          onChange={setActiveCardId}
+          className="contact-profile-view__role-tabs"
+        />
       )}
 
       {/* Content */}

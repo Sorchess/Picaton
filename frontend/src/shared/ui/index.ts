@@ -35,8 +35,11 @@ export { SkillBar } from "./SkillBar";
 
 export { Container } from "./Container";
 
-export { Switcher } from "./Switcher";
-export type { SwitcherOption } from "./Switcher";
+export { TapBar } from "./TapBar";
+export type { TapBarOption } from "./TapBar";
+
+export { Tabs } from "./Tabs";
+export type { Tab } from "./Tabs";
 
 export { SearchBox } from "./SearchBox";
 

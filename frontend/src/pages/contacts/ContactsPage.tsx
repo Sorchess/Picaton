@@ -17,6 +17,8 @@ import {
   Input,
   Avatar,
   IconButton,
+  Tabs,
+  type Tab,
 } from "@/shared";
 import "./ContactsPage.scss";
 
@@ -539,7 +541,7 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
     }
   };
 
-  const tabs: { id: TabType; label: string }[] = [
+  const tabs: Tab[] = [
     { id: "my", label: "Мои контакты" },
     { id: "company", label: "Компания" },
     { id: "recommendations", label: "Рекомендации" },
@@ -585,20 +587,15 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
       </header>
 
       {/* Tabs */}
-      <div className="contacts-page__tabs">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`contacts-page__tab ${activeTab === tab.id ? "contacts-page__tab--active" : ""}`}
-            onClick={() => {
-              setActiveTab(tab.id);
-              setSearchQuery("");
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        tabs={tabs}
+        activeId={activeTab}
+        onChange={(id) => {
+          setActiveTab(id as TabType);
+          setSearchQuery("");
+        }}
+        className="contacts-page__tabs"
+      />
 
       {error && (
         <div className="contacts-page__error" onClick={() => setError(null)}>

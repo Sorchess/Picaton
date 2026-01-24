@@ -1,8 +1,9 @@
-.role-tabs {
+@use "../../styles/variables" as *;
+
+.tabs {
   display: flex;
   align-items: center;
   gap: 2px;
-  width: 100%;
   padding: 2px;
   background: var(--color-bg-secondary);
   border-radius: 15.5px;
@@ -14,14 +15,54 @@
     display: none;
   }
 
+  // Full width modifier
+  &--full-width {
+    width: 100%;
+  }
+
+  // Size variants
+  &--sm {
+    .tabs__tab {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 11.5px;
+    }
+
+    .tabs__icon {
+      font-size: 10px;
+    }
+  }
+
+  &--md {
+    .tabs__tab {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 13.5px;
+    }
+
+    .tabs__icon {
+      font-size: 12px;
+    }
+  }
+
+  &--lg {
+    .tabs__tab {
+      padding: 10px 16px;
+      font-size: 14px;
+      border-radius: 14.5px;
+    }
+
+    .tabs__icon {
+      font-size: 14px;
+    }
+  }
+
   &__tab {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 8px 12px;
-    border-radius: 13.5px;
     background: transparent;
     border: 1px solid transparent;
     cursor: pointer;
@@ -31,9 +72,9 @@
       -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
       sans-serif;
     font-weight: 500;
-    font-size: 13px;
     text-align: center;
     white-space: nowrap;
+    color: var(--color-text-muted);
 
     &:hover:not(&--active) {
       color: var(--color-text-secondary);
@@ -42,19 +83,19 @@
     &--active {
       background: var(--color-glass-bg);
       border: 1px solid var(--color-glass-border);
+      color: var(--color-text-primary);
 
-      .role-tabs__name {
-        color: var(--color-text-primary);
+      &:hover {
+        background: var(--color-glass-bg-hover);
       }
     }
   }
 
-  &__name {
-    color: var(--color-text-muted);
+  &__label {
     transition: color 0.2s ease;
   }
 
-  &__emoji {
-    font-size: 12px;
+  &__icon {
+    line-height: 1;
   }
 }

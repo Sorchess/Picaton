@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect, type ReactNode } from "react";
-import "./Switcher.scss";
+import "./TapBar.scss";
 
-export interface SwitcherOption {
+export interface TapBarOption {
   value: string;
   label: ReactNode;
   icon?: ReactNode;
 }
 
-interface SwitcherProps {
-  options: SwitcherOption[];
+interface TapBarProps {
+  options: TapBarOption[];
   value?: string;
   defaultValue?: string;
   onChange?: (value: string) => void;
@@ -16,7 +16,7 @@ interface SwitcherProps {
   className?: string;
 }
 
-export function Switcher(Props: SwitcherProps) {
+export function TapBar(Props: TapBarProps) {
   const {
     options,
     value,
@@ -26,7 +26,7 @@ export function Switcher(Props: SwitcherProps) {
     className = "",
   } = Props;
   const [internalValue, setInternalValue] = useState(
-    defaultValue || options[0]?.value
+    defaultValue || options[0]?.value,
   );
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
   const [direction, setDirection] = useState<"left" | "right" | null>(null);
@@ -94,14 +94,14 @@ export function Switcher(Props: SwitcherProps) {
     onChange?.(optionValue);
   };
 
-  const classNames = ["switcher", `switcher--${size}`, className]
+  const classNames = ["tapbar", `tapbar--${size}`, className]
     .filter(Boolean)
     .join(" ");
 
   const indicatorClassNames = [
-    "switcher__indicator",
-    isAnimating && direction === "right" && "switcher__indicator--bounce-right",
-    isAnimating && direction === "left" && "switcher__indicator--bounce-left",
+    "tapbar__indicator",
+    isAnimating && direction === "right" && "tapbar__indicator--bounce-right",
+    isAnimating && direction === "left" && "tapbar__indicator--bounce-left",
   ]
     .filter(Boolean)
     .join(" ");
@@ -109,7 +109,7 @@ export function Switcher(Props: SwitcherProps) {
   return (
     <div className={classNames} ref={containerRef}>
       <div className={indicatorClassNames} style={indicatorStyle}>
-        <div className="switcher__indicator-blob" />
+        <div className="tapbar__indicator-blob" />
       </div>
       {options.map((option) => (
         <button
@@ -119,16 +119,16 @@ export function Switcher(Props: SwitcherProps) {
               optionRefs.current.set(option.value, el);
             }
           }}
-          className={`switcher__option ${
-            activeValue === option.value ? "switcher__option--active" : ""
+          className={`tapbar__option ${
+            activeValue === option.value ? "tapbar__option--active" : ""
           }`}
           onClick={() => handleOptionClick(option.value)}
           type="button"
         >
           {option.icon && (
-            <span className="switcher__option-icon">{option.icon}</span>
+            <span className="tapbar__option-icon">{option.icon}</span>
           )}
-          <span className="switcher__option-label">{option.label}</span>
+          <span className="tapbar__option-label">{option.label}</span>
         </button>
       ))}
     </div>

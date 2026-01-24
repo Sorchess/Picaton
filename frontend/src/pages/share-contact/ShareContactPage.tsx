@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type FC } from "react";
-import { IconButton, Modal, Button } from "@/shared";
+import { IconButton, Modal, Button, Tabs } from "@/shared";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
@@ -310,22 +310,15 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
         </div>
 
         {/* Tab Switcher */}
-        <div className="share-contact-page__tabs">
-          <button
-            type="button"
-            className={`share-contact-page__tab ${activeTab === "settings" ? "share-contact-page__tab--active" : ""}`}
-            onClick={() => setActiveTab("settings")}
-          >
-            Настройки
-          </button>
-          <button
-            type="button"
-            className={`share-contact-page__tab ${activeTab === "preview" ? "share-contact-page__tab--active" : ""}`}
-            onClick={() => setActiveTab("preview")}
-          >
-            Посмотреть
-          </button>
-        </div>
+        <Tabs
+          tabs={[
+            { id: "settings", label: "Настройки" },
+            { id: "preview", label: "Посмотреть" },
+          ]}
+          activeId={activeTab}
+          onChange={(id) => setActiveTab(id as "settings" | "preview")}
+          className="share-contact-page__tabs"
+        />
 
         {/* Section Label */}
         <div className="share-contact-page__section-label">

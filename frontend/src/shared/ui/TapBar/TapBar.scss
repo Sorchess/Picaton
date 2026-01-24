@@ -93,7 +93,7 @@
   }
 }
 
-.switcher {
+.tapbar {
   @include liquid-glass-border;
   @include liquid-glass-default;
   position: relative;
@@ -107,25 +107,25 @@
   &--sm {
     padding: 3px;
 
-    .switcher__option {
+    .tapbar__option {
       padding: 8px 16px;
       font-size: $font-size-xs;
       gap: 6px;
     }
 
-    .switcher__option-icon {
+    .tapbar__option-icon {
       font-size: 14px;
     }
   }
 
   &--md {
-    .switcher__option {
+    .tapbar__option {
       padding: 10px 20px;
       font-size: $font-size-sm;
       gap: 8px;
     }
 
-    .switcher__option-icon {
+    .tapbar__option-icon {
       font-size: 16px;
     }
   }
@@ -133,13 +133,13 @@
   &--lg {
     padding: 5px;
 
-    .switcher__option {
+    .tapbar__option {
       padding: 14px 28px;
       font-size: $font-size-base;
       gap: 10px;
     }
 
-    .switcher__option-icon {
+    .tapbar__option-icon {
       font-size: 20px;
     }
   }
@@ -149,13 +149,15 @@
     position: absolute;
     top: 4px;
     height: calc(100% - 8px);
-    transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transition:
+      left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
       width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 4px 20px -3px rgba(0, 0, 0, 0.4),
-      0 0 30px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow:
+      0 4px 20px -3px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(255, 255, 255, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
     pointer-events: none;
     overflow: hidden;
-
 
     // Анимация при движении вправо
     &--bounce-right {
@@ -178,7 +180,6 @@
     }
   }
 
-
   &__option {
     position: relative;
     z-index: 1;
@@ -195,14 +196,14 @@
     transition: all 0.3s ease;
     white-space: nowrap;
 
-    &:hover:not(.switcher__option--active) {
+    &:hover:not(.tapbar__option--active) {
       color: var(--color-text-primary);
     }
 
     &--active {
       color: var(--color-accent);
 
-      .switcher__option-icon {
+      .tapbar__option-icon {
         transform: scale(1.15);
       }
     }
