@@ -233,9 +233,7 @@
     line-height: 1;
   }
 
-  // Hover эффект на контейнере
   &:hover {
-    border-color: var(--color-glass-border-hover);
-    box-shadow: 0 8px 30px -10px rgba(0, 0, 0, 0.3);
+    @include liquid-glass-default-hover;
   }
 }

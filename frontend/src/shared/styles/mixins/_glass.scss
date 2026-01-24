@@ -130,6 +130,7 @@
 
 // Default liquid glass style
 @mixin liquid-glass-default {
+  transition: all 0.3s ease;
   background: linear-gradient(
     145deg,
     rgba(255, 255, 255, 0.12) 0%,
@@ -190,6 +191,7 @@
 
 // Ghost liquid glass style
 @mixin liquid-glass-ghost {
+  transition: all 0.3s ease;
   background: linear-gradient(
     145deg,
     rgba(255, 255, 255, 0.08) 0%,
@@ -255,6 +257,7 @@
 
 // Elevated liquid glass style
 @mixin liquid-glass-elevated {
+  transition: all 0.3s ease;
   background: linear-gradient(
     145deg,
     rgba(255, 255, 255, 0.95) 0%,
@@ -321,6 +324,7 @@
 
 // Danger liquid glass style — dark theme
 @mixin liquid-glass-danger {
+  transition: all 0.3s ease;
   background: linear-gradient(
     145deg,
     rgba(205, 43, 43, 0.35) 0%,
