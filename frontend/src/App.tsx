@@ -62,6 +62,7 @@ type ExtendedPageType = PageType | "contact-profile" | "share-contact";
 interface ContactProfileNavData {
   user: UserPublic;
   cardId?: string;
+  cardIds?: string[]; // Массив ID карточек для предпросмотра нескольких
   savedContact?: SavedContact | null;
   returnPage: PageType;
   singleCardMode?: boolean;
@@ -135,10 +136,12 @@ function AuthenticatedApp() {
   };
 
   // Функция предпросмотра визитки из страницы поделиться (открывает страницу профиля как её увидит другой пользователь)
-  const navigateToPreviewFromShareContact = async (cardId: string) => {
+  const navigateToPreviewFromShareContact = async (cardIds: string[]) => {
+    if (cardIds.length === 0) return;
+
     try {
-      // Загружаем публичные данные карточки
-      const cardData = await businessCardApi.getPublic(cardId);
+      // Загружаем публичные данные первой карточки для базовых данных пользователя
+      const cardData = await businessCardApi.getPublic(cardIds[0]);
 
       // Преобразуем данные карточки в формат UserPublic
       const firstName = cardData.display_name
@@ -169,12 +172,14 @@ function AuthenticatedApp() {
       };
 
       // НЕ очищаем shareContactData, чтобы можно было вернуться обратно
+      // Если выбрана только одна карточка - singleCardMode, иначе показываем табы
       setContactProfileData({
         user: userData,
-        cardId: cardData.id,
+        cardId: cardIds[0],
+        cardIds: cardIds,
         savedContact: null,
         returnPage: previousPage,
-        singleCardMode: true,
+        singleCardMode: cardIds.length === 1,
       });
       setCurrentPage("contact-profile");
     } catch (error) {
@@ -554,6 +559,7 @@ function AuthenticatedApp() {
           <ContactProfilePage
             user={contactProfileData.user}
             cardId={contactProfileData.cardId}
+            cardIds={contactProfileData.cardIds}
             savedContact={contactProfileData.savedContact}
             onBack={navigateBackFromContactProfile}
             onContactSaved={() => {

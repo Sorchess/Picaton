@@ -31,6 +31,7 @@ from infrastructure.dependencies import (
     get_ai_tags_service,
     get_qrcode_service,
     get_gigachat_text_tags_service,
+    get_user_service,
 )
 from application.services.business_card import (
     BusinessCardService,
@@ -39,6 +40,7 @@ from application.services.business_card import (
     CardAccessDeniedError,
 )
 from application.services.qrcode import QRCodeService
+from application.services.user import UserService
 
 
 router = APIRouter()
@@ -81,7 +83,9 @@ def _card_to_response(card) -> BusinessCardResponse:
     )
 
 
-def _card_to_public_response(card) -> BusinessCardPublicResponse:
+def _card_to_public_response(
+    card, fallback_avatar_url: str | None = None
+) -> BusinessCardPublicResponse:
     """Преобразовать карточку в публичный ответ API."""
     visible_contacts = [c for c in card.contacts if c.is_visible]
     return BusinessCardPublicResponse(
@@ -89,7 +93,7 @@ def _card_to_public_response(card) -> BusinessCardPublicResponse:
         owner_id=card.owner_id,
         title=card.title,
         display_name=card.display_name,
-        avatar_url=card.avatar_url,
+        avatar_url=card.avatar_url or fallback_avatar_url,
         bio=card.bio,
         ai_generated_bio=card.ai_generated_bio,
         tags=[
@@ -164,23 +168,41 @@ async def get_user_cards(
 async def get_primary_card(
     owner_id: UUID,
     card_service: BusinessCardService = Depends(get_business_card_service),
+    user_service: UserService = Depends(get_user_service),
 ):
     """Получить основную визитную карточку пользователя."""
     card = await card_service.get_primary_card(owner_id)
     if not card:
         raise HTTPException(status_code=404, detail="Primary card not found")
-    return _card_to_public_response(card)
+    # Получаем аватар пользователя как fallback
+    fallback_avatar = None
+    if not card.avatar_url:
+        try:
+            user = await user_service.get_user(owner_id)
+            fallback_avatar = user.avatar_url
+        except Exception:
+            pass
+    return _card_to_public_response(card, fallback_avatar)
 
 
 @router.get("/{card_id}", response_model=BusinessCardPublicResponse)
 async def get_card(
     card_id: UUID,
     card_service: BusinessCardService = Depends(get_business_card_service),
+    user_service: UserService = Depends(get_user_service),
 ):
     """Получить публичную информацию о визитной карточке."""
     try:
         card = await card_service.get_card(card_id)
-        return _card_to_public_response(card)
+        # Получаем аватар пользователя как fallback, если у карточки нет своего
+        fallback_avatar = None
+        if not card.avatar_url:
+            try:
+                user = await user_service.get_user(card.owner_id)
+                fallback_avatar = user.avatar_url
+            except Exception:
+                pass
+        return _card_to_public_response(card, fallback_avatar)
     except BusinessCardNotFoundError:
         raise HTTPException(status_code=404, detail="Card not found")
 
@@ -605,6 +627,7 @@ async def get_card_by_share_token(
     token: str,
     card_service: BusinessCardService = Depends(get_business_card_service),
     qrcode_service: QRCodeService = Depends(get_qrcode_service),
+    user_service: UserService = Depends(get_user_service),
 ):
     """Получить визитную карточку по токену ссылки."""
     card_id = await qrcode_service.get_card_by_token(token)
@@ -619,35 +642,15 @@ async def get_card_by_share_token(
         if not card:
             raise HTTPException(status_code=404, detail="Card not found")
 
-        return BusinessCardPublicResponse(
-            id=card.id,
-            owner_id=card.owner_id,
-            title=card.title,
-            display_name=card.display_name,
-            avatar_url=card.avatar_url,
-            bio=card.bio,
-            ai_generated_bio=card.ai_generated_bio,
-            tags=[
-                CardTagInfo(
-                    id=tag.id,
-                    name=tag.name,
-                    category=tag.category,
-                    proficiency=tag.proficiency,
-                )
-                for tag in card.tags
-            ],
-            search_tags=card.search_tags,
-            contacts=[
-                CardContactInfo(
-                    type=contact.type.value,
-                    value=contact.value,
-                    is_primary=contact.is_primary,
-                    is_visible=contact.is_visible,
-                )
-                for contact in card.contacts
-                if contact.is_visible
-            ],
-            completeness=card.completeness,
-        )
+        # Получаем аватар пользователя как fallback
+        fallback_avatar = None
+        if not card.avatar_url:
+            try:
+                user = await user_service.get_user(card.owner_id)
+                fallback_avatar = user.avatar_url
+            except Exception:
+                pass
+
+        return _card_to_public_response(card, fallback_avatar)
     except BusinessCardNotFoundError:
         raise HTTPException(status_code=404, detail="Card not found")

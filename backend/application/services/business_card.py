@@ -81,11 +81,15 @@ class BusinessCardService:
         if count == 0:
             is_primary = True
 
-        # Если display_name не указан - получаем имя пользователя
-        if not display_name and self._user_repository:
+        # Если display_name не указан или avatar_url не указан - получаем данные пользователя
+        if (not display_name or not avatar_url) and self._user_repository:
             user = await self._user_repository.get_by_id(owner_id)
             if user:
-                display_name = f"{user.first_name} {user.last_name}".strip()
+                if not display_name:
+                    display_name = f"{user.first_name} {user.last_name}".strip()
+                # Копируем аватар пользователя если не указан явно
+                if not avatar_url and user.avatar_url:
+                    avatar_url = user.avatar_url
 
         card = BusinessCard(
             owner_id=owner_id,

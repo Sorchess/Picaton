@@ -9,6 +9,7 @@ import "./ContactProfilePage.scss";
 interface ContactProfilePageProps {
   user: UserPublic;
   cardId?: string;
+  cardIds?: string[]; // Массив ID карточек для предпросмотра нескольких
   savedContact?: SavedContact | null;
   onBack: () => void;
   onContactSaved?: () => void;
@@ -20,6 +21,7 @@ interface ContactProfilePageProps {
 export function ContactProfilePage({
   user,
   cardId,
+  cardIds,
   savedContact,
   onBack,
   onContactSaved,
@@ -62,6 +64,7 @@ export function ContactProfilePage({
       <ContactProfileView
         user={user}
         cardId={cardId}
+        cardIds={cardIds}
         onClose={onBack}
         onSaveContact={handleSaveContact}
         onDeleteContact={isSaved ? handleDeleteContact : undefined}

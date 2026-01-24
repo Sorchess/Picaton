@@ -24,8 +24,8 @@ interface ShareContactPageProps {
   onBack: () => void;
   /** Callback to open/edit a card */
   onOpenCard?: (card: BusinessCard) => void;
-  /** Callback to preview selected card (opens full profile page) */
-  onPreview?: (cardId: string) => void;
+  /** Callback to preview selected cards (opens full profile page) */
+  onPreview?: (cardIds: string[]) => void;
   /** Initially selected card IDs */
   initialSelectedIds?: string[];
 }
@@ -324,8 +324,8 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
           activeId={activeTab}
           onChange={(id) => {
             if (id === "preview" && onPreview && selectedCardIds.length > 0) {
-              // Open full profile preview page
-              onPreview(selectedCardIds[0]);
+              // Open full profile preview page with all selected cards
+              onPreview(selectedCardIds);
             } else {
               setActiveTab(id as "settings" | "preview");
             }

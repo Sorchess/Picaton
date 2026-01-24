@@ -6,6 +6,7 @@ import {
   EndorsableSkill,
   IconButton,
   Tabs,
+  Loader,
 } from "@/shared";
 import type { UserPublic, ContactInfo } from "@/entities/user";
 import { getFullName } from "@/entities/user";
@@ -21,6 +22,7 @@ import "./ContactProfileView.scss";
 interface ContactProfileViewProps {
   user: UserPublic;
   cardId?: string; // ID карточки для эндорсментов
+  cardIds?: string[]; // Массив ID карточек для предпросмотра нескольких
   onClose: () => void;
   onSaveContact?: (user: UserPublic) => void;
   onDeleteContact?: ((user: UserPublic) => void) | (() => void);
@@ -122,6 +124,7 @@ function ContactLink({ contact }: { contact: ContactInfo }) {
 export function ContactProfileView({
   user,
   cardId: initialCardId,
+  cardIds,
   onClose,
   onSaveContact,
   onDeleteContact,
@@ -147,6 +150,42 @@ export function ContactProfileView({
   // Загрузка всех карточек контакта
   const loadCards = useCallback(async () => {
     if (!user.id) return;
+
+    // Если передан массив cardIds - загружаем только эти карточки
+    if (cardIds && cardIds.length > 0) {
+      setIsLoadingCards(true);
+      try {
+        const cardPromises = cardIds.map((id) => businessCardApi.getPublic(id));
+        const cardDataList = await Promise.all(cardPromises);
+        const publicCards: BusinessCardPublic[] = cardDataList.map(
+          (cardData) => ({
+            id: cardData.id,
+            owner_id: cardData.owner_id,
+            display_name: cardData.display_name,
+            avatar_url: cardData.avatar_url,
+            bio: cardData.bio,
+            ai_generated_bio: cardData.ai_generated_bio,
+            tags: cardData.tags,
+            search_tags: cardData.search_tags,
+            contacts: cardData.contacts,
+            completeness: cardData.completeness,
+            is_primary: cardData.is_primary,
+            title: cardData.title,
+            emojis: cardData.emojis || [],
+          }),
+        );
+        setCards(publicCards);
+        // Устанавливаем первую карточку как активную
+        if (!activeCardId && publicCards.length > 0) {
+          setActiveCardId(publicCards[0].id);
+        }
+      } catch (error) {
+        console.error("Failed to load cards:", error);
+      } finally {
+        setIsLoadingCards(false);
+      }
+      return;
+    }
 
     // В режиме одной карточки загружаем только её
     if (singleCardMode && initialCardId) {
@@ -214,7 +253,7 @@ export function ContactProfileView({
     } finally {
       setIsLoadingCards(false);
     }
-  }, [user.id, activeCardId, initialCardId, singleCardMode]);
+  }, [user.id, activeCardId, initialCardId, singleCardMode, cardIds]);
 
   useEffect(() => {
     loadCards();
@@ -323,12 +362,13 @@ export function ContactProfileView({
 
   const activeCard = getActiveCard();
   const fullName = activeCard?.display_name || getFullName(user);
+  // Используем аватар из активной карточки, с fallback на аватар пользователя
   const displayAvatar = activeCard?.avatar_url || user.avatar_url;
+  // Bio берём только из активной карточки, если карточки загружены
   const bio =
-    activeCard?.bio ||
-    activeCard?.ai_generated_bio ||
-    user.bio ||
-    user.ai_generated_bio;
+    cards.length > 0
+      ? activeCard?.bio || activeCard?.ai_generated_bio
+      : user.bio || user.ai_generated_bio;
   const contacts = activeCard?.contacts || user.contacts || [];
   const displayTags = activeCard?.tags || user.tags || [];
   const displaySearchTags = activeCard?.search_tags || user.search_tags || [];
@@ -401,10 +441,10 @@ export function ContactProfileView({
       {/* Top Bar */}
       <div className="contact-profile-view__top-bar">
         <IconButton onClick={onClose} aria-label="Назад">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
             <path
-              d="M15 18L9 12L15 6"
-              stroke="currentColor"
+              d="M9 1L1 9L9 17"
+              stroke="black"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -415,77 +455,81 @@ export function ContactProfileView({
         <div className="contact-profile-view__top-spacer" />
       </div>
 
-      {/* Hero Block */}
-      <div className="contact-profile-view__hero">
-        {/* Floating emojis decoration */}
-        <div className="contact-profile-view__emojis">
-          {(getActiveCard()?.emojis || []).map((emoji, index) => (
-            <span
-              key={index}
-              className={`contact-profile-view__emoji contact-profile-view__emoji--${index + 1}`}
-            >
-              <span className="contact-profile-view__emoji-blur">{emoji}</span>
-              <span className="contact-profile-view__emoji-main">{emoji}</span>
-            </span>
-          ))}
-        </div>
-
-        {/* Avatar */}
-        <div className="contact-profile-view__avatar">
-          <div className="contact-profile-view__avatar-glow" />
-          <Avatar
-            src={displayAvatar || undefined}
-            initials={getInitials(fullName)}
-            size="lg"
-            alt={fullName}
-          />
-        </div>
-
-        {/* Name and roles */}
-        <div className="contact-profile-view__info">
-          <h1 className="contact-profile-view__name">{fullName}</h1>
-          <div className="contact-profile-view__roles">
-            {getCardRoles().map((role, index) => (
-              <span key={index} className="contact-profile-view__role">
-                {index > 0 && (
-                  <span className="contact-profile-view__dot">•</span>
-                )}
-                {role}
+      {/* Content */}
+      <div className="contact-profile-view__content">
+        {/* Hero Block */}
+        <div className="contact-profile-view__hero">
+          {/* Floating emojis decoration */}
+          <div className="contact-profile-view__emojis">
+            {(getActiveCard()?.emojis || []).map((emoji, index) => (
+              <span
+                key={index}
+                className={`contact-profile-view__emoji contact-profile-view__emoji--${index + 1}`}
+              >
+                <span className="contact-profile-view__emoji-blur">
+                  {emoji}
+                </span>
+                <span className="contact-profile-view__emoji-main">
+                  {emoji}
+                </span>
               </span>
             ))}
           </div>
+
+          {/* Avatar */}
+          <div className="contact-profile-view__avatar">
+            <div className="contact-profile-view__avatar-glow" />
+            <Avatar
+              src={displayAvatar || undefined}
+              initials={getInitials(fullName)}
+              size="lg"
+              alt={fullName}
+            />
+          </div>
+
+          {/* Name and roles */}
+          <div className="contact-profile-view__info">
+            <h1 className="contact-profile-view__name">{fullName}</h1>
+            <div className="contact-profile-view__roles">
+              {getCardRoles().map((role, index) => (
+                <span key={index} className="contact-profile-view__role">
+                  {index > 0 && (
+                    <span className="contact-profile-view__dot">•</span>
+                  )}
+                  {role}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats badges */}
+          <div className="contact-profile-view__stats">
+            <span className="contact-profile-view__stat contact-profile-view__stat--skills">
+              {skillsCount} Skills
+            </span>
+            <span className="contact-profile-view__stat contact-profile-view__stat--recommendations">
+              {recommendationsCount} Рекомендаций
+            </span>
+            <span className="contact-profile-view__stat contact-profile-view__stat--level">
+              {userLevel} Уровень
+            </span>
+          </div>
         </div>
 
-        {/* Stats badges */}
-        <div className="contact-profile-view__stats">
-          <span className="contact-profile-view__stat contact-profile-view__stat--skills">
-            {skillsCount} Skills
-          </span>
-          <span className="contact-profile-view__stat contact-profile-view__stat--recommendations">
-            {recommendationsCount} Рекомендаций
-          </span>
-          <span className="contact-profile-view__stat contact-profile-view__stat--level">
-            {userLevel} Уровень
-          </span>
-        </div>
-      </div>
+        {/* Role Tabs - только если есть больше одной карточки и не в режиме одной карточки */}
+        {!singleCardMode && roleTabs.length > 1 && activeCardId && (
+          <Tabs
+            tabs={roleTabs.map((role) => ({
+              id: role.id,
+              label: role.name,
+              icon: role.emoji,
+            }))}
+            activeId={activeCardId}
+            onChange={setActiveCardId}
+            className="contact-profile-view__role-tabs"
+          />
+        )}
 
-      {/* Role Tabs - только если есть больше одной карточки и не в режиме одной карточки */}
-      {!singleCardMode && roleTabs.length > 1 && activeCardId && (
-        <Tabs
-          tabs={roleTabs.map((role) => ({
-            id: role.id,
-            label: role.name,
-            icon: role.emoji,
-          }))}
-          activeId={activeCardId}
-          onChange={setActiveCardId}
-          className="contact-profile-view__role-tabs"
-        />
-      )}
-
-      {/* Content */}
-      <div className="contact-profile-view__content">
         {/* Bio Card */}
         {bio && (
           <div className="contact-profile-view__card">
@@ -590,7 +634,7 @@ export function ContactProfileView({
       {/* Loading overlay */}
       {isLoadingCards && (
         <div className="contact-profile-view__loading">
-          <div className="contact-profile-view__spinner" />
+          <Loader />
         </div>
       )}
     </div>
