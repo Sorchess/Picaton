@@ -25,6 +25,8 @@ interface ContactProfileViewProps {
   onSaveContact?: (user: UserPublic) => void;
   onDeleteContact?: ((user: UserPublic) => void) | (() => void);
   isSaved?: boolean;
+  /** If true, only show the specified cardId without tabs for switching */
+  singleCardMode?: boolean;
 }
 
 interface RoleTab {
@@ -124,6 +126,7 @@ export function ContactProfileView({
   onSaveContact,
   onDeleteContact,
   isSaved = false,
+  singleCardMode = false,
 }: ContactProfileViewProps) {
   const { user: authUser } = useAuth();
 
@@ -144,6 +147,36 @@ export function ContactProfileView({
   // Загрузка всех карточек контакта
   const loadCards = useCallback(async () => {
     if (!user.id) return;
+
+    // В режиме одной карточки загружаем только её
+    if (singleCardMode && initialCardId) {
+      setIsLoadingCards(true);
+      try {
+        const cardData = await businessCardApi.getPublic(initialCardId);
+        const publicCard: BusinessCardPublic = {
+          id: cardData.id,
+          owner_id: cardData.owner_id,
+          display_name: cardData.display_name,
+          avatar_url: cardData.avatar_url,
+          bio: cardData.bio,
+          ai_generated_bio: cardData.ai_generated_bio,
+          tags: cardData.tags,
+          search_tags: cardData.search_tags,
+          contacts: cardData.contacts,
+          completeness: cardData.completeness,
+          is_primary: cardData.is_primary,
+          title: cardData.title,
+          emojis: cardData.emojis || [],
+        };
+        setCards([publicCard]);
+        setActiveCardId(initialCardId);
+      } catch (error) {
+        console.error("Failed to load card:", error);
+      } finally {
+        setIsLoadingCards(false);
+      }
+      return;
+    }
 
     setIsLoadingCards(true);
     try {
@@ -181,7 +214,7 @@ export function ContactProfileView({
     } finally {
       setIsLoadingCards(false);
     }
-  }, [user.id, activeCardId, initialCardId]);
+  }, [user.id, activeCardId, initialCardId, singleCardMode]);
 
   useEffect(() => {
     loadCards();
@@ -437,8 +470,8 @@ export function ContactProfileView({
         </div>
       </div>
 
-      {/* Role Tabs - только если есть больше одной карточки */}
-      {roleTabs.length > 1 && activeCardId && (
+      {/* Role Tabs - только если есть больше одной карточки и не в режиме одной карточки */}
+      {!singleCardMode && roleTabs.length > 1 && activeCardId && (
         <Tabs
           tabs={roleTabs.map((role) => ({
             id: role.id,

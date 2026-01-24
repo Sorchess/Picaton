@@ -64,6 +64,7 @@ interface ContactProfileNavData {
   cardId?: string;
   savedContact?: SavedContact | null;
   returnPage: PageType;
+  singleCardMode?: boolean;
 }
 
 // Контекст для навигации на страницу поделиться контактом
@@ -104,7 +105,12 @@ function AuthenticatedApp() {
 
   // Функция возврата со страницы профиля
   const navigateBackFromContactProfile = () => {
-    setCurrentPage(contactProfileData?.returnPage || previousPage);
+    // Если есть сохранённые данные share-contact, возвращаемся туда
+    if (shareContactData) {
+      setCurrentPage("share-contact");
+    } else {
+      setCurrentPage(contactProfileData?.returnPage || previousPage);
+    }
     setContactProfileData(null);
   };
 
@@ -126,6 +132,54 @@ function AuthenticatedApp() {
     setProfileOpenCardId(cardId);
     setCurrentPage("profile");
     setShareContactData(null);
+  };
+
+  // Функция предпросмотра визитки из страницы поделиться (открывает страницу профиля как её увидит другой пользователь)
+  const navigateToPreviewFromShareContact = async (cardId: string) => {
+    try {
+      // Загружаем публичные данные карточки
+      const cardData = await businessCardApi.getPublic(cardId);
+
+      // Преобразуем данные карточки в формат UserPublic
+      const firstName = cardData.display_name
+        ? cardData.display_name.split(" ")[0]
+        : "";
+      const lastName = cardData.display_name
+        ? cardData.display_name.split(" ").slice(1).join(" ")
+        : "";
+
+      const userData: UserPublic & { card_id?: string } = {
+        id: cardData.owner_id,
+        card_id: cardData.id,
+        first_name: firstName,
+        last_name: lastName,
+        avatar_url: cardData.avatar_url,
+        bio: cardData.bio,
+        ai_generated_bio: cardData.ai_generated_bio,
+        location: null,
+        tags: cardData.tags,
+        search_tags: cardData.search_tags,
+        contacts: cardData.contacts.map((c) => ({
+          type: c.type,
+          value: c.value,
+          is_primary: c.is_primary,
+          is_visible: c.is_visible,
+        })),
+        profile_completeness: cardData.completeness,
+      };
+
+      // НЕ очищаем shareContactData, чтобы можно было вернуться обратно
+      setContactProfileData({
+        user: userData,
+        cardId: cardData.id,
+        savedContact: null,
+        returnPage: previousPage,
+        singleCardMode: true,
+      });
+      setCurrentPage("contact-profile");
+    } catch (error) {
+      console.error("Failed to load card for preview:", error);
+    }
   };
 
   // Функция смены страницы через PageSwitcher
@@ -514,6 +568,7 @@ function AuthenticatedApp() {
                 text: "Контакт удален",
               });
             }}
+            singleCardMode={contactProfileData.singleCardMode}
           />
         )}
         {currentPage === "share-contact" && shareContactData && (
@@ -521,6 +576,7 @@ function AuthenticatedApp() {
             cards={shareContactData.cards}
             onBack={navigateBackFromShareContact}
             onOpenCard={(card) => navigateToCardFromShareContact(card.id)}
+            onPreview={navigateToPreviewFromShareContact}
           />
         )}
       </main>
