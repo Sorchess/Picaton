@@ -1,21 +1,21 @@
-// Дополнительные стили для page-switcher поверх базового Switcher
+// Дополнительные стили для page-switcher поверх базового TapBar
 .page-switcher {
-  // Стили наследуются от компонента Switcher
+  // Стили наследуются от компонента TapBar
   // Здесь можно добавить специфичные стили для этого виджета
 
   // Адаптация для мобильной версии в футере
   @media (max-width: 768px) {
-    .switcher__option {
+    .tapbar__option {
       flex-direction: column;
       padding: 10px 12px;
       gap: 4px;
     }
 
-    .switcher__option-label {
+    .tapbar__option-label {
       display: none;
     }
 
-    .switcher__option-icon {
+    .tapbar__option-icon {
       font-size: 20px;
     }
   }
