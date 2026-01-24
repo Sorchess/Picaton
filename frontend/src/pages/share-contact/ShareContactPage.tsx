@@ -148,11 +148,14 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Calculate duration index from position
+  const SLIDER_PADDING = 12; // Должно соответствовать padding в CSS
   const calculateIndexFromPosition = (clientX: number) => {
     if (!sliderRef.current) return durationIndex;
     const rect = sliderRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    // Учитываем padding слайдера
+    const trackWidth = rect.width - SLIDER_PADDING * 2;
+    const x = clientX - rect.left - SLIDER_PADDING;
+    const percentage = Math.max(0, Math.min(1, x / trackWidth));
     return Math.round(percentage * (DURATION_OPTIONS.length - 1));
   };
 
@@ -417,15 +420,15 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
                   }}
                 />
               ))}
+              <div
+                className="share-contact-page__duration-handle"
+                style={{
+                  left: `${(durationIndex / (DURATION_OPTIONS.length - 1)) * 100}%`,
+                }}
+                onMouseDown={handleDragStart}
+                onTouchStart={handleDragStart}
+              />
             </div>
-            <div
-              className="share-contact-page__duration-handle"
-              style={{
-                left: `${(durationIndex / (DURATION_OPTIONS.length - 1)) * 100}%`,
-              }}
-              onMouseDown={handleDragStart}
-              onTouchStart={handleDragStart}
-            />
           </div>
         </div>
 
