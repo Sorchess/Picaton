@@ -1,4 +1,4 @@
-import { Modal } from "@/shared";
+import { IconButton, Modal } from "@/shared";
 import "./QrModal.scss";
 
 interface QrModalProps {
@@ -15,15 +15,9 @@ interface QrModalProps {
 
 // Back arrow icon
 const BackArrowIcon = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
     <path
-      d="M15 18L9 12L15 6"
+      d="M9 1L1 9L9 17"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
@@ -89,8 +83,7 @@ export function QrModal({
   onClose,
   qrCodeImage,
   userName,
-  eventName = "Хищный процесс 2026",
-  scanCount = 0,
+  // scanCount = 0,
   onOpenCard,
   onSaveQr,
   onShare,
@@ -137,23 +130,22 @@ export function QrModal({
       <div className="qr-modal">
         {/* Header */}
         <div className="qr-modal__header">
-          <button
-            className="qr-modal__back-btn"
-            onClick={onClose}
-            aria-label="Назад"
-          >
+          <IconButton onClick={onClose} aria-label="Назад">
             <BackArrowIcon />
-          </button>
+          </IconButton>
 
           <div className="qr-modal__event-badge">
-            <span className="qr-modal__event-name">{eventName}</span>
+            <span className="qr-modal__event-name">
+              {userName ? `${userName}` : "QR код"}
+            </span>
           </div>
 
-          {scanCount > 0 && (
+          {/* {scanCount > 0 && (
             <div className="qr-modal__scan-badge">
               <span>{scanCount}</span>
             </div>
-          )}
+          )} */}
+          <div className="qr-modal__top-spacer" />
         </div>
 
         {/* QR Code */}
@@ -166,14 +158,14 @@ export function QrModal({
         {/* Action buttons */}
         <div className="qr-modal__actions">
           <button className="qr-modal__action-btn" onClick={onOpenCard}>
-            <span className="qr-modal__action-text">Открыть визитку</span>
+            <span className="qr-modal__action-text">Отправить</span>
             <span className="qr-modal__action-icon">
               <ShareArrowIcon />
             </span>
           </button>
 
           <button className="qr-modal__action-btn" onClick={handleSaveQr}>
-            <span className="qr-modal__action-text">Сохранить QR</span>
+            <span className="qr-modal__action-text">Сохранить</span>
             <span className="qr-modal__action-icon">
               <DownloadIcon />
             </span>
