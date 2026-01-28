@@ -444,14 +444,15 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
 
         {/* Bottom section with share button */}
         <div className="share-contact-page__bottom">
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            fullWidth={true}
             className="share-contact-page__share-button"
             onClick={handleShare}
             disabled={selectedCardIds.length === 0 || isGenerating}
           >
             {isGenerating ? "Генерация..." : "Создать ссылку / QR"}
-          </button>
+          </Button>
         </div>
       </div>
 

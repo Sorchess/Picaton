@@ -321,36 +321,6 @@
     padding: 20px 0;
   }
 
-  &__share-button {
-    width: 100%;
-    padding: 16px 24px;
-    background: var(--color-primary, #0081ff);
-    border: none;
-    border-radius: 25px;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover:not(:disabled) {
-      background: var(--color-primary-hover, #0070e0);
-      transform: translateY(-1px);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
   // Create card modal
   &__create-modal {
     display: flex;

@@ -1,4 +1,4 @@
-import { IconButton, Modal } from "@/shared";
+import { Button, IconButton, Modal } from "@/shared";
 import "./QrModal.scss";
 
 interface QrModalProps {
@@ -174,9 +174,9 @@ export function QrModal({
 
         {/* Share button */}
         <div className="qr-modal__footer">
-          <button className="qr-modal__share-btn" onClick={handleShare}>
+          <Button variant="primary" fullWidth={true} className="qr-modal__share-btn" onClick={handleShare}>
             Поделиться визиткой
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>
