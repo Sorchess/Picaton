@@ -43,7 +43,12 @@ export function Modal({
           });
         });
       }, 0);
+      // Lock scroll on iOS Safari
+      document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.height = "100%";
     } else if (isVisible) {
       // Сначала убираем класс анимации
       hideTimer = setTimeout(() => {
@@ -51,13 +56,24 @@ export function Modal({
         // Затем после завершения анимации убираем элемент
         setTimeout(() => setIsVisible(false), 500);
       }, 0);
+      // Restore scroll
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
     }
 
     return () => {
       clearTimeout(showTimer);
       clearTimeout(hideTimer);
       if (animationFrame) cancelAnimationFrame(animationFrame);
+      // Ensure scroll is restored when component unmounts
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
     };
   }, [isOpen, isVisible]);
 
