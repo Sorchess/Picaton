@@ -19,7 +19,7 @@ export function TelegramSyncModal({
 }: TelegramSyncModalProps) {
   const [status, setStatus] = useState<SyncStatus>("idle");
   const [foundContacts, setFoundContacts] = useState<TelegramFoundContact[]>(
-    []
+    [],
   );
   const [error, setError] = useState<string | null>(null);
   const [deepLink, setDeepLink] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export function TelegramSyncModal({
       poll();
       pollingRef.current = window.setInterval(poll, 2000);
     },
-    [onSyncComplete]
+    [onSyncComplete],
   );
 
   const handleStartSync = async () => {
@@ -157,7 +157,7 @@ export function TelegramSyncModal({
 
   const handleInvite = () => {
     const inviteText = encodeURIComponent(
-      "Привет! Присоединяйся к Picaton — сервису для создания профессиональной сети. Создай свой профиль и находи нужных специалистов!"
+      "Привет! Присоединяйся к Picaton — сервису для создания профессиональной сети. Создай свой профиль и находи нужных специалистов!",
     );
     const inviteUrl = encodeURIComponent(window.location.origin);
 
@@ -178,7 +178,7 @@ export function TelegramSyncModal({
       setTimeout(() => {
         window.open(
           `https://t.me/share/url?url=${inviteUrl}&text=${inviteText}`,
-          "_blank"
+          "_blank",
         );
       }, 500);
     }
@@ -189,7 +189,6 @@ export function TelegramSyncModal({
       isOpen={isOpen}
       onClose={handleClose}
       title="Синхронизация контактов"
-      size="md"
     >
       <div className="telegram-sync-modal">
         {status === "idle" && (
@@ -323,7 +322,7 @@ export function TelegramSyncModal({
                     foundContacts.length,
                     "контакт",
                     "контакта",
-                    "контактов"
+                    "контактов",
                   )} в Picaton`
                 : "К сожалению, никого не нашли среди ваших контактов"}
             </p>
@@ -426,7 +425,7 @@ function getNoun(
   number: number,
   one: string,
   two: string,
-  five: string
+  five: string,
 ): string {
   let n = Math.abs(number);
   n %= 100;

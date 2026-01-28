@@ -60,7 +60,7 @@ export function RolesManager({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<CompanyRoleFull | null>(
-    null
+    null,
   );
   const [isSaving, setIsSaving] = useState(false);
 
@@ -138,7 +138,7 @@ export function RolesManager({
     const existingRole = roles.find(
       (r) =>
         r.name.toLowerCase() === formData.name.trim().toLowerCase() &&
-        r.id !== selectedRole?.id
+        r.id !== selectedRole?.id,
     );
     if (existingRole) {
       errors.name = "Роль с таким названием уже существует";
@@ -385,7 +385,6 @@ export function RolesManager({
         isOpen={isCreateModalOpen}
         onClose={handleCloseCreate}
         title="Создать новую роль"
-        size="lg"
       >
         <div className="role-form">
           <div className="role-form__section">
@@ -467,7 +466,6 @@ export function RolesManager({
         title={`Редактировать роль${
           selectedRole ? `: ${selectedRole.name}` : ""
         }`}
-        size="lg"
       >
         <div className="role-form">
           {/* Предупреждение для системных ролей */}
@@ -578,7 +576,6 @@ export function RolesManager({
         isOpen={isDeleteModalOpen}
         onClose={handleCloseDelete}
         title="Удалить роль"
-        size="sm"
       >
         <div className="role-delete">
           <div className="role-delete__icon">🗑️</div>

@@ -85,7 +85,6 @@ export function PhoneInputModal({
       isOpen={isOpen}
       onClose={handleClose}
       title="Синхронизация контактов"
-      size="md"
     >
       <div className="phone-input-modal">
         {!result ? (
@@ -113,7 +112,7 @@ export function PhoneInputModal({
                       parsedCount,
                       "номер",
                       "номера",
-                      "номеров"
+                      "номеров",
                     )}`
                   : "Один номер на строку. Формат: Имя: +7 999 123 45 67"}
               </span>
@@ -180,7 +179,7 @@ export function PhoneInputModal({
                       result.found.length,
                       "контакт найден",
                       "контакта найдено",
-                      "контактов найдено"
+                      "контактов найдено",
                     )}
                   </span>
                 </div>
@@ -204,7 +203,7 @@ export function PhoneInputModal({
                       result.pending_count,
                       "номер",
                       "номера",
-                      "номеров"
+                      "номеров",
                     )}{" "}
                     ожидает регистрации
                   </span>
@@ -280,7 +279,7 @@ function getNoun(
   count: number,
   one: string,
   few: string,
-  many: string
+  many: string,
 ): string {
   const n = Math.abs(count) % 100;
   const n1 = n % 10;

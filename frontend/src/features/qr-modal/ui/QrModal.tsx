@@ -121,12 +121,7 @@ export function QrModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="md"
-      className="qr-modal-wrapper"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} className="qr-modal-wrapper">
       <div className="qr-modal">
         {/* Header */}
         <div className="qr-modal__header">
@@ -174,7 +169,12 @@ export function QrModal({
 
         {/* Share button */}
         <div className="qr-modal__footer">
-          <Button variant="primary" fullWidth={true} className="qr-modal__share-btn" onClick={handleShare}>
+          <Button
+            variant="primary"
+            fullWidth={true}
+            className="qr-modal__share-btn"
+            onClick={handleShare}
+          >
             Поделиться визиткой
           </Button>
         </div>

@@ -6,7 +6,6 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   title?: string;
-  size?: "sm" | "md" | "lg" | "fullscreen";
   className?: string;
   /** Закрывать при клике на overlay (по умолчанию true) */
   closeOnOverlayClick?: boolean;
@@ -18,7 +17,6 @@ export function Modal({
   isOpen,
   onClose,
   children,
-  size = "md",
   className = "",
   closeOnOverlayClick = true,
   closeOnEscape = true,
@@ -99,7 +97,7 @@ export function Modal({
     .filter(Boolean)
     .join(" ");
 
-  const modalClassNames = ["modal", `modal--${size}`, className]
+  const modalClassNames = ["modal", className]
     .filter(Boolean)
     .join(" ");
 

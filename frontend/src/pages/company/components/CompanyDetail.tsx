@@ -156,7 +156,7 @@ export function CompanyDetail({
   const selectedCard = userCards.find((c) => c.id === selectedCardId);
 
   const pendingInvitations = invitations.filter(
-    (inv) => inv.status === "pending"
+    (inv) => inv.status === "pending",
   );
 
   return (
@@ -399,7 +399,7 @@ export function CompanyDetail({
                       if (member.selected_card_id && onViewMemberCard) {
                         onViewMemberCard(
                           member.user.id,
-                          member.selected_card_id
+                          member.selected_card_id,
                         );
                       }
                     }}
@@ -410,7 +410,7 @@ export function CompanyDetail({
                     <Avatar
                       src={member.user.avatar_url || undefined}
                       initials={`${member.user.first_name.charAt(
-                        0
+                        0,
                       )}${member.user.last_name.charAt(0)}`}
                       size="md"
                     />
@@ -580,7 +580,6 @@ export function CompanyDetail({
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
         title="Пригласить участника"
-        size="sm"
       >
         <div className="invite-form">
           <Input
@@ -620,7 +619,6 @@ export function CompanyDetail({
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         title="Редактировать компанию"
-        size="md"
       >
         <div className="edit-company-form">
           <Input
@@ -661,7 +659,6 @@ export function CompanyDetail({
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         title="Удалить компанию"
-        size="sm"
       >
         <div className="delete-confirm">
           <Typography variant="body">
@@ -691,7 +688,6 @@ export function CompanyDetail({
         isOpen={isCardSelectModalOpen}
         onClose={() => setIsCardSelectModalOpen(false)}
         title="Выберите визитку"
-        size="md"
       >
         <div className="card-select-modal">
           <Typography variant="body" color="secondary">

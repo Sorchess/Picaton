@@ -628,7 +628,6 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title="Создать компанию"
-        size="md"
       >
         <div className="create-company-form">
           <Input
