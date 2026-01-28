@@ -20,9 +20,6 @@
     z-index: 1000;
     cursor: pointer;
     animation: slideDown 0.3s ease;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
   }
 
   @keyframes slideDown {
@@ -52,11 +49,6 @@
     padding: 12px 32px;
     background: var(--color-bg-secondary);
     border-radius: 21px;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-weight: 500;
-    font-size: 14px;
     color: var(--color-text-primary);
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
   }
@@ -91,21 +83,11 @@
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     border-radius: 22.5px;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-size: 14px;
-    font-weight: 500;
     color: var(--color-text-primary);
   }
 
   // Duration label (plain text, not in card)
   &__duration-label {
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-size: 14px;
-    font-weight: 500;
     color: var(--color-text-secondary, #676767);
     margin-left: 10px;
   }
@@ -160,11 +142,6 @@
   }
 
   &__card-title {
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-size: 16px;
-    font-weight: 500;
     color: var(--color-text-primary);
   }
 
@@ -201,11 +178,6 @@
   }
 
   &__add-card-text {
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-size: 14px;
-    font-weight: 500;
     color: #0081ff;
     cursor: pointer;
   }
@@ -245,11 +217,6 @@
   &__duration-option {
     border: none;
     background: transparent;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-size: 12px;
-    font-weight: 500;
     color: var(--color-text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -329,10 +296,6 @@
   }
 
   &__create-hint {
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-size: 14px;
     color: var(--color-text-secondary, #676767);
     margin: 0;
   }
@@ -343,10 +306,6 @@
     border: 1px solid var(--color-border, #e3e3e3);
     border-radius: 12px;
     background: var(--color-bg-secondary, #f9faff);
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-    font-size: 16px;
     color: var(--color-text-primary, #000);
     outline: none;
     transition: border-color 0.2s ease;
