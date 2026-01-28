@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { ideaApi, type Idea } from "@/entities/idea";
 import { projectApi, type Project } from "@/entities/project";
 import { useAuth } from "@/features/auth";
+import { CreateProjectModal } from "@/features/create-project-modal";
 import {
   Tag,
   Loader,
@@ -63,6 +64,7 @@ export function CollaborationPage() {
   const [myProjects, setMyProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const loadShowcaseIdeas = useCallback(async () => {
     try {
@@ -237,6 +239,13 @@ export function CollaborationPage() {
     console.log("Card clicked:", card.id, card.type);
   };
 
+  const handleProjectCreated = (projectId: string) => {
+    console.log("Project created:", projectId);
+    // Reload my projects and switch to "my" tab
+    loadMyProjects();
+    setActiveTab("my");
+  };
+
   const handleVote = async (ideaId: string, direction: "like" | "dislike") => {
     try {
       await ideaApi.swipe({ idea_id: ideaId, direction });
@@ -284,7 +293,10 @@ export function CollaborationPage() {
         <div className="collaboration-page__title-container">
           <h1 className="collaboration-page__title">Коллаборации</h1>
         </div>
-        <IconButton onClick={() => {}} aria-label="Добавить проект">
+        <IconButton
+          onClick={() => setIsCreateModalOpen(true)}
+          aria-label="Добавить проект"
+        >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M9.768 16.0391C9.768 16.332 9.66 16.5859 9.445 16.8008C9.23 17.0156 8.97 17.123 8.664 17.123C8.365 17.123 8.107 17.0156 7.893 16.8008C7.678 16.5859 7.57 16.332 7.57 16.0391V1.86914C7.57 1.56966 7.678 1.3125 7.893 1.09766C8.107 0.882812 8.365 0.775391 8.664 0.775391C8.97 0.775391 9.23 0.882812 9.445 1.09766C9.66 1.3125 9.768 1.56966 9.768 1.86914V16.0391ZM1.584 10.043C1.285 10.043 1.027 9.93883 0.812 9.73047C0.598 9.51562 0.49 9.25521 0.49 8.94922C0.49 8.64974 0.598 8.39258 0.812 8.17773C1.027 7.95638 1.285 7.8457 1.584 7.8457H15.744C16.044 7.8457 16.301 7.95638 16.516 8.17773C16.73 8.39258 16.838 8.64974 16.838 8.94922C16.838 9.25521 16.73 9.51562 16.516 9.73047C16.301 9.93883 16.044 10.043 15.744 10.043H1.584Z"
@@ -478,6 +490,13 @@ export function CollaborationPage() {
           ))
         )}
       </div>
+
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleProjectCreated}
+      />
     </div>
   );
 }
