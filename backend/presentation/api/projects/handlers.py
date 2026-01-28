@@ -52,12 +52,18 @@ def _project_to_response(
         avatar_url=project.avatar_url,
         is_public=project.is_public,
         allow_join_requests=project.allow_join_requests,
+        tags=project.tags or [],
+        required_skills=project.required_skills or [],
+        deadline=project.deadline,
+        problem=project.problem or "",
+        solution=project.solution or "",
         members_count=project.members_count,
         created_at=project.created_at,
         updated_at=project.updated_at,
         is_member=is_member,
         my_role=my_role,
         unread_count=unread_count,
+        unread_messages_count=unread_count,
     )
 
 
@@ -95,6 +101,11 @@ async def create_project(
             company_id=data.company_id,
             is_public=data.is_public,
             allow_join_requests=data.allow_join_requests,
+            tags=data.tags or [],
+            required_skills=data.required_skills or [],
+            deadline=data.deadline,
+            problem=data.problem or "",
+            solution=data.solution or "",
         ),
     )
 
@@ -125,6 +136,26 @@ async def create_project_from_idea(
         )
 
     return _project_to_response(project, is_member=True, my_role="owner")
+
+
+@router.get("/public", response_model=ProjectListResponse)
+async def get_public_projects(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    project_service: ProjectService = Depends(get_project_service),
+):
+    """Получить публичные проекты для витрины."""
+    projects = await project_service.get_public_projects(
+        limit=limit,
+        offset=offset,
+    )
+
+    responses = [_project_to_response(project) for project in projects]
+
+    return ProjectListResponse(
+        projects=responses,
+        total=len(responses),
+    )
 
 
 @router.get("/my", response_model=ProjectListResponse)
@@ -283,6 +314,11 @@ async def update_project(
             description=data.description,
             is_public=data.is_public,
             allow_join_requests=data.allow_join_requests,
+            tags=data.tags,
+            required_skills=data.required_skills,
+            deadline=data.deadline,
+            problem=data.problem,
+            solution=data.solution,
         )
     except ProjectNotFoundError:
         raise HTTPException(

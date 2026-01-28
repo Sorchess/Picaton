@@ -37,6 +37,14 @@ export const projectApi = {
     return api.get<ProjectListResponse>(`/projects/my?${params.toString()}`);
   },
 
+  // Публичные проекты (для витрины)
+  getPublicProjects: (limit = 50, offset = 0) => {
+    const params = new URLSearchParams();
+    params.append("limit", limit.toString());
+    params.append("offset", offset.toString());
+    return api.get<ProjectListResponse>(`/projects/public?${params.toString()}`);
+  },
+
   // Приглашения
   getMyInvitations: () => api.get<Invitation[]>("/projects/invitations"),
 

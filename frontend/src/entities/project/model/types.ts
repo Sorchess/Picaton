@@ -36,6 +36,13 @@ export interface Project {
   avatar_url?: string | null;
   is_public: boolean;
   allow_join_requests: boolean;
+  // New fields
+  tags: string[];
+  required_skills: string[];
+  deadline?: string | null; // ISO date string
+  problem: string;
+  solution: string;
+  // Stats
   members_count: number;
   created_at: string;
   updated_at: string;
@@ -72,6 +79,11 @@ export interface CreateProjectRequest {
   company_id?: string | null;
   is_public?: boolean;
   allow_join_requests?: boolean;
+  tags?: string[];
+  required_skills?: string[];
+  deadline?: string | null; // ISO date string (YYYY-MM-DD)
+  problem?: string;
+  solution?: string;
 }
 
 export interface UpdateProjectRequest {
@@ -79,6 +91,11 @@ export interface UpdateProjectRequest {
   description?: string;
   is_public?: boolean;
   allow_join_requests?: boolean;
+  tags?: string[];
+  required_skills?: string[];
+  deadline?: string | null;
+  problem?: string;
+  solution?: string;
 }
 
 export interface InviteMemberRequest {

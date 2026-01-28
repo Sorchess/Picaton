@@ -1,6 +1,6 @@
 """Pydantic schemas для API проектов."""
 
-from datetime import datetime
+from datetime import datetime, date
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -18,6 +18,11 @@ class CreateProjectRequest(BaseModel):
     company_id: UUID | None = None
     is_public: bool = True
     allow_join_requests: bool = True
+    tags: list[str] = Field(default_factory=list, max_length=20)
+    required_skills: list[str] = Field(default_factory=list, max_length=30)
+    deadline: date | None = None
+    problem: str = Field(default="", max_length=5000)
+    solution: str = Field(default="", max_length=5000)
 
 
 class UpdateProjectRequest(BaseModel):
@@ -27,6 +32,11 @@ class UpdateProjectRequest(BaseModel):
     description: str | None = Field(None, max_length=5000)
     is_public: bool | None = None
     allow_join_requests: bool | None = None
+    tags: list[str] | None = Field(None, max_length=20)
+    required_skills: list[str] | None = Field(None, max_length=30)
+    deadline: date | None = None
+    problem: str | None = Field(None, max_length=5000)
+    solution: str | None = Field(None, max_length=5000)
 
 
 class InviteMemberRequest(BaseModel):
@@ -83,6 +93,11 @@ class ProjectResponse(BaseModel):
     avatar_url: str | None = None
     is_public: bool
     allow_join_requests: bool
+    tags: list[str] = []
+    required_skills: list[str] = []
+    deadline: date | None = None
+    problem: str = ""
+    solution: str = ""
     members_count: int
     created_at: datetime
     updated_at: datetime
@@ -90,6 +105,7 @@ class ProjectResponse(BaseModel):
     is_member: bool = False
     my_role: str | None = None
     unread_count: int = 0
+    unread_messages_count: int = 0
 
     class Config:
         from_attributes = True

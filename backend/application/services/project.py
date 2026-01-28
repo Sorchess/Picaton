@@ -1,7 +1,8 @@
 """Сервис управления проектами."""
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import date
 from uuid import UUID, uuid4
 
 from domain.entities.project import Project
@@ -53,6 +54,11 @@ class CreateProjectData:
     company_id: UUID | None = None
     is_public: bool = True
     allow_join_requests: bool = True
+    tags: list[str] = field(default_factory=list)
+    required_skills: list[str] = field(default_factory=list)
+    deadline: date | None = None
+    problem: str = ""
+    solution: str = ""
 
 
 class ProjectService:
@@ -85,6 +91,11 @@ class ProjectService:
             company_id=data.company_id,
             is_public=data.is_public,
             allow_join_requests=data.allow_join_requests,
+            tags=data.tags[:20] if data.tags else [],
+            required_skills=data.required_skills[:30] if data.required_skills else [],
+            deadline=data.deadline,
+            problem=data.problem,
+            solution=data.solution,
             status=ProjectStatus.FORMING,
             members_count=1,
         )
@@ -152,6 +163,11 @@ class ProjectService:
         description: str | None = None,
         is_public: bool | None = None,
         allow_join_requests: bool | None = None,
+        tags: list[str] | None = None,
+        required_skills: list[str] | None = None,
+        deadline: date | None = None,
+        problem: str | None = None,
+        solution: str | None = None,
     ) -> Project:
         """Обновить проект."""
         project = await self.get_project(project_id)
@@ -169,6 +185,16 @@ class ProjectService:
             project.is_public = is_public
         if allow_join_requests is not None:
             project.allow_join_requests = allow_join_requests
+        if tags is not None:
+            project.set_tags(tags)
+        if required_skills is not None:
+            project.set_required_skills(required_skills)
+        if deadline is not None:
+            project.set_deadline(deadline)
+        if problem is not None:
+            project.set_problem(problem)
+        if solution is not None:
+            project.set_solution(solution)
 
         return await self._project_repo.update(project)
 
@@ -192,6 +218,17 @@ class ProjectService:
         return await self._project_repo.get_user_projects(
             user_id=user_id,
             include_pending=include_pending,
+            limit=limit,
+            offset=offset,
+        )
+
+    async def get_public_projects(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[Project]:
+        """Получить публичные проекты для витрины."""
+        return await self._project_repo.get_public_projects(
             limit=limit,
             offset=offset,
         )

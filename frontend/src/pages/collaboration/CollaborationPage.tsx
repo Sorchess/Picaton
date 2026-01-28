@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { ideaApi, type Idea } from "@/entities/idea";
 import { projectApi, type Project } from "@/entities/project";
 import { useAuth } from "@/features/auth";
 import { CreateProjectModal } from "@/features/create-project-modal";
@@ -14,7 +13,7 @@ import {
 } from "@/shared";
 import "./CollaborationPage.scss";
 
-type TabType = "showcase" | "voting" | "my";
+type TabType = "showcase" | "my";
 
 interface ProjectCardData {
   id: string;
@@ -22,15 +21,14 @@ interface ProjectCardData {
   description: string;
   tags: string[];
   deadline?: number; // days remaining
-  approvalPercent?: number;
   members: Array<{
     id: string;
     name: string;
     avatarUrl?: string | null;
   }>;
   daysAgo: number;
-  type: "idea" | "project";
-  originalData: Idea | Project;
+  type: "project";
+  originalData: Project;
 }
 
 // Helper to calculate days ago
@@ -59,32 +57,20 @@ function formatDeadline(days: number): string {
 export function CollaborationPage() {
   const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("showcase");
-  const [showcaseIdeas, setShowcaseIdeas] = useState<Idea[]>([]);
-  const [votingIdeas, setVotingIdeas] = useState<Idea[]>([]);
+  const [showcaseProjects, setShowcaseProjects] = useState<Project[]>([]);
   const [myProjects, setMyProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const loadShowcaseIdeas = useCallback(async () => {
+  const loadShowcaseProjects = useCallback(async () => {
     try {
-      // Load public ideas for showcase (ideas that are active and looking for team)
-      const response = await ideaApi.getFeed(50);
-      setShowcaseIdeas(response.ideas || []);
+      // Load public projects for showcase
+      const response = await projectApi.getPublicProjects(50);
+      setShowcaseProjects(response.projects || []);
     } catch (err) {
-      console.error("Failed to load showcase ideas:", err);
-      setShowcaseIdeas([]);
-    }
-  }, []);
-
-  const loadVotingIdeas = useCallback(async () => {
-    try {
-      // Load ideas that need voting (active ideas)
-      const response = await ideaApi.getFeed(30);
-      setVotingIdeas(response.ideas || []);
-    } catch (err) {
-      console.error("Failed to load voting ideas:", err);
-      setVotingIdeas([]);
+      console.error("Failed to load showcase projects:", err);
+      setShowcaseProjects([]);
     }
   }, []);
 
@@ -104,8 +90,7 @@ export function CollaborationPage() {
       setIsLoading(true);
       try {
         await Promise.all([
-          loadShowcaseIdeas(),
-          loadVotingIdeas(),
+          loadShowcaseProjects(),
           loadMyProjects(),
         ]);
       } catch (err) {
@@ -115,93 +100,30 @@ export function CollaborationPage() {
       }
     };
     loadData();
-  }, [loadShowcaseIdeas, loadVotingIdeas, loadMyProjects]);
+  }, [loadShowcaseProjects, loadMyProjects]);
 
-  // Transform ideas to card format
+  // Transform projects to card format
   const transformedShowcase: ProjectCardData[] = useMemo(() => {
-    return showcaseIdeas.map((idea) => {
-      // Calculate approval percentage based on likes vs total reactions
-      const totalReactions =
-        idea.likes_count + idea.super_likes_count + idea.dislikes_count;
-      const approvalPercent =
-        totalReactions > 0
-          ? Math.round(
-              ((idea.likes_count + idea.super_likes_count) / totalReactions) *
-                100,
-            )
-          : 0;
-
-      // Estimate deadline based on status (28 days for team_forming, etc.)
-      let deadline: number | undefined;
-      if (idea.status === "team_forming") {
-        deadline = 28;
-      } else if (idea.status === "active") {
-        deadline = 45;
-      }
-
-      return {
-        id: idea.id,
-        title: idea.title,
-        description: idea.description,
-        tags: idea.required_skills.slice(0, 3),
-        deadline,
-        approvalPercent,
-        members: idea.author
-          ? [
-              {
-                id: idea.author.id,
-                name: `${idea.author.first_name} ${idea.author.last_name}`,
-                avatarUrl: idea.author.avatar_url,
-              },
-            ]
-          : [],
-        daysAgo: getDaysAgo(idea.created_at),
-        type: "idea" as const,
-        originalData: idea,
-      };
-    });
-  }, [showcaseIdeas]);
-
-  const transformedVoting: ProjectCardData[] = useMemo(() => {
-    return votingIdeas.map((idea) => {
-      const totalReactions =
-        idea.likes_count + idea.super_likes_count + idea.dislikes_count;
-      const approvalPercent =
-        totalReactions > 0
-          ? Math.round(
-              ((idea.likes_count + idea.super_likes_count) / totalReactions) *
-                100,
-            )
-          : 0;
-
-      return {
-        id: idea.id,
-        title: idea.title,
-        description: idea.description,
-        tags: idea.required_skills.slice(0, 3),
-        approvalPercent,
-        members: idea.author
-          ? [
-              {
-                id: idea.author.id,
-                name: `${idea.author.first_name} ${idea.author.last_name}`,
-                avatarUrl: idea.author.avatar_url,
-              },
-            ]
-          : [],
-        daysAgo: getDaysAgo(idea.created_at),
-        type: "idea" as const,
-        originalData: idea,
-      };
-    });
-  }, [votingIdeas]);
+    return showcaseProjects.map((project) => ({
+      id: project.id,
+      title: project.name,
+      description: project.description || "",
+      tags: project.tags || [],
+      deadline: project.deadline ? Math.ceil((new Date(project.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : undefined,
+      members: [],
+      daysAgo: getDaysAgo(project.created_at),
+      type: "project" as const,
+      originalData: project,
+    }));
+  }, [showcaseProjects]);
 
   const transformedMyProjects: ProjectCardData[] = useMemo(() => {
     return myProjects.map((project) => ({
       id: project.id,
       title: project.name,
       description: project.description || "",
-      tags: [],
+      tags: project.tags || [],
+      deadline: project.deadline ? Math.ceil((new Date(project.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : undefined,
       members: [],
       daysAgo: getDaysAgo(project.created_at),
       type: "project" as const,
@@ -213,8 +135,6 @@ export function CollaborationPage() {
     switch (activeTab) {
       case "showcase":
         return transformedShowcase;
-      case "voting":
-        return transformedVoting;
       case "my":
         return transformedMyProjects;
       default:
@@ -223,13 +143,11 @@ export function CollaborationPage() {
   }, [
     activeTab,
     transformedShowcase,
-    transformedVoting,
     transformedMyProjects,
   ]);
 
   const tabs: Tab[] = [
     { id: "showcase", label: "Витрина проектов" },
-    { id: "voting", label: "Голосования" },
     { id: "my", label: "Мои проекты" },
   ];
 
@@ -243,17 +161,8 @@ export function CollaborationPage() {
     console.log("Project created:", projectId);
     // Reload my projects and switch to "my" tab
     loadMyProjects();
+    loadShowcaseProjects();
     setActiveTab("my");
-  };
-
-  const handleVote = async (ideaId: string, direction: "like" | "dislike") => {
-    try {
-      await ideaApi.swipe({ idea_id: ideaId, direction });
-      // Reload voting ideas after vote
-      loadVotingIdeas();
-    } catch (err) {
-      console.error("Failed to vote:", err);
-    }
   };
 
   const getInitials = (name: string) => {
@@ -341,13 +250,11 @@ export function CollaborationPage() {
             </svg>
             <h3>
               {activeTab === "showcase" && "Нет проектов"}
-              {activeTab === "voting" && "Нет голосований"}
               {activeTab === "my" && "У вас пока нет проектов"}
             </h3>
             <p>
               {activeTab === "showcase" &&
                 "Здесь появятся проекты, которые ищут участников"}
-              {activeTab === "voting" && "Идеи для голосования появятся здесь"}
               {activeTab === "my" &&
                 "Создайте свой первый проект или присоединитесь к существующему"}
             </p>
@@ -369,7 +276,7 @@ export function CollaborationPage() {
                   ))}
                 </div>
                 <div className="collaboration-page__project-stats">
-                  {card.deadline && (
+                  {card.deadline && card.deadline > 0 && (
                     <div className="collaboration-page__project-deadline">
                       <svg
                         width="14"
@@ -385,24 +292,6 @@ export function CollaborationPage() {
                       <span>{formatDeadline(card.deadline)}</span>
                     </div>
                   )}
-                  {card.approvalPercent !== undefined &&
-                    card.approvalPercent > 0 && (
-                      <div
-                        className={`collaboration-page__project-approval ${card.approvalPercent >= 50 ? "collaboration-page__project-approval--high" : ""}`}
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-                        </svg>
-                        <span>{card.approvalPercent}%</span>
-                      </div>
-                    )}
                 </div>
               </div>
 
@@ -444,48 +333,6 @@ export function CollaborationPage() {
                   {formatDaysAgo(card.daysAgo)}
                 </span>
               </div>
-
-              {/* Voting Actions for Voting Tab */}
-              {activeTab === "voting" && card.type === "idea" && (
-                <div className="collaboration-page__vote-actions">
-                  <button
-                    className="collaboration-page__vote-btn collaboration-page__vote-btn--dislike"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleVote(card.id, "dislike");
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M10 15V19a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
-                    </svg>
-                  </button>
-                  <button
-                    className="collaboration-page__vote-btn collaboration-page__vote-btn--like"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleVote(card.id, "like");
-                    }}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-                    </svg>
-                  </button>
-                </div>
-              )}
             </div>
           ))
         )}

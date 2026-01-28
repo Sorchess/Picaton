@@ -1,7 +1,7 @@
 """Доменная сущность проекта."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from uuid import UUID
 
 from domain.entities.base import Entity
@@ -50,6 +50,13 @@ class Project(Entity):
     is_public: bool = field(default=True)  # Виден ли проект публично
     allow_join_requests: bool = field(default=True)  # Можно ли подать заявку
 
+    # Новые поля для расширенного функционала
+    tags: list[str] = field(default_factory=list)  # Теги проекта
+    required_skills: list[str] = field(default_factory=list)  # Требуемые навыки
+    deadline: date | None = field(default=None)  # Дедлайн проекта
+    problem: str = field(default="")  # Проблематика
+    solution: str = field(default="")  # Предлагаемое решение
+
     # Статистика
     members_count: int = field(default=1)  # Включая владельца
 
@@ -83,6 +90,35 @@ class Project(Entity):
         if len(description) > MAX_DESCRIPTION_LENGTH:
             description = description[:MAX_DESCRIPTION_LENGTH]
         self.description = description
+        self._touch()
+
+    def set_tags(self, tags: list[str]) -> None:
+        """Установить теги проекта."""
+        self.tags = tags[:20] if tags else []  # Максимум 20 тегов
+        self._touch()
+
+    def set_required_skills(self, skills: list[str]) -> None:
+        """Установить требуемые навыки."""
+        self.required_skills = skills[:30] if skills else []  # Максимум 30 навыков
+        self._touch()
+
+    def set_deadline(self, deadline: date | None) -> None:
+        """Установить дедлайн проекта."""
+        self.deadline = deadline
+        self._touch()
+
+    def set_problem(self, problem: str) -> None:
+        """Установить проблематику проекта."""
+        if len(problem) > MAX_DESCRIPTION_LENGTH:
+            problem = problem[:MAX_DESCRIPTION_LENGTH]
+        self.problem = problem
+        self._touch()
+
+    def set_solution(self, solution: str) -> None:
+        """Установить предлагаемое решение."""
+        if len(solution) > MAX_DESCRIPTION_LENGTH:
+            solution = solution[:MAX_DESCRIPTION_LENGTH]
+        self.solution = solution
         self._touch()
 
     def activate(self) -> None:

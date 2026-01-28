@@ -167,6 +167,11 @@ export function CreateProjectModal({
         description: description.trim() || undefined,
         is_public: true,
         allow_join_requests: true,
+        tags: tags.length > 0 ? tags : undefined,
+        required_skills: skills.length > 0 ? skills : undefined,
+        deadline: deadline || undefined,
+        problem: problem.trim() || undefined,
+        solution: solution.trim() || undefined,
       };
 
       const project = await projectApi.create(projectData);

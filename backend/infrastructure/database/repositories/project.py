@@ -34,6 +34,11 @@ class MongoProjectRepository(ProjectRepositoryInterface):
             "avatar_url": project.avatar_url,
             "is_public": project.is_public,
             "allow_join_requests": project.allow_join_requests,
+            "tags": project.tags,
+            "required_skills": project.required_skills,
+            "deadline": project.deadline.isoformat() if project.deadline else None,
+            "problem": project.problem,
+            "solution": project.solution,
             "members_count": project.members_count,
             "created_at": project.created_at,
             "updated_at": project.updated_at,
@@ -41,6 +46,18 @@ class MongoProjectRepository(ProjectRepositoryInterface):
 
     def _from_document(self, doc: dict) -> Project:
         """Преобразовать документ MongoDB в сущность."""
+        from datetime import date as date_type
+
+        deadline = None
+        if doc.get("deadline"):
+            try:
+                if isinstance(doc["deadline"], str):
+                    deadline = date_type.fromisoformat(doc["deadline"])
+                elif isinstance(doc["deadline"], datetime):
+                    deadline = doc["deadline"].date()
+            except (ValueError, TypeError):
+                deadline = None
+
         return Project(
             id=UUID(doc["_id"]),
             idea_id=UUID(doc["idea_id"]) if doc.get("idea_id") else None,
@@ -52,6 +69,11 @@ class MongoProjectRepository(ProjectRepositoryInterface):
             avatar_url=doc.get("avatar_url"),
             is_public=doc.get("is_public", True),
             allow_join_requests=doc.get("allow_join_requests", True),
+            tags=doc.get("tags", []),
+            required_skills=doc.get("required_skills", []),
+            deadline=deadline,
+            problem=doc.get("problem", ""),
+            solution=doc.get("solution", ""),
             members_count=doc.get("members_count", 1),
             created_at=doc.get("created_at", datetime.now(timezone.utc)),
             updated_at=doc.get("updated_at", datetime.now(timezone.utc)),
