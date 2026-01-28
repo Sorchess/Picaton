@@ -67,11 +67,11 @@
     cursor: pointer;
   }
 
-  // Contact List
+  // Project List
   &__list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
   }
 
   // Empty state
@@ -105,22 +105,19 @@
     }
   }
 
-  // Contact Card
-  &__card {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
+  // Project Card - Based on Figma design
+  &__project-card {
     padding: 16px;
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
-    border-radius: 16px;
+    border-radius: 20px;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 1px 3px var(--color-shadow);
+    box-shadow: 0 2px 8px var(--color-shadow);
 
     &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px var(--color-shadow);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--color-shadow);
       border-color: var(--color-glass-border-hover);
     }
 
@@ -129,60 +126,29 @@
     }
   }
 
-  &__card-avatar {
-    flex-shrink: 0;
-
-    .avatar {
-      &__inner {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-
-      &__image {
-        border-radius: 50%;
-      }
-
-      &__initials {
-        font-size: 18px;
-      }
-    }
+  // Project Card Header
+  &__project-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
   }
 
-  &__card-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__card-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    margin: 0 0 2px;
-    line-height: 1.3;
-  }
-
-  &__card-position {
-    font-size: 13px;
-    color: var(--color-text-secondary);
-    margin: 0 0 8px;
-    line-height: 1.4;
-  }
-
-  &__card-tags {
+  &__project-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 8px;
+    flex: 1;
 
     .tag {
-      background: var(--color-glass-bg);
-      border: 1px solid var(--color-glass-border);
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border);
       color: var(--color-text-secondary);
       font-size: 12px;
       padding: 4px 10px;
-      border-radius: 12px;
+      border-radius: 20px;
+      font-weight: 500;
 
       &--outline {
         background: transparent;
@@ -191,240 +157,203 @@
     }
   }
 
-  &__card-action {
+  &__project-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
+  }
+
+  &__project-deadline {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--color-text-secondary);
-    transition: all 0.2s;
-    align-self: center;
-
-    &:hover {
-      background: var(--color-glass-bg-hover);
-      color: var(--color-text-primary);
-      border-color: var(--color-glass-border-hover);
-    }
-  }
-
-  // Import button area
-  &__import {
-    margin-top: 16px;
-    display: flex;
-    justify-content: center;
-  }
-
-  // Modal styles
-  &__modal {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 0;
-  }
-
-  &__modal-avatar {
-    margin-bottom: 16px;
-
-    .avatar__inner {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-    }
-  }
-
-  &__modal-name {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    margin: 0 0 20px;
-    text-align: center;
-  }
-
-  &__modal-info {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  &__modal-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
+    gap: 4px;
+    padding: 4px 10px;
     background: var(--color-bg-tertiary);
-    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
 
     svg {
-      color: var(--color-text-secondary);
-      flex-shrink: 0;
+      opacity: 0.7;
+    }
+  }
+
+  &__project-approval {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 20px;
+    font-size: 12px;
+    color: #22c55e;
+    font-weight: 600;
+
+    svg {
+      stroke: #22c55e;
     }
 
-    a {
-      color: var(--color-text-primary);
-      text-decoration: none;
-      font-size: 15px;
+    &--high {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+  }
 
-      &:hover {
-        color: var(--color-accent);
+  // Project Card Title & Description
+  &__project-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 6px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__project-description {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin: 0 0 16px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // Project Card Footer
+  &__project-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__project-members {
+    display: flex;
+    align-items: center;
+  }
+
+  &__project-member {
+    margin-left: -8px;
+    position: relative;
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--color-bg-secondary);
+      border-radius: 50%;
+      overflow: hidden;
+
+      &__inner {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+      }
+
+      &__image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+      }
+
+      &__initials {
+        font-size: 12px;
       }
     }
-  }
 
-  &__modal-notes,
-  &__modal-tags {
-    width: 100%;
-    margin-bottom: 16px;
-
-    h4 {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--color-text-muted);
-      margin: 0 0 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    p {
-      color: var(--color-text-primary);
-      font-size: 15px;
-      line-height: 1.6;
-      margin: 0;
-      padding: 12px;
+    &--more {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
       background: var(--color-bg-tertiary);
-      border-radius: 12px;
+      border: 2px solid var(--color-bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
     }
   }
 
-  &__tags-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  &__project-date {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-weight: 500;
   }
 
-  &__modal-actions {
-    width: 100%;
+  // Voting Actions
+  &__vote-actions {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 16px;
+    margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid var(--color-border);
   }
 
-  // Button styles
-  &__btn {
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+  &__vote-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
 
-    &--primary {
-      background: var(--color-accent);
-      color: var(--color-text-on-accent);
-
-      &:hover:not(:disabled) {
-        background: var(--color-accent-hover);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-    }
-
-    &--secondary {
-      background: var(--color-bg-tertiary);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-primary);
+    &--like {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
 
       &:hover {
-        background: var(--color-glass-bg-hover);
+        background: rgba(34, 197, 94, 0.2);
+        transform: scale(1.1);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      svg {
+        stroke: #22c55e;
       }
     }
 
-    &--danger {
-      background: rgba(239, 68, 68, 0.15);
-      color: var(--color-error);
+    &--dislike {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
 
-      &:hover:not(:disabled) {
-        background: rgba(239, 68, 68, 0.25);
+      &:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: scale(1.1);
       }
 
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-    }
-  }
-
-  // Add/Edit form
-  &__add-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 8px 0;
-  }
-
-  &__add-form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  &__add-form-notes {
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--color-text-secondary);
-      margin-bottom: 8px;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 12px;
-      background: var(--color-bg-tertiary);
-      border: 1px solid var(--color-border);
-      border-radius: 12px;
-      font-size: 15px;
-      color: var(--color-text-primary);
-      resize: vertical;
-      font-family: inherit;
-      min-height: 80px;
-
-      &::placeholder {
-        color: var(--color-text-muted);
+      &:active {
+        transform: scale(0.95);
       }
 
-      &:focus {
-        outline: none;
-        border-color: var(--color-accent);
-        background: var(--color-bg-secondary);
+      svg {
+        stroke: #ef4444;
       }
     }
-  }
-
-  &__add-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 8px;
   }
 }
 
-// Override Avatar styles for circular avatars in contact cards
-.collaboration-page__card-avatar,
-.collaboration-page__modal-avatar {
+// Override Avatar styles for circular avatars in project cards
+.collaboration-page__project-member {
   .avatar__inner {
     border-radius: 50% !important;
   }
@@ -439,25 +368,29 @@
   .collaboration-page {
     padding: 0 12px 100px;
 
-    &__add-form-row {
-      grid-template-columns: 1fr;
-    }
-
-    &__tab {
-      padding: 8px 14px;
-      font-size: 13px;
-    }
-
-    &__card {
+    &__project-card {
       padding: 14px;
     }
 
-    &__card-name {
-      font-size: 15px;
+    &__project-title {
+      font-size: 16px;
     }
 
-    &__card-position {
-      font-size: 12px;
+    &__project-description {
+      font-size: 13px;
+    }
+
+    &__project-member {
+      .avatar {
+        width: 32px;
+        height: 32px;
+      }
+
+      &--more {
+        width: 32px;
+        height: 32px;
+        font-size: 10px;
+      }
     }
   }
 }
