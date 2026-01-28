@@ -1,42 +1,26 @@
 @use "../../../shared/styles/mixins/glass" as *;
+@use "../../../shared/styles/mixins/layout" as *;
+@use "../../../shared/styles/variables" as *;
 
+// QR Modal wrapper - transparent modal container
 .qr-modal-wrapper {
-  // Bottom sheet behavior - align to bottom
-  align-items: flex-end !important;
-  padding: 0 !important;
-  background: none;
-  border: none;
-  backdrop-filter: none;
-  position: absolute;
-  bottom: 0;
-  // Override modal animation for slide up from bottom
   .modal {
-    transform: translateY(100%) scale(1) !important;
-    opacity: 1 !important;
-    max-height: 95vh;
-    max-width: 100% !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    border-radius: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1) !important;
-  }
-
-  &.modal-overlay--active .modal {
-    transform: translateY(0) scale(1) !important;
+    background: transparent;
+    border: none;
+    padding: 0;
+    backdrop-filter: none;
   }
 
   .modal__close {
-    display: none !important;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
   }
 
-  .modal__content {
-    display: flex;
-    flex-direction: column;
-    height: auto;
+  @include mobile {
+    .modal__close {
+      display: none;
+    }
   }
 }
 
@@ -44,13 +28,15 @@
   width: 100%;
   max-width: 393px;
   margin: 0 auto;
-  height: auto;
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-primary);
-  border-radius: 32px 32px 0 0;
+  border-radius: $radius-3xl;
   padding: 12px;
   box-sizing: border-box;
+
+  @include mobile {
+    border-radius: $radius-3xl $radius-3xl 0 0;
+  }
 
   &__header {
     display: flex;
@@ -71,7 +57,7 @@
     @include liquid-glass;
     display: inline-block;
     padding: 8px 24px;
-    border-radius: 16px;
+    border-radius: $radius-lg;
     font-size: 16px;
     font-weight: 500;
     white-space: nowrap;
@@ -122,7 +108,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    border-radius: 16px;
+    border-radius: $radius-lg;
   }
 
   &__actions {
@@ -137,13 +123,12 @@
     justify-content: center;
     gap: 8px;
     flex: 1;
-    padding: 14px 14px;
-    border-radius: 25px;
+    padding: 14px;
+    border-radius: $radius-full;
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-
     border: 1px solid var(--color-border);
     background: var(--color-bg-secondary);
     color: var(--color-text-secondary);
@@ -160,5 +145,4 @@
   &__footer {
     padding: 0 8px 20px;
   }
-
 }
