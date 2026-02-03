@@ -9,6 +9,7 @@ import {
   extractTagsFromBio,
   IconButton,
   AvatarEmojiButton,
+  Avatar,
 } from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import "./CardEditor.scss";
@@ -306,15 +307,14 @@ export function CardEditor({
       {/* Top Bar */}
       <div className="card-editor__top-bar">
         <IconButton onClick={onBack} aria-label="Назад">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
+          <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+            <path
+              d="M9 1L1 9L9 17"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </IconButton>
 
@@ -347,43 +347,24 @@ export function CardEditor({
 
       {/* Hero Section */}
       <div className="card-editor__hero">
-        <div className="card-editor__avatar">
-          {user.avatar_url ? (
-            <img
-              src={user.avatar_url}
-              alt={userDisplayName}
-              style={{
-                width: 89,
-                height: 91,
-                borderRadius: 85,
-                objectFit: "cover",
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 89,
-                height: 91,
-                borderRadius: 85,
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 32,
-                color: "white",
-                fontWeight: 600,
-              }}
+        <div className="card-editor__emojis">
+          {selectedCard?.emojis.map((emoji, index) => (
+            <span
+              key={index}
+              className={`profile-hero__emoji profile-hero__emoji--${index + 1}`}
             >
-              {user.first_name?.[0]?.toUpperCase() || "?"}
-            </div>
-          )}
-          <div
-            className="card-editor__avatar-glow"
-            style={{
-              background: user.avatar_url
-                ? `url(${user.avatar_url}) center/cover`
-                : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
+              <span className="profile-hero__emoji-blur">{emoji}</span>
+              <span className="profile-hero__emoji-main">{emoji}</span>
+            </span>
+          ))}
+        </div>
+        <div className="card-editor__avatar">
+          <div className="profile-hero__avatar-glow" />
+          <Avatar
+            src={user.avatar_url || undefined}
+            initials={userDisplayName}
+            size="lg"
+            alt={userDisplayName}
           />
           <AvatarEmojiButton
             selectedEmojis={selectedCard.emojis || []}
