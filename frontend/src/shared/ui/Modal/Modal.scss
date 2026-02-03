@@ -105,4 +105,8 @@
       font-size: $font-size-xl;
     }
   }
+
+  @media (max-width: #{$breakpoint-sm}) {
+    width: 100%;
+  }
 }
