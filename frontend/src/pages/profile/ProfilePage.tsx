@@ -422,7 +422,7 @@ export function ProfilePage({
             className="profile__add-card"
             onClick={() => setShowCreateModal(true)}
           >
-            <span className="profile__add-card-icon">+</span>
+            <span className="profile__add-card-icon"></span>
             <span className="profile__add-card-text">
               Создать новую визитку
             </span>

@@ -4,7 +4,7 @@
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  background: var(--color-bg-primary, #090909);
+  background: var(--color-bg-primary);
 
   // Top Bar
   &__top-bar {
@@ -16,7 +16,7 @@
     justify-content: space-between;
     width: 100%;
     padding: 16px 0;
-    background: var(--color-bg-primary, #090909);
+    background: var(--color-bg-primary);
   }
 
   &__top-center {

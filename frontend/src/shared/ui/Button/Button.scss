@@ -36,7 +36,7 @@
     background: var(--color-accent);
     border: none;
     border-radius: 25px;
-    color: #fff;
+    color: var(--color-text-on-accent);
     transition: all 0.2s ease;
 
     &:hover:not(:disabled) {
