@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { IconButton, Modal } from "@/shared";
+import { IconButton, Modal, Button } from "@/shared";
 import { projectApi, type CreateProjectRequest } from "@/entities/project";
 import "./CreateProjectModal.scss";
 
@@ -207,13 +207,14 @@ export function CreateProjectModal({
           <IconButton onClick={handleClose} aria-label="Назад">
             <BackArrowIcon />
           </IconButton>
-          <button
+          <Button
             className="create-project-modal__done-btn"
+            variant="liquid"
             onClick={handleSubmit}
             disabled={isSubmitting || !name.trim()}
           >
             {isSubmitting ? "..." : "Готово"}
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -228,10 +229,10 @@ export function CreateProjectModal({
           )}
 
           {/* Project Name */}
-          <div className="create-project-modal__field">
+          <div className="create-project-modal__field create-project-modal__field--card">
             <input
               type="text"
-              className="create-project-modal__input create-project-modal__input--title"
+              className="create-project-modal__input create-project-modal__textarea"
               placeholder="Название проекта"
               value={name}
               onChange={(e) => setName(e.target.value)}
