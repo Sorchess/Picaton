@@ -1,1 +1,1 @@
-export { ProfileInfoCard, defaultHobbies } from "./ProfileInfoCard";
+export { ProfileInfoCard } from "./ProfileInfoCard";

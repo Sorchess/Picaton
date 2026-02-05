@@ -324,7 +324,6 @@ export function ProfilePage({
   const hobbies =
     displaySearchTags.slice(0, 5).map((tag, i) => ({
       id: `hobby-${i}`,
-      icon: "❤️",
       name: tag,
     })) || [];
 
