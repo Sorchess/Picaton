@@ -130,7 +130,7 @@
     padding: 20px;
     background: transparent;
     border: 2px dashed var(--color-text-muted);
-    border-radius: 16px;
+    border-radius: 25px;
     cursor: pointer;
     transition: all 0.3s ease;
 
@@ -194,56 +194,36 @@
     }
   }
 
-  &__edit-card-icon {
-    font-size: 18px;
-  }
-
-  &__edit-card-text {
-    font-size: 14px;
-    font-weight: 500;
-    color: #0081ff;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
-  }
-
   // Create modal
   &__create-modal {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding: 20px;
   }
 
   &__create-hint {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.6);
     line-height: 1.5;
     margin: 0;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
   }
 
   &__create-input {
     width: 100%;
     padding: 14px 18px;
-    background: #242424;
-    border: 1px solid #303030;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-bg-secondary);
     border-radius: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
     font-size: 16px;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
-      sans-serif;
     transition: all 0.2s;
 
     &::placeholder {
-      color: rgba(255, 255, 255, 0.4);
+      color: var(--color-text-muted);
     }
 
     &:focus {
       outline: none;
-      border-color: rgba(0, 129, 255, 0.5);
+      border-color: var(--color-accent-hover);
     }
   }
 
