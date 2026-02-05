@@ -12,11 +12,6 @@ interface InfoField {
   onClick?: () => void;
 }
 
-interface HobbyTag {
-  id: string;
-  name: string;
-}
-
 interface ContactInfo {
   type: string;
   value: string;
@@ -26,7 +21,6 @@ interface ContactInfo {
 interface TagInfo {
   id: string;
   name: string;
-  category?: string;
 }
 
 interface ProfileInfoCardProps {
@@ -37,7 +31,6 @@ interface ProfileInfoCardProps {
   username?: string;
   onUsernameClick?: () => void;
   birthDate?: string;
-  hobbies?: HobbyTag[];
   additionalFields?: InfoField[];
   className?: string;
 }
@@ -49,7 +42,6 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
   phone,
   username,
   onUsernameClick,
-  hobbies = [],
   className = "",
 }) => {
   const phoneContact = contacts.find((c) => c.type === "phone");
@@ -62,8 +54,7 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
     username ||
     tags.length > 0 ||
     displayPhone ||
-    otherContacts.length > 0 ||
-    hobbies.length > 0;
+    otherContacts.length > 0;
 
   if (!hasContent) {
     return null;
@@ -130,20 +121,6 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
         </div>
       )}
 
-      {/* Skills Card */}
-      {tags.length > 0 && (
-        <div className="profile-info-cards__card">
-          <span className="profile-info-cards__label">Навыки</span>
-          <div className="profile-info-cards__tags">
-            {tags.map((tag) => (
-              <span key={tag.id} className="profile-info-cards__tag">
-                {tag.name}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Phone Card */}
       {displayPhone && (
         <div className="profile-info-cards__card">
@@ -203,13 +180,13 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
         </div>
       ))}
 
-      {/* Hobbies / Interests Card */}
-      {hobbies.length > 0 && (
+      {/* Skills Card */}
+      {tags.length > 0 && (
         <div className="profile-info-cards__card">
-          <span className="profile-info-cards__label">Interests</span>
+          <span className="profile-info-cards__label">Навыки</span>
           <div className="profile-info-cards__tags">
-            {hobbies.map((hobby) => (
-              <span key={hobby.id} className="profile-info-cards__tag">
+            {tags.map((tag) => (
+              <span key={tag.id} className="profile-info-cards__tag">
                 <span className="profile-info-cards__tag-icon">
                   <svg
                     width="12"
@@ -224,7 +201,7 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
                     />
                   </svg>
                 </span>
-                {hobby.name}
+                {tag.name}
               </span>
             ))}
           </div>

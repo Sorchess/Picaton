@@ -320,10 +320,9 @@ export function ProfilePage({
   };
 
 
-  // Hobbies (from search tags)
-  const hobbies =
+  const tags =
     displaySearchTags.slice(0, 5).map((tag, i) => ({
-      id: `hobby-${i}`,
+      id: `tag-${i}`,
       name: tag,
     })) || [];
 
@@ -370,7 +369,7 @@ export function ProfilePage({
         <ProfileInfoCard
           bio={selectedCard?.bio || selectedCard?.ai_generated_bio || undefined}
           contacts={displayContacts}
-          tags={displayTags}
+          tags={tags}
           phone={displayContacts.find((c) => c.type === "phone")?.value}
           username={user.telegram_username || undefined}
           onUsernameClick={() => {
@@ -379,7 +378,6 @@ export function ProfilePage({
             }
           }}
           birthDate={formatBirthDate(user.created_at)}
-          hobbies={hobbies}
         />
 
         {/* Add new card button */}
