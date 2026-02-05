@@ -42,7 +42,6 @@
 
     &:hover:not(:disabled) {
       background: var(--color-accent-hover);
-      transform: translateY(-1px);
     }
 
     &:active:not(:disabled) {
@@ -71,17 +70,7 @@
     backdrop-filter: blur($blur-sm);
 
     &:hover {
-      background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.08) 0%,
-        rgba(255, 255, 255, 0.02) 100%
-      );
-      border-color: rgba(255, 255, 255, 0.25);
-      transform: scale(1.05) translateY(-2px);
-      box-shadow:
-        0 15px 35px -10px rgba(0, 0, 0, 0.5),
-        0 0 20px rgba(255, 255, 255, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      background: var(--color-bg-tertiary);
     }
 
     &:active {
