@@ -5,24 +5,13 @@ import "./ProfileHeroBlock.scss";
 interface ProfileHeroBlockProps {
   /** User name */
   name: string;
-  /** Avatar URL */
   avatarUrl?: string | null;
-  /** User roles/titles */
   roles: string[];
-  /** Skills count */
   skillsCount: number;
-  /** Recommendations count */
-  recommendationsCount: number;
-  /** User level */
-  level: number;
-  /** Floating emojis for decoration */
+  likesCount: number;
   emojis?: string[];
-  /** On skills click */
   onSkillsClick?: () => void;
-  /** On recommendations click */
-  onRecommendationsClick?: () => void;
-  /** On level click */
-  onLevelClick?: () => void;
+  onLikesClick?: () => void;
 }
 
 /**
@@ -33,12 +22,10 @@ export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
   avatarUrl,
   roles,
   skillsCount,
-  recommendationsCount,
-  level,
+  likesCount,
   emojis = [],
   onSkillsClick,
-  onRecommendationsClick,
-  onLevelClick,
+  onLikesClick,
 }) => {
   const initials = name
     .split(" ")
@@ -93,21 +80,14 @@ export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
           className="profile-hero__stat profile-hero__stat--skills"
           onClick={onSkillsClick}
         >
-          {skillsCount} Skills
+          {skillsCount} Навыков
         </button>
         <button
           type="button"
-          className="profile-hero__stat profile-hero__stat--recommendations"
-          onClick={onRecommendationsClick}
+          className="profile-hero__stat profile-hero__stat--likes"
+          onClick={onLikesClick}
         >
-          {recommendationsCount} Рекомендаций
-        </button>
-        <button
-          type="button"
-          className="profile-hero__stat profile-hero__stat--level"
-          onClick={onLevelClick}
-        >
-          {level} Уровень
+          {likesCount} Лайков
         </button>
       </div>
     </div>

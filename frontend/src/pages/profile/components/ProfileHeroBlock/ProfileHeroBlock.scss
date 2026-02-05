@@ -196,16 +196,10 @@
       color: #0081ff;
     }
 
-    &--recommendations {
-      background: rgba(143, 64, 200, 0.1);
-      border-color: rgba(143, 64, 200, 0.1);
-      color: #8f40c8;
-    }
-
-    &--level {
-      background: rgba(56, 128, 40, 0.1);
-      border-color: rgba(56, 128, 40, 0.1);
-      color: #388028;
+    &--likes {
+      background: #f5e5ea;
+      border-color: #cd2b2b;
+      color: #cd2b2b;
     }
   }
 }
@@ -232,16 +226,10 @@
         color: #2873ed;
       }
 
-      &--recommendations {
-        background: rgba(143, 64, 200, 0.1);
-        border-color: rgba(143, 64, 200, 0.15);
-        color: #8f40c8;
-      }
-
-      &--level {
-        background: rgba(56, 128, 40, 0.1);
-        border-color: rgba(56, 128, 40, 0.15);
-        color: #388028;
+      &--likes {
+        background: #f5e5ea;
+        border-color: #cd2b2b;
+        color: #cd2b2b;
       }
     }
   }

@@ -13,10 +13,7 @@ import {
   ProfileHeroBlock,
   RoleTabs,
   ProfileInfoCard,
-  SocialTrustCard,
   ProfileTopBar,
-  CheckIcon,
-  UsersIcon,
 } from "./components";
 import type { RoleTab } from "./components";
 import "./ProfilePage.scss";
@@ -297,14 +294,7 @@ export function ProfilePage({
   const displayContacts = selectedCard?.contacts || user.contacts || [];
   const displaySearchTags = selectedCard?.search_tags || user.search_tags || [];
 
-  // Skills count from selected card
-  const skillsCount = displayTags.length || 0;
-  // Recommendations count (can be fetched from API later)
-  const recommendationsCount = 120;
-  // User level (based on card completeness or profile completeness)
-  const userLevel =
-    Math.floor((selectedCard?.completeness || user.profile_completeness) / 4) +
-    1;
+  const skillsCount = displaySearchTags.length || 0;
 
   // Extract roles from selected card's tags
   const getCardRoles = (): string[] => {
@@ -329,25 +319,6 @@ export function ProfilePage({
     return roles;
   };
 
-  // Trust items
-  const trustItems = [
-    {
-      id: "skills",
-      icon: <CheckIcon />,
-      title: "Подтвержденные скиллы",
-      subtitle: `${skillsCount} подтверждений`,
-      variant: "blue" as const,
-      onClick: () => {},
-    },
-    {
-      id: "contacts",
-      icon: <UsersIcon />,
-      title: "Совместных контактов",
-      subtitle: `${displayContacts.length * 10} контактов`,
-      variant: "purple" as const,
-      onClick: () => {},
-    },
-  ];
 
   // Hobbies (from search tags)
   const hobbies =
@@ -385,8 +356,7 @@ export function ProfilePage({
           avatarUrl={displayAvatar}
           roles={getCardRoles()}
           skillsCount={skillsCount}
-          recommendationsCount={recommendationsCount}
-          level={userLevel}
+          likesCount={0}
           emojis={selectedCard?.emojis}
         />
 
@@ -412,9 +382,6 @@ export function ProfilePage({
           birthDate={formatBirthDate(user.created_at)}
           hobbies={hobbies}
         />
-
-        {/* Social Trust Card */}
-        <SocialTrustCard items={trustItems} />
 
         {/* Add new card button */}
         {cards.length < 5 && (
