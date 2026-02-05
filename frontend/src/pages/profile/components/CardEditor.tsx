@@ -135,10 +135,19 @@ export function CardEditor({
   // Emoji state
   const [isSavingEmojis, setIsSavingEmojis] = useState(false);
 
+  // Card settings state
+  const [cardTitle, setCardTitle] = useState(card.title || "");
+  const [displayName, setDisplayName] = useState(card.display_name || "");
+  const [useProfileAvatar, setUseProfileAvatar] = useState(!card.avatar_url);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
   // Sync with prop changes
   useEffect(() => {
     setSelectedCard(card);
     setProfileTags(card.search_tags || []);
+    setCardTitle(card.title || "");
+    setDisplayName(card.display_name || "");
+    setUseProfileAvatar(!card.avatar_url);
   }, [card]);
 
   // Текущий шаг (теперь 3 шага: bio, tags, contacts)
@@ -279,16 +288,78 @@ export function CardEditor({
     [user.id, selectedCard.id, onCardUpdate],
   );
 
+  // Save card settings (title, display_name, avatar)
+  const handleSaveSettings = useCallback(
+    async (updates: { title?: string; display_name?: string; avatar_url?: string | null }) => {
+      setIsSavingSettings(true);
+      try {
+        const updated = await businessCardApi.update(selectedCard.id, user.id, updates);
+        setSelectedCard(updated);
+        onCardUpdate(updated);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Ошибка сохранения настроек"
+        );
+      } finally {
+        setIsSavingSettings(false);
+      }
+    },
+    [user.id, selectedCard.id, onCardUpdate]
+  );
+
+  // Debounced save for title
+  const handleTitleChange = useCallback(
+    (value: string) => {
+      setCardTitle(value);
+    },
+    []
+  );
+
+  const handleTitleBlur = useCallback(() => {
+    if (cardTitle !== selectedCard.title) {
+      handleSaveSettings({ title: cardTitle });
+    }
+  }, [cardTitle, selectedCard.title, handleSaveSettings]);
+
+  // Debounced save for display name
+  const handleDisplayNameChange = useCallback(
+    (value: string) => {
+      setDisplayName(value);
+    },
+    []
+  );
+
+  const handleDisplayNameBlur = useCallback(() => {
+    if (displayName !== selectedCard.display_name) {
+      handleSaveSettings({ display_name: displayName });
+    }
+  }, [displayName, selectedCard.display_name, handleSaveSettings]);
+
+  // Toggle avatar source
+  const handleAvatarToggle = useCallback(
+    (useProfile: boolean) => {
+      setUseProfileAvatar(useProfile);
+      handleSaveSettings({
+        avatar_url: useProfile ? null : user.avatar_url,
+      });
+    },
+    [handleSaveSettings, user.avatar_url]
+  );
+
   const getContactLabel = (type: string) => {
     return (
       CONTACT_TYPES.find((ct) => ct.type === type.toLowerCase())?.label || type
     );
   };
 
-  // Формируем полное имя пользователя
-  const userDisplayName = [user.first_name, user.last_name]
+  // Формируем отображаемое имя (из визитки или профиля)
+  const userFullName = [user.first_name, user.last_name]
     .filter(Boolean)
     .join(" ");
+  const cardDisplayName = selectedCard.display_name || userFullName;
+
+  // Аватар визитки (из визитки или профиля)
+  const cardAvatarUrl = selectedCard.avatar_url || user.avatar_url;
 
   // Генерируем роли пользователя
   const generateRoles = () => {
@@ -361,10 +432,10 @@ export function CardEditor({
         <div className="card-editor__avatar">
           <div className="profile-hero__avatar-glow" />
           <Avatar
-            src={user.avatar_url || undefined}
-            initials={userDisplayName}
+            src={cardAvatarUrl || undefined}
+            initials={cardDisplayName}
             size="lg"
-            alt={userDisplayName}
+            alt={cardDisplayName}
           />
           <AvatarEmojiButton
             selectedEmojis={selectedCard.emojis || []}
@@ -375,7 +446,7 @@ export function CardEditor({
         </div>
 
         <div className="card-editor__info">
-          <h1 className="card-editor__name">{userDisplayName || "—"}</h1>
+          <h1 className="card-editor__name">{cardDisplayName || "—"}</h1>
           <div className="card-editor__roles">
             {generateRoles().map((role, index) => (
               <span key={index} className="card-editor__role">
@@ -392,6 +463,84 @@ export function CardEditor({
 
       {/* Content */}
       <div className="card-editor__content">
+        {/* Card Settings Section */}
+        <div className="card-editor__card">
+          <div className="card-editor__section-header">
+            <h2 className="card-editor__section-title">Настройки визитки</h2>
+            {isSavingSettings && (
+              <span className="card-editor__section-action">
+                <span className="card-editor__spinner" /> Сохранение...
+              </span>
+            )}
+          </div>
+
+          {/* Card Title */}
+          {!selectedCard.is_primary && (
+            <div className="card-editor__field">
+              <label className="card-editor__label">Название визитки</label>
+              <input
+                type="text"
+                className="card-editor__input"
+                value={cardTitle}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                onBlur={handleTitleBlur}
+                placeholder="Например: Разработчик, Дизайнер..."
+                maxLength={50}
+              />
+            </div>
+          )}
+
+          {/* Display Name */}
+          <div className="card-editor__field">
+            <label className="card-editor__label">Отображаемое имя</label>
+            <input
+              type="text"
+              className="card-editor__input"
+              value={displayName}
+              onChange={(e) => handleDisplayNameChange(e.target.value)}
+              onBlur={handleDisplayNameBlur}
+              placeholder={userFullName || "Ваше имя"}
+              maxLength={100}
+            />
+            <span className="card-editor__hint">
+              Имя, которое будет показано на визитке. Оставьте пустым для использования имени из профиля.
+            </span>
+          </div>
+
+          {/* Avatar Source */}
+          <div className="card-editor__field">
+            <label className="card-editor__label">Аватар</label>
+            <div className="card-editor__avatar-options">
+              <button
+                type="button"
+                className={`card-editor__avatar-option ${useProfileAvatar ? "card-editor__avatar-option--active" : ""}`}
+                onClick={() => handleAvatarToggle(true)}
+              >
+                <Avatar
+                  src={user.avatar_url || undefined}
+                  initials={userFullName}
+                  size="sm"
+                  alt="Аватар профиля"
+                />
+                <span>Из профиля</span>
+              </button>
+              <button
+                type="button"
+                className={`card-editor__avatar-option ${!useProfileAvatar ? "card-editor__avatar-option--active" : ""}`}
+                onClick={() => handleAvatarToggle(false)}
+              >
+                <div className="card-editor__avatar-placeholder">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+                  </svg>
+                </div>
+                <span>Без аватара</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Bio Section */}
         <div className="card-editor__card">
           <UnifiedBioEditor
