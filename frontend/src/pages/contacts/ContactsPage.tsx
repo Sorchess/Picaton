@@ -19,6 +19,7 @@ import {
   IconButton,
   Tabs,
   type Tab,
+  Button,
 } from "@/shared";
 import "./ContactsPage.scss";
 
@@ -952,19 +953,21 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
             />
           </div>
           <div className="contacts-page__add-form-actions">
-            <button
+            <Button
               className="contacts-page__btn contacts-page__btn--secondary"
+              variant="secondary"
               onClick={() => setIsAddModalOpen(false)}
             >
               Отмена
-            </button>
-            <button
+            </Button>
+            <Button
               className="contacts-page__btn contacts-page__btn--primary"
+              variant="primary"
               onClick={handleAddContact}
               disabled={!newContact.first_name.trim()}
             >
               Добавить
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
