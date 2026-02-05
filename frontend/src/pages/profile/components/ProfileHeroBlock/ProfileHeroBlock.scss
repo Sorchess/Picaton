@@ -198,14 +198,14 @@
 
     &--likes {
       background: #f5e5ea;
-      border-color: #cd2b2b;
+      border-color: #f1d2d7;
       color: #cd2b2b;
     }
   }
 }
 
 // Light theme
-[data-theme="light"] {
+[data-theme="dark"] {
   .profile-hero {
     &__name {
       color: rgba(0, 0, 0, 0.9);
@@ -227,8 +227,8 @@
       }
 
       &--likes {
-        background: #f5e5ea;
-        border-color: #cd2b2b;
+        background: #352525;
+        border-color: #442626;
         color: #cd2b2b;
       }
     }
