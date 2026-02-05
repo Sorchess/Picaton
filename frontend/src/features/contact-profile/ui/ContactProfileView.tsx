@@ -395,14 +395,6 @@ export function ContactProfileView({
 
   // Skills count
   const skillsCount = displayTags.length || 0;
-  const recommendationsCount = skillsWithEndorsements.reduce(
-    (acc, skill) => acc + skill.endorsement_count,
-    0,
-  );
-  const userLevel =
-    Math.floor(
-      (activeCard?.completeness || user.profile_completeness || 0) / 4,
-    ) + 1;
 
   // Проверяем, можно ли лайкать (нельзя лайкать свои навыки)
   const canEndorse = authUser?.id !== user.id;
@@ -425,13 +417,6 @@ export function ContactProfileView({
           id: `search-${idx}`,
           name,
         }));
-
-  // Hobbies (from search tags)
-  const hobbies = displaySearchTags.slice(0, 5).map((tag, i) => ({
-    id: `hobby-${i}`,
-    icon: "❤️",
-    name: tag,
-  }));
 
   const roleTabs = generateRoleTabs();
 
@@ -511,16 +496,19 @@ export function ContactProfileView({
             </div>
 
             {/* Stats badges */}
-            <div className="contact-profile-view__stats">
-              <span className="contact-profile-view__stat contact-profile-view__stat--skills">
-                {skillsCount} Skills
-              </span>
-              <span className="contact-profile-view__stat contact-profile-view__stat--recommendations">
-                {recommendationsCount} Рекомендаций
-              </span>
-              <span className="contact-profile-view__stat contact-profile-view__stat--level">
-                {userLevel} Уровень
-              </span>
+            <div className="profile-hero__stats">
+              <button
+                type="button"
+                className="profile-hero__stat profile-hero__stat--skills"
+              >
+                {skillsCount} Навыков
+              </button>
+              <button
+                type="button"
+                className="profile-hero__stat profile-hero__stat--likes"
+              >
+                {/*likesCount*/}0 Лайков
+              </button>
             </div>
           </div>
 
@@ -620,7 +608,7 @@ export function ContactProfileView({
           {(hasEndorsementData || fallbackTags.length > 0) && (
             <div className="contact-profile-view__card">
               <div className="contact-profile-view__card-header">
-                <span className="contact-profile-view__card-label">Skills</span>
+                <span className="contact-profile-view__card-label">Навыки</span>
                 {canEndorse && hasEndorsementData && (
                   <span className="contact-profile-view__card-hint">
                     Нажмите, чтобы подтвердить
@@ -666,23 +654,6 @@ export function ContactProfileView({
               <p className="contact-profile-view__no-contacts">
                 Пользователь не указал контакты для связи
               </p>
-            </div>
-          )}
-
-          {/* Hobbies Card */}
-          {hobbies.length > 0 && (
-            <div className="contact-profile-view__card">
-              <span className="contact-profile-view__card-label">Интересы</span>
-              <div className="contact-profile-view__hobbies">
-                {hobbies.map((hobby) => (
-                  <span key={hobby.id} className="contact-profile-view__hobby">
-                    <span className="contact-profile-view__hobby-icon">
-                      {hobby.icon}
-                    </span>
-                    {hobby.name}
-                  </span>
-                ))}
-              </div>
             </div>
           )}
         </div>
