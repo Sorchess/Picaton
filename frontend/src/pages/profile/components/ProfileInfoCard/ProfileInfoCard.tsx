@@ -1,4 +1,6 @@
 import type { FC, ReactNode } from "react";
+import { EndorsableSkill } from "@/shared";
+import type { SkillWithEndorsements } from "@/api/endorsementApi";
 import "./ProfileInfoCard.scss";
 
 interface InfoField {
@@ -27,6 +29,7 @@ interface ProfileInfoCardProps {
   bio?: string;
   contacts?: ContactInfo[];
   tags?: TagInfo[];
+  skillsWithEndorsements?: SkillWithEndorsements[];
   phone?: string;
   username?: string;
   onUsernameClick?: () => void;
@@ -39,6 +42,7 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
   bio,
   contacts = [],
   tags = [],
+  skillsWithEndorsements = [],
   phone,
   username,
   onUsernameClick,
@@ -53,6 +57,7 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
     bio ||
     username ||
     tags.length > 0 ||
+    skillsWithEndorsements.length > 0 ||
     displayPhone ||
     otherContacts.length > 0;
 
@@ -180,8 +185,21 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
         </div>
       ))}
 
-      {/* Skills Card */}
-      {tags.length > 0 && (
+      {/* Skills Card with Endorsements */}
+      {skillsWithEndorsements.length > 0 ? (
+        <div className="profile-info-cards__card">
+          <span className="profile-info-cards__label">Навыки</span>
+          <div className="profile-info-cards__tags">
+            {skillsWithEndorsements.map((skill) => (
+              <EndorsableSkill
+                key={skill.tag_id}
+                skill={skill}
+                canEndorse={false}
+              />
+            ))}
+          </div>
+        </div>
+      ) : tags.length > 0 ? (
         <div className="profile-info-cards__card">
           <span className="profile-info-cards__label">Навыки</span>
           <div className="profile-info-cards__tags">
@@ -206,7 +224,7 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
             ))}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

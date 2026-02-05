@@ -7,6 +7,8 @@ import { businessCardApi } from "@/entities/business-card";
 import type { CompanyCardAssignment } from "@/entities/company";
 import { companyApi } from "@/entities/company";
 import { useAuth } from "@/features/auth";
+import { endorsementApi } from "@/api/endorsementApi";
+import type { SkillWithEndorsements } from "@/api/endorsementApi";
 import { Loader, Button, Modal } from "@/shared";
 import {
   CardEditor,
@@ -58,6 +60,9 @@ export function ProfilePage({
   // Active role for tabs
   const [activeRoleId, setActiveRoleId] = useState("personal");
 
+  // Skills with endorsements for selected card
+  const [skillsWithEndorsements, setSkillsWithEndorsements] = useState<SkillWithEndorsements[]>([]);
+
   const loadUser = useCallback(async () => {
     if (!authUser?.id) return;
     setIsLoading(true);
@@ -91,6 +96,28 @@ export function ProfilePage({
     }
   }, []);
 
+  // Get current selected card based on active role
+  const getSelectedCard = useCallback((): BusinessCard | null => {
+    if (!activeRoleId || cards.length === 0) return null;
+    return cards.find((c) => c.id === activeRoleId) || cards[0];
+  }, [activeRoleId, cards]);
+
+  // Load endorsements for selected card
+  const loadEndorsements = useCallback(async () => {
+    const card = getSelectedCard();
+    if (!card || !authUser?.id) {
+      setSkillsWithEndorsements([]);
+      return;
+    }
+    try {
+      const data = await endorsementApi.getCardSkills(card.id, authUser.id);
+      setSkillsWithEndorsements(data.skills);
+    } catch (error) {
+      console.error("Failed to load endorsements:", error);
+      setSkillsWithEndorsements([]);
+    }
+  }, [authUser?.id, getSelectedCard]);
+
   // Получить компании, которые используют данную визитку
   const getCompaniesUsingCard = useCallback(
     (cardId: string): CompanyCardAssignment[] => {
@@ -104,6 +131,11 @@ export function ProfilePage({
     loadCards();
     loadCardAssignments();
   }, [loadUser, loadCards, loadCardAssignments]);
+
+  // Load endorsements when selected card changes
+  useEffect(() => {
+    loadEndorsements();
+  }, [loadEndorsements]);
 
   // Open card from prop on mount
   useEffect(() => {
@@ -209,12 +241,6 @@ export function ProfilePage({
     return roles;
   }, [cards]);
 
-  // Get current selected card based on active role
-  const getSelectedCard = useCallback((): BusinessCard | null => {
-    if (!activeRoleId || cards.length === 0) return null;
-    return cards.find((c) => c.id === activeRoleId) || cards[0];
-  }, [activeRoleId, cards]);
-
   // Set initial active role when cards load
   useEffect(() => {
     if (cards.length > 0 && !activeRoleId) {
@@ -296,6 +322,12 @@ export function ProfilePage({
 
   const skillsCount = displaySearchTags.length || 0;
 
+  // Calculate total likes from all skills with endorsements
+  const totalLikesCount = skillsWithEndorsements.reduce(
+    (sum, skill) => sum + skill.endorsement_count,
+    0
+  );
+
   // Extract roles from selected card's tags
   const getCardRoles = (): string[] => {
     const roles: string[] = [];
@@ -354,7 +386,7 @@ export function ProfilePage({
           avatarUrl={displayAvatar}
           roles={getCardRoles()}
           skillsCount={skillsCount}
-          likesCount={0}
+          likesCount={totalLikesCount}
           emojis={selectedCard?.emojis}
         />
 
@@ -370,6 +402,7 @@ export function ProfilePage({
           bio={selectedCard?.bio || selectedCard?.ai_generated_bio || undefined}
           contacts={displayContacts}
           tags={tags}
+          skillsWithEndorsements={skillsWithEndorsements}
           phone={displayContacts.find((c) => c.type === "phone")?.value}
           username={user.telegram_username || undefined}
           onUsernameClick={() => {
