@@ -394,7 +394,13 @@ export function ContactProfileView({
   };
 
   // Skills count
-  const skillsCount = displayTags.length || 0;
+  const skillsCount = displaySearchTags.length || 0;
+
+  // Calculate total likes from all skills with endorsements
+  const totalLikesCount = skillsWithEndorsements.reduce(
+    (sum, skill) => sum + skill.endorsement_count,
+    0
+  );
 
   // Проверяем, можно ли лайкать (нельзя лайкать свои навыки)
   const canEndorse = authUser?.id !== user.id;
@@ -443,9 +449,11 @@ export function ContactProfileView({
               />
             </svg>
           </IconButton>
-          <div className="contact-profile-view__title-container">
-            <h1 className="contact-profile-view__title">Демонстрация</h1>
-          </div>
+          {!canEndorse && (
+            <div className="contact-profile-view__title-container">
+              <h1 className="contact-profile-view__title">Демонстрация</h1>
+            </div>
+          )}
           <div className="contact-profile-view__top-spacer" />
         </div>
 
@@ -507,7 +515,7 @@ export function ContactProfileView({
                 type="button"
                 className="profile-hero__stat profile-hero__stat--likes"
               >
-                {/*likesCount*/}0 Лайков
+                {totalLikesCount} Лайков
               </button>
             </div>
           </div>
@@ -539,7 +547,7 @@ export function ContactProfileView({
             )}
             {isSaved && onDeleteContact && (
               <button
-                className="contact-profile-view__action-btn contact-profile-view__action-btn--danger"
+                className="contact-profile-view__action-btn contact-profile-view__action-btn"
                 onClick={() =>
                   (onDeleteContact as (user: UserPublic) => void)(user)
                 }
