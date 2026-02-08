@@ -51,7 +51,6 @@ export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
 
       {/* Avatar with glow */}
       <div className="profile-hero__avatar">
-        <div className="profile-hero__avatar-glow" />
         <Avatar
           src={avatarUrl || undefined}
           initials={initials}

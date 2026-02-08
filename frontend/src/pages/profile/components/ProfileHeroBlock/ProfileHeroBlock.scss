@@ -85,26 +85,10 @@
     margin-bottom: 20px;
 
     .avatar {
-      width: 89px;
-      height: 91px;
-
       &__inner {
-        border-radius: 85px;
+        border-radius: 50%;
       }
     }
-  }
-
-  &__avatar-glow {
-    position: absolute;
-    top: 0;
-    left: -1.5px;
-    width: 89px;
-    height: 91px;
-    border-radius: 85px;
-    filter: blur(15px);
-    opacity: 0.5;
-    background: inherit;
-    z-index: -1;
   }
 
   // Name and roles

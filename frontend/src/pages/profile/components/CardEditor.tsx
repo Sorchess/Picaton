@@ -430,7 +430,6 @@ export function CardEditor({
           ))}
         </div>
         <div className="card-editor__avatar">
-          <div className="profile-hero__avatar-glow" />
           <Avatar
             src={cardAvatarUrl || undefined}
             initials={cardDisplayName}
