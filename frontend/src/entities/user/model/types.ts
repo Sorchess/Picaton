@@ -110,6 +110,7 @@ export interface SavedContact {
   last_name: string;
   phone: string | null;
   email: string | null;
+  avatar_url?: string | null;
   contacts: ContactInfo[]; // Контакты для связи (telegram, whatsapp и т.д.)
   messenger_type: string | null;
   messenger_value: string | null;

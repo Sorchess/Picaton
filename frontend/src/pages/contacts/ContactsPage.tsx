@@ -471,7 +471,7 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
         name: getContactFullName(c),
         position: null,
         company: null,
-        avatarUrl: null,
+        avatarUrl: c.avatar_url || null, 
         tags: c.search_tags,
         type: "saved" as const,
         originalData: c,
