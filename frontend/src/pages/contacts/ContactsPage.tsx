@@ -784,108 +784,110 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
         </div>
       )}
 
-      {/* Contact List */}
-      <div className="contacts-page__list">
-        {transformedContacts.length === 0 ? (
-          <div className="contacts-page__empty">
-            <svg
-              width="64"
-              height="64"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            <h3>
-              {activeTab === "my" &&
-                contactsWithoutSelf.length === 0 &&
-                "Нет контактов"}
-              {activeTab === "my" &&
-                contactsWithoutSelf.length > 0 &&
-                "Ничего не найдено"}
-              {activeTab === "company" && "Нет коллег"}
-              {activeTab === "recommendations" && "Нет рекомендаций"}
-            </h3>
-            <p>
-              {activeTab === "my" &&
-                contactsWithoutSelf.length === 0 &&
-                "Добавляйте экспертов из поиска или создавайте контакты вручную"}
-              {activeTab === "my" &&
-                contactsWithoutSelf.length > 0 &&
-                "Попробуйте изменить поисковый запрос"}
-              {activeTab === "company" &&
-                "Присоединитесь к компании, чтобы видеть коллег"}
-              {activeTab === "recommendations" &&
-                "Заполните теги в профиле для получения рекомендаций"}
-            </p>
-          </div>
-        ) : (
-          transformedContacts.map((card) => (
-            <div
-              key={card.id}
-              className="contacts-page__card"
-              onClick={() => handleCardClick(card)}
-            >
-              <div className="contacts-page__card-avatar">
-                {card.avatarUrl ? (
-                  <Avatar src={card.avatarUrl} alt={card.name} size="lg" />
-                ) : (
-                  <Avatar initials={getInitials(card.name)} size="lg" />
-                )}
-              </div>
-              <div className="contacts-page__card-info">
-                <h3 className="contacts-page__card-name">{card.name}</h3>
-                {(card.position || card.company) && (
-                  <p className="contacts-page__card-position">
-                    {card.position}
-                    {card.position && card.company && <br />}
-                    {card.company}
-                  </p>
-                )}
-                {card.tags.length > 0 && (
-                  <div className="contacts-page__card-tags">
-                    {card.tags.slice(0, 4).map((tag) => (
-                      <Tag key={tag} size="sm">
-                        {tag}
-                      </Tag>
-                    ))}
-                    {card.tags.length > 4 && (
-                      <Tag variant="outline" size="sm">
-                        +{card.tags.length - 4}
-                      </Tag>
-                    )}
-                  </div>
-                )}
-              </div>
-              {card.type === "recommendation" && (
-                <button
-                  className="contacts-page__card-action"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSaveRecommendation(card.originalData as UserPublic);
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                </button>
-              )}
+      {/* Contact List — скрываем при активном API-поиске */}
+      {!apiSearchResults && (
+        <div className="contacts-page__list">
+          {transformedContacts.length === 0 ? (
+            <div className="contacts-page__empty">
+              <svg
+                width="64"
+                height="64"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              <h3>
+                {activeTab === "my" &&
+                  contactsWithoutSelf.length === 0 &&
+                  "Нет контактов"}
+                {activeTab === "my" &&
+                  contactsWithoutSelf.length > 0 &&
+                  "Ничего не найдено"}
+                {activeTab === "company" && "Нет коллег"}
+                {activeTab === "recommendations" && "Нет рекомендаций"}
+              </h3>
+              <p>
+                {activeTab === "my" &&
+                  contactsWithoutSelf.length === 0 &&
+                  "Добавляйте экспертов из поиска или создавайте контакты вручную"}
+                {activeTab === "my" &&
+                  contactsWithoutSelf.length > 0 &&
+                  "Попробуйте изменить поисковый запрос"}
+                {activeTab === "company" &&
+                  "Присоединитесь к компании, чтобы видеть коллег"}
+                {activeTab === "recommendations" &&
+                  "Заполните теги в профиле для получения рекомендаций"}
+              </p>
             </div>
-          ))
-        )}
-      </div>
+          ) : (
+            transformedContacts.map((card) => (
+              <div
+                key={card.id}
+                className="contacts-page__card"
+                onClick={() => handleCardClick(card)}
+              >
+                <div className="contacts-page__card-avatar">
+                  {card.avatarUrl ? (
+                    <Avatar src={card.avatarUrl} alt={card.name} size="lg" />
+                  ) : (
+                    <Avatar initials={getInitials(card.name)} size="lg" />
+                  )}
+                </div>
+                <div className="contacts-page__card-info">
+                  <h3 className="contacts-page__card-name">{card.name}</h3>
+                  {(card.position || card.company) && (
+                    <p className="contacts-page__card-position">
+                      {card.position}
+                      {card.position && card.company && <br />}
+                      {card.company}
+                    </p>
+                  )}
+                  {card.tags.length > 0 && (
+                    <div className="contacts-page__card-tags">
+                      {card.tags.slice(0, 4).map((tag) => (
+                        <Tag key={tag} size="sm">
+                          {tag}
+                        </Tag>
+                      ))}
+                      {card.tags.length > 4 && (
+                        <Tag variant="outline" size="sm">
+                          +{card.tags.length - 4}
+                        </Tag>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {card.type === "recommendation" && (
+                  <button
+                    className="contacts-page__card-action"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSaveRecommendation(card.originalData as UserPublic);
+                    }}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Import button for "my" tab */}
       {activeTab === "my" && (
