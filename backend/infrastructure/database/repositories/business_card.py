@@ -1,5 +1,6 @@
 """MongoDB реализация репозитория визитных карточек."""
 
+import re
 from uuid import UUID
 
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -173,7 +174,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
         self, query: str, limit: int = 20, public_only: bool = True
     ) -> list[BusinessCard]:
         """Полнотекстовый поиск карточек."""
-        query_lower = query.lower().strip()
+        query_lower = re.escape(query.lower().strip())
         match_query = {
             "is_active": True,
             "$or": [
@@ -199,7 +200,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
         # Создаём regex паттерны для каждого ключевого слова
         or_conditions = []
         for keyword in keywords:
-            keyword_lower = keyword.lower().strip()
+            keyword_lower = re.escape(keyword.lower().strip())
             if keyword_lower:
                 or_conditions.append(
                     {"bio": {"$regex": keyword_lower, "$options": "i"}}
@@ -291,7 +292,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
         """Полнотекстовый поиск среди указанных карточек."""
         if not card_ids:
             return []
-        query_lower = query.lower().strip()
+        query_lower = re.escape(query.lower().strip())
         match_query = {
             "_id": {"$in": [str(cid) for cid in card_ids]},
             "is_active": True,
@@ -323,7 +324,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             return []
         or_conditions = []
         for keyword in keywords:
-            keyword_lower = keyword.lower().strip()
+            keyword_lower = re.escape(keyword.lower().strip())
             if keyword_lower:
                 or_conditions.append(
                     {"bio": {"$regex": keyword_lower, "$options": "i"}}

@@ -1,13 +1,36 @@
-// Дополнительные стили для page-switcher поверх базового TapBar
-.page-switcher {
-  // Стили наследуются от компонента TapBar
-  // Здесь можно добавить специфичные стили для этого виджета
+@use "../../shared/styles/variables" as *;
+@use "../../shared/styles/mixins" as *;
 
-  // Адаптация для мобильной версии в футере
+// ── Wrapper: houses tab bar + search button / search bar ──
+.page-switcher-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 500px;
+
+  // ── Search-open mode ──
+  &--search-open {
+    max-width: 100%;
+  }
+}
+
+// ── The TapBar part (inherits from TapBar component) ──
+.page-switcher {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+
+  // Compact options so they fit alongside the search button
+  .tapbar__option {
+    padding: 12px 16px;
+  }
+
   @media (max-width: 768px) {
     .tapbar__option {
+      flex: 1;
       flex-direction: column;
-      padding: 14px 24px;
+      padding: 14px 0;
       gap: 4px;
     }
 
@@ -18,5 +41,133 @@
     .tapbar__option-icon {
       font-size: 20px;
     }
+  }
+}
+
+// ── Separate circular contacts/search button (right side) ──
+.page-switcher-contacts {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+  @include liquid-glass;
+  color: var(--color-text-secondary);
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  &--active {
+    background: rgba(40, 115, 237, 0.1);
+    color: var(--color-accent, #2873ed);
+  }
+
+  &--close {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+// ── Search mode: replaces the entire tab bar ──
+.page-switcher-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 60px;
+  @include liquid-glass;
+  border-radius: $radius-full;
+  padding: 8px 8px 8px 16px;
+  animation: search-expand 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+
+  &__field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--color-text-primary);
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__clear {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: var(--color-glass-bg);
+    border-radius: 50%;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+
+  &__submit {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border: none;
+    border-radius: $radius-full;
+    background: var(--color-accent, #2873ed);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    &:not(:disabled):active {
+      transform: scale(0.96);
+    }
+  }
+}
+
+@keyframes search-expand {
+  from {
+    opacity: 0;
+    transform: scaleX(0.6);
+    transform-origin: right center;
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+    transform-origin: right center;
   }
 }

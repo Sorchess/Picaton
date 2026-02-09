@@ -1,7 +1,6 @@
 @use "./shared/styles/variables" as *;
 @use "./shared/styles/mixins" as *;
 
-
 .app {
   min-height: 100vh;
   min-height: 100dvh;
@@ -235,26 +234,14 @@
       justify-content: center;
     }
 
-    // Адаптация Switcher для мобильного футера
-    .page-switcher {
+    // The wrapper takes full width
+    .page-switcher-wrapper {
       width: 100%;
-      max-width: 400px;
+      max-width: 480px;
+    }
+
+    .page-switcher {
       justify-content: space-around;
-
-      .switcher__option {
-        flex: 1;
-        flex-direction: column;
-        padding: 12px 4px;
-        gap: 4px;
-      }
-
-      .switcher__option-label {
-        font-size: 10px;
-      }
-
-      .switcher__option-icon {
-        font-size: 22px;
-      }
     }
   }
 }

@@ -1,5 +1,6 @@
 """MongoDB реализация репозитория ролей компании."""
 
+import re
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -46,7 +47,7 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
             except ValueError:
                 # Пропускаем неизвестные права (для совместимости)
                 pass
-        
+
         return CompanyRole(
             id=UUID(doc["_id"]),
             company_id=UUID(doc["company_id"]),
@@ -73,10 +74,10 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
 
     async def get_by_company(self, company_id: UUID) -> list[CompanyRole]:
         """Получить все роли компании (отсортированные по приоритету)."""
-        cursor = self._collection.find(
-            {"company_id": str(company_id)}
-        ).sort("priority", 1)  # По возрастанию приоритета (выше = важнее)
-        
+        cursor = self._collection.find({"company_id": str(company_id)}).sort(
+            "priority", 1
+        )  # По возрастанию приоритета (выше = важнее)
+
         roles = []
         async for doc in cursor:
             roles.append(self._from_document(doc))
@@ -86,36 +87,41 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
         self, company_id: UUID, name: str
     ) -> CompanyRole | None:
         """Получить роль по названию в компании."""
-        doc = await self._collection.find_one({
-            "company_id": str(company_id),
-            "name": {"$regex": f"^{name}$", "$options": "i"}  # Case-insensitive
-        })
+        doc = await self._collection.find_one(
+            {
+                "company_id": str(company_id),
+                "name": {
+                    "$regex": f"^{re.escape(name)}$",
+                    "$options": "i",
+                },  # Case-insensitive
+            }
+        )
         return self._from_document(doc) if doc else None
 
     async def get_default_role(self, company_id: UUID) -> CompanyRole | None:
         """Получить роль по умолчанию для компании."""
-        doc = await self._collection.find_one({
-            "company_id": str(company_id),
-            "is_default": True
-        })
+        doc = await self._collection.find_one(
+            {"company_id": str(company_id), "is_default": True}
+        )
         return self._from_document(doc) if doc else None
 
     async def get_owner_role(self, company_id: UUID) -> CompanyRole | None:
         """Получить роль владельца компании."""
-        doc = await self._collection.find_one({
-            "company_id": str(company_id),
-            "is_system": True,
-            "priority": OWNER_PRIORITY
-        })
+        doc = await self._collection.find_one(
+            {
+                "company_id": str(company_id),
+                "is_system": True,
+                "priority": OWNER_PRIORITY,
+            }
+        )
         return self._from_document(doc) if doc else None
 
     async def get_system_roles(self, company_id: UUID) -> list[CompanyRole]:
         """Получить системные роли компании."""
-        cursor = self._collection.find({
-            "company_id": str(company_id),
-            "is_system": True
-        }).sort("priority", 1)
-        
+        cursor = self._collection.find(
+            {"company_id": str(company_id), "is_system": True}
+        ).sort("priority", 1)
+
         roles = []
         async for doc in cursor:
             roles.append(self._from_document(doc))
@@ -123,11 +129,10 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
 
     async def get_custom_roles(self, company_id: UUID) -> list[CompanyRole]:
         """Получить кастомные (не системные) роли компании."""
-        cursor = self._collection.find({
-            "company_id": str(company_id),
-            "is_system": False
-        }).sort("priority", 1)
-        
+        cursor = self._collection.find(
+            {"company_id": str(company_id), "is_system": False}
+        ).sort("priority", 1)
+
         roles = []
         async for doc in cursor:
             roles.append(self._from_document(doc))
@@ -135,9 +140,7 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
 
     async def count_by_company(self, company_id: UUID) -> int:
         """Получить количество ролей в компании."""
-        return await self._collection.count_documents({
-            "company_id": str(company_id)
-        })
+        return await self._collection.count_documents({"company_id": str(company_id)})
 
     async def update(self, role: CompanyRole) -> CompanyRole:
         """Обновить роль."""
@@ -153,9 +156,7 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
 
     async def delete_by_company(self, company_id: UUID) -> int:
         """Удалить все роли компании."""
-        result = await self._collection.delete_many({
-            "company_id": str(company_id)
-        })
+        result = await self._collection.delete_many({"company_id": str(company_id)})
         return result.deleted_count
 
     async def create_system_roles(self, company_id: UUID) -> list[CompanyRole]:
@@ -166,7 +167,7 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
         owner_role = CompanyRole.create_owner_role(company_id)
         admin_role = CompanyRole.create_admin_role(company_id)
         member_role = CompanyRole.create_member_role(company_id)
-        
+
         # Bulk insert для эффективности
         docs = [
             self._to_document(owner_role),
@@ -174,30 +175,24 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
             self._to_document(member_role),
         ]
         await self._collection.insert_many(docs)
-        
+
         return [owner_role, admin_role, member_role]
 
     async def get_next_priority(self, company_id: UUID) -> int:
         """Получить следующий доступный приоритет для новой роли."""
         # Находим максимальный приоритет среди кастомных ролей
         pipeline = [
-            {"$match": {
-                "company_id": str(company_id),
-                "is_system": False
-            }},
-            {"$group": {
-                "_id": None,
-                "max_priority": {"$max": "$priority"}
-            }}
+            {"$match": {"company_id": str(company_id), "is_system": False}},
+            {"$group": {"_id": None, "max_priority": {"$max": "$priority"}}},
         ]
-        
+
         cursor = self._collection.aggregate(pipeline)
         result = await cursor.to_list(length=1)
-        
+
         if result and result[0].get("max_priority") is not None:
             # Следующий приоритет после максимального кастомного
             return result[0]["max_priority"] + 1
-        
+
         # Если кастомных ролей нет, начинаем с 2 (после admin)
         return ADMIN_PRIORITY + 1
 
@@ -206,11 +201,11 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
     ) -> list[CompanyRole]:
         """
         Переупорядочить роли по приоритету.
-        
+
         Args:
             company_id: ID компании
             role_priorities: Словарь {role_id: new_priority}
-            
+
         Returns:
             Обновлённый список ролей
         """
@@ -220,14 +215,14 @@ class MongoCompanyRoleRepository(CompanyRoleRepositoryInterface):
                 {
                     "_id": str(role_id),
                     "company_id": str(company_id),
-                    "is_system": False  # Нельзя менять приоритет системных ролей
+                    "is_system": False,  # Нельзя менять приоритет системных ролей
                 },
                 {
                     "$set": {
                         "priority": priority,
-                        "updated_at": datetime.now(timezone.utc)
+                        "updated_at": datetime.now(timezone.utc),
                     }
-                }
+                },
             )
-        
+
         return await self.get_by_company(company_id)

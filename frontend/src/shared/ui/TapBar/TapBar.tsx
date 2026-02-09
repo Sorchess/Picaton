@@ -42,49 +42,53 @@ export function TapBar(Props: TapBarProps) {
     const activeButton = optionRefs.current.get(activeValue);
     const container = containerRef.current;
 
-    if (activeButton && container) {
-      const containerRect = container.getBoundingClientRect();
-      const buttonRect = activeButton.getBoundingClientRect();
-      const newLeft = buttonRect.left - containerRect.left;
+    if (!activeButton || !container) {
+      // No matching option — hide the indicator
+      setIndicatorStyle({ width: 0, opacity: 0 });
+      return;
+    }
 
-      // При первом рендере только запоминаем позицию без анимации
-      if (isInitialRender.current) {
-        isInitialRender.current = false;
-        prevLeftRef.current = newLeft;
-        setIndicatorStyle({
-          width: buttonRect.width,
-          left: newLeft,
-        });
-        return;
-      }
+    const containerRect = container.getBoundingClientRect();
+    const buttonRect = activeButton.getBoundingClientRect();
+    const newLeft = buttonRect.left - containerRect.left;
 
-      // Определяем направление движения только если позиция изменилась
-      if (prevLeftRef.current !== null && prevLeftRef.current !== newLeft) {
-        const newDirection = newLeft > prevLeftRef.current ? "right" : "left";
-        setDirection(newDirection);
-        setIsAnimating(true);
-
-        // Сбрасываем анимацию после завершения
-        const timer = setTimeout(() => {
-          setIsAnimating(false);
-        }, 500);
-
-        prevLeftRef.current = newLeft;
-
-        setIndicatorStyle({
-          width: buttonRect.width,
-          left: newLeft,
-        });
-
-        return () => clearTimeout(timer);
-      }
-
+    // При первом рендере только запоминаем позицию без анимации
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
       prevLeftRef.current = newLeft;
       setIndicatorStyle({
         width: buttonRect.width,
         left: newLeft,
       });
+      return;
     }
+
+    // Определяем направление движения только если позиция изменилась
+    if (prevLeftRef.current !== null && prevLeftRef.current !== newLeft) {
+      const newDirection = newLeft > prevLeftRef.current ? "right" : "left";
+      setDirection(newDirection);
+      setIsAnimating(true);
+
+      // Сбрасываем анимацию после завершения
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 500);
+
+      prevLeftRef.current = newLeft;
+
+      setIndicatorStyle({
+        width: buttonRect.width,
+        left: newLeft,
+      });
+
+      return () => clearTimeout(timer);
+    }
+
+    prevLeftRef.current = newLeft;
+    setIndicatorStyle({
+      width: buttonRect.width,
+      left: newLeft,
+    });
   }, [activeValue, options]);
 
   const handleOptionClick = (optionValue: string) => {

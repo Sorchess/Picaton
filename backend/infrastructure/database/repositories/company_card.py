@@ -2,6 +2,7 @@
 MongoDB реализация репозитория корпоративных карточек.
 """
 
+import re
 from uuid import UUID
 
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -138,39 +139,43 @@ class MongoCompanyCardRepository(ICompanyCardRepository):
         self, company_id: UUID, user_id: UUID
     ) -> CompanyCard | None:
         """Получить карточку сотрудника в компании."""
-        doc = await self._collection.find_one({
-            "company_id": str(company_id),
-            "user_id": str(user_id),
-        })
+        doc = await self._collection.find_one(
+            {
+                "company_id": str(company_id),
+                "user_id": str(user_id),
+            }
+        )
         return self._doc_to_entity(doc) if doc else None
 
     async def get_by_company_and_member(
         self, company_id: UUID, member_id: UUID
     ) -> CompanyCard | None:
         """Получить карточку по ID членства."""
-        doc = await self._collection.find_one({
-            "company_id": str(company_id),
-            "member_id": str(member_id),
-        })
+        doc = await self._collection.find_one(
+            {
+                "company_id": str(company_id),
+                "member_id": str(member_id),
+            }
+        )
         return self._doc_to_entity(doc) if doc else None
 
     async def get_by_company(
-        self, company_id: UUID,
+        self,
+        company_id: UUID,
         include_inactive: bool = False,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> list[CompanyCard]:
         """Получить все карточки компании."""
         query = {"company_id": str(company_id)}
         if not include_inactive:
             query["is_active"] = True
-        
+
         cursor = self._collection.find(query).skip(offset).limit(limit)
         return [self._doc_to_entity(doc) async for doc in cursor]
 
     async def count_by_company(
-        self, company_id: UUID,
-        include_inactive: bool = False
+        self, company_id: UUID, include_inactive: bool = False
     ) -> int:
         """Подсчитать количество карточек в компании."""
         query = {"company_id": str(company_id)}
@@ -179,49 +184,44 @@ class MongoCompanyCardRepository(ICompanyCardRepository):
         return await self._collection.count_documents(query)
 
     async def search_by_tags(
-        self, company_id: UUID,
-        tags: list[str],
-        limit: int = 50
+        self, company_id: UUID, tags: list[str], limit: int = 50
     ) -> list[CompanyCard]:
         """Найти карточки по тегам."""
         # Приводим теги к нижнему регистру для поиска
         lower_tags = [t.lower() for t in tags]
-        
+
         query = {
             "company_id": str(company_id),
             "is_active": True,
             "search_tags": {"$in": lower_tags},
         }
-        
+
         cursor = self._collection.find(query).limit(limit)
         return [self._doc_to_entity(doc) async for doc in cursor]
 
     async def search_by_text(
-        self, company_id: UUID,
-        query: str,
-        limit: int = 50
+        self, company_id: UUID, query: str, limit: int = 50
     ) -> list[CompanyCard]:
         """Текстовый поиск по карточкам."""
         # Создаём regex для поиска
+        escaped_query = re.escape(query)
         search_query = {
             "company_id": str(company_id),
             "is_active": True,
             "$or": [
-                {"display_name": {"$regex": query, "$options": "i"}},
-                {"position": {"$regex": query, "$options": "i"}},
-                {"department": {"$regex": query, "$options": "i"}},
-                {"bio": {"$regex": query, "$options": "i"}},
-                {"search_tags": {"$regex": query.lower(), "$options": "i"}},
+                {"display_name": {"$regex": escaped_query, "$options": "i"}},
+                {"position": {"$regex": escaped_query, "$options": "i"}},
+                {"department": {"$regex": escaped_query, "$options": "i"}},
+                {"bio": {"$regex": escaped_query, "$options": "i"}},
+                {"search_tags": {"$regex": re.escape(query.lower()), "$options": "i"}},
             ],
         }
-        
+
         cursor = self._collection.find(search_query).limit(limit)
         return [self._doc_to_entity(doc) async for doc in cursor]
 
     async def search_by_embedding(
-        self, company_id: UUID,
-        embedding: list[float],
-        limit: int = 10
+        self, company_id: UUID, embedding: list[float], limit: int = 10
     ) -> list[CompanyCard]:
         """Семантический поиск по embedding."""
         # Используем $vectorSearch для Atlas или косинусное сходство
@@ -258,27 +258,25 @@ class MongoCompanyCardRepository(ICompanyCardRepository):
             {"$sort": {"similarity": -1}},
             {"$limit": limit},
         ]
-        
+
         cursor = self._collection.aggregate(pipeline)
         return [self._doc_to_entity(doc) async for doc in cursor]
 
     async def get_by_position(
-        self, company_id: UUID,
-        position: str
+        self, company_id: UUID, position: str
     ) -> list[CompanyCard]:
         """Получить карточки по должности."""
         query = {
             "company_id": str(company_id),
             "is_active": True,
-            "position": {"$regex": f"^{position}$", "$options": "i"},
+            "position": {"$regex": f"^{re.escape(position)}$", "$options": "i"},
         }
-        
+
         cursor = self._collection.find(query)
         return [self._doc_to_entity(doc) async for doc in cursor]
 
     async def get_by_department(
-        self, company_id: UUID,
-        department: str
+        self, company_id: UUID, department: str
     ) -> list[CompanyCard]:
         """Получить карточки по отделу."""
         query = {
@@ -286,14 +284,12 @@ class MongoCompanyCardRepository(ICompanyCardRepository):
             "is_active": True,
             "department": {"$regex": f"^{department}$", "$options": "i"},
         }
-        
+
         cursor = self._collection.find(query)
         return [self._doc_to_entity(doc) async for doc in cursor]
 
     async def get_public_cards(
-        self, company_id: UUID,
-        limit: int = 100,
-        offset: int = 0
+        self, company_id: UUID, limit: int = 100, offset: int = 0
     ) -> list[CompanyCard]:
         """Получить публичные карточки компании."""
         query = {
@@ -301,22 +297,18 @@ class MongoCompanyCardRepository(ICompanyCardRepository):
             "is_active": True,
             "is_public": True,
         }
-        
+
         cursor = self._collection.find(query).skip(offset).limit(limit)
         return [self._doc_to_entity(doc) async for doc in cursor]
 
     async def delete_by_company(self, company_id: UUID) -> int:
         """Удалить все карточки компании."""
-        result = await self._collection.delete_many({
-            "company_id": str(company_id)
-        })
+        result = await self._collection.delete_many({"company_id": str(company_id)})
         return result.deleted_count
 
     async def delete_by_user(self, user_id: UUID) -> int:
         """Удалить все карточки пользователя."""
-        result = await self._collection.delete_many({
-            "user_id": str(user_id)
-        })
+        result = await self._collection.delete_many({"user_id": str(user_id)})
         return result.deleted_count
 
 
@@ -326,37 +318,33 @@ async def create_company_card_indexes(collection: AsyncIOMotorCollection) -> Non
     await collection.create_index(
         [("company_id", 1), ("user_id", 1)],
         unique=True,
-        name="unique_user_company_card"
+        name="unique_user_company_card",
     )
-    
+
     # Индекс для поиска по членству
     await collection.create_index(
-        [("company_id", 1), ("member_id", 1)],
-        name="company_member_idx"
+        [("company_id", 1), ("member_id", 1)], name="company_member_idx"
     )
-    
+
     # Индекс для поиска по тегам
     await collection.create_index(
-        [("company_id", 1), ("search_tags", 1)],
-        name="company_search_tags_idx"
+        [("company_id", 1), ("search_tags", 1)], name="company_search_tags_idx"
     )
-    
+
     # Индекс для фильтрации по должности и отделу
     await collection.create_index(
-        [("company_id", 1), ("position", 1)],
-        name="company_position_idx"
+        [("company_id", 1), ("position", 1)], name="company_position_idx"
     )
     await collection.create_index(
-        [("company_id", 1), ("department", 1)],
-        name="company_department_idx"
+        [("company_id", 1), ("department", 1)], name="company_department_idx"
     )
-    
+
     # Индекс для активных публичных карточек
     await collection.create_index(
         [("company_id", 1), ("is_active", 1), ("is_public", 1)],
-        name="company_active_public_idx"
+        name="company_active_public_idx",
     )
-    
+
     # Текстовый индекс для полнотекстового поиска
     await collection.create_index(
         [
@@ -365,5 +353,5 @@ async def create_company_card_indexes(collection: AsyncIOMotorCollection) -> Non
             ("department", "text"),
             ("bio", "text"),
         ],
-        name="company_card_text_search_idx"
+        name="company_card_text_search_idx",
     )

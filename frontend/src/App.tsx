@@ -96,6 +96,11 @@ function AuthenticatedApp() {
     string | undefined
   >(undefined);
 
+  // Search query from the tab-bar search button
+  const [tabBarSearchQuery, setTabBarSearchQuery] = useState<
+    string | undefined
+  >(undefined);
+
   // Функция навигации на страницу профиля контакта
   const navigateToContactProfile = (data: ContactProfileNavData) => {
     setContactProfileData(data);
@@ -192,6 +197,13 @@ function AuthenticatedApp() {
     setContactProfileData(null);
     setShareContactData(null);
     setProfileOpenCardId(undefined);
+    setTabBarSearchQuery(undefined);
+  };
+
+  // Handle search submitted from the tab-bar search button
+  const handleTabBarSearch = (query: string) => {
+    setTabBarSearchQuery(query);
+    setCurrentPage("contacts");
   };
 
   // QR code loading state
@@ -481,6 +493,7 @@ function AuthenticatedApp() {
                 : (currentPage as PageType)
             }
             onChange={handlePageChange}
+            onSearchSubmit={handleTabBarSearch}
           />
         </div>
 
@@ -516,6 +529,8 @@ function AuthenticatedApp() {
                 returnPage: "contacts",
               })
             }
+            initialSearchQuery={tabBarSearchQuery}
+            onSearchQueryConsumed={() => setTabBarSearchQuery(undefined)}
           />
         )}
         {currentPage === "profile" && (
@@ -584,6 +599,7 @@ function AuthenticatedApp() {
               : (currentPage as PageType)
           }
           onChange={handlePageChange}
+          onSearchSubmit={handleTabBarSearch}
         />
       </footer>
 

@@ -80,9 +80,17 @@ interface ContactsPageProps {
     cardId?: string,
     savedContact?: SavedContact | null,
   ) => void;
+  /** Pre-filled search query from the tab-bar search button */
+  initialSearchQuery?: string;
+  /** Called after the initial search query has been consumed */
+  onSearchQueryConsumed?: () => void;
 }
 
-export function ContactsPage({ onOpenContact }: ContactsPageProps) {
+export function ContactsPage({
+  onOpenContact,
+  initialSearchQuery,
+  onSearchQueryConsumed,
+}: ContactsPageProps) {
   const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("my");
   const [contacts, setContacts] = useState<SavedContact[]>([]);
@@ -95,8 +103,6 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
   const [apiSearchResults, setApiSearchResults] = useState<SearchResult | null>(
     null,
   );
-  const [isSearching, setIsSearching] = useState(false);
-  const [isSearchBarOpen, setIsSearchBarOpen] = useState(false);
   const [savedContactIds, setSavedContactIds] = useState<Set<string>>(
     new Set(),
   );
@@ -246,32 +252,26 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
         setApiSearchResults(null);
         return;
       }
-      setIsSearching(true);
       try {
         const results = await userApi.search(q, { limit: 20 });
         setApiSearchResults(results);
       } catch {
         // Не показываем ошибку API-поиска, просто нет результатов
         setApiSearchResults(null);
-      } finally {
-        setIsSearching(false);
       }
     },
     [searchQuery],
   );
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleApiSearch();
+  // Handle initial search query from tab-bar
+  useEffect(() => {
+    if (initialSearchQuery) {
+      setSearchQuery(initialSearchQuery);
+      handleApiSearch(initialSearchQuery);
+      onSearchQueryConsumed?.();
     }
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    if (!value.trim()) {
-      setApiSearchResults(null);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSearchQuery]);
 
   const handleSearchResultClick = (user: UserPublic) => {
     if (onOpenContact) {
@@ -679,17 +679,8 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
       {/* Header */}
       <header className="contacts-page__header">
         <IconButton
-          onClick={() => {
-            setIsSearchBarOpen((prev) => {
-              if (prev) {
-                // При закрытии очищаем поиск
-                setSearchQuery("");
-                setApiSearchResults(null);
-              }
-              return !prev;
-            });
-          }}
-          aria-label="Поиск"
+          onClick={() => setIsAddModalOpen(true)}
+          aria-label="Редактировать"
         >
           <svg
             width="18"
@@ -698,9 +689,11 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            <path d="m15 5 4 4" />
           </svg>
         </IconButton>
         <div className="contacts-page__title-container">
@@ -1171,50 +1164,6 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
           </div>
         </div>
       </Modal>
-
-      {/* Search bar — fixed bottom */}
-      {isSearchBarOpen && (
-        <div className="contacts-page__search-wrapper">
-          <div className="contacts-page__search-field">
-            <svg
-              className="contacts-page__search-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
-              type="text"
-              className="contacts-page__search-input"
-              placeholder="Поиск по навыкам, имени..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-            />
-            {searchQuery && (
-              <button
-                className="contacts-page__search-clear"
-                onClick={() => {
-                  setSearchQuery("");
-                  setApiSearchResults(null);
-                }}
-              >
-                ✕
-              </button>
-            )}
-            <button
-              className="contacts-page__search-btn"
-              onClick={() => handleApiSearch()}
-              disabled={isSearching || !searchQuery.trim()}
-            >
-              {isSearching ? <Loader /> : "Найти"}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
