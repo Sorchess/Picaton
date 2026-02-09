@@ -1,6 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import type { SavedContact, UserPublic } from "@/entities/user";
-import { userApi } from "@/entities/user";
+import type {
+  SavedContact,
+  UserPublic,
+  SearchResult,
+  SearchCardResult,
+} from "@/entities/user";
+import { userApi, UserCard } from "@/entities/user";
 import { businessCardApi } from "@/entities/business-card";
 import {
   companyApi,
@@ -22,6 +27,39 @@ import {
   Button,
 } from "@/shared";
 import "./ContactsPage.scss";
+
+// Адаптер для преобразования SearchCardResult в UserPublic-совместимый объект
+function cardToUserLike(
+  card: SearchCardResult,
+): UserPublic & { card_id: string } {
+  const firstName = card.display_name
+    ? card.display_name.split(" ")[0]
+    : card.owner_first_name || "";
+  const lastName = card.display_name
+    ? card.display_name.split(" ").slice(1).join(" ")
+    : card.owner_last_name || "";
+
+  return {
+    id: card.owner_id,
+    card_id: card.id,
+    first_name: firstName,
+    last_name: lastName,
+    avatar_url: card.avatar_url,
+    bio: card.bio,
+    ai_generated_bio: card.ai_generated_bio,
+    location: null,
+    search_tags: card.search_tags,
+    tags: [],
+    contacts: card.contacts.map((c) => ({
+      type: c.type,
+      value: c.value,
+      is_primary: c.is_primary,
+      is_visible: true,
+    })),
+    position: null,
+    profile_completeness: card.completeness,
+  };
+}
 
 type TabType = "my" | "company" | "recommendations";
 
@@ -54,6 +92,13 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [apiSearchResults, setApiSearchResults] = useState<SearchResult | null>(
+    null,
+  );
+  const [isSearching, setIsSearching] = useState(false);
+  const [savedContactIds, setSavedContactIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [selectedContact, setSelectedContact] = useState<SavedContact | null>(
     null,
   );
@@ -86,6 +131,13 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
     try {
       const data = await userApi.getContacts(authUser.id);
       setContacts(data);
+      // Обновляем набор сохранённых card_id / user_id
+      const ids = new Set<string>();
+      data.forEach((c) => {
+        if (c.saved_card_id) ids.add(c.saved_card_id);
+        else if (c.saved_user_id) ids.add(c.saved_user_id);
+      });
+      setSavedContactIds(ids);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка загрузки");
     } finally {
@@ -184,6 +236,68 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
     loadContacts();
     loadCompanyMembers();
   }, [loadContacts, loadCompanyMembers]);
+
+  // API поиск
+  const handleApiSearch = useCallback(
+    async (searchText?: string) => {
+      const q = searchText ?? searchQuery;
+      if (!q.trim()) {
+        setApiSearchResults(null);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const results = await userApi.search(q, { limit: 20 });
+        setApiSearchResults(results);
+      } catch {
+        // Не показываем ошибку API-поиска, просто нет результатов
+        setApiSearchResults(null);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [searchQuery],
+  );
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleApiSearch();
+    }
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (!value.trim()) {
+      setApiSearchResults(null);
+    }
+  };
+
+  const handleSearchResultClick = (user: UserPublic) => {
+    if (onOpenContact) {
+      const cardId = (user as UserPublic & { card_id?: string }).card_id;
+      onOpenContact(user, cardId);
+    }
+  };
+
+  const handleSaveSearchResult = async (
+    user: UserPublic & { card_id?: string },
+  ) => {
+    if (!authUser?.id) return;
+    if (user.card_id && savedContactIds.has(user.card_id)) return;
+    try {
+      await userApi.saveContact(authUser.id, user.id, user.card_id);
+      setSavedContactIds((prev) => {
+        const newSet = new Set(prev);
+        if (user.card_id) newSet.add(user.card_id);
+        return newSet;
+      });
+      await loadContacts();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Ошибка сохранения контакта",
+      );
+    }
+  };
 
   useEffect(() => {
     if (activeTab === "recommendations") {
@@ -471,7 +585,7 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
         name: getContactFullName(c),
         position: null,
         company: null,
-        avatarUrl: c.avatar_url || null, 
+        avatarUrl: c.avatar_url || null,
         tags: c.search_tags,
         type: "saved" as const,
         originalData: c,
@@ -587,6 +701,48 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
         </IconButton>
       </header>
 
+      {/* Search bar */}
+      <div className="contacts-page__search-wrapper">
+        <div className="contacts-page__search-field">
+          <svg
+            className="contacts-page__search-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            type="text"
+            className="contacts-page__search-input"
+            placeholder="Поиск по навыкам, имени..."
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+          />
+          {searchQuery && (
+            <button
+              className="contacts-page__search-clear"
+              onClick={() => {
+                setSearchQuery("");
+                setApiSearchResults(null);
+              }}
+            >
+              ✕
+            </button>
+          )}
+          <button
+            className="contacts-page__search-btn"
+            onClick={() => handleApiSearch()}
+            disabled={isSearching || !searchQuery.trim()}
+          >
+            {isSearching ? <Loader /> : "Найти"}
+          </button>
+        </div>
+      </div>
+
       {/* Tabs */}
       <Tabs
         tabs={tabs}
@@ -594,6 +750,7 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
         onChange={(id) => {
           setActiveTab(id as TabType);
           setSearchQuery("");
+          setApiSearchResults(null);
         }}
         className="contacts-page__tabs"
       />
@@ -601,6 +758,71 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
       {error && (
         <div className="contacts-page__error" onClick={() => setError(null)}>
           {error}
+        </div>
+      )}
+
+      {/* API Search Results */}
+      {apiSearchResults && (
+        <div className="contacts-page__search-results">
+          <div className="contacts-page__search-results-header">
+            <Typography variant="body" color="secondary">
+              Найдено:{" "}
+              <strong>
+                {
+                  apiSearchResults.cards.filter(
+                    (c) => c.owner_id !== authUser?.id,
+                  ).length
+                }
+              </strong>
+            </Typography>
+            {apiSearchResults.expanded_tags &&
+              apiSearchResults.expanded_tags.length > 0 && (
+                <div className="contacts-page__search-suggested">
+                  <span>Похожие:</span>
+                  {apiSearchResults.expanded_tags
+                    .slice(0, 5)
+                    .map((tag: string, i: number) => (
+                      <Tag
+                        key={i}
+                        size="sm"
+                        onClick={() => {
+                          setSearchQuery(tag);
+                          handleApiSearch(tag);
+                        }}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {tag}
+                      </Tag>
+                    ))}
+                </div>
+              )}
+          </div>
+          <div className="contacts-page__search-grid">
+            {apiSearchResults.cards
+              .filter((card) => card.owner_id !== authUser?.id)
+              .map((card) => {
+                const userLike = cardToUserLike(card);
+                const isSaved = savedContactIds.has(card.id);
+                return (
+                  <UserCard
+                    key={card.id}
+                    user={userLike}
+                    onClick={handleSearchResultClick}
+                    onAddContact={handleSaveSearchResult}
+                    isSaved={isSaved}
+                    showTags
+                    compact
+                  />
+                );
+              })}
+          </div>
+          {apiSearchResults.cards.filter((c) => c.owner_id !== authUser?.id)
+            .length === 0 && (
+            <div className="contacts-page__empty">
+              <h3>Никого не найдено</h3>
+              <p>Попробуйте изменить поисковый запрос</p>
+            </div>
+          )}
         </div>
       )}
 
