@@ -17,6 +17,7 @@ import {
   ProfileInfoCard,
   ProfileTopBar,
 } from "./components";
+import type { ContactAvatarData } from "./components/ProfileTopBar/ProfileTopBar";
 import type { RoleTab } from "./components";
 import "./ProfilePage.scss";
 
@@ -28,12 +29,15 @@ interface ProfilePageProps {
   openCardId?: string;
   /** Callback when card is opened (to clear openCardId) */
   onCardOpened?: () => void;
+  /** Navigate to contacts page */
+  onNavigateToContacts?: () => void;
 }
 
 export function ProfilePage({
   onShareContact,
   openCardId,
   onCardOpened,
+  onNavigateToContacts,
 }: ProfilePageProps) {
   const { user: authUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
@@ -61,7 +65,15 @@ export function ProfilePage({
   const [activeRoleId, setActiveRoleId] = useState("personal");
 
   // Skills with endorsements for selected card
-  const [skillsWithEndorsements, setSkillsWithEndorsements] = useState<SkillWithEndorsements[]>([]);
+  const [skillsWithEndorsements, setSkillsWithEndorsements] = useState<
+    SkillWithEndorsements[]
+  >([]);
+
+  // Saved contacts count & avatars
+  const [savedContactsCount, setSavedContactsCount] = useState<number>(0);
+  const [savedContactAvatars, setSavedContactAvatars] = useState<
+    ContactAvatarData[]
+  >([]);
 
   const loadUser = useCallback(async () => {
     if (!authUser?.id) return;
@@ -95,6 +107,27 @@ export function ProfilePage({
       // Ignore errors
     }
   }, []);
+
+  const loadSavedContactsCount = useCallback(async () => {
+    if (!authUser?.id) return;
+    try {
+      const contacts = await userApi.getContacts(authUser.id);
+      setSavedContactsCount(contacts.length);
+      const avatars: ContactAvatarData[] = contacts.slice(0, 5).map((c) => ({
+        avatarUrl: c.avatar_url || null,
+        initials:
+          [c.first_name?.[0], c.last_name?.[0]]
+            .filter(Boolean)
+            .join("")
+            .toUpperCase() ||
+          c.name?.[0]?.toUpperCase() ||
+          "?",
+      }));
+      setSavedContactAvatars(avatars);
+    } catch {
+      // Ignore errors
+    }
+  }, [authUser?.id]);
 
   // Get current selected card based on active role
   const getSelectedCard = useCallback((): BusinessCard | null => {
@@ -130,7 +163,8 @@ export function ProfilePage({
     loadUser();
     loadCards();
     loadCardAssignments();
-  }, [loadUser, loadCards, loadCardAssignments]);
+    loadSavedContactsCount();
+  }, [loadUser, loadCards, loadCardAssignments, loadSavedContactsCount]);
 
   // Load endorsements when selected card changes
   useEffect(() => {
@@ -325,7 +359,7 @@ export function ProfilePage({
   // Calculate total likes from all skills with endorsements
   const totalLikesCount = skillsWithEndorsements.reduce(
     (sum, skill) => sum + skill.endorsement_count,
-    0
+    0,
   );
 
   // Extract roles from selected card's tags
@@ -351,7 +385,6 @@ export function ProfilePage({
     return roles;
   };
 
-
   const tags =
     displaySearchTags.slice(0, 5).map((tag, i) => ({
       id: `tag-${i}`,
@@ -376,6 +409,9 @@ export function ProfilePage({
           }
         }}
         onRightClick={handleShareProfile}
+        contactsCount={savedContactsCount}
+        contactAvatars={savedContactAvatars}
+        onContactsClick={onNavigateToContacts}
       />
 
       {/* Content */}

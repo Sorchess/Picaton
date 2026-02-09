@@ -1,3 +1,5 @@
+@use "@/shared/styles/mixins/glass" as *;
+
 .profile-top-bar {
   position: sticky;
   top: 0;
@@ -8,4 +10,81 @@
   width: 100%;
   padding: 16px 0;
   background: none;
+
+  &__contacts-badge {
+    @include liquid-glass;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 40px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.15s ease,
+      opacity 0.15s ease;
+
+    &:active {
+      transform: scale(0.97);
+      opacity: 0.85;
+    }
+  }
+
+  &__contacts-text {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 24px;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+  }
+
+  &__avatars {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid #f3f5fa;
+    object-fit: cover;
+    margin-left: -9px;
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    &--placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      color: var(--color-text-primary);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+
+      [data-theme="dark"] & {
+        background: linear-gradient(135deg, #333 0%, #111 100%);
+      }
+    }
+  }
+
+  &__contacts-extra {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 24px;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    margin-left: 2px;
+  }
 }

@@ -541,6 +541,7 @@ function AuthenticatedApp() {
             }
             openCardId={profileOpenCardId}
             onCardOpened={() => setProfileOpenCardId(undefined)}
+            onNavigateToContacts={() => handlePageChange("contacts")}
           />
         )}
         {currentPage === "company" && (

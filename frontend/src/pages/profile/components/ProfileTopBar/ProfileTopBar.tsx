@@ -2,6 +2,11 @@ import type { FC, ReactNode } from "react";
 import { IconButton } from "@/shared";
 import "./ProfileTopBar.scss";
 
+export interface ContactAvatarData {
+  avatarUrl: string | null;
+  initials: string;
+}
+
 interface ProfileTopBarProps {
   /** Left button icon/content */
   leftIcon?: ReactNode;
@@ -15,6 +20,12 @@ interface ProfileTopBarProps {
   onRightClick?: () => void;
   /** Right button aria-label */
   rightLabel?: string;
+  /** Total saved contacts count */
+  contactsCount?: number;
+  /** Avatar data of saved contacts (first few) */
+  contactAvatars?: ContactAvatarData[];
+  /** On contacts badge click */
+  onContactsClick?: () => void;
   /** Additional CSS class */
   className?: string;
 }
@@ -69,6 +80,8 @@ const ShareIcon = () => (
 /**
  * Profile top bar with action buttons (from Figma design)
  */
+const MAX_AVATARS = 3;
+
 export const ProfileTopBar: FC<ProfileTopBarProps> = ({
   leftIcon = <SettingsIcon />,
   onLeftClick,
@@ -76,13 +89,60 @@ export const ProfileTopBar: FC<ProfileTopBarProps> = ({
   rightIcon = <ShareIcon />,
   onRightClick,
   rightLabel = "Поделиться",
+  contactsCount,
+  contactAvatars = [],
+  onContactsClick,
   className = "",
 }) => {
+  const visibleAvatars = contactAvatars.slice(0, MAX_AVATARS);
+  const extraCount =
+    contactAvatars.length > MAX_AVATARS
+      ? contactAvatars.length - MAX_AVATARS
+      : 0;
+
   return (
     <div className={`profile-top-bar ${className}`}>
       <IconButton onClick={onLeftClick} aria-label={leftLabel}>
         {leftIcon}
       </IconButton>
+
+      {contactsCount !== undefined && (
+        <button
+          type="button"
+          className="profile-top-bar__contacts-badge"
+          onClick={onContactsClick}
+        >
+          <span className="profile-top-bar__contacts-text">
+            {contactsCount} контактов
+          </span>
+          {visibleAvatars.length > 0 && (
+            <div className="profile-top-bar__avatars">
+              {visibleAvatars.map((contact, i) =>
+                contact.avatarUrl ? (
+                  <img
+                    key={i}
+                    src={contact.avatarUrl}
+                    alt=""
+                    className="profile-top-bar__avatar"
+                  />
+                ) : (
+                  <div
+                    key={i}
+                    className="profile-top-bar__avatar profile-top-bar__avatar--placeholder"
+                  >
+                    <span>{contact.initials}</span>
+                  </div>
+                ),
+              )}
+            </div>
+          )}
+          {extraCount > 0 && (
+            <span className="profile-top-bar__contacts-extra">
+              +{extraCount}
+            </span>
+          )}
+        </button>
+      )}
 
       <IconButton onClick={onRightClick} aria-label={rightLabel}>
         {rightIcon}
