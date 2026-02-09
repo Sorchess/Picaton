@@ -701,48 +701,6 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
         </IconButton>
       </header>
 
-      {/* Search bar */}
-      <div className="contacts-page__search-wrapper">
-        <div className="contacts-page__search-field">
-          <svg
-            className="contacts-page__search-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            type="text"
-            className="contacts-page__search-input"
-            placeholder="Поиск по навыкам, имени..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-          />
-          {searchQuery && (
-            <button
-              className="contacts-page__search-clear"
-              onClick={() => {
-                setSearchQuery("");
-                setApiSearchResults(null);
-              }}
-            >
-              ✕
-            </button>
-          )}
-          <button
-            className="contacts-page__search-btn"
-            onClick={() => handleApiSearch()}
-            disabled={isSearching || !searchQuery.trim()}
-          >
-            {isSearching ? <Loader /> : "Найти"}
-          </button>
-        </div>
-      </div>
-
       {/* Tabs */}
       <Tabs
         tabs={tabs}
@@ -1193,6 +1151,48 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
           </div>
         </div>
       </Modal>
+
+      {/* Search bar — fixed bottom */}
+      <div className="contacts-page__search-wrapper">
+        <div className="contacts-page__search-field">
+          <svg
+            className="contacts-page__search-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            type="text"
+            className="contacts-page__search-input"
+            placeholder="Поиск по навыкам, имени..."
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+          />
+          {searchQuery && (
+            <button
+              className="contacts-page__search-clear"
+              onClick={() => {
+                setSearchQuery("");
+                setApiSearchResults(null);
+              }}
+            >
+              ✕
+            </button>
+          )}
+          <button
+            className="contacts-page__search-btn"
+            onClick={() => handleApiSearch()}
+            disabled={isSearching || !searchQuery.trim()}
+          >
+            {isSearching ? <Loader /> : "Найти"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
