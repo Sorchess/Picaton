@@ -351,6 +351,7 @@ class SavedContactResponse(BaseModel):
     last_name: str
     phone: str | None
     email: str | None
+    avatar_url: str | None = None
     contacts: list[ContactInfo] = []  # Контакты для связи
     messenger_type: str | None
     messenger_value: str | None

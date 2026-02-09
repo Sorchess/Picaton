@@ -776,9 +776,30 @@ async def get_user_contacts(
     skip: int = 0,
     limit: int = 100,
     contact_service=Depends(get_contact_service),
+    user_service=Depends(get_user_service),
+    card_service=Depends(get_business_card_service),
 ):
     """Получить все сохраненные контакты пользователя."""
     contacts = await contact_service.get_user_contacts(user_id, skip, limit)
+
+    # Обогащаем контакты без avatar_url
+    for contact in contacts:
+        if contact.avatar_url:
+            continue
+        # Пробуем получить аватарку из карточки или пользователя
+        try:
+            if contact.saved_card_id:
+                card = await card_service.get_card(contact.saved_card_id)
+                if card and card.avatar_url:
+                    contact.avatar_url = card.avatar_url
+                    continue
+            if contact.saved_user_id:
+                user = await user_service.get_user(contact.saved_user_id)
+                if user and user.avatar_url:
+                    contact.avatar_url = user.avatar_url
+        except Exception:
+            pass
+
     return [_contact_to_response(c) for c in contacts]
 
 
@@ -984,6 +1005,7 @@ def _contact_to_response(contact) -> SavedContactResponse:
         last_name=contact.last_name,
         phone=contact.phone,
         email=contact.email,
+        avatar_url=contact.avatar_url,
         contacts=[
             ContactInfo(
                 type=c.type.value if hasattr(c.type, "value") else c.type,

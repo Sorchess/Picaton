@@ -31,6 +31,7 @@ class MongoSavedContactRepository(SavedContactRepositoryInterface):
             "last_name": contact.last_name,
             "phone": contact.phone,
             "email": contact.email,
+            "avatar_url": contact.avatar_url,
             "contacts": [
                 {
                     "type": c.type.value if hasattr(c.type, "value") else c.type,
@@ -85,6 +86,7 @@ class MongoSavedContactRepository(SavedContactRepositoryInterface):
             last_name=doc.get("last_name", ""),
             phone=doc.get("phone"),
             email=doc.get("email"),
+            avatar_url=doc.get("avatar_url"),
             contacts=contacts,
             messenger_type=doc.get("messenger_type"),
             messenger_value=doc.get("messenger_value"),

@@ -29,6 +29,7 @@ class SavedContact(Entity):
     last_name: str = field(default="")  # Фамилия
     phone: str | None = field(default=None)
     email: str | None = field(default=None)
+    avatar_url: str | None = field(default=None)  # URL аватарки
     notes: str | None = field(default=None)
 
     # Контакты для связи (telegram, whatsapp и т.д.)

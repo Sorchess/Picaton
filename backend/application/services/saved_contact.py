@@ -81,6 +81,7 @@ class SavedContactService:
             first_name=first_name,
             last_name=last_name,
             email=user.email if user else None,
+            avatar_url=card.avatar_url or (user.avatar_url if user else None),
             contacts=list(card.contacts),  # Копируем контакты из карточки
             search_tags=search_tags or [],
             notes=notes,
@@ -119,21 +120,24 @@ class SavedContactService:
         if await self._contact_repository.exists(owner_id, user_id):
             raise ContactAlreadyExistsError(str(user_id))
 
-        # Пытаемся найти основную карточку пользователя для получения контактов
+        # Пытаемся найти основную карточку пользователя для получения контактов и аватарки
         contacts_to_save = list(user.contacts)
         user_search_tags = list(user.search_tags)
+        avatar_url = user.avatar_url
 
-        if self._card_repository and not contacts_to_save:
-            # Если у пользователя нет контактов, пробуем взять из его карточки
+        if self._card_repository:
             cards = await self._card_repository.get_by_owner(user_id)
             if cards:
-                # Берём основную (первую) карточку
                 primary_card = cards[0]
-                contacts_to_save = list(primary_card.contacts)
-                # Также добавляем теги из карточки
-                user_search_tags = list(
-                    set(user_search_tags + primary_card.search_tags)
-                )
+                if not contacts_to_save:
+                    # Если у пользователя нет контактов, берём из карточки
+                    contacts_to_save = list(primary_card.contacts)
+                    # Также добавляем теги из карточки
+                    user_search_tags = list(
+                        set(user_search_tags + primary_card.search_tags)
+                    )
+                if not avatar_url and primary_card.avatar_url:
+                    avatar_url = primary_card.avatar_url
 
         contact = SavedContact(
             owner_id=owner_id,
@@ -142,6 +146,7 @@ class SavedContactService:
             first_name=user.first_name,
             last_name=user.last_name,
             email=user.email,
+            avatar_url=avatar_url,
             contacts=contacts_to_save,  # Копируем контакты пользователя или из карточки
             search_tags=search_tags or [],
             notes=notes,
