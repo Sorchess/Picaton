@@ -77,22 +77,6 @@ export const Switcher: FC<SwitcherProps> = ({
 // Default tabs from Figma design
 export const defaultTabs: SwitcherItem[] = [
   {
-    id: "search",
-    label: "Поиск",
-    path: "/search",
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-        <path
-          d="M16 16L20 20"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  {
     id: "contacts",
     label: "Контакты",
     path: "/contacts",

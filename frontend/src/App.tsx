@@ -3,7 +3,6 @@ import { ThemeProvider, ThemeToggle } from "./shared";
 import { PageSwitcher } from "./widgets";
 import type { PageType } from "./widgets";
 import {
-  SearchPage,
   ContactsPage,
   ProfilePage,
   LoginPage,
@@ -76,8 +75,8 @@ interface ShareContactNavData {
 
 function AuthenticatedApp() {
   const { user, logout, refreshUser } = useAuth();
-  const [currentPage, setCurrentPage] = useState<ExtendedPageType>("search");
-  const [previousPage, setPreviousPage] = useState<PageType>("search");
+  const [currentPage, setCurrentPage] = useState<ExtendedPageType>("contacts");
+  const [previousPage, setPreviousPage] = useState<PageType>("contacts");
   const [inviteProcessing, setInviteProcessing] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{
     type: "success" | "error";
@@ -285,7 +284,7 @@ function AuthenticatedApp() {
             user: userData,
             cardId: undefined,
             savedContact: null,
-            returnPage: "search",
+            returnPage: "contacts",
           });
           setQrUserLoaded(true);
         }
@@ -359,7 +358,7 @@ function AuthenticatedApp() {
             user: userData,
             cardId: cardData.id,
             savedContact: null,
-            returnPage: "search",
+            returnPage: "contacts",
           });
           setQrUserLoaded(true);
         }
@@ -506,18 +505,6 @@ function AuthenticatedApp() {
       </header>
 
       <main className="app__main">
-        {currentPage === "search" && (
-          <SearchPage
-            onOpenContact={(user, cardId) =>
-              navigateToContactProfile({
-                user,
-                cardId,
-                savedContact: null,
-                returnPage: "search",
-              })
-            }
-          />
-        )}
         {currentPage === "collaboration" && <CollaborationPage />}
         {currentPage === "contacts" && (
           <ContactsPage

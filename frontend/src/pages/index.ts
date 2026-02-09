@@ -1,5 +1,4 @@
 export { ProfilePage } from "./profile";
-export { SearchPage } from "./search";
 export { ContactsPage } from "./contacts";
 export { ContactProfilePage } from "./contact-profile";
 export { ShareContactPage } from "./share-contact";

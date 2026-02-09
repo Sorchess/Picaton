@@ -96,6 +96,7 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
     null,
   );
   const [isSearching, setIsSearching] = useState(false);
+  const [isSearchBarOpen, setIsSearchBarOpen] = useState(false);
   const [savedContactIds, setSavedContactIds] = useState<Set<string>>(
     new Set(),
   );
@@ -677,12 +678,29 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
     <div className="contacts-page">
       {/* Header */}
       <header className="contacts-page__header">
-        <IconButton onClick={() => {}} aria-label="Редактировать">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M3.60742 16.1367L1.24414 17.0449C1.10091 17.097 0.970703 17.0645 0.853516 16.9473C0.742839 16.8301 0.713542 16.6966 0.765625 16.5469L1.72266 14.252L12.709 3.27539L14.584 5.16016L3.60742 16.1367ZM15.5215 4.24219L13.627 2.35742L14.6816 1.3125C14.9421 1.05859 15.2122 0.921875 15.4922 0.902344C15.7721 0.882812 16.0326 0.990234 16.2734 1.22461L16.6543 1.61523C16.8952 1.85612 17.0091 2.11328 16.9961 2.38672C16.9831 2.66016 16.8431 2.93034 16.5762 3.19727L15.5215 4.24219Z"
-              fill="currentColor"
-            />
+        <IconButton
+          onClick={() => {
+            setIsSearchBarOpen((prev) => {
+              if (prev) {
+                // При закрытии очищаем поиск
+                setSearchQuery("");
+                setApiSearchResults(null);
+              }
+              return !prev;
+            });
+          }}
+          aria-label="Поиск"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
           </svg>
         </IconButton>
         <div className="contacts-page__title-container">
@@ -1155,46 +1173,48 @@ export function ContactsPage({ onOpenContact }: ContactsPageProps) {
       </Modal>
 
       {/* Search bar — fixed bottom */}
-      <div className="contacts-page__search-wrapper">
-        <div className="contacts-page__search-field">
-          <svg
-            className="contacts-page__search-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            type="text"
-            className="contacts-page__search-input"
-            placeholder="Поиск по навыкам, имени..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-          />
-          {searchQuery && (
-            <button
-              className="contacts-page__search-clear"
-              onClick={() => {
-                setSearchQuery("");
-                setApiSearchResults(null);
-              }}
+      {isSearchBarOpen && (
+        <div className="contacts-page__search-wrapper">
+          <div className="contacts-page__search-field">
+            <svg
+              className="contacts-page__search-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
             >
-              ✕
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              type="text"
+              className="contacts-page__search-input"
+              placeholder="Поиск по навыкам, имени..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+            />
+            {searchQuery && (
+              <button
+                className="contacts-page__search-clear"
+                onClick={() => {
+                  setSearchQuery("");
+                  setApiSearchResults(null);
+                }}
+              >
+                ✕
+              </button>
+            )}
+            <button
+              className="contacts-page__search-btn"
+              onClick={() => handleApiSearch()}
+              disabled={isSearching || !searchQuery.trim()}
+            >
+              {isSearching ? <Loader /> : "Найти"}
             </button>
-          )}
-          <button
-            className="contacts-page__search-btn"
-            onClick={() => handleApiSearch()}
-            disabled={isSearching || !searchQuery.trim()}
-          >
-            {isSearching ? <Loader /> : "Найти"}
-          </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
