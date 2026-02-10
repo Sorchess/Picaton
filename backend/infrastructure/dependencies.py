@@ -438,14 +438,14 @@ def get_gigachat_text_tags_service() -> GigaChatTextTagsGenerator:
     return GigaChatTextTagsGenerator(gigachat_client)
 
 
-def get_document_transcriber_service() -> "DocumentTranscriberService":
+def get_document_transcriber_service():
     """Получить сервис транскрибации документов в текст."""
     from application.services.document_transcriber import DocumentTranscriberService
 
     return DocumentTranscriberService()
 
 
-def get_speech_recognition_service() -> "SpeechRecognitionService":
+def get_speech_recognition_service():
     """Получить сервис распознавания речи через Yandex SpeechKit."""
     from application.services.speech_recognition import (
         SpeechRecognitionService,
