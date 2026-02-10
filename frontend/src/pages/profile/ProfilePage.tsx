@@ -112,8 +112,9 @@ export function ProfilePage({
     if (!authUser?.id) return;
     try {
       const contacts = await userApi.getContacts(authUser.id);
-      setSavedContactsCount(contacts.length);
-      const avatars: ContactAvatarData[] = contacts.slice(0, 5).map((c) => ({
+      const filtered = contacts.filter((c) => c.saved_user_id !== authUser.id);
+      setSavedContactsCount(filtered.length);
+      const avatars: ContactAvatarData[] = filtered.slice(0, 5).map((c) => ({
         avatarUrl: c.avatar_url || null,
         initials:
           [c.first_name?.[0], c.last_name?.[0]]
