@@ -187,52 +187,149 @@ export function LoginPage() {
       <div className="auth-page__container">
         <div className="auth-page__header">
           <div className="auth-page__logo">
-            <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+            <svg
+              width="64"
+              height="67"
+              viewBox="0 0 41 43"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g filter="url(#filter0_ddii_auth_logo)">
+                <path
+                  d="M15.6699 7.40995C15.6699 2.43033 22.1549 0.511287 24.8647 4.689L27.0697 8.08838C27.4651 8.69792 27.9886 9.21396 28.6037 9.60061L36.6791 14.6766C40.172 16.8721 39.653 22.1144 35.7975 23.5825L25.9007 27.351C24.5676 27.8586 23.5149 28.9114 23.0073 30.2444L20.3426 37.2423C18.7074 41.5366 12.6324 41.5366 10.9972 37.2423L8.15462 29.7771C7.76023 28.7413 6.94226 27.9234 5.90653 27.529C1.87508 25.9939 2.97512 20.0137 7.28896 20.0137H11.0866C13.6179 20.0137 15.6699 17.9616 15.6699 15.4303V7.40995Z"
+                  fill="#0081FF"
+                />
+                <path
+                  d="M15.6699 7.40995C15.6699 2.43033 22.1549 0.511287 24.8647 4.689L27.0697 8.08838C27.4651 8.69792 27.9886 9.21396 28.6037 9.60061L36.6791 14.6766C40.172 16.8721 39.653 22.1144 35.7975 23.5825L25.9007 27.351C24.5676 27.8586 23.5149 28.9114 23.0073 30.2444L20.3426 37.2423C18.7074 41.5366 12.6324 41.5366 10.9972 37.2423L8.15462 29.7771C7.76023 28.7413 6.94226 27.9234 5.90653 27.529C1.87508 25.9939 2.97512 20.0137 7.28896 20.0137H11.0866C13.6179 20.0137 15.6699 17.9616 15.6699 15.4303V7.40995Z"
+                  fill="url(#paint0_radial_auth_logo)"
+                />
+                <path
+                  d="M15.6699 7.40995C15.6699 2.43033 22.1549 0.511287 24.8647 4.689L27.0697 8.08838C27.4651 8.69792 27.9886 9.21396 28.6037 9.60061L36.6791 14.6766C40.172 16.8721 39.653 22.1144 35.7975 23.5825L25.9007 27.351C24.5676 27.8586 23.5149 28.9114 23.0073 30.2444L20.3426 37.2423C18.7074 41.5366 12.6324 41.5366 10.9972 37.2423L8.15462 29.7771C7.76023 28.7413 6.94226 27.9234 5.90653 27.529C1.87508 25.9939 2.97512 20.0137 7.28896 20.0137H11.0866C13.6179 20.0137 15.6699 17.9616 15.6699 15.4303V7.40995Z"
+                  fill="url(#paint1_radial_auth_logo)"
+                />
+              </g>
               <defs>
-                <linearGradient
-                  id="authLogoGradient"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
+                <filter
+                  id="filter0_ddii_auth_logo"
+                  x="-9.77516e-05"
+                  y="0.00039053"
+                  width="43.0191"
+                  height="42.8625"
+                  filterUnits="userSpaceOnUse"
+                  colorInterpolationFilters="sRGB"
                 >
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="50%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#d946ef" />
-                </linearGradient>
+                  <feFlood floodOpacity="0" result="BackgroundImageFix" />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feOffset dx="-2" />
+                  <feComposite in2="hardAlpha" operator="out" />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0.336951 0 0 0 0 0.666955 0 0 0 1 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="BackgroundImageFix"
+                    result="effect1_dropShadow"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feOffset dx="-1" />
+                  <feGaussianBlur stdDeviation="1.2" />
+                  <feComposite in2="hardAlpha" operator="out" />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0.00784314 0 0 0 0 0.686275 0 0 0 0 0.878431 0 0 0 1 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="effect1_dropShadow"
+                    result="effect2_dropShadow"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="effect2_dropShadow"
+                    result="shape"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feOffset dx="4" dy="2" />
+                  <feGaussianBlur stdDeviation="2" />
+                  <feComposite
+                    in2="hardAlpha"
+                    operator="arithmetic"
+                    k2="-1"
+                    k3="1"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="shape"
+                    result="effect3_innerShadow"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feOffset dx="1" dy="-1" />
+                  <feGaussianBlur stdDeviation="1.2" />
+                  <feComposite
+                    in2="hardAlpha"
+                    operator="arithmetic"
+                    k2="-1"
+                    k3="1"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0.00784314 0 0 0 0 0.752941 0 0 0 0 0.909804 0 0 0 1 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="effect3_innerShadow"
+                    result="effect4_innerShadow"
+                  />
+                </filter>
+                <radialGradient
+                  id="paint0_radial_auth_logo"
+                  cx="0"
+                  cy="0"
+                  r="1"
+                  gradientUnits="userSpaceOnUse"
+                  gradientTransform="translate(31.6699 20.5137) rotate(75) scale(32.6112)"
+                >
+                  <stop stopColor="#8C00FF" />
+                  <stop offset="1" stopColor="#0283FF" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient
+                  id="paint1_radial_auth_logo"
+                  cx="0"
+                  cy="0"
+                  r="1"
+                  gradientUnits="userSpaceOnUse"
+                  gradientTransform="translate(15.6699 36.5137) rotate(32.3827) scale(28.941)"
+                >
+                  <stop stopColor="#00EAFF" />
+                  <stop offset="1" stopColor="#0283FF" stopOpacity="0" />
+                </radialGradient>
               </defs>
-              <circle cx="16" cy="16" r="14" fill="url(#authLogoGradient)" />
-              <circle cx="16" cy="10" r="2.5" fill="white" />
-              <circle cx="10" cy="20" r="2.5" fill="white" />
-              <circle cx="22" cy="20" r="2.5" fill="white" />
-              <circle cx="16" cy="16" r="3" fill="white" opacity="0.9" />
-              <line
-                x1="16"
-                y1="10"
-                x2="16"
-                y2="16"
-                stroke="white"
-                strokeWidth="1.5"
-                opacity="0.7"
-              />
-              <line
-                x1="16"
-                y1="16"
-                x2="10"
-                y2="20"
-                stroke="white"
-                strokeWidth="1.5"
-                opacity="0.7"
-              />
-              <line
-                x1="16"
-                y1="16"
-                x2="22"
-                y2="20"
-                stroke="white"
-                strokeWidth="1.5"
-                opacity="0.7"
-              />
             </svg>
           </div>
           <Typography variant="h1" className="auth-page__title">
