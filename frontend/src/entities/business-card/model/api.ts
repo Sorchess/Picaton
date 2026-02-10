@@ -6,6 +6,8 @@ import type {
   BusinessCardUpdate,
   BusinessCardListResponse,
   CardContactAdd,
+  DocumentTranscribeResponse,
+  SpeechRecognitionResponse,
 } from "./types";
 
 export const businessCardApi = {
@@ -138,4 +140,19 @@ export const businessCardApi = {
       token?: string;
       expires_at?: string;
     }>(`/cards/${cardId}/qr-code${duration ? `?duration=${duration}` : ""}`),
+
+  // ============ Транскрибация документов ============
+
+  // Извлечь текст из документа (PDF, DOCX, TXT, RTF)
+  transcribeDocument: (file: File) =>
+    api.upload<DocumentTranscribeResponse>("/cards/transcribe-document", file),
+
+  // ============ Распознавание речи (Yandex SpeechKit) ============
+
+  // Распознать речь из аудиофайла
+  recognizeSpeech: (audioBlob: Blob) =>
+    api.upload<SpeechRecognitionResponse>(
+      "/cards/recognize-speech",
+      new File([audioBlob], "audio.webm", { type: audioBlob.type || "audio/webm" }),
+    ),
 };

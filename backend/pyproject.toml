@@ -24,6 +24,9 @@ cloudinary = "^1.41.0"
 python-multipart = "^0.0.20"
 websockets = "^15.0.1"
 gigachat = "^0.1.43"
+python-docx = "^1.1.0"
+PyPDF2 = "^3.0.1"
+striprtf = "^0.0.26"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"

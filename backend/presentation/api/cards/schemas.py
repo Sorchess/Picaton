@@ -225,3 +225,27 @@ class TextTagGenerationResponse(BaseModel):
     source_text: str = Field(
         description="Исходный текст, из которого генерировались теги"
     )
+
+
+# ============ Document Transcription ============
+
+
+class DocumentTranscribeResponse(BaseModel):
+    """Ответ с извлечённым текстом из документа."""
+
+    text: str = Field(description="Извлечённый текст из документа")
+    filename: str = Field(description="Оригинальное имя файла")
+    format: str = Field(description="Определённый формат файла (pdf, docx, txt, rtf)")
+    char_count: int = Field(description="Количество символов в извлечённом тексте")
+    was_truncated: bool = Field(
+        description="Был ли текст обрезан из-за превышения лимита"
+    )
+
+
+# ============ Speech Recognition ============
+
+
+class SpeechRecognitionResponse(BaseModel):
+    """Ответ с распознанным текстом из аудио."""
+
+    text: str = Field(description="Распознанный текст")

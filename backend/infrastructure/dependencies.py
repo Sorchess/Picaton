@@ -438,6 +438,31 @@ def get_gigachat_text_tags_service() -> GigaChatTextTagsGenerator:
     return GigaChatTextTagsGenerator(gigachat_client)
 
 
+def get_document_transcriber_service() -> "DocumentTranscriberService":
+    """Получить сервис транскрибации документов в текст."""
+    from application.services.document_transcriber import DocumentTranscriberService
+
+    return DocumentTranscriberService()
+
+
+def get_speech_recognition_service() -> "SpeechRecognitionService":
+    """Получить сервис распознавания речи через Yandex SpeechKit."""
+    from application.services.speech_recognition import (
+        SpeechRecognitionService,
+        SpeechRecognitionUnavailableError,
+    )
+
+    try:
+        return SpeechRecognitionService()
+    except SpeechRecognitionUnavailableError:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=503,
+            detail="Сервис распознавания речи не настроен. Укажите YANDEX_SPEECHKIT__API_KEY и YANDEX_SPEECHKIT__FOLDER_ID.",
+        )
+
+
 def get_search_service(
     user_repo: UserRepository,
     card_repo: BusinessCardRepository,

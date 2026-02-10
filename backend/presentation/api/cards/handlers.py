@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 
 from presentation.api.cards.schemas import (
     BusinessCardCreate,
@@ -24,6 +24,8 @@ from presentation.api.cards.schemas import (
     TextTagGenerationRequest,
     TextTagGenerationResponse,
     CardEmojisUpdate,
+    DocumentTranscribeResponse,
+    SpeechRecognitionResponse,
 )
 from infrastructure.dependencies import (
     get_business_card_service,
@@ -32,6 +34,8 @@ from infrastructure.dependencies import (
     get_qrcode_service,
     get_gigachat_text_tags_service,
     get_user_service,
+    get_document_transcriber_service,
+    get_speech_recognition_service,
 )
 from application.services.business_card import (
     BusinessCardService,
@@ -41,6 +45,18 @@ from application.services.business_card import (
 )
 from application.services.qrcode import QRCodeService
 from application.services.user import UserService
+from application.services.document_transcriber import (
+    DocumentTranscriberService,
+    UnsupportedFormatError,
+    FileTooLargeError,
+    EmptyDocumentError,
+    ParseError,
+)
+from application.services.speech_recognition import (
+    SpeechRecognitionService,
+    SpeechRecognitionError,
+    SpeechRecognitionUnavailableError,
+)
 
 
 router = APIRouter()
@@ -571,6 +587,61 @@ async def generate_tags_from_text(
         raise HTTPException(status_code=500, detail=f"Ошибка генерации тегов: {str(e)}")
 
 
+# ============ Document Transcription ============
+
+
+@router.post("/transcribe-document", response_model=DocumentTranscribeResponse)
+async def transcribe_document(
+    file: UploadFile = File(
+        ...,
+        description="Документ для извлечения текста (PDF, DOCX, TXT, RTF). Максимум 10 МБ.",
+    ),
+    transcriber: DocumentTranscriberService = Depends(
+        get_document_transcriber_service
+    ),
+):
+    """
+    Извлечь текст из загруженного документа.
+
+    Поддерживаемые форматы:
+    - **PDF** (.pdf) — извлечение текста из всех страниц
+    - **DOCX** (.docx) — параграфы и таблицы
+    - **TXT** (.txt) — чтение с автоопределением кодировки
+    - **RTF** (.rtf) — конвертация в plain text
+
+    Используется для автозаполнения поля «О себе» из резюме или других документов.
+    Максимальный размер файла: 10 МБ.
+    Максимальная длина извлечённого текста: 5000 символов.
+    """
+    try:
+        content = await file.read()
+        result = await transcriber.transcribe(
+            file_content=content,
+            filename=file.filename or "unknown",
+            content_type=file.content_type,
+        )
+        return DocumentTranscribeResponse(
+            text=result.text,
+            filename=result.original_filename,
+            format=result.format.value,
+            char_count=result.char_count,
+            was_truncated=result.was_truncated,
+        )
+    except UnsupportedFormatError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FileTooLargeError as e:
+        raise HTTPException(status_code=413, detail=str(e))
+    except EmptyDocumentError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except ParseError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ошибка при обработке документа: {str(e)}",
+        )
+
+
 # ============ Clear Content ============
 
 
@@ -654,3 +725,49 @@ async def get_card_by_share_token(
         return _card_to_public_response(card, fallback_avatar)
     except BusinessCardNotFoundError:
         raise HTTPException(status_code=404, detail="Card not found")
+
+
+# ============ Speech Recognition (Yandex SpeechKit) ============
+
+
+@router.post("/recognize-speech", response_model=SpeechRecognitionResponse)
+async def recognize_speech(
+    file: UploadFile = File(
+        ...,
+        description="Аудиофайл для распознавания (OGG/Opus, WAV, WebM). Максимум 1 МБ, до 30 секунд.",
+    ),
+    speech_service: SpeechRecognitionService = Depends(
+        get_speech_recognition_service
+    ),
+):
+    """
+    Распознать речь из аудиофайла через Yandex SpeechKit.
+
+    Используется для голосового ввода в поле «О себе».
+    Принимает аудио с микрофона (OGG/Opus или WebM из браузера).
+    Максимальная длительность: 30 секунд.
+    """
+    audio_data = await file.read()
+
+    if len(audio_data) > 1 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail="Аудиофайл слишком большой. Максимум 1 МБ.",
+        )
+
+    if not audio_data:
+        raise HTTPException(status_code=400, detail="Пустой аудиофайл")
+
+    try:
+        result = await speech_service.recognize(
+            audio_data=audio_data,
+            content_type=file.content_type,
+        )
+        return SpeechRecognitionResponse(text=result.text)
+    except SpeechRecognitionError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ошибка распознавания речи: {str(e)}",
+        )

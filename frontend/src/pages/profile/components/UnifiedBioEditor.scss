@@ -10,6 +10,12 @@
     }
   }
 
+  &--transcribing {
+    .unified-bio-editor__textarea {
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+  }
+
   // Header
   &__header {
     display: flex;
@@ -45,6 +51,100 @@
     &--offline {
       background: rgba(239, 68, 68, 0.15);
       color: #ef4444;
+    }
+  }
+
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__voice-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.08);
+    color: rgba(239, 68, 68, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    &--recording {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #ef4444;
+      animation: voicePulse 1.5s ease infinite;
+    }
+  }
+
+  &__voice-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(239, 68, 68, 0.2);
+    border-top-color: #ef4444;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes voicePulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    }
+  }
+
+  &__upload-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #303030;
+    border-radius: 10px;
+    background: rgba(16, 185, 129, 0.08);
+    color: rgba(16, 185, 129, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.3);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
     }
   }
 
@@ -96,9 +196,56 @@
     }
   }
 
+  // Success
+  &__success {
+    padding: 12px 14px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    border-radius: 14px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    animation: fadeInSlide 0.3s ease;
+
+    &:hover {
+      background: rgba(16, 185, 129, 0.15);
+    }
+  }
+
+  @keyframes fadeInSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // Hidden file input
+  &__file-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
   // Input wrapper
   &__input-wrapper {
     position: relative;
+
+    &--drag-over {
+      .unified-bio-editor__textarea {
+        border-color: rgba(16, 185, 129, 0.6);
+        background: rgba(16, 185, 129, 0.05);
+      }
+    }
   }
 
   &__textarea {
@@ -139,6 +286,154 @@
         rgba(255, 255, 255, 0.05) 0%,
         rgba(139, 92, 246, 0.05) 100%
       );
+    }
+  }
+
+  // Drag overlay
+  &__drag-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(16, 185, 129, 0.08);
+    border: 2px dashed rgba(16, 185, 129, 0.5);
+    border-radius: 14px;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  &__drag-overlay-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: #10b981;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+
+    svg {
+      opacity: 0.8;
+      animation: bounceUp 1s ease infinite;
+    }
+  }
+
+  @keyframes bounceUp {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  // Transcribe overlay
+  &__transcribe-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 14px;
+    z-index: 10;
+    backdrop-filter: blur(6px);
+    color: #10b981;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    animation: fadeIn 0.2s ease;
+  }
+
+  &__transcribe-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(16, 185, 129, 0.2);
+    border-top-color: #10b981;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  // Recording overlay
+  &__recording-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 14px;
+    z-index: 10;
+    backdrop-filter: blur(6px);
+    color: #ef4444;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    animation: fadeIn 0.2s ease;
+  }
+
+  &__recording-pulse {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ef4444;
+    animation: recordPulse 1.2s ease infinite;
+  }
+
+  &__recording-stop {
+    padding: 6px 16px;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    border-radius: 20px;
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+  }
+
+  @keyframes recordPulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.15);
+      opacity: 0.7;
     }
   }
 
@@ -325,6 +620,36 @@
       color: rgba(0, 0, 0, 0.9);
     }
 
+    &__voice-btn {
+      background: rgba(239, 68, 68, 0.06);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: rgba(239, 68, 68, 0.6);
+
+      &:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border-color: rgba(239, 68, 68, 0.25);
+      }
+
+      &--recording {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.4);
+        color: #dc2626;
+      }
+    }
+
+    &__upload-btn {
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: rgba(16, 185, 129, 0.6);
+
+      &:hover:not(:disabled) {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border-color: rgba(16, 185, 129, 0.25);
+      }
+    }
+
     &__history-btn {
       background: rgba(0, 0, 0, 0.03);
       border-color: rgba(0, 0, 0, 0.1);
@@ -349,6 +674,38 @@
         border-color: rgba(40, 115, 237, 0.5);
         background: rgba(0, 0, 0, 0.05);
       }
+    }
+
+    &__drag-overlay {
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    &__transcribe-overlay {
+      background: rgba(255, 255, 255, 0.75);
+      color: #059669;
+    }
+
+    &__transcribe-spinner {
+      border-color: rgba(16, 185, 129, 0.15);
+      border-top-color: #059669;
+    }
+
+    &__recording-overlay {
+      background: rgba(255, 255, 255, 0.75);
+      color: #dc2626;
+    }
+
+    &__recording-stop {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+    }
+
+    &__success {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: #059669;
     }
 
     &__char-count {

@@ -117,6 +117,15 @@ class MagicLinkConfig(BaseSettings):
     frontend_url: str = ""  # URL фронтенда для ссылок в QR-кодах и email
 
 
+class YandexSpeechKitConfig(BaseSettings):
+    """Конфигурация Yandex SpeechKit для распознавания речи."""
+
+    api_key: str = ""  # API-ключ сервисного аккаунта
+    folder_id: str = ""  # ID каталога в Yandex Cloud
+    lang: str = "ru-RU"  # Язык распознавания
+    topic: str = "general"  # Языковая модель
+
+
 class TelegramConfig(BaseSettings):
     """Конфигурация Telegram авторизации."""
 
@@ -149,6 +158,7 @@ class Config(BaseSettings):
     rabbitmq: RabbitMQConfig = RabbitMQConfig()
     magic_link: MagicLinkConfig = MagicLinkConfig()
     telegram: TelegramConfig = TelegramConfig()
+    yandex_speechkit: YandexSpeechKitConfig = YandexSpeechKitConfig()
     mongo: DatabaseConfig
     api: APIConfig
 

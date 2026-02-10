@@ -73,3 +73,21 @@ export interface CardContactAdd {
   is_primary?: boolean;
   is_visible?: boolean;
 }
+
+export interface DocumentTranscribeResponse {
+  /** Извлечённый текст из документа */
+  text: string;
+  /** Оригинальное имя файла */
+  filename: string;
+  /** Определённый формат (pdf, docx, txt, rtf) */
+  format: string;
+  /** Количество символов */
+  char_count: number;
+  /** Был ли текст обрезан */
+  was_truncated: boolean;
+}
+
+export interface SpeechRecognitionResponse {
+  /** Распознанный текст */
+  text: string;
+}
