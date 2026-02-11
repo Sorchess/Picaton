@@ -31,12 +31,22 @@ interface ChatsPageProps {
   };
   /** Колбек после того, как чат открыт (сбросить target) */
   onChatOpened?: () => void;
+  /** Открыть профиль пользователя (по клику на аватарку в чате) */
+  onViewProfile?: (
+    userId: string,
+    userData: {
+      first_name: string;
+      last_name: string;
+      avatar_url?: string | null;
+    },
+  ) => void;
 }
 
 export function ChatsPage({
   openUserId,
   openUserData,
   onChatOpened,
+  onViewProfile,
 }: ChatsPageProps) {
   const { user } = useAuth();
   const currentUserId = user?.id;
@@ -520,7 +530,19 @@ export function ChatsPage({
           </svg>
         </IconButton>
 
-        <div className="chats-page__chat-user">
+        <div
+          className="chats-page__chat-user"
+          onClick={() => {
+            if (onViewProfile && activeConversation) {
+              onViewProfile(activeConversation.participant.id, {
+                first_name: activeConversation.participant.first_name,
+                last_name: activeConversation.participant.last_name,
+                avatar_url: activeConversation.participant.avatar_url,
+              });
+            }
+          }}
+          style={{ cursor: onViewProfile ? "pointer" : undefined }}
+        >
           <Avatar
             src={activeConversation.participant.avatar_url || undefined}
             initials={getParticipantInitials(activeConversation.participant)}

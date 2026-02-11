@@ -52,7 +52,7 @@ export interface SendDMRequest {
 
 export interface StartConversationRequest {
   recipient_id: string;
-  content: string;
+  content?: string;
 }
 
 export interface StartConversationResponse {

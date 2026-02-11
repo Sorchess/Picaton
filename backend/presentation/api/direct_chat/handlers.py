@@ -5,6 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from domain.entities.conversation import DirectMessage
 from application.services.direct_chat import (
     DirectChatService,
     DMAccessDeniedError,
@@ -138,11 +139,21 @@ async def start_conversation(
             detail="Cannot start conversation with yourself",
         )
 
-    conv, message = await dm_service.send_first_message(
-        sender_id=current_user_id,
-        recipient_id=data.recipient_id,
-        content=data.content,
-    )
+    if data.content and data.content.strip():
+        conv, message = await dm_service.send_first_message(
+            sender_id=current_user_id,
+            recipient_id=data.recipient_id,
+            content=data.content.strip(),
+        )
+    else:
+        conv = await dm_service.get_or_create_conversation(
+            current_user_id, data.recipient_id
+        )
+        message = DirectMessage(
+            conversation_id=conv.id,
+            sender_id=current_user_id,
+            content="",
+        )
 
     other_id = conv.get_other_participant(current_user_id)
     participant = await _get_user_info(user_service, other_id)

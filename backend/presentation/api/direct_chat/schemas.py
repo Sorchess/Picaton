@@ -20,7 +20,7 @@ class StartConversationRequest(BaseModel):
     """Запрос на начало диалога с пользователем."""
 
     recipient_id: UUID
-    content: str = Field(..., min_length=1, max_length=10000)
+    content: str | None = Field(default=None, max_length=10000)
 
 
 class EditDMRequest(BaseModel):

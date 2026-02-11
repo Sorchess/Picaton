@@ -640,18 +640,30 @@ function AuthenticatedApp() {
                 : undefined
             }
             onChatOpened={() => setChatTargetUser(null)}
+            onViewProfile={(userId, userData) => {
+              navigateToContactProfile({
+                user: {
+                  id: userId,
+                  first_name: userData.first_name,
+                  last_name: userData.last_name,
+                  avatar_url: userData.avatar_url || null,
+                  bio: null,
+                  ai_generated_bio: null,
+                  location: null,
+                  tags: [],
+                  search_tags: [],
+                  contacts: [],
+                  profile_completeness: 0,
+                },
+                savedContact: null,
+                returnPage: "chats",
+              });
+            }}
           />
         )}
         {currentPage === "contacts" && (
           <ContactsPage
-            onOpenContact={(user, cardId, savedContact) =>
-              navigateToContactProfile({
-                user,
-                cardId,
-                savedContact,
-                returnPage: "contacts",
-              })
-            }
+            onOpenContact={(user) => navigateToChat(user)}
             initialSearchQuery={tabBarSearchQuery}
             onSearchQueryConsumed={() => setTabBarSearchQuery(undefined)}
           />
@@ -701,7 +713,6 @@ function AuthenticatedApp() {
               });
             }}
             singleCardMode={contactProfileData.singleCardMode}
-            onMessage={navigateToChat}
           />
         )}
         {currentPage === "share-contact" && shareContactData && (
