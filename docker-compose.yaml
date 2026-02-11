@@ -6,8 +6,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO__USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO__PASSWORD}
-    ports:
-      - "27017:27017"
+    # ports:
+    #   - "27017:27017"
     volumes:
       - mongo_data:/data/db
     healthcheck:
@@ -23,8 +23,8 @@ services:
     image: redis:7-alpine
     hostname: redis
     container_name: redis
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -39,9 +39,9 @@ services:
     image: rabbitmq:3-management-alpine
     hostname: rabbitmq
     container_name: rabbitmq
-    ports:
-      - "5672:5672" # AMQP
-      - "15672:15672" # Management UI
+    # ports:
+    #   - "5672:5672"
+    #   - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ__USERNAME:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ__PASSWORD:-guest}
