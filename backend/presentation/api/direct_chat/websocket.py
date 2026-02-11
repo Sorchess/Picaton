@@ -134,7 +134,8 @@ async def dm_websocket_endpoint(
 
     from application.services.user import UserService
     from application.services.direct_chat import DirectChatService
-    from application.services.ai_bio import AIBioGeneratorService, AIBioGenerator
+    from application.services.ai_bio import AIBioGeneratorService
+    from application.services.llm_bio import AIBioGenerator
     from application.services.ai_tags import AITagsGeneratorService, MockAITagsGenerator
 
     dm_service = DirectChatService(conv_repo, msg_repo)
