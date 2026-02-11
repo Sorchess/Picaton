@@ -40,6 +40,8 @@ interface ChatsPageProps {
       avatar_url?: string | null;
     },
   ) => void;
+  /** Уведомить о том, что чат открыт/закрыт (для скрытия футера) */
+  onChatViewChange?: (isOpen: boolean) => void;
 }
 
 export function ChatsPage({
@@ -47,6 +49,7 @@ export function ChatsPage({
   openUserData,
   onChatOpened,
   onViewProfile,
+  onChatViewChange,
 }: ChatsPageProps) {
   const { user } = useAuth();
   const currentUserId = user?.id;
@@ -216,6 +219,14 @@ export function ChatsPage({
     loadConversations();
   }, [loadConversations]);
 
+  // Сбросить состояние чата при размонтировании
+  useEffect(() => {
+    return () => {
+      onChatViewChange?.(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Открыть конкретный диалог по userId извне
   useEffect(() => {
     if (!openUserId || !openUserData) return;
@@ -240,6 +251,7 @@ export function ChatsPage({
           });
           setConversations((prev) => [res.conversation, ...prev]);
           setActiveConversation(res.conversation);
+          onChatViewChange?.(true);
           setMessages(res.message.content ? [res.message] : []);
         } catch {
           // Может уже существовать — перезагрузим
@@ -263,6 +275,7 @@ export function ChatsPage({
   const handleOpenConversation = useCallback(
     async (conv: Conversation) => {
       setActiveConversation(conv);
+      onChatViewChange?.(true);
       setMessages([]);
       setTypingUser(null);
       await loadMessages(conv.id);
@@ -288,6 +301,7 @@ export function ChatsPage({
   // Назад к списку
   const handleBack = () => {
     setActiveConversation(null);
+    onChatViewChange?.(false);
     setMessages([]);
     setTypingUser(null);
     loadConversations();

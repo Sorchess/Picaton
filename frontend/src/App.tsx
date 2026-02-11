@@ -105,6 +105,9 @@ function AuthenticatedApp() {
   // Данные для открытия чата с конкретным пользователем
   const [chatTargetUser, setChatTargetUser] = useState<UserPublic | null>(null);
 
+  // Чат открыт (для скрытия мобильного футера)
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   // Функция навигации на страницу профиля контакта
   const navigateToContactProfile = (data: ContactProfileNavData) => {
     setContactProfileData(data);
@@ -624,7 +627,7 @@ function AuthenticatedApp() {
         </div>
       </header>
 
-      <main className="app__main">
+      <main className={`app__main${isChatOpen ? " app__main--chat-open" : ""}`}>
         {currentPage === "collaboration" && <CollaborationPage />}
         {currentPage === "chats" && (
           <ChatsPage
@@ -640,6 +643,7 @@ function AuthenticatedApp() {
                 : undefined
             }
             onChatOpened={() => setChatTargetUser(null)}
+            onChatViewChange={setIsChatOpen}
             onViewProfile={(userId, userData) => {
               navigateToContactProfile({
                 user: {
@@ -726,7 +730,9 @@ function AuthenticatedApp() {
       </main>
 
       {/* Мобильный футер с навигацией */}
-      <footer className="app__footer">
+      <footer
+        className={`app__footer${isChatOpen ? " app__footer--hidden" : ""}`}
+      >
         <PageSwitcher
           value={
             currentPage === "contact-profile" || currentPage === "share-contact"

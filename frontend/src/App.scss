@@ -78,11 +78,7 @@
     &-text {
       font-family: "Syne", sans-serif;
       font-weight: 800;
-      background: linear-gradient(
-        135deg,
-        #6366f1 0%,
-        #2873ED 100%
-      );
+      background: linear-gradient(135deg, #6366f1 0%, #2873ed 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -202,6 +198,14 @@
     @media (max-width: 768px) {
       padding-bottom: 80px; // Место для мобильного футера
     }
+
+    &--chat-open {
+      overflow: hidden;
+
+      @media (max-width: 768px) {
+        padding-bottom: 0;
+      }
+    }
   }
 
   // Переключатель страниц в хедере (для десктопа)
@@ -232,6 +236,10 @@
     @media (max-width: 768px) {
       display: flex;
       justify-content: center;
+    }
+
+    &--hidden {
+      display: none !important;
     }
 
     // The wrapper takes full width
