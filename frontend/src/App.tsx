@@ -11,6 +11,7 @@ import {
   CollaborationPage,
   ContactProfilePage,
   ShareContactPage,
+  ChatsPage,
 } from "./pages";
 import { AuthProvider, useAuth } from "./features/auth";
 import { EmailModal } from "./features/email-modal";
@@ -100,6 +101,9 @@ function AuthenticatedApp() {
   const [tabBarSearchQuery, setTabBarSearchQuery] = useState<
     string | undefined
   >(undefined);
+
+  // Данные для открытия чата с конкретным пользователем
+  const [chatTargetUser, setChatTargetUser] = useState<UserPublic | null>(null);
 
   // Функция навигации на страницу профиля контакта
   const navigateToContactProfile = (data: ContactProfileNavData) => {
@@ -198,6 +202,13 @@ function AuthenticatedApp() {
     setShareContactData(null);
     setProfileOpenCardId(undefined);
     setTabBarSearchQuery(undefined);
+    setChatTargetUser(null);
+  };
+
+  // Навигация в чат с пользователем
+  const navigateToChat = (targetUser: UserPublic) => {
+    setChatTargetUser(targetUser);
+    setCurrentPage("chats");
   };
 
   // Handle search submitted from the tab-bar search button
@@ -615,6 +626,22 @@ function AuthenticatedApp() {
 
       <main className="app__main">
         {currentPage === "collaboration" && <CollaborationPage />}
+        {currentPage === "chats" && (
+          <ChatsPage
+            openUserId={chatTargetUser?.id}
+            openUserData={
+              chatTargetUser
+                ? {
+                    id: chatTargetUser.id,
+                    first_name: chatTargetUser.first_name,
+                    last_name: chatTargetUser.last_name || "",
+                    avatar_url: chatTargetUser.avatar_url,
+                  }
+                : undefined
+            }
+            onChatOpened={() => setChatTargetUser(null)}
+          />
+        )}
         {currentPage === "contacts" && (
           <ContactsPage
             onOpenContact={(user, cardId, savedContact) =>
@@ -674,6 +701,7 @@ function AuthenticatedApp() {
               });
             }}
             singleCardMode={contactProfileData.singleCardMode}
+            onMessage={navigateToChat}
           />
         )}
         {currentPage === "share-contact" && shareContactData && (

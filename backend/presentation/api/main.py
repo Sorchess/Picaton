@@ -20,6 +20,10 @@ from presentation.api.chat import (
     chat_global_router,
     ws_router as chat_ws_router,
 )
+from presentation.api.direct_chat import (
+    router as dm_router,
+    ws_router as dm_ws_router,
+)
 
 origins = [
     "http://localhost",
@@ -88,6 +92,8 @@ def create_app() -> FastAPI:
     app.include_router(chat_router, prefix="/api", tags=["Chat"])
     app.include_router(chat_global_router, prefix="/api", tags=["Chat"])
     app.include_router(chat_ws_router, prefix="/api", tags=["WebSocket"])
+    app.include_router(dm_router, prefix="/api", tags=["Direct Messages"])
+    app.include_router(dm_ws_router, prefix="/api", tags=["WebSocket"])
 
     return app
 

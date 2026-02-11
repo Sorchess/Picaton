@@ -23,6 +23,8 @@ from infrastructure.database.repositories import (
     MongoProjectMemberRepository,
     MongoChatMessageRepository,
     MongoShareLinkRepository,
+    MongoConversationRepository,
+    MongoDirectMessageRepository,
 )
 from infrastructure.database.repositories.company_role import MongoCompanyRoleRepository
 from infrastructure.database.repositories.company_card import MongoCompanyCardRepository
@@ -50,6 +52,8 @@ from domain.repositories import (
     ProjectRepositoryInterface,
     ProjectMemberRepositoryInterface,
     ChatMessageRepositoryInterface,
+    ConversationRepositoryInterface,
+    DirectMessageRepositoryInterface,
 )
 from domain.repositories.company_role import CompanyRoleRepositoryInterface
 from domain.repositories.pending_hash import PendingHashRepositoryInterface
@@ -93,6 +97,7 @@ from application.services.idea import IdeaService
 from application.services.swipe import SwipeService
 from application.services.project import ProjectService
 from application.services.chat import ChatService
+from application.services.direct_chat import DirectChatService
 from application.services.ai_team_matching import AITeamMatchingService
 from application.services.ai_prd_generator import AIPRDGeneratorService
 from application.services.gamification import GamificationService
@@ -674,6 +679,20 @@ def get_chat_message_repository(
     return MongoChatMessageRepository(db["chat_messages"])
 
 
+def get_conversation_repository(
+    db: Database,
+) -> ConversationRepositoryInterface:
+    """Получить репозиторий диалогов."""
+    return MongoConversationRepository(db["conversations"])
+
+
+def get_direct_message_repository(
+    db: Database,
+) -> DirectMessageRepositoryInterface:
+    """Получить репозиторий прямых сообщений."""
+    return MongoDirectMessageRepository(db["direct_messages"])
+
+
 def get_idea_comment_repository(
     db: Database,
 ) -> IdeaCommentRepositoryInterface:
@@ -700,6 +719,12 @@ ProjectMemberRepository = Annotated[
 ]
 ChatMessageRepository = Annotated[
     ChatMessageRepositoryInterface, Depends(get_chat_message_repository)
+]
+ConversationRepository = Annotated[
+    ConversationRepositoryInterface, Depends(get_conversation_repository)
+]
+DirectMessageRepository = Annotated[
+    DirectMessageRepositoryInterface, Depends(get_direct_message_repository)
 ]
 IdeaCommentRepository = Annotated[
     IdeaCommentRepositoryInterface, Depends(get_idea_comment_repository)
@@ -746,6 +771,14 @@ def get_chat_service(
 ) -> ChatService:
     """Получить сервис чата."""
     return ChatService(message_repo, member_repo)
+
+
+def get_direct_chat_service(
+    conv_repo: ConversationRepository,
+    msg_repo: DirectMessageRepository,
+) -> DirectChatService:
+    """Получить сервис прямых сообщений."""
+    return DirectChatService(conv_repo, msg_repo)
 
 
 def get_ai_team_matching_service(

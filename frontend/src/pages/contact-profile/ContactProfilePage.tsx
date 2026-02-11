@@ -14,6 +14,7 @@ interface ContactProfilePageProps {
   onBack: () => void;
   onContactSaved?: () => void;
   onContactDeleted?: () => void;
+  onMessage?: (user: UserPublic) => void;
   /** If true, show only the specified card without tabs */
   singleCardMode?: boolean;
 }
@@ -26,6 +27,7 @@ export function ContactProfilePage({
   onBack,
   onContactSaved,
   onContactDeleted,
+  onMessage,
   singleCardMode = false,
 }: ContactProfilePageProps) {
   const { user: authUser } = useAuth();
@@ -68,6 +70,7 @@ export function ContactProfilePage({
         onClose={onBack}
         onSaveContact={handleSaveContact}
         onDeleteContact={isSaved ? handleDeleteContact : undefined}
+        onMessage={onMessage}
         isSaved={isSaved}
         singleCardMode={singleCardMode}
       />

@@ -34,6 +34,12 @@ from infrastructure.database.repositories.chat_message import (
 from infrastructure.database.repositories.share_link import (
     MongoShareLinkRepository,
 )
+from infrastructure.database.repositories.conversation import (
+    MongoConversationRepository,
+)
+from infrastructure.database.repositories.direct_message import (
+    MongoDirectMessageRepository,
+)
 
 __all__ = [
     "MongoUserRepository",
@@ -54,4 +60,7 @@ __all__ = [
     "MongoChatMessageRepository",
     # Share Links
     "MongoShareLinkRepository",
+    # Direct Messages
+    "MongoConversationRepository",
+    "MongoDirectMessageRepository",
 ]

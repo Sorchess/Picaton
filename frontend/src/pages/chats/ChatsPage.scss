@@ -1,0 +1,495 @@
+@use "../../shared/styles/variables" as *;
+@use "../../shared/styles/mixins/glass" as *;
+
+.chats-page {
+  min-height: 100vh;
+  padding: 0 16px 100px;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--color-bg-primary);
+  box-sizing: border-box;
+  overflow-x: hidden;
+
+  &--loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 60vh;
+  }
+
+  &--chat-open {
+    padding: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // ═══════════ Header (same as ContactsPage/CollaborationPage) ═══════════
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  &__title-container {
+    @include liquid-glass;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    border-radius: 16px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  // ═══════════ Search ═══════════
+
+  &__search {
+    margin-bottom: 20px;
+  }
+
+  // ═══════════ Conversation List ═══════════
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    color: inherit;
+    box-shadow: 0 1px 3px var(--color-shadow);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--color-shadow);
+    }
+
+    &:active {
+      transform: scale(0.99);
+    }
+  }
+
+  &__card-avatar {
+    flex-shrink: 0;
+
+    .avatar__inner,
+    .avatar__image {
+      border-radius: 50% !important;
+    }
+  }
+
+  &__card-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__card-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__card-time {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  &__card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__card-preview {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__card-you {
+    color: var(--color-text-muted);
+  }
+
+  &__card-badge {
+    flex-shrink: 0;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  // ═══════════ Chat Header ═══════════
+
+  &__chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    @include liquid-glass;
+    border-radius: 0;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  &__chat-header-spacer {
+    width: 40px;
+    flex-shrink: 0;
+  }
+
+  &__chat-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+
+    .avatar__inner,
+    .avatar__image {
+      border-radius: 50% !important;
+    }
+  }
+
+  &__chat-user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__chat-user-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__typing {
+    font-size: 12px;
+    color: var(--color-accent);
+    animation: chats-typing-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes chats-typing-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  // ═══════════ Messages ═══════════
+
+  &__messages {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    overflow-y: auto;
+    gap: 4px;
+  }
+
+  &__messages-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+  }
+
+  &__load-more {
+    @include liquid-glass--ghost;
+    align-self: center;
+    padding: 6px 18px;
+    margin-bottom: 16px;
+    border-radius: $radius-full;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) {
+      @include liquid-glass--ghost-hover;
+      color: var(--color-text-primary);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__date-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 16px 0 12px;
+
+    span {
+      @include liquid-glass--ghost;
+      padding: 4px 14px;
+      border-radius: $radius-full;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__message {
+    display: flex;
+    margin-bottom: 2px;
+    animation: chats-message-appear 0.2s ease;
+
+    &--own {
+      justify-content: flex-end;
+
+      .chats-page__bubble {
+        background: linear-gradient(
+          135deg,
+          rgba(var(--color-accent-rgb), 0.15) 0%,
+          rgba(var(--color-accent-rgb), 0.08) 100%
+        );
+        border: 1px solid rgba(var(--color-accent-rgb), 0.15);
+        border-radius: 18px 18px 4px 18px;
+        backdrop-filter: blur(12px);
+
+        @at-root [data-theme="light"] & {
+          background: linear-gradient(
+            135deg,
+            rgba(40, 115, 237, 0.1) 0%,
+            rgba(40, 115, 237, 0.04) 100%
+          );
+          border-color: rgba(40, 115, 237, 0.12);
+        }
+      }
+    }
+
+    &--other {
+      justify-content: flex-start;
+
+      .chats-page__bubble {
+        background: var(--color-bg-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: 18px 18px 18px 4px;
+      }
+    }
+  }
+
+  &__bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    position: relative;
+    box-shadow: 0 1px 3px var(--color-shadow);
+
+    @media (max-width: 480px) {
+      max-width: 85%;
+    }
+  }
+
+  &__bubble-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text-primary);
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  &__bubble-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  &__bubble-edited {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+  &__bubble-time {
+    font-size: 11px;
+    color: var(--color-text-muted);
+  }
+
+  &__bubble-status {
+    font-size: 12px;
+    color: var(--color-text-muted);
+
+    &--read {
+      color: var(--color-accent);
+    }
+  }
+
+  // ═══════════ Input Area ═══════════
+
+  &__input-area {
+    padding: 8px 16px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background: var(--color-bg-primary);
+    border-top: 1px solid var(--color-border);
+    position: sticky;
+    bottom: 0;
+
+    @media (max-width: 768px) {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+  }
+
+  &__input-row {
+    @include liquid-glass;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 6px 6px 6px 16px;
+    border-radius: 24px;
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--color-text-primary);
+    resize: none;
+    max-height: 120px;
+    line-height: 1.4;
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__send-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-glass-bg);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+
+    &--active {
+      background: var(--color-accent);
+      color: var(--color-text-on-accent);
+      box-shadow: 0 2px 8px rgba(var(--color-accent-rgb), 0.3);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    &:not(:disabled):active {
+      transform: scale(0.9);
+    }
+  }
+}
+
+// ═══════════ Animations ═══════════
+
+@keyframes chats-message-appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ═══════════ Responsive ═══════════
+
+@media (max-width: 480px) {
+  .chats-page {
+    padding: 0 12px 100px;
+
+    &--chat-open {
+      padding: 0;
+    }
+
+    &__card {
+      padding: 12px;
+    }
+  }
+}

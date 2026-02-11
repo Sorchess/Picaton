@@ -16,6 +16,8 @@ from domain.repositories.idea_swipe import IdeaSwipeRepositoryInterface
 from domain.repositories.project import ProjectRepositoryInterface
 from domain.repositories.project_member import ProjectMemberRepositoryInterface
 from domain.repositories.chat_message import ChatMessageRepositoryInterface
+from domain.repositories.conversation import ConversationRepositoryInterface
+from domain.repositories.direct_message import DirectMessageRepositoryInterface
 
 __all__ = [
     "UserRepositoryInterface",
@@ -35,4 +37,6 @@ __all__ = [
     "ProjectRepositoryInterface",
     "ProjectMemberRepositoryInterface",
     "ChatMessageRepositoryInterface",
+    "ConversationRepositoryInterface",
+    "DirectMessageRepositoryInterface",
 ]

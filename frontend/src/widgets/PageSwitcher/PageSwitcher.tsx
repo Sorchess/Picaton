@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { TapBar, type TapBarOption } from "@/shared";
 import "./PageSwitcher.scss";
 
-type PageType = "collaboration" | "contacts" | "profile" | "company";
+type PageType = "collaboration" | "contacts" | "chats" | "profile" | "company";
 
 interface PageSwitcherProps {
   value: PageType;
@@ -34,6 +34,22 @@ const pageOptions: TapBarOption[] = [
         <path d="m4.93 19.07.71-.71" />
         <path d="m18.36 5.64.71-.71" />
         <circle cx="12" cy="12" r="4" />
+      </svg>
+    ),
+  },
+  {
+    value: "chats",
+    label: "Чаты",
+    icon: (
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
     ),
   },

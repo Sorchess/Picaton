@@ -25,6 +25,7 @@ interface ContactProfileViewProps {
   onClose: () => void;
   onSaveContact?: (user: UserPublic) => void;
   onDeleteContact?: ((user: UserPublic) => void) | (() => void);
+  onMessage?: (user: UserPublic) => void;
   isSaved?: boolean;
   /** If true, only show the specified cardId without tabs for switching */
   singleCardMode?: boolean;
@@ -127,6 +128,7 @@ export function ContactProfileView({
   onClose,
   onSaveContact,
   onDeleteContact,
+  onMessage,
   isSaved = false,
   singleCardMode = false,
 }: ContactProfileViewProps) {
@@ -399,7 +401,7 @@ export function ContactProfileView({
   // Calculate total likes from all skills with endorsements
   const totalLikesCount = skillsWithEndorsements.reduce(
     (sum, skill) => sum + skill.endorsement_count,
-    0
+    0,
   );
 
   // Проверяем, можно ли лайкать (нельзя лайкать свои навыки)
@@ -588,6 +590,30 @@ export function ContactProfileView({
                 />
               </svg>
             </button>
+
+            {onMessage && (
+              <button
+                className="contact-profile-view__action-btn contact-profile-view__action-btn--message"
+                onClick={() => onMessage(user)}
+              >
+                <span>Написать</span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M14 10.667a1.333 1.333 0 0 1-1.333 1.333H4.667L2 14.667V3.333A1.333 1.333 0 0 1 3.333 2h9.334A1.333 1.333 0 0 1 14 3.333v7.334z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
 
           {/* Role Tabs - только если есть больше одной карточки и не в режиме одной карточки */}
