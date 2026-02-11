@@ -7,7 +7,6 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  max-width: 500px;
 
   // ── Search-open mode ──
   &--search-open {
@@ -83,7 +82,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  width: 505.44px;
   height: 60px;
   @include liquid-glass;
   border-radius: $radius-full;
