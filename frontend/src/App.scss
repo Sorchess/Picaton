@@ -17,6 +17,12 @@
     justify-content: center;
   }
 
+  &--chat-open {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   &__loader {
     display: flex;
     flex-direction: column;
@@ -201,6 +207,7 @@
 
     &--chat-open {
       overflow: hidden;
+      min-height: 0;
 
       @media (max-width: 768px) {
         padding-bottom: 0;

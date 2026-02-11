@@ -13,10 +13,11 @@ import {
   Avatar,
   Loader,
   Typography,
-  SearchInput,
+  Tabs,
   EmptyState,
   IconButton,
 } from "@/shared";
+import type { Tab } from "@/shared";
 import "./ChatsPage.scss";
 
 interface ChatsPageProps {
@@ -42,6 +43,8 @@ interface ChatsPageProps {
   ) => void;
   /** Уведомить о том, что чат открыт/закрыт (для скрытия футера) */
   onChatViewChange?: (isOpen: boolean) => void;
+  /** Перейти на страницу контактов (кнопка «Написать») */
+  onNavigateToContacts?: () => void;
 }
 
 export function ChatsPage({
@@ -50,6 +53,7 @@ export function ChatsPage({
   onChatOpened,
   onViewProfile,
   onChatViewChange,
+  onNavigateToContacts,
 }: ChatsPageProps) {
   const { user } = useAuth();
   const currentUserId = user?.id;
@@ -64,7 +68,7 @@ export function ChatsPage({
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [typingUser, setTypingUser] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -122,6 +126,19 @@ export function ChatsPage({
             ) {
               // Не добавлять дубли
               if (prev.some((m) => m.id === msg.id)) return prev;
+
+              // Если это своё сообщение — заменить оптимистичное (temp-*)
+              if (msg.sender_id === currentUserId) {
+                const tempIdx = prev.findIndex(
+                  (m) => m.id.startsWith("temp-") && m.content === msg.content,
+                );
+                if (tempIdx !== -1) {
+                  const updated = [...prev];
+                  updated[tempIdx] = msg as DirectMessage;
+                  return updated;
+                }
+              }
+
               return [...prev, msg as DirectMessage];
             }
             return prev;
@@ -372,14 +389,27 @@ export function ChatsPage({
     }
   };
 
-  // Фильтрация
-  const filteredConversations = searchQuery
-    ? conversations.filter((c) =>
-        getParticipantName(c.participant)
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
-      )
-    : conversations;
+  // Табы
+  const chatTabs: Tab[] = [
+    { id: "all", label: "Все чаты" },
+    {
+      id: "projects",
+      label: (
+        <>
+          Проекты
+          {conversations.length > 0 && (
+            <span className="chats-page__tab-badge">
+              {conversations.length}
+            </span>
+          )}
+        </>
+      ),
+    },
+    { id: "companies", label: "Компании" },
+  ];
+
+  // Фильтрация по табу (пока все показываем в "Все чаты")
+  const filteredConversations = conversations;
 
   // Группировка сообщений по дате
   const shouldShowDateSeparator = (msg: DirectMessage, idx: number) => {
@@ -415,26 +445,23 @@ export function ChatsPage({
   if (!activeConversation) {
     return (
       <div className="chats-page">
-        {/* Заголовок — как на ContactsPage/CollaborationPage */}
+        {/* Заголовок */}
         <header className="chats-page__header">
-          <IconButton onClick={() => {}} aria-label="Фильтр">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="4" y1="6" x2="20" y2="6" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-              <line x1="10" y1="18" x2="14" y2="18" />
+          <IconButton aria-label="Назад">
+            <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+              <path
+                d="M9 1L1 9L9 17"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </IconButton>
           <div className="chats-page__title-container">
             <h1 className="chats-page__title">Чаты</h1>
           </div>
-          <IconButton onClick={() => {}} aria-label="Новый чат">
+          <IconButton onClick={onNavigateToContacts} aria-label="Написать">
             <svg
               width="20"
               height="20"
@@ -442,20 +469,22 @@ export function ChatsPage({
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              <path d="M12 7v6M9 10h6" />
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
             </svg>
           </IconButton>
         </header>
 
-        {/* Поиск — shared SearchInput */}
-        <div className="chats-page__search">
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onClear={() => setSearchQuery("")}
-            placeholder="Поиск по чатам..."
+        {/* Табы */}
+        <div className="chats-page__tabs">
+          <Tabs
+            tabs={chatTabs}
+            activeId={activeTab}
+            onChange={setActiveTab}
+            size="md"
           />
         </div>
 
@@ -469,13 +498,9 @@ export function ChatsPage({
           </div>
         ) : filteredConversations.length === 0 ? (
           <EmptyState
-            emoji={searchQuery ? "🔍" : "💬"}
-            title={searchQuery ? "Ничего не найдено" : "Нет сообщений"}
-            description={
-              searchQuery
-                ? "Попробуйте изменить запрос"
-                : "Откройте профиль контакта и нажмите «Написать»"
-            }
+            emoji="💬"
+            title="Нет сообщений"
+            description="Откройте профиль контакта и нажмите «Написать»"
           />
         ) : (
           <div className="chats-page__list">
@@ -525,27 +550,33 @@ export function ChatsPage({
     );
   }
 
-  // ═══════════ РЕНДЕР: Открытый чат ═══════════
   return (
     <div className="chats-page chats-page--chat-open">
       {/* Шапка чата */}
       <header className="chats-page__chat-header">
         <IconButton onClick={handleBack} aria-label="Назад">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <path d="M15 18l-6-6 6-6" />
+          <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+            <path
+              d="M9 1L1 9L9 17"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </IconButton>
 
+        <div className="chats-page__chat-user-info">
+          <span className="chats-page__chat-user-name">
+            {getParticipantName(activeConversation.participant)}
+          </span>
+          {typingUser && (
+            <span className="chats-page__typing">печатает...</span>
+          )}
+        </div>
+
         <div
-          className="chats-page__chat-user"
+          className="chats-page__chat-avatar"
           onClick={() => {
             if (onViewProfile && activeConversation) {
               onViewProfile(activeConversation.participant.id, {
@@ -562,17 +593,7 @@ export function ChatsPage({
             initials={getParticipantInitials(activeConversation.participant)}
             size="sm"
           />
-          <div className="chats-page__chat-user-info">
-            <span className="chats-page__chat-user-name">
-              {getParticipantName(activeConversation.participant)}
-            </span>
-            {typingUser && (
-              <span className="chats-page__typing">печатает...</span>
-            )}
-          </div>
         </div>
-
-        <div className="chats-page__chat-header-spacer" />
       </header>
 
       {/* Сообщения */}

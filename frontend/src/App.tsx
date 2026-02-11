@@ -434,7 +434,7 @@ function AuthenticatedApp() {
   }
 
   return (
-    <div className="app">
+    <div className={`app${isChatOpen ? " app--chat-open" : ""}`}>
       {/* Уведомление о приглашении */}
       {inviteMessage && (
         <div
@@ -644,6 +644,7 @@ function AuthenticatedApp() {
             }
             onChatOpened={() => setChatTargetUser(null)}
             onChatViewChange={setIsChatOpen}
+            onNavigateToContacts={() => handlePageChange("contacts")}
             onViewProfile={(userId, userData) => {
               navigateToContactProfile({
                 user: {
