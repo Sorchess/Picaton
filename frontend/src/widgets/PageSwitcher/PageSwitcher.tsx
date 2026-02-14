@@ -127,7 +127,6 @@ export function PageSwitcher({
   const handleSubmit = () => {
     if (!searchQuery.trim()) return;
     onSearchSubmit?.(searchQuery.trim());
-    handleCloseSearch();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

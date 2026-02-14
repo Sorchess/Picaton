@@ -80,7 +80,6 @@
 // ── Search mode: replaces the entire tab bar ──
 .page-switcher-search {
   display: flex;
-  align-items: center;
   gap: 8px;
   width: 505.44px;
   height: 60px;
@@ -88,6 +87,7 @@
   border-radius: $radius-full;
   padding: 8px 8px 8px 16px;
   animation: search-expand 0.15s ease forwards;
+  overflow: hidden;
 
   &__field {
     flex: 1;
