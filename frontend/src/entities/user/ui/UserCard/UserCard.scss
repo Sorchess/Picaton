@@ -1,13 +1,14 @@
 .user-card {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 20px;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
-  background: var(--color-glass-bg);
-  border: 1px solid var(--color-glass-border);
-  backdrop-filter: blur(12px);
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px var(--color-shadow);
 
   &--clickable {
     cursor: pointer;
@@ -32,12 +33,29 @@
     }
 
     .user-card__name {
-      font-size: 14px;
+      font-size: 16px;
     }
   }
 
   &__avatar {
     flex-shrink: 0;
+
+    .avatar {
+      &__inner {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      &__image {
+        border-radius: 50%;
+      }
+
+      &__initials {
+        font-size: 18px;
+      }
+    }
   }
 
   &__content {
@@ -55,10 +73,10 @@
   }
 
   &__name {
-    margin: 0;
     font-size: 16px;
     font-weight: 600;
     color: var(--color-text-primary);
+    margin: 0 0 2px;
     line-height: 1.3;
   }
 

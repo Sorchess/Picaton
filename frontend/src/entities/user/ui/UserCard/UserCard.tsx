@@ -1,8 +1,8 @@
 import type { UserPublic } from "../../model/types";
 import { getFullName } from "../../model/types";
-import { UserAvatar } from "../UserAvatar";
 import { useTheme } from "@/shared/config/theme";
 import "./UserCard.scss";
+import { Avatar, Tag } from "@/shared";
 
 interface UserCardProps {
   user: UserPublic;
@@ -40,7 +40,16 @@ export function UserCard({
 
   const displayedTags = user.search_tags?.slice(0, maxTags) || [];
   const hasMoreTags = (user.search_tags?.length || 0) > maxTags;
+  const displayAvatar = user.avatar_url || undefined;
   const fullName = getFullName(user);
+
+  const getInitials = (name: string): string => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   const classNames = [
     "user-card",
@@ -60,12 +69,11 @@ export function UserCard({
       tabIndex={onClick ? 0 : undefined}
     >
       <div className="user-card__avatar">
-        <UserAvatar
-          src={user.avatar_url}
-          firstName={user.first_name}
-          lastName={user.last_name}
+        <Avatar
+          initials={getInitials(fullName)}
+          src={displayAvatar}
           alt={fullName}
-          size={compact ? "md" : "lg"}
+          size="lg"
         />
       </div>
 
@@ -89,14 +97,14 @@ export function UserCard({
         {showTags && displayedTags.length > 0 && (
           <div className="user-card__tags">
             {displayedTags.map((tag, index) => (
-              <span key={index} className="user-card__tag">
+              <Tag key={index} size="sm" variant="default">
                 {tag}
-              </span>
+              </Tag>
             ))}
             {hasMoreTags && (
-              <span className="user-card__tag user-card__tag--more">
+              <Tag size="sm" variant="default">
                 +{(user.search_tags?.length || 0) - maxTags}
-              </span>
+              </Tag>
             )}
           </div>
         )}
