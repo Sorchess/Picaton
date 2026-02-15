@@ -138,7 +138,7 @@
     border: none;
     border-radius: $radius-full;
     background: var(--color-accent, #2873ed);
-    color: #fff;
+    color: var(--color-bg-primary);
     font-size: 14px;
     font-weight: 600;
     font-family: inherit;
