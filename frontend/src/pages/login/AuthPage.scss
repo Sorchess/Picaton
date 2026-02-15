@@ -28,12 +28,15 @@
   &__header {
     text-align: center;
     margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
   }
 
   &__logo {
     display: flex;
     justify-content: center;
-    margin-bottom: 1rem;
 
     svg {
       filter: drop-shadow(0 4px 20px rgba(139, 92, 246, 0.4));
@@ -42,13 +45,9 @@
 
   &__title {
     font-family: "Syne", sans-serif;
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
-    background: linear-gradient(
-        135deg,
-        #6366f1 0%,
-        #2873ED 100%
-    );
+    background: linear-gradient(135deg, #6366f1 0%, #2873ed 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -76,12 +75,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-  }
-
-  &__label {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
-    font-weight: 500;
   }
 
   &__error {
@@ -120,40 +113,6 @@
     }
     75% {
       transform: translateX(-5px);
-    }
-  }
-
-  &__submit {
-    margin-top: 0.5rem;
-    width: 100%;
-    padding: 1rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    border: none;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: normal;
-    word-wrap: break-word;
-    text-align: center;
-    line-height: 1.4;
-    min-height: 52px;
-
-    @media (max-width: 480px) {
-      padding: 0.875rem 0.75rem;
-      font-size: 0.9rem;
-    }
-
-    &:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
     }
   }
 
@@ -236,34 +195,12 @@
     gap: 0.5rem;
   }
 
-  // Override shared Input styles for auth page
-  input {
-    width: 100%;
-    padding: 0.875rem 1rem;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    color: var(--color-text-primary);
-    font-size: 1rem;
-    transition: all 0.2s ease;
-
-    &::placeholder {
-      color: var(--color-text-muted);
-    }
-
-    &:focus {
-      outline: none;
-      border-color: rgba(139, 92, 246, 0.5);
-      background: var(--color-glass-bg-hover);
-    }
-  }
-
   // Divider between methods
   &__divider {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin: 1.5rem 0;
+    margin: 0.5rem 0;
 
     &::before,
     &::after {
@@ -286,5 +223,57 @@
     flex-direction: column;
     gap: 0.75rem;
     align-items: center;
+  }
+
+  &__floating-svg-1 {
+    width: 180px;
+    top: 15%;
+    left: 10%;
+    animation: float-depth-1 6s ease-in-out infinite;
+  }
+
+  &__floating-svg-2 {
+    width: 120px;
+    bottom: 20%;
+    right: 15%;
+    animation: float-depth-2 7s ease-in-out infinite;
+  }
+}
+
+@keyframes float-depth-1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    filter: blur(1px); /* Среднее положение - средний блюр */
+    opacity: 0.9;
+  }
+  50% {
+    /* Движение ВНИЗ (глубже) */
+    transform: translate(-20px, 40px) scale(0.9);
+    filter: blur(5px); /* Сильный блюр, как на фоне */
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    filter: blur(1px);
+    opacity: 0.9;
+  }
+}
+
+@keyframes float-depth-2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    filter: blur(6px); /* Начинаем размытым */
+    opacity: 0.7;
+  }
+  50% {
+    /* Движение ВВЕРХ (ближе к зрителю) */
+    transform: translate(30px, -50px) scale(1.1);
+    filter: blur(1px); /* Почти четкий, но мягкий "Soft Focus" */
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    filter: blur(6px);
+    opacity: 0.7;
   }
 }
