@@ -45,39 +45,15 @@
   }
 
   &__input {
-    width: 100%;
-    padding: 0.875rem 1rem;
-    font-size: 1rem;
-    border: 2px solid var(--color-border, #e0e0e0);
-    border-radius: 12px;
-    background: var(--color-bg-secondary, #f8f8f8);
-    color: var(--color-text-primary);
-    transition:
-      border-color 0.2s,
-      box-shadow 0.2s;
-    box-sizing: border-box;
-
-    &::placeholder {
-      color: var(--color-text-tertiary, #999);
-    }
-
-    &:focus {
-      outline: none;
-      border-color: var(--color-primary, #007aff);
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
     &--code {
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: 0.5rem;
-      font-family: "SF Mono", Monaco, "Courier New", monospace;
+      input {
+        padding: 0.875rem 1rem;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: 0.5rem;
+        font-family: "SF Mono", Monaco, "Courier New", monospace;
+      }
     }
   }
 

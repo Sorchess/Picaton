@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Button } from "@/shared";
+import { Modal, Button, Input } from "@/shared";
 import { userApi } from "@/entities/user";
 import "./EmailModal.scss";
 
@@ -128,15 +128,15 @@ export function EmailModal({
               подтверждения.
             </p>
             <div className="email-modal__input-wrapper">
-              <input
-                type="email"
+              <Input
+                placeholder="Email"
                 className="email-modal__input"
-                placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 autoFocus
               />
+
               {error && <span className="email-modal__error">{error}</span>}
             </div>
             <div className="email-modal__actions">
@@ -160,7 +160,7 @@ export function EmailModal({
               его ниже для подтверждения.
             </p>
             <div className="email-modal__input-wrapper">
-              <input
+              <Input
                 type="text"
                 className="email-modal__input email-modal__input--code"
                 placeholder="000000"
