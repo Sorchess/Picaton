@@ -328,7 +328,7 @@ export function LoginPage() {
           </svg>
         </div>
 
-        <div className="auth-page__header">
+        <div className="auth-page__header" style={{ flexDirection: "row" }}>
           <div className="auth-page__logo">
             <svg
               width="64"
@@ -524,6 +524,108 @@ export function LoginPage() {
             Версия: 1.0.0
           </Typography>
         </div>
+      </div>
+      <div className="auth-page__glow">
+        <svg
+          width="318"
+          height="318"
+          viewBox="0 0 318 318"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g filter="url(#filter0_f_1635_19937)">
+            <path
+              d="M231.881 130.951C224.32 102.73 220.539 88.6201 210.702 80.6541C207.525 78.0814 203.963 76.0248 200.147 74.5598C188.33 70.0236 174.22 73.8044 146.001 81.3661L130.949 85.3992C102.729 92.9609 88.6196 96.7417 80.6539 106.579C78.0813 109.756 76.0248 113.318 74.5598 117.134C70.0238 128.952 73.8045 143.062 81.3659 171.282L85.3989 186.334C92.9603 214.555 96.7411 228.665 106.578 236.631C109.755 239.204 113.317 241.26 117.133 242.725C128.95 247.262 143.06 243.481 171.279 235.919L186.331 231.886C214.551 224.324 228.66 220.544 236.626 210.706C239.199 207.529 241.255 203.967 242.72 200.151C247.256 188.333 243.476 174.223 235.914 146.003L231.881 130.951Z"
+              fill="url(#paint0_linear_1635_19937)"
+            />
+          </g>
+          <defs>
+            <filter
+              id="filter0_f_1635_19937"
+              x="9.91821e-05"
+              y="-0.000389099"
+              width="317.28"
+              height="317.286"
+              filterUnits="userSpaceOnUse"
+              color-interpolation-filters="sRGB"
+            >
+              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+              <feBlend
+                mode="normal"
+                in="SourceGraphic"
+                in2="BackgroundImageFix"
+                result="shape"
+              />
+              <feGaussianBlur
+                stdDeviation="36.3"
+                result="effect1_foregroundBlur_1635_19937"
+              />
+            </filter>
+            <linearGradient
+              id="paint0_linear_1635_19937"
+              x1="214.993"
+              y1="67.9205"
+              x2="112.898"
+              y2="238.451"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stop-color="#0081FF" />
+              <stop offset="1" stop-color="#A54CFF" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <svg
+          width="383"
+          height="383"
+          viewBox="0 0 383 383"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g filter="url(#filter0_f_1635_19939)">
+            <rect
+              width="153.506"
+              height="153.604"
+              rx="38.3764"
+              transform="matrix(-0.846362 -0.53259 -0.5326 0.846379 297.164 167.188)"
+              fill="url(#paint0_linear_1635_19939)"
+            />
+          </g>
+          <defs>
+            <filter
+              id="filter0_f_1635_19939"
+              x="0"
+              y="0"
+              width="382.597"
+              height="382.627"
+              filterUnits="userSpaceOnUse"
+              color-interpolation-filters="sRGB"
+            >
+              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+              <feBlend
+                mode="normal"
+                in="SourceGraphic"
+                in2="BackgroundImageFix"
+                result="shape"
+              />
+              <feGaussianBlur
+                stdDeviation="50"
+                result="effect1_foregroundBlur_1635_19939"
+              />
+            </filter>
+            <linearGradient
+              id="paint0_linear_1635_19939"
+              x1="2.03009e-06"
+              y1="4.80012"
+              x2="140.71"
+              y2="141.034"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stop-color="#12F0B6" />
+              <stop offset="1" stop-color="#0081FF" />
+            </linearGradient>
+          </defs>
+        </svg>
       </div>
     </div>
   );

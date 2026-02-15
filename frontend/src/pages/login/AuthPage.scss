@@ -1,27 +1,48 @@
 .auth-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   background: var(--color-bg-primary);
+  overflow: hidden;
+  position: relative;
 
   @media (max-width: 480px) {
     padding: 1rem;
   }
 
+  &__glow {
+    visibility: hidden;
+    position: absolute;
+    bottom: -30%;
+    display: flex;
+    justify-content: space-between;
+
+    @media (max-width: 480px) {
+      visibility: visible;
+    }
+
+    svg {
+      position: relative;
+      top: -30px;
+    }
+  }
+
   &__container {
     width: 100%;
     max-width: 420px;
-    padding: 3rem;
+    padding: 2rem;
     background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 24px;
+    border-radius: 25px;
     backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--color-border);
+    z-index: 2;
 
     @media (max-width: 480px) {
       padding: 1.5rem;
-      border-radius: 16px;
+      border-radius: 25px;
     }
   }
 
@@ -29,6 +50,7 @@
     text-align: center;
     margin-bottom: 2.5rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 12px;
@@ -226,16 +248,16 @@
   }
 
   &__floating-svg-1 {
-    width: 180px;
+    width: 200px;
     top: 15%;
     left: 10%;
     animation: float-depth-1 6s ease-in-out infinite;
   }
 
   &__floating-svg-2 {
-    width: 120px;
+    width: 100px;
     bottom: 20%;
-    right: 15%;
+    right: 0;
     animation: float-depth-2 7s ease-in-out infinite;
   }
 }
@@ -248,7 +270,7 @@
   }
   50% {
     /* Движение ВНИЗ (глубже) */
-    transform: translate(-20px, 40px) scale(0.9);
+    transform: translate(-10px, 20px) scale(0.9);
     filter: blur(5px); /* Сильный блюр, как на фоне */
     opacity: 0.6;
   }
@@ -267,7 +289,7 @@
   }
   50% {
     /* Движение ВВЕРХ (ближе к зрителю) */
-    transform: translate(30px, -50px) scale(1.1);
+    transform: translate(15px, -25px) scale(1.1);
     filter: blur(1px); /* Почти четкий, но мягкий "Soft Focus" */
     opacity: 1;
   }
