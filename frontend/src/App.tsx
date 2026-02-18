@@ -8,7 +8,6 @@ import {
   LoginPage,
   OnboardingPage,
   CompanyPage,
-  CollaborationPage,
   ContactProfilePage,
   ShareContactPage,
   ChatsPage,
@@ -628,7 +627,6 @@ function AuthenticatedApp() {
       </header>
 
       <main className={`app__main${isChatOpen ? " app__main--chat-open" : ""}`}>
-        {currentPage === "collaboration" && <CollaborationPage />}
         {currentPage === "chats" && (
           <ChatsPage
             openUserId={chatTargetUser?.id}
