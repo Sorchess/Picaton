@@ -39,6 +39,7 @@
     border-radius: 25px;
     color: var(--color-text-on-accent);
     transition: all 0.2s ease;
+    box-shadow: 1px 10px 10px color-mix(in srgb, var(--color-accent), transparent 65%);
 
     &:hover:not(:disabled) {
       background: var(--color-accent-hover);

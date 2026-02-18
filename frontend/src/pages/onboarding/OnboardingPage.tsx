@@ -1,338 +1,423 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState } from "react";
 import { useAuth } from "@/features/auth";
-import { userApi } from "@/entities/user";
+import { userApi } from "@/entities/user/model/api";
+import { businessCardApi } from "@/entities/business-card/model/api";
 import {
   Typography,
   Button,
+  Card,
   Input,
-  parseEmailName,
-  formatParsedName,
+  Textarea,
+  PrivacyOptionList,
 } from "@/shared";
+import type { PrivacyLevel } from "@/shared";
+import Loupe from "@/shared/assets/Loupe.webp";
+import House from "@/shared/assets/House.webp";
+import Stars from "@/shared/assets/Stars.webp";
+import Handshake from "@/shared/assets/Handshake.webp";
+import Done from "@/shared/assets/Done.webp";
 import "./OnboardingPage.scss";
 
-type OnboardingStep = "welcome" | "profile" | "complete";
+const SLIDE_COUNT = 4;
+const PROFILE_STEPS = 4; // profile, bio, privacy, done
 
-export function OnboardingPage() {
-  const { user, refreshUser } = useAuth();
-  const [step, setStep] = useState<OnboardingStep>("welcome");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface SlideData {
+  animation: string;
+  title: string;
+  description: string;
+}
 
-  // Парсим имя из email
-  const parsedName = user?.email ? parseEmailName(user.email) : null;
-  const suggestedName = parsedName ? formatParsedName(parsedName) : "";
-  const hasSuggestion = !!suggestedName;
+const slides: SlideData[] = [
+  {
+    animation: Loupe,
+    title: "Умный поиск",
+    description: "Найдите экспертов по любым навыкам",
+  },
+  {
+    animation: Handshake,
+    title: "Создавайте связи",
+    description: "Узнайте как вы связаны с нужными людьми",
+  },
+  {
+    animation: House,
+    title: "Компания",
+    description: "Исследуйте структуру и людей вашей организации",
+  },
+  {
+    animation: Stars,
+    title: "AI ассистирование",
+    description: "Экономь время и собственные ресурсы, используя AI",
+  },
+];
 
-  // Form state
-  const [firstName, setFirstName] = useState(user?.first_name || "");
-  const [lastName, setLastName] = useState(user?.last_name || "");
-  const [bio, setBio] = useState(user?.bio || "");
-  const [location, setLocation] = useState(user?.location || "");
-  const [suggestionAccepted, setSuggestionAccepted] = useState(false);
+function ProgressBar({ current, total }: { current: number; total: number }) {
+  return (
+    <svg
+      className="onboarding__progress"
+      viewBox="0 0 393 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {Array.from({ length: total }, (_, i) => {
+        const gap = 8;
+        const sidePadding = 24;
+        const availableWidth = 393 - sidePadding * 2;
+        const barWidth = (availableWidth - gap * (total - 1)) / total;
+        const x = sidePadding + i * (barWidth + gap);
+        return (
+          <rect
+            key={i}
+            x={x}
+            y={10}
+            width={barWidth}
+            height={4}
+            rx={2}
+            fill={i <= current ? "#0081FF" : "#E3EAF7"}
+          />
+        );
+      })}
+    </svg>
+  );
+}
 
-  // Предзаполняем форму из распознанного имени
-  useEffect(() => {
-    if (
-      parsedName &&
-      !user?.first_name &&
-      !user?.last_name &&
-      !suggestionAccepted
-    ) {
-      if (parsedName.firstName) setFirstName(parsedName.firstName);
-      if (parsedName.lastName) setLastName(parsedName.lastName);
-    }
-  }, [parsedName, user?.first_name, user?.last_name, suggestionAccepted]);
+/* ── Step 1: Name ── */
+function ProfileNameStep({
+  onNext,
+  isSubmitting,
+}: {
+  onNext: (firstName: string, lastName: string) => void;
+  isSubmitting: boolean;
+}) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [errors, setErrors] = useState<{
+    firstName?: string;
+    lastName?: string;
+  }>({});
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const validate = () => {
+    const newErrors: typeof errors = {};
+    if (!firstName.trim()) newErrors.firstName = "Введите имя";
+    if (!lastName.trim()) newErrors.lastName = "Введите фамилию";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    if (!firstName.trim() || !lastName.trim()) {
-      setError("Имя и фамилия обязательны для заполнения");
-      return;
-    }
-
-    if (!user?.id) {
-      setError("Ошибка авторизации");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      await userApi.update(user.id, {
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        bio: bio.trim() || null,
-        location: location.trim() || null,
-      });
-
-      setStep("complete");
-
-      // Показываем сообщение об успехе, затем обновляем данные пользователя
-      // что вызовет автоматический переход в AuthenticatedApp
-      setTimeout(async () => {
-        await refreshUser();
-      }, 1500);
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      setError("Не удалось сохранить данные. Попробуйте ещё раз.");
-    } finally {
-      setIsLoading(false);
+  const handleSubmit = () => {
+    if (validate()) {
+      onNext(firstName.trim(), lastName.trim());
     }
   };
 
-  // Экран приветствия
-  if (step === "welcome") {
-    return (
-      <div className="onboarding">
-        <div className="onboarding__container">
-          <div className="onboarding__header">
-            <div className="onboarding__icon">🎉</div>
-            <Typography variant="h1" className="onboarding__title">
-              Добро пожаловать в Picaton!
-            </Typography>
-            <Typography variant="body" className="onboarding__subtitle">
-              Расскажите о себе, чтобы другие участники могли вас найти
-            </Typography>
-          </div>
-
-          <div className="onboarding__features">
-            <div className="onboarding__feature">
-              <span className="onboarding__feature-icon">🔍</span>
-              <div className="onboarding__feature-content">
-                <Typography
-                  variant="body"
-                  className="onboarding__feature-title"
-                >
-                  Находите специалистов
-                </Typography>
-                <Typography
-                  variant="small"
-                  className="onboarding__feature-desc"
-                >
-                  Ищите людей по навыкам и интересам
-                </Typography>
-              </div>
-            </div>
-            <div className="onboarding__feature">
-              <span className="onboarding__feature-icon">🤝</span>
-              <div className="onboarding__feature-content">
-                <Typography
-                  variant="body"
-                  className="onboarding__feature-title"
-                >
-                  Создавайте связи
-                </Typography>
-                <Typography
-                  variant="small"
-                  className="onboarding__feature-desc"
-                >
-                  Обменивайтесь контактами через QR-коды
-                </Typography>
-              </div>
-            </div>
-            <div className="onboarding__feature">
-              <span className="onboarding__feature-icon">✨</span>
-              <div className="onboarding__feature-content">
-                <Typography
-                  variant="body"
-                  className="onboarding__feature-title"
-                >
-                  AI-презентация
-                </Typography>
-                <Typography
-                  variant="small"
-                  className="onboarding__feature-desc"
-                >
-                  ИИ создаст вашу уникальную визитку
-                </Typography>
-              </div>
-            </div>
-          </div>
-
-          {hasSuggestion && (
-            <div className="onboarding__suggestion">
-              <Typography
-                variant="body"
-                className="onboarding__suggestion-text"
-              >
-                Вас зовут <strong>{suggestedName}</strong>?
-              </Typography>
-              <div className="onboarding__suggestion-actions">
-                <Button
-                  variant="primary"
-                  className="onboarding__suggestion-btn"
-                  onClick={() => {
-                    setSuggestionAccepted(true);
-                    setStep("profile");
-                  }}
-                >
-                  Да, это я
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="onboarding__suggestion-btn"
-                  onClick={() => {
-                    setFirstName("");
-                    setLastName("");
-                    setSuggestionAccepted(true);
-                    setStep("profile");
-                  }}
-                >
-                  Нет, другое имя
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {!hasSuggestion && (
-            <Button
-              variant="primary"
-              className="onboarding__submit"
-              onClick={() => setStep("profile")}
-            >
-              Начать заполнение
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Экран успешного завершения
-  if (step === "complete") {
-    return (
-      <div className="onboarding">
-        <div className="onboarding__container">
-          <div className="onboarding__header">
-            <div className="onboarding__icon onboarding__icon--success">✅</div>
-            <Typography variant="h1" className="onboarding__title">
-              Профиль создан!
-            </Typography>
-            <Typography variant="body" className="onboarding__subtitle">
-              Отлично, {firstName}! Теперь вы можете пользоваться платформой
-            </Typography>
-          </div>
-
-          <div className="onboarding__next-steps">
-            <Typography variant="body" className="onboarding__next-title">
-              Что дальше:
-            </Typography>
-            <ul className="onboarding__next-list">
-              <li>Добавьте теги навыков</li>
-              <li>Загрузите аватар</li>
-              <li>Добавьте контакты для связи</li>
-            </ul>
-          </div>
-
-          <div className="onboarding__loader">
-            <div className="onboarding__spinner" />
-            <Typography variant="small">Переходим в приложение...</Typography>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Форма заполнения профиля
   return (
-    <div className="onboarding">
-      <div className="onboarding__container">
-        <div className="onboarding__header">
-          <div className="onboarding__step-indicator">
-            <span className="onboarding__step-badge">Шаг 1 из 1</span>
+    <>
+      <div className="onboarding__center">
+        <div className="onboarding__profile-form">
+          <Typography variant="h1" className="onboarding__profile-heading">
+            Создайте профиль
+          </Typography>
+          <Typography variant="body" className="onboarding__profile-subheading">
+            Расскажите о себе
+          </Typography>
+
+          <div className="onboarding__profile-fields">
+            <Input
+              placeholder="Имя"
+              value={firstName}
+              onChange={(e) => {
+                setFirstName(e.target.value);
+                if (errors.firstName)
+                  setErrors((prev) => ({ ...prev, firstName: undefined }));
+              }}
+              error={errors.firstName}
+              fullWidth
+            />
+            <Input
+              placeholder="Фамилия"
+              value={lastName}
+              onChange={(e) => {
+                setLastName(e.target.value);
+                if (errors.lastName)
+                  setErrors((prev) => ({ ...prev, lastName: undefined }));
+              }}
+              error={errors.lastName}
+              fullWidth
+            />
           </div>
-          <Typography variant="h1" className="onboarding__title">
-            Основная информация
-          </Typography>
-          <Typography variant="body" className="onboarding__subtitle">
-            Эти данные будут видны другим пользователям
-          </Typography>
         </div>
+      </div>
 
-        <form className="onboarding__form" onSubmit={handleSubmit}>
-          <div className="onboarding__row">
-            <div className="onboarding__field">
-              <label className="onboarding__label">
-                Имя <span className="onboarding__required">*</span>
-              </label>
-              <Input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Иван"
-                autoFocus
-                disabled={isLoading}
-              />
-            </div>
-            <div className="onboarding__field">
-              <label className="onboarding__label">
-                Фамилия <span className="onboarding__required">*</span>
-              </label>
-              <Input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Иванов"
-                disabled={isLoading}
-              />
-            </div>
-          </div>
+      <div className="onboarding__bottom">
+        <Button
+          variant="primary"
+          className="onboarding__continue"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Сохранение..." : "Продолжить"}
+        </Button>
+      </div>
+    </>
+  );
+}
 
-          <div className="onboarding__field">
-            <label className="onboarding__label">Информация о себе</label>
-            <textarea
-              className="onboarding__textarea"
+/* ── Step 2: Bio ── */
+function ProfileBioStep({
+  onNext,
+  isSubmitting,
+}: {
+  onNext: (bio: string) => void;
+  isSubmitting: boolean;
+}) {
+  const [bio, setBio] = useState("");
+
+  return (
+    <>
+      <div className="onboarding__center">
+        <div className="onboarding__profile-form">
+          <Typography variant="h1" className="onboarding__profile-heading">
+            Расскажите о себе
+          </Typography>
+          <Typography variant="body" className="onboarding__profile-subheading">
+            Это поможет другим людям узнать вас лучше
+          </Typography>
+
+          <div className="onboarding__profile-fields">
+            <Textarea
+              placeholder="Чем вы занимаетесь, ваши интересы и опыт..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="Расскажите о себе, своих навыках и интересах..."
-              disabled={isLoading}
-              rows={4}
-            />
-            <span className="onboarding__hint">
-              Краткое описание поможет людям узнать вас лучше
-            </span>
-          </div>
-
-          <div className="onboarding__field">
-            <label className="onboarding__label">Город</label>
-            <Input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Москва, Санкт-Петербург..."
-              disabled={isLoading}
+              rows={5}
+              fullWidth
             />
           </div>
-
-          {error && (
-            <div className="onboarding__error">
-              <Typography variant="small">{error}</Typography>
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            variant="primary"
-            className="onboarding__submit"
-            disabled={isLoading || !firstName.trim() || !lastName.trim()}
-          >
-            {isLoading ? (
-              <>
-                <span className="onboarding__btn-spinner" />
-                Сохраняем...
-              </>
-            ) : (
-              "Сохранить и продолжить"
-            )}
-          </Button>
-
-          <Typography variant="small" className="onboarding__skip-hint">
-            Вы сможете дополнить профиль позже
-          </Typography>
-        </form>
+        </div>
       </div>
+
+      <div className="onboarding__bottom">
+        <Button
+          variant="primary"
+          className="onboarding__continue"
+          onClick={() => onNext(bio.trim())}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Сохранение..." : "Продолжить"}
+        </Button>
+        <Button
+          variant="ghost"
+          className="onboarding__skip"
+          onClick={() => onNext("")}
+          disabled={isSubmitting}
+        >
+          Пропустить
+        </Button>
+      </div>
+    </>
+  );
+}
+
+/* ── Step 3: Privacy ── */
+function ProfilePrivacyStep({
+  onNext,
+  isSubmitting,
+}: {
+  onNext: (privacy: PrivacyLevel) => void;
+  isSubmitting: boolean;
+}) {
+  const [privacy, setPrivacy] = useState<PrivacyLevel>("public");
+
+  return (
+    <>
+      <div className="onboarding__center">
+        <div className="onboarding__profile-form">
+          <Typography variant="h1" className="onboarding__profile-heading">
+            Конфиденциальность
+          </Typography>
+          <Typography variant="body" className="onboarding__profile-subheading">
+            Кто сможет видеть ваш профиль?
+          </Typography>
+
+          <div className="onboarding__profile-fields">
+            <PrivacyOptionList selectedLevel={privacy} onChange={setPrivacy} />
+          </div>
+        </div>
+      </div>
+
+      <div className="onboarding__bottom">
+        <Button
+          variant="primary"
+          className="onboarding__continue"
+          onClick={() => onNext(privacy)}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Сохранение..." : "Продолжить"}
+        </Button>
+      </div>
+    </>
+  );
+}
+
+/* ── Step 4: Done ── */
+function DoneStep({ onFinish }: { onFinish: () => void }) {
+  return (
+    <>
+      <div className="onboarding__center">
+        <div className="onboarding__profile-form">
+          <Typography variant="h1" className="onboarding__profile-heading">
+            Всё готово!
+          </Typography>
+          <Typography variant="body" className="onboarding__profile-subheading">
+            Ваш профиль создан. Начните искать нужных людей
+          </Typography>
+        </div>
+        <img src={Done} alt="Done" className="onboarding__animation" />
+      </div>
+
+      <div className="onboarding__bottom">
+        <Button
+          variant="primary"
+          className="onboarding__continue"
+          onClick={onFinish}
+        >
+          Начать
+        </Button>
+      </div>
+    </>
+  );
+}
+
+export function OnboardingPage() {
+  const { user, refreshUser } = useAuth();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isProfilePhase = currentStep >= SLIDE_COUNT;
+  const profileStepIndex = currentStep - SLIDE_COUNT; // 0, 1, 2
+  const isLastSlide = currentStep === SLIDE_COUNT - 1;
+
+  const handleContinue = () => {
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  /* Save name, advance to bio step */
+  const handleNameNext = async (firstName: string, lastName: string) => {
+    if (!user) return;
+    setIsSubmitting(true);
+    try {
+      await userApi.update(user.id, {
+        first_name: firstName,
+        last_name: lastName,
+      });
+      setCurrentStep((prev) => prev + 1);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /* Save bio to primary business card, advance to privacy step */
+  const handleBioNext = async (bio: string) => {
+    if (!user) return;
+    if (bio) {
+      setIsSubmitting(true);
+      try {
+        const primaryCard = await businessCardApi.getPrimary(user.id);
+        await businessCardApi.update(primaryCard.id, user.id, { bio });
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  /* Save privacy, advance to done step */
+  const handlePrivacyNext = async (privacy: PrivacyLevel) => {
+    if (!user) return;
+    setIsSubmitting(true);
+    try {
+      await userApi.updateVisibility(user.id, privacy === "public");
+      setCurrentStep((prev) => prev + 1);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /* Finish onboarding */
+  const handleFinish = async () => {
+    await refreshUser();
+  };
+
+  const renderProfileStep = () => {
+    switch (profileStepIndex) {
+      case 0:
+        return (
+          <ProfileNameStep
+            onNext={handleNameNext}
+            isSubmitting={isSubmitting}
+          />
+        );
+      case 1:
+        return (
+          <ProfileBioStep onNext={handleBioNext} isSubmitting={isSubmitting} />
+        );
+      case 2:
+        return (
+          <ProfilePrivacyStep
+            onNext={handlePrivacyNext}
+            isSubmitting={isSubmitting}
+          />
+        );
+      case 3:
+        return <DoneStep onFinish={handleFinish} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="onboarding">
+      <div className="onboarding__top">
+        <ProgressBar
+          current={isProfilePhase ? profileStepIndex : currentStep}
+          total={isProfilePhase ? PROFILE_STEPS : SLIDE_COUNT}
+        />
+      </div>
+
+      {isProfilePhase ? (
+        renderProfileStep()
+      ) : (
+        <>
+          <div className="onboarding__center">
+            {slides.map((s, i) => (
+              <img
+                key={i}
+                src={s.animation}
+                alt={s.title}
+                className="onboarding__animation"
+                style={{ display: i === currentStep ? "block" : "none" }}
+              />
+            ))}
+          </div>
+
+          <div className="onboarding__bottom">
+            <Card className="onboarding__card" padding="sm">
+              <Typography variant="h1" className="onboarding__title">
+                {slides[currentStep].title}
+              </Typography>
+              <Typography variant="body" className="onboarding__subtitle">
+                {slides[currentStep].description}
+              </Typography>
+            </Card>
+
+            <Button
+              variant="primary"
+              className="onboarding__continue"
+              onClick={handleContinue}
+            >
+              {isLastSlide ? "Далее" : "Продолжить"}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

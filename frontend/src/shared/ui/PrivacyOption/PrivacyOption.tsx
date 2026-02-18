@@ -1,7 +1,7 @@
-import type { FC, ReactNode } from "react";
+import type { FC } from "react";
 import "./PrivacyOption.scss";
 
-export type PrivacyLevel = "public" | "contacts" | "private";
+export type PrivacyLevel = "public" | "contacts" | "private" | "company";
 
 interface PrivacyOptionProps {
   /** Privacy level identifier */
@@ -11,7 +11,7 @@ interface PrivacyOptionProps {
   /** Option description */
   description: string;
   /** Icon or emoji */
-  icon: ReactNode;
+  icon?: string;
   /** Selected state */
   isSelected?: boolean;
   /** Click handler */
@@ -45,8 +45,8 @@ export const PrivacyOption: FC<PrivacyOptionProps> = ({
       disabled={disabled}
       data-level={level}
     >
-      <div className="privacy-option__icon">{icon}</div>
-      <div className="privacy-option__content">
+      {icon && <span className="privacy-option__icon">{icon}</span>}
+        <div className="privacy-option__content">
         <h4 className="privacy-option__title">{title}</h4>
         <p className="privacy-option__description">{description}</p>
       </div>
@@ -77,10 +77,7 @@ interface PrivacyOptionListProps {
   className?: string;
 }
 
-/**
- * List of privacy options (from Figma)
- */
-export const PrivacyOptionList: FC<PrivacyOptionListProps> = ({
+  export const PrivacyOptionList: FC<PrivacyOptionListProps> = ({
   selectedLevel,
   onChange,
   className = "",
@@ -89,25 +86,29 @@ export const PrivacyOptionList: FC<PrivacyOptionListProps> = ({
     level: PrivacyLevel;
     title: string;
     description: string;
-    icon: string;
+    icon?: string;
   }> = [
     {
       level: "public",
-      title: "Открытый профиль",
-      description: "Все могут найти вас и посмотреть профиль",
-      icon: "🌐",
+      title: "Все",
+      description: "Публичный профиль",
     },
     {
       level: "contacts",
-      title: "Только контакты",
-      description: "Только ваши контакты видят полный профиль",
-      icon: "👥",
+      title: "Контакты",
+      description: "Видно только вашим контактам",
     },
     {
       level: "private",
-      title: "Приватный",
-      description: "Профиль скрыт от поиска",
+      title: "Только я",
+      description: "Информация доступна только вам",
       icon: "🔒",
+    },
+    {
+      level: "company",
+      title: "Компания",
+      description: "Видно коллегам из компании",
+      icon: "🏢",
     },
   ];
 
