@@ -156,6 +156,7 @@ async def update_user_profile(
         last_name=data.last_name,
         avatar_url=data.avatar_url,
         bio=data.bio,
+        position=data.position if data.position is not None else ...,
     )
 
     # Если это онбординг - создаём первую карточку автоматически
@@ -931,6 +932,7 @@ def _user_to_response(user) -> UserResponse:
         location=user.location,
         bio=user.bio,
         ai_generated_bio=user.ai_generated_bio,
+        position=user.position,
         status=user.status.value,
         tags=[
             TagInfo(

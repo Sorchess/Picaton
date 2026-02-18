@@ -28,21 +28,38 @@
 
   &__field {
     width: 100%;
-    padding: 14px 24px;
-    border-radius: 25px;
     font-size: $font-size-base;
-    border: 1px solid var(--color-border);
-    background: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     transition: all 0.2s ease;
 
-    &::placeholder {
-      text-align: center;
+    &--default {
+      border-radius: 25px;
+      padding: 14px 24px;
+
+      border: 1px solid var(--color-border);
+      background: var(--color-bg-secondary);
+
+      &::placeholder {
+        text-align: center;
+      }
+
+      &:focus {
+        outline: none;
+        background: var(--color-bg-tertiary);
+      }
     }
 
-    &:focus {
-      outline: none;
-      background: var(--color-bg-tertiary);
+    &--transparent {
+      background: none;
+      border: none;
+
+      &::placeholder {
+        text-align: left;
+      }
+
+      &:focus {
+        outline: none;
+      }
     }
   }
 

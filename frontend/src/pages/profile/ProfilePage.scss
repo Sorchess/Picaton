@@ -141,7 +141,8 @@
       .profile__add-card-icon {
         transform: scale(1.1);
         background: rgba(0, 129, 255, 0.2);
-        color: #0081ff;
+        color: var(--color-accent-hover);
+        border: 1px solid var(--color-accent-hover);
       }
     }
   }

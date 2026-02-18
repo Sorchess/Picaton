@@ -242,6 +242,16 @@ class DocumentTranscribeResponse(BaseModel):
     )
 
 
+# ============ Avatar Upload ============
+
+
+class CardAvatarUploadResponse(BaseModel):
+    """Ответ с URL загруженного аватара визитки."""
+
+    avatar_url: str = Field(description="URL загруженного аватара")
+    card_id: str = Field(description="ID визитной карточки")
+
+
 # ============ Speech Recognition ============
 
 

@@ -141,6 +141,15 @@ export const businessCardApi = {
       expires_at?: string;
     }>(`/cards/${cardId}/qr-code${duration ? `?duration=${duration}` : ""}`),
 
+  // ============ Avatar Upload ============
+
+  // Загрузить аватарку для визитки
+  uploadAvatar: (cardId: string, ownerId: string, file: File) =>
+    api.upload<{ avatar_url: string; card_id: string }>(
+      `/cards/${cardId}/avatar?owner_id=${ownerId}`,
+      file,
+    ),
+
   // ============ Транскрибация документов ============
 
   // Извлечь текст из документа (PDF, DOCX, TXT, RTF)
@@ -153,6 +162,8 @@ export const businessCardApi = {
   recognizeSpeech: (audioBlob: Blob) =>
     api.upload<SpeechRecognitionResponse>(
       "/cards/recognize-speech",
-      new File([audioBlob], "audio.webm", { type: audioBlob.type || "audio/webm" }),
+      new File([audioBlob], "audio.webm", {
+        type: audioBlob.type || "audio/webm",
+      }),
     ),
 };

@@ -30,6 +30,7 @@ class MongoUserRepository(UserRepositoryInterface):
             "telegram_id": user.telegram_id,
             "telegram_username": user.telegram_username,
             "location": user.location,
+            "position": user.position,
             "tags": [
                 {
                     "id": str(tag.id),
@@ -91,6 +92,7 @@ class MongoUserRepository(UserRepositoryInterface):
             telegram_id=doc.get("telegram_id"),
             telegram_username=doc.get("telegram_username"),
             location=doc.get("location"),
+            position=doc.get("position"),
             tags=tags,
             search_tags=doc.get("search_tags", []),
             contacts=contacts,

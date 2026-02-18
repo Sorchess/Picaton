@@ -1,14 +1,28 @@
 import { forwardRef, useId, type InputHTMLAttributes } from "react";
 import "./Input.scss";
 
+export type InputVariant = "default" | "transparent";
+
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   fullWidth?: boolean;
+  variant?: InputVariant;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, fullWidth = false, className = "", id, ...props }, ref) => {
+  (
+    {
+      label,
+      error,
+      variant = "default",
+      fullWidth = false,
+      className = "",
+      id,
+      ...props
+    },
+    ref,
+  ) => {
     const generatedId = useId();
     const inputId = id || generatedId;
 
@@ -28,11 +42,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input ref={ref} id={inputId} className="input__field" {...props} />
+        <input
+          ref={ref}
+          id={inputId}
+          className={`input__field ${variant ? `input__field--${variant}` : ""}`}
+          {...props}
+        />
         {error && <span className="input__error">{error}</span>}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = "Input";

@@ -57,6 +57,9 @@ class User(Entity):
     # Локация
     location: str | None = field(default=None)
 
+    # Должность / роль
+    position: str | None = field(default=None)
+
     # Навыки и теги для ассоциативного поиска
     tags: list[Tag] = field(default_factory=list)
     search_tags: list[str] = field(default_factory=list)  # Облако тегов для поиска
@@ -216,6 +219,7 @@ class User(Entity):
         last_name: str | None = None,
         avatar_url: str | None = None,
         bio: str | None = None,
+        position: str | None = ...,
     ) -> None:
         """Обновить основные данные профиля."""
         if first_name is not None:
@@ -237,6 +241,9 @@ class User(Entity):
             if bio:
                 self._validate_bio(bio)
             self.bio = bio
+
+        if position is not ...:
+            self.position = position.strip() if position else None
 
         self._recalculate_completeness()
 

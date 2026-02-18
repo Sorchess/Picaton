@@ -24,6 +24,7 @@ from presentation.api.cards.schemas import (
     TextTagGenerationRequest,
     TextTagGenerationResponse,
     CardEmojisUpdate,
+    CardAvatarUploadResponse,
     DocumentTranscribeResponse,
     SpeechRecognitionResponse,
 )
@@ -36,7 +37,10 @@ from infrastructure.dependencies import (
     get_user_service,
     get_document_transcriber_service,
     get_speech_recognition_service,
+    get_cloudinary_service,
 )
+from infrastructure.storage import CloudinaryService
+from infrastructure.storage.cloudinary_service import CloudinaryError, InvalidFileError
 from application.services.business_card import (
     BusinessCardService,
     BusinessCardNotFoundError,
@@ -596,9 +600,7 @@ async def transcribe_document(
         ...,
         description="Документ для извлечения текста (PDF, DOCX, TXT, RTF). Максимум 10 МБ.",
     ),
-    transcriber: DocumentTranscriberService = Depends(
-        get_document_transcriber_service
-    ),
+    transcriber: DocumentTranscriberService = Depends(get_document_transcriber_service),
 ):
     """
     Извлечь текст из загруженного документа.
@@ -736,9 +738,7 @@ async def recognize_speech(
         ...,
         description="Аудиофайл для распознавания (OGG/Opus, WAV, WebM). Максимум 1 МБ, до 30 секунд.",
     ),
-    speech_service: SpeechRecognitionService = Depends(
-        get_speech_recognition_service
-    ),
+    speech_service: SpeechRecognitionService = Depends(get_speech_recognition_service),
 ):
     """
     Распознать речь из аудиофайла через Yandex SpeechKit.
@@ -770,4 +770,71 @@ async def recognize_speech(
         raise HTTPException(
             status_code=500,
             detail=f"Ошибка распознавания речи: {str(e)}",
+        )
+
+
+# ============ Card Avatar Upload ============
+
+
+@router.post("/{card_id}/avatar", response_model=CardAvatarUploadResponse)
+async def upload_card_avatar(
+    card_id: UUID,
+    owner_id: UUID,
+    file: UploadFile = File(...),
+    card_service: BusinessCardService = Depends(get_business_card_service),
+    cloudinary_service: CloudinaryService = Depends(get_cloudinary_service),
+):
+    """
+    Загрузить аватарку для визитной карточки.
+
+    - Поддерживаемые форматы: jpg, jpeg, png, webp
+    - Максимальный размер: 5MB
+    - Изображение автоматически масштабируется до 400x400
+    """
+    try:
+        # Verify card exists and belongs to user
+        card = await card_service.get_card(card_id)
+        if str(card.owner_id) != str(owner_id):
+            raise CardAccessDeniedError("Access denied")
+
+        # Read file content
+        content = await file.read()
+
+        # Upload to Cloudinary with card-specific public_id
+        result = await cloudinary_service.upload_avatar(
+            user_id=owner_id,
+            file_content=content,
+            filename=file.filename or "avatar.jpg",
+        )
+
+        # Update card with new avatar URL
+        updated_card = await card_service.update_card(
+            card_id=card_id,
+            owner_id=owner_id,
+            avatar_url=result.url,
+        )
+
+        return CardAvatarUploadResponse(
+            avatar_url=result.url,
+            card_id=str(card_id),
+        )
+
+    except BusinessCardNotFoundError:
+        raise HTTPException(status_code=404, detail="Card not found")
+    except CardAccessDeniedError:
+        raise HTTPException(status_code=403, detail="Access denied")
+    except InvalidFileError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except CloudinaryError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка загрузки аватара: {str(e)}",
         )

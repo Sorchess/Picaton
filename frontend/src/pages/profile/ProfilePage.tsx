@@ -257,7 +257,7 @@ export function ProfilePage({
     if (primaryCard) {
       roles.push({
         id: primaryCard.id,
-        name: "Личный",
+        name: primaryCard.title || "Личный",
         emoji: "🔥",
       });
     }
@@ -341,6 +341,7 @@ export function ProfilePage({
         onBack={handleBackToOverview}
         onCardUpdate={handleCardUpdate}
         onCardDelete={handleCardDelete}
+        onUserUpdate={setUser}
       />
     );
   }
@@ -367,9 +368,9 @@ export function ProfilePage({
   const getCardRoles = (): string[] => {
     const roles: string[] = [];
 
-    // Добавляем title карточки если это не личная
-    if (selectedCard && !selectedCard.is_primary && selectedCard.title) {
-      roles.push(selectedCard.title);
+    // Добавляем должность пользователя
+    if (user.position) {
+      roles.push(user.position);
     }
 
     // Добавляем теги из карточки
@@ -380,7 +381,7 @@ export function ProfilePage({
     }
 
     if (roles.length === 0) {
-      roles.push(user.position || "Пользователь");
+      roles.push("Пользователь");
     }
 
     return roles;

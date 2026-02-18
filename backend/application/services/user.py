@@ -74,6 +74,7 @@ class UserService:
         last_name: str | None = None,
         avatar_url: str | None = None,
         bio: str | None = None,
+        position: str | None = ...,
     ) -> User:
         """Обновить профиль пользователя."""
         user = await self.get_user(user_id)
@@ -82,6 +83,7 @@ class UserService:
             last_name=last_name,
             avatar_url=avatar_url,
             bio=bio,
+            position=position,
         )
         return await self._user_repository.update(user)
 
