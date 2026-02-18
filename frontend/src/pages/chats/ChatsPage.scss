@@ -259,9 +259,9 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: 8px 16px;
     overflow-y: auto;
-    gap: 4px;
+    gap: 0;
   }
 
   &__messages-empty {
@@ -316,46 +316,84 @@
     margin-bottom: 2px;
     animation: chats-message-appear 0.2s ease;
 
+    // Отступ между группами
+    &--single,
+    &--last {
+      margin-bottom: 10px;
+    }
+
+    // ── Свои сообщения: градиент по группе ──
+
     &--own {
       justify-content: flex-end;
 
-      .chats-page__bubble {
-        background: linear-gradient(
-          135deg,
-          rgba(var(--color-accent-rgb), 0.15) 0%,
-          rgba(var(--color-accent-rgb), 0.08) 100%
-        );
-        border: 1px solid rgba(var(--color-accent-rgb), 0.15);
-        border-radius: 18px 18px 4px 18px;
-        backdrop-filter: blur(12px);
-
-        @at-root [data-theme="light"] & {
-          background: linear-gradient(
-            135deg,
-            rgba(40, 115, 237, 0.1) 0%,
-            rgba(40, 115, 237, 0.04) 100%
-          );
-          border-color: rgba(40, 115, 237, 0.12);
-        }
+      &.chats-page__message--single .chats-page__bubble {
+        background: rgba(var(--color-accent-rgb), 0.22);
+        border-radius: 20px 20px 4px 20px;
+      }
+      &.chats-page__message--first .chats-page__bubble {
+        background: rgba(var(--color-accent-rgb), 0.16);
+        border-radius: 20px 20px 4px 20px;
+      }
+      &.chats-page__message--middle .chats-page__bubble {
+        background: rgba(var(--color-accent-rgb), 0.20);
+        border-radius: 20px 4px 4px 20px;
+      }
+      &.chats-page__message--last .chats-page__bubble {
+        background: rgba(var(--color-accent-rgb), 0.24);
+        border-radius: 20px 4px 20px 20px;
       }
     }
+
+    // Light theme overrides for own messages
+    @at-root [data-theme="light"] {
+      .chats-page__message--own.chats-page__message--single
+        .chats-page__bubble {
+        background: rgba(40, 115, 237, 0.18);
+      }
+      .chats-page__message--own.chats-page__message--first .chats-page__bubble {
+        background: rgba(40, 115, 237, 0.12);
+      }
+      .chats-page__message--own.chats-page__message--middle
+        .chats-page__bubble {
+        background: rgba(40, 115, 237, 0.16);
+      }
+      .chats-page__message--own.chats-page__message--last .chats-page__bubble {
+        background: rgba(40, 115, 237, 0.20);
+      }
+    }
+
+    // ── Чужие сообщения ──
 
     &--other {
       justify-content: flex-start;
 
-      .chats-page__bubble {
+      &.chats-page__message--single .chats-page__bubble {
         background: var(--color-bg-secondary);
-        border: 1px solid var(--color-border);
-        border-radius: 18px 18px 18px 4px;
+        border-radius: 20px 20px 20px 4px;
+      }
+      &.chats-page__message--first .chats-page__bubble {
+        background: var(--color-bg-secondary);
+        border-radius: 20px 20px 20px 4px;
+      }
+      &.chats-page__message--middle .chats-page__bubble {
+        background: var(--color-bg-secondary);
+        border-radius: 4px 20px 20px 4px;
+      }
+      &.chats-page__message--last .chats-page__bubble {
+        background: var(--color-bg-secondary);
+        border-radius: 4px 20px 20px 20px;
       }
     }
   }
 
   &__bubble {
     max-width: 78%;
-    padding: 10px 14px;
+    padding: 8px 12px;
     position: relative;
-    box-shadow: 0 1px 3px var(--color-shadow);
+    border: none;
+    box-shadow: none;
+    transition: background 0.15s ease;
 
     @media (max-width: 480px) {
       max-width: 85%;
@@ -376,7 +414,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 4px;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   &__bubble-edited {

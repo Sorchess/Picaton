@@ -441,6 +441,33 @@ export function ChatsPage({
     });
   };
 
+  // Позиция сообщения в группе (Telegram-стиль)
+  const getMessagePosition = (
+    msg: DirectMessage,
+    idx: number,
+  ): "single" | "first" | "middle" | "last" => {
+    const prevMsg = idx > 0 ? messages[idx - 1] : null;
+    const nextMsg = idx < messages.length - 1 ? messages[idx + 1] : null;
+
+    const sameAsPrev =
+      prevMsg &&
+      !prevMsg.is_deleted &&
+      prevMsg.sender_id === msg.sender_id &&
+      !shouldShowDateSeparator(msg, idx);
+
+    const sameAsNext =
+      nextMsg &&
+      !nextMsg.is_deleted &&
+      nextMsg.sender_id === msg.sender_id &&
+      idx + 1 < messages.length &&
+      !shouldShowDateSeparator(nextMsg, idx + 1);
+
+    if (sameAsPrev && sameAsNext) return "middle";
+    if (sameAsPrev) return "last";
+    if (sameAsNext) return "first";
+    return "single";
+  };
+
   // ═══════════ РЕНДЕР: Список диалогов ═══════════
   if (!activeConversation) {
     return (
@@ -627,6 +654,7 @@ export function ChatsPage({
           if (msg.is_deleted) return null;
           const isOwn = msg.sender_id === currentUserId;
           const showDate = shouldShowDateSeparator(msg, idx);
+          const position = getMessagePosition(msg, idx);
 
           return (
             <div key={msg.id}>
@@ -636,7 +664,7 @@ export function ChatsPage({
                 </div>
               )}
               <div
-                className={`chats-page__message ${isOwn ? "chats-page__message--own" : "chats-page__message--other"}`}
+                className={`chats-page__message chats-page__message--${isOwn ? "own" : "other"} chats-page__message--${position}`}
               >
                 <div className="chats-page__bubble">
                   <p className="chats-page__bubble-text">{msg.content}</p>
