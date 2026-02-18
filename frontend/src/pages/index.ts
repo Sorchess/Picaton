@@ -5,5 +5,6 @@ export { ShareContactPage } from "./share-contact";
 export { LoginPage } from "./login";
 export { OnboardingPage } from "./onboarding";
 export { CompanyPage } from "./company";
+export { SettingsPage } from "./settings";
 export { CollaborationPage } from "./collaboration";
 export { ChatsPage } from "./chats";

@@ -17,7 +17,7 @@ import type {
 } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import type { UserPublic } from "@/entities/user";
-import { Button, Modal, Input, Loader, Typography } from "@/shared";
+import { Button, Modal, Input, Loader, IconButton } from "@/shared";
 import { CompanyList, CompanyDetail } from "./components";
 import "./CompanyPage.scss";
 
@@ -53,9 +53,10 @@ type ViewMode = "list" | "detail";
 
 interface CompanyPageProps {
   onOpenContact?: (user: UserPublic, cardId?: string) => void;
+  onBack?: () => void;
 }
 
-export function CompanyPage({ onOpenContact }: CompanyPageProps) {
+export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
   const { user: authUser } = useAuth();
 
   // View mode
@@ -98,7 +99,6 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
     name: "",
     email_domain: "",
     description: "",
-    allow_auto_join: false,
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -315,7 +315,6 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
         name: createForm.name,
         email_domain: createForm.email_domain,
         description: createForm.description || undefined,
-        allow_auto_join: createForm.allow_auto_join,
       });
       await loadCompanies();
       // После создания роль будет загружена через loadRoles
@@ -329,7 +328,6 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
         name: "",
         email_domain: "",
         description: "",
-        allow_auto_join: false,
       });
       showSuccess("Компания успешно создана!");
       // Сразу открываем новую компанию
@@ -423,14 +421,12 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
   const handleUpdateCompany = async (data: {
     name: string;
     description: string;
-    allow_auto_join: boolean;
   }) => {
     if (!selectedCompany) return;
     try {
       const updated = await companyApi.update(selectedCompany.company.id, {
         name: data.name || undefined,
         description: data.description || undefined,
-        allow_auto_join: data.allow_auto_join,
       });
       setSelectedCompany({
         ...selectedCompany,
@@ -488,6 +484,23 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
   if (isLoading && viewMode === "list") {
     return (
       <div className="company-page">
+        <header className="company-page__header">
+          <IconButton aria-label="Назад" onClick={onBack}>
+            <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+              <path
+                d="M9 1L1 9L9 17"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </IconButton>
+          <div className="company-page__title-container">
+            <h1 className="company-page__title">Компании</h1>
+          </div>
+          <div style={{ width: 36 }} />
+        </header>
         <div className="company-page__loading">
           <Loader />
         </div>
@@ -559,6 +572,42 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
   // List view
   return (
     <div className="company-page">
+      {/* Заголовок */}
+      <header className="company-page__header">
+        <IconButton aria-label="Назад" onClick={onBack}>
+          <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+            <path
+              d="M9 1L1 9L9 17"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </IconButton>
+        <div className="company-page__title-container">
+          <h1 className="company-page__title">Компании</h1>
+        </div>
+        <IconButton
+          aria-label="Создать"
+          onClick={() => setIsCreateModalOpen(true)}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </IconButton>
+      </header>
+
       {/* Toast */}
       {toast && (
         <div
@@ -573,33 +622,30 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
         </div>
       )}
 
-      {/* Мои приглашения */}
-      {myInvitations.length > 0 && (
-        <div className="company-page__invitations-banner">
-          <div className="company-page__invitations-header">
-            <span className="company-page__invitations-icon">📬</span>
-            <Typography variant="h3">У вас есть приглашения</Typography>
-          </div>
-          <div className="company-page__invitations-list">
+      <div className="company-page__list">
+        {/* Мои приглашения */}
+        {myInvitations.length > 0 && (
+          <div className="company-page__invitations">
             {myInvitations.map((inv) => (
-              <div key={inv.id} className="invitation-card">
-                <div className="invitation-card__info">
-                  <Typography variant="body">
-                    <strong>{inv.company.name}</strong>
-                  </Typography>
-                  <Typography variant="small" color="secondary">
+              <div key={inv.id} className="company-page__invite-card">
+                <div className="company-page__invite-icon">📬</div>
+                <div className="company-page__invite-content">
+                  <span className="company-page__invite-name">
+                    {inv.company.name}
+                  </span>
+                  <span className="company-page__invite-role">
                     Роль: {getRoleName(inv.role)}
                     {inv.invited_by &&
-                      ` • От: ${inv.invited_by.first_name} ${inv.invited_by.last_name}`}
-                  </Typography>
+                      ` • ${inv.invited_by.first_name} ${inv.invited_by.last_name}`}
+                  </span>
                 </div>
-                <div className="invitation-card__actions">
+                <div className="company-page__invite-actions">
                   <Button
                     size="sm"
                     onClick={() => handleAcceptInvitation(inv.token)}
                     disabled={isSaving}
                   >
-                    Принять
+                    ✓
                   </Button>
                   <Button
                     size="sm"
@@ -607,21 +653,21 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
                     onClick={() => handleDeclineInvitation(inv.token)}
                     disabled={isSaving}
                   >
-                    Отклонить
+                    ✕
                   </Button>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Список компаний */}
-      <CompanyList
-        companies={companies}
-        onSelectCompany={handleSelectCompany}
-        onCreateCompany={() => setIsCreateModalOpen(true)}
-      />
+        {/* Список компаний */}
+        <CompanyList
+          companies={companies}
+          onSelectCompany={handleSelectCompany}
+          onCreateCompany={() => setIsCreateModalOpen(true)}
+        />
+      </div>
 
       {/* Модалка создания компании */}
       <Modal
@@ -654,19 +700,6 @@ export function CompanyPage({ onOpenContact }: CompanyPageProps) {
             }
             placeholder="Краткое описание компании"
           />
-          <label className="checkbox-field">
-            <input
-              type="checkbox"
-              checked={createForm.allow_auto_join}
-              onChange={(e) =>
-                setCreateForm({
-                  ...createForm,
-                  allow_auto_join: e.target.checked,
-                })
-              }
-            />
-            <span>Разрешить автоматическое вступление по домену email</span>
-          </label>
           <div className="form-actions">
             <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>
               Отмена

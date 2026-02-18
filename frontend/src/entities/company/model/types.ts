@@ -108,7 +108,6 @@ export interface Company {
   logo_url: string | null;
   description: string | null;
   owner_id: string | null;
-  allow_auto_join: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -179,14 +178,12 @@ export interface CreateCompanyRequest {
   email_domain: string;
   logo_url?: string;
   description?: string;
-  allow_auto_join?: boolean;
 }
 
 export interface UpdateCompanyRequest {
   name?: string;
   logo_url?: string;
   description?: string;
-  allow_auto_join?: boolean;
 }
 
 export interface CreateInvitationRequest {

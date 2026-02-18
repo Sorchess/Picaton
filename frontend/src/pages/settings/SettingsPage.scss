@@ -1,0 +1,147 @@
+@use "../../shared/styles/variables" as *;
+@use "../../shared/styles/mixins/glass" as *;
+
+.settings-page {
+  min-height: 100vh;
+  padding: 0 16px 100px;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--color-bg-primary);
+  box-sizing: border-box;
+  overflow-x: hidden;
+
+  // ═══════════ Header ═══════════
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0 0;
+  }
+
+  &__title-container {
+    @include liquid-glass;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    border-radius: 25px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  // ═══════════ List ═══════════
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 16px;
+  }
+
+  &__card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    color: inherit;
+    box-shadow: 0 1px 3px var(--color-shadow);
+
+    &:active {
+      transform: scale(0.99);
+    }
+
+    &--danger {
+      .settings-page__card-name {
+        color: var(--color-danger, #ff3b30);
+      }
+    }
+  }
+
+  &__card-avatar {
+    flex-shrink: 0;
+
+    .avatar__inner,
+    .avatar__image {
+      border-radius: 50% !important;
+    }
+  }
+
+  &__card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: var(--color-bg-tertiary, rgba(0, 0, 0, 0.04));
+    color: var(--color-text-secondary);
+
+    &--danger {
+      color: var(--color-danger, #ff3b30);
+      background: rgba(255, 59, 48, 0.08);
+    }
+  }
+
+  &__card-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__card-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__card-arrow {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+  }
+
+  &__card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__card-preview {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+}

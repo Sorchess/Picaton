@@ -24,9 +24,6 @@ class CreateCompanyRequest(BaseModel):
     description: str | None = Field(
         None, max_length=1000, description="Описание компании"
     )
-    allow_auto_join: bool = Field(
-        False, description="Разрешить автоматическое вступление по домену email"
-    )
 
 
 class UpdateCompanyRequest(BaseModel):
@@ -39,9 +36,6 @@ class UpdateCompanyRequest(BaseModel):
     description: str | None = Field(
         None, max_length=1000, description="Описание компании"
     )
-    allow_auto_join: bool | None = Field(
-        None, description="Разрешить автоматическое вступление"
-    )
 
 
 class CompanyResponse(BaseModel):
@@ -53,7 +47,6 @@ class CompanyResponse(BaseModel):
     logo_url: str | None = None
     description: str | None = None
     owner_id: UUID | None = None
-    allow_auto_join: bool = False
     is_active: bool = True
     created_at: datetime
     updated_at: datetime

@@ -1,1 +1,1 @@
-export { ProfileTopBar, SettingsIcon, ShareIcon } from "./ProfileTopBar";
+export { ProfileTopBar, EditorIcon, ShareIcon } from "./ProfileTopBar";

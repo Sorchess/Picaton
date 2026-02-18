@@ -107,7 +107,7 @@
     justify-content: space-between;
     width: 100%;
     min-height: 241px;
-    padding-bottom: 10px;
+    padding-bottom: 20px;
     border-radius: 24px;
     position: relative;
   }
@@ -290,7 +290,7 @@
     color: var(--color-text-secondary);
     width: 120px;
     min-width: 80px;
-    padding: 0;
+    height: 42px;
 
     &::placeholder {
       color: #6f7884;

@@ -54,7 +54,6 @@ interface CompanyDetailProps {
   onUpdateCompany: (data: {
     name: string;
     description: string;
-    allow_auto_join: boolean;
   }) => Promise<void>;
   onDeleteCompany: () => Promise<void>;
   onRolesChange?: () => void;
@@ -106,7 +105,6 @@ export function CompanyDetail({
   const [editForm, setEditForm] = useState({
     name: company.company.name,
     description: company.company.description || "",
-    allow_auto_join: company.company.allow_auto_join,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -533,14 +531,6 @@ export function CompanyDetail({
                     {company.company.description || "—"}
                   </Typography>
                 </div>
-                <div className="settings-info__row">
-                  <Typography variant="small" color="secondary">
-                    Авто-вступление
-                  </Typography>
-                  <Typography variant="body">
-                    {company.company.allow_auto_join ? "Включено" : "Выключено"}
-                  </Typography>
-                </div>
               </div>
               <Button
                 variant="secondary"
@@ -548,7 +538,6 @@ export function CompanyDetail({
                   setEditForm({
                     name: company.company.name,
                     description: company.company.description || "",
-                    allow_auto_join: company.company.allow_auto_join,
                   });
                   setIsEditModalOpen(true);
                 }}
@@ -633,16 +622,6 @@ export function CompanyDetail({
               setEditForm({ ...editForm, description: e.target.value })
             }
           />
-          <label className="checkbox-field">
-            <input
-              type="checkbox"
-              checked={editForm.allow_auto_join}
-              onChange={(e) =>
-                setEditForm({ ...editForm, allow_auto_join: e.target.checked })
-              }
-            />
-            <span>Разрешить автоматическое вступление по домену email</span>
-          </label>
           <div className="form-actions">
             <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>
               Отмена

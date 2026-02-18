@@ -1,6 +1,6 @@
 import type { CompanyWithRole } from "@/entities/company";
-import { getRoleName, getRoleColor, isOwnerRole } from "@/entities/company";
-import { Typography, Tag, Button } from "@/shared";
+import { getRoleName } from "@/entities/company";
+import { Typography, Button } from "@/shared";
 import "./CompanyList.scss";
 
 interface CompanyListProps {
@@ -41,19 +41,13 @@ export function CompanyList({
 
   return (
     <div className="company-list">
-      <div className="company-list__header">
-        <Typography variant="h1">Мои компании</Typography>
-        <Button onClick={onCreateCompany} size="sm">
-          + Создать
-        </Button>
-      </div>
-
-      <div className="company-list__grid">
+      <div className="company-list__items">
         {companies.map((item) => (
-          <div
+          <button
             key={item.company.id}
             className="company-card"
             onClick={() => onSelectCompany(item)}
+            type="button"
           >
             <div className="company-card__logo">
               {item.company.logo_url ? (
@@ -64,53 +58,30 @@ export function CompanyList({
                 </span>
               )}
             </div>
+
             <div className="company-card__content">
-              <Typography variant="h3" className="company-card__name">
-                {item.company.name}
-              </Typography>
-              <Typography
-                variant="small"
-                color="secondary"
-                className="company-card__domain"
-              >
-                @{item.company.email_domain}
-              </Typography>
-              {item.company.description && (
-                <Typography
-                  variant="small"
-                  color="secondary"
-                  className="company-card__description"
-                >
-                  {item.company.description}
-                </Typography>
-              )}
+              <span className="company-card__name">{item.company.name}</span>
+              <span className="company-card__role">
+                {getRoleName(item.role)}
+              </span>
             </div>
-            <div className="company-card__footer">
-              <div className="company-card__role">
-                <span
-                  className="company-card__role-dot"
-                  style={{ backgroundColor: getRoleColor(item.role) }}
-                />
-                <Tag
-                  size="sm"
-                  variant={isOwnerRole(item.role) ? "outline" : "default"}
-                  style={{
-                    backgroundColor: item.role
-                      ? `${getRoleColor(item.role)}15`
-                      : undefined,
-                    borderColor: item.role
-                      ? getRoleColor(item.role)
-                      : undefined,
-                    color: item.role ? getRoleColor(item.role) : undefined,
-                  }}
-                >
-                  {isOwnerRole(item.role) && "👑 "}
-                  {getRoleName(item.role)}
-                </Tag>
-              </div>
-              <span className="company-card__arrow">→</span>
-            </div>
-          </div>
+
+            <svg
+              className="company-card__chevron"
+              width="8"
+              height="14"
+              viewBox="0 0 8 14"
+              fill="none"
+            >
+              <path
+                d="M1 1L7 7L1 13"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         ))}
       </div>
     </div>

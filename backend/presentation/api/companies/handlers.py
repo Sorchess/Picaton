@@ -96,7 +96,6 @@ async def create_company(
             email_domain=data.email_domain,
             logo_url=data.logo_url,
             description=data.description,
-            allow_auto_join=data.allow_auto_join,
         )
     except CompanyAlreadyExistsError as e:
         raise HTTPException(
@@ -121,7 +120,6 @@ async def create_company(
         logo_url=company.logo_url,
         description=company.description,
         owner_id=company.owner_id,
-        allow_auto_join=company.allow_auto_join,
         is_active=company.is_active,
         created_at=company.created_at,
         updated_at=company.updated_at,
@@ -148,7 +146,6 @@ async def get_my_companies(
                 logo_url=item["company"].logo_url,
                 description=item["company"].description,
                 owner_id=item["company"].owner_id,
-                allow_auto_join=item["company"].allow_auto_join,
                 is_active=item["company"].is_active,
                 created_at=item["company"].created_at,
                 updated_at=item["company"].updated_at,
@@ -210,7 +207,6 @@ async def get_my_invitations(
                     logo_url=company.logo_url,
                     description=company.description,
                     owner_id=company.owner_id,
-                    allow_auto_join=company.allow_auto_join,
                     is_active=company.is_active,
                     created_at=company.created_at,
                     updated_at=company.updated_at,
@@ -363,7 +359,6 @@ async def get_company(
         logo_url=company.logo_url,
         description=company.description,
         owner_id=company.owner_id,
-        allow_auto_join=company.allow_auto_join,
         is_active=company.is_active,
         created_at=company.created_at,
         updated_at=company.updated_at,
@@ -388,7 +383,6 @@ async def update_company(
             name=data.name,
             logo_url=data.logo_url,
             description=data.description,
-            allow_auto_join=data.allow_auto_join,
         )
     except CompanyNotFoundError:
         raise HTTPException(
@@ -408,7 +402,6 @@ async def update_company(
         logo_url=company.logo_url,
         description=company.description,
         owner_id=company.owner_id,
-        allow_auto_join=company.allow_auto_join,
         is_active=company.is_active,
         created_at=company.created_at,
         updated_at=company.updated_at,

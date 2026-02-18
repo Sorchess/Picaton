@@ -196,7 +196,6 @@ class CompanyService:
         email_domain: str,
         logo_url: str | None = None,
         description: str | None = None,
-        allow_auto_join: bool = False,
     ) -> Company:
         """
         Создать новую компанию.
@@ -207,7 +206,6 @@ class CompanyService:
             email_domain: Домен email компании
             logo_url: URL логотипа
             description: Описание компании
-            allow_auto_join: Разрешить автоматическое вступление по домену email
 
         Returns:
             Созданная компания
@@ -229,7 +227,6 @@ class CompanyService:
             logo_url=logo_url,
             description=description,
             owner_id=owner.id,
-            allow_auto_join=allow_auto_join,
         )
         company = await self._company_repo.create(company)
 
@@ -288,7 +285,6 @@ class CompanyService:
         name: str | None = None,
         logo_url: str | None = None,
         description: str | None = None,
-        allow_auto_join: bool | None = None,
     ) -> Company:
         """
         Обновить данные компании.
@@ -299,7 +295,6 @@ class CompanyService:
             name: Новое название
             logo_url: Новый URL логотипа
             description: Новое описание
-            allow_auto_join: Разрешить автоматическое вступление
 
         Returns:
             Обновлённая компания
@@ -323,9 +318,6 @@ class CompanyService:
             company.update_logo(logo_url)
         if description is not None:
             company.description = description
-            company.updated_at = datetime.now(timezone.utc)
-        if allow_auto_join is not None:
-            company.allow_auto_join = allow_auto_join
             company.updated_at = datetime.now(timezone.utc)
 
         return await self._company_repo.update(company)

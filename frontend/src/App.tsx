@@ -12,6 +12,7 @@ import {
   ShareContactPage,
   ChatsPage,
 } from "./pages";
+import { SettingsPage } from "./pages/settings";
 import { AuthProvider, useAuth } from "./features/auth";
 import { EmailModal } from "./features/email-modal";
 import { companyApi } from "./entities/company";
@@ -55,7 +56,11 @@ function clearPendingInviteToken() {
 }
 
 // Расширенный тип страницы для поддержки профиля контакта и страницы поделиться
-type ExtendedPageType = PageType | "contact-profile" | "share-contact";
+type ExtendedPageType =
+  | PageType
+  | "contact-profile"
+  | "share-contact"
+  | "company";
 
 // Контекст для навигации на профиль контакта
 interface ContactProfileNavData {
@@ -599,7 +604,9 @@ function AuthenticatedApp() {
             value={
               currentPage === "contact-profile"
                 ? previousPage
-                : (currentPage as PageType)
+                : currentPage === "company"
+                  ? "settings"
+                  : (currentPage as PageType)
             }
             onChange={handlePageChange}
             onSearchSubmit={handleTabBarSearch}
@@ -684,6 +691,12 @@ function AuthenticatedApp() {
             onNavigateToContacts={() => handlePageChange("contacts")}
           />
         )}
+        {currentPage === "settings" && (
+          <SettingsPage
+            onOpenCompanies={() => setCurrentPage("company")}
+            onBack={() => handlePageChange("profile")}
+          />
+        )}
         {currentPage === "company" && (
           <CompanyPage
             onOpenContact={(user, cardId) =>
@@ -691,9 +704,10 @@ function AuthenticatedApp() {
                 user,
                 cardId,
                 savedContact: null,
-                returnPage: "company",
+                returnPage: "settings",
               })
             }
+            onBack={() => setCurrentPage("settings")}
           />
         )}
         {currentPage === "contact-profile" && contactProfileData && (
@@ -736,7 +750,9 @@ function AuthenticatedApp() {
           value={
             currentPage === "contact-profile" || currentPage === "share-contact"
               ? previousPage
-              : (currentPage as PageType)
+              : currentPage === "company"
+                ? "settings"
+                : (currentPage as PageType)
           }
           onChange={handlePageChange}
           onSearchSubmit={handleTabBarSearch}

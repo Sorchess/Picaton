@@ -55,7 +55,6 @@ class Company(Entity):
     owner_id: UUID | None = field(default=None)
 
     # Настройки
-    allow_auto_join: bool = field(default=False)  # Авто-вступление по домену email
     is_active: bool = field(default=True)
 
     # Timestamps
@@ -130,11 +129,13 @@ MAX_DEPARTMENT_LENGTH = 100
 
 class InvalidPositionError(ValueError):
     """Невалидная должность."""
+
     pass
 
 
 class InvalidDepartmentError(ValueError):
     """Невалидный отдел."""
+
     pass
 
 
@@ -143,17 +144,17 @@ class CompanyMember(Entity):
     """
     Членство пользователя в компании.
     Связывает пользователя с компанией и определяет его роль.
-    
+
     Теперь использует role_id для связи с сущностью CompanyRole,
     что позволяет создавать кастомные роли с гибкими правами.
     """
 
     company_id: UUID = field(default=None)
     user_id: UUID = field(default=None)
-    
+
     # Ссылка на роль (CompanyRole entity)
     role_id: UUID | None = field(default=None)
-    
+
     # Организационная структура
     position: str | None = field(default=None)  # Должность (напр. "Senior Developer")
     department: str | None = field(default=None)  # Отдел (напр. "Engineering")
