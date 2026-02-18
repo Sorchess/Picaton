@@ -423,6 +423,7 @@ export function ProfilePage({
           name={displayName}
           avatarUrl={displayAvatar}
           roles={getCardRoles()}
+          username={user.username}
           skillsCount={skillsCount}
           likesCount={totalLikesCount}
           emojis={selectedCard?.emojis}
@@ -443,11 +444,13 @@ export function ProfilePage({
           skillsWithEndorsements={skillsWithEndorsements}
           phone={displayContacts.find((c) => c.type === "phone")?.value}
           username={user.telegram_username || undefined}
+          userHandle={user.username}
           onUsernameClick={() => {
             if (user.telegram_username) {
               navigator.clipboard.writeText(`@${user.telegram_username}`);
             }
           }}
+          onShareClick={handleShareProfile}
           birthDate={formatBirthDate(user.created_at)}
         />
 

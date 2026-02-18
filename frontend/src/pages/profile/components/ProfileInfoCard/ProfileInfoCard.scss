@@ -40,6 +40,11 @@
         opacity: 0.7;
       }
     }
+
+    &--accent {
+      color: #0081ff;
+      font-weight: 500;
+    }
   }
 
   &__bio-text {
@@ -58,6 +63,16 @@
     width: 24px;
     height: 24px;
     color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
+  }
+
+  &__share-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+    transition: color 0.2s ease;
   }
 
   &__tags {
@@ -88,6 +103,10 @@
 
 [data-theme="dark"] {
   .profile-info-cards {
+    &__value--accent {
+      color: #2873ed;
+    }
+
     &__tag {
       background: #352525;
       border-color: #442626;

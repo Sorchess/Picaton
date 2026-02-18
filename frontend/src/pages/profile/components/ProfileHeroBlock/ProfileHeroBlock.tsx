@@ -7,6 +7,7 @@ interface ProfileHeroBlockProps {
   name: string;
   avatarUrl?: string | null;
   roles: string[];
+  username?: string | null;
   skillsCount: number;
   likesCount: number;
   emojis?: string[];

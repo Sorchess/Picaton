@@ -158,7 +158,9 @@ export function CardEditor({
   // Name editing state
   const [firstName, setFirstName] = useState(user.first_name || "");
   const [lastName, setLastName] = useState(user.last_name || "");
+  const [username, setUsername] = useState(user.username || "");
   const [isSavingName, setIsSavingName] = useState(false);
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
 
   // Sync with prop changes
   useEffect(() => {
@@ -168,6 +170,7 @@ export function CardEditor({
     setRoleText(user.position || "");
     setFirstName(user.first_name || "");
     setLastName(user.last_name || "");
+    setUsername(user.username || "");
   }, [card, user]);
 
   // Текущий шаг (теперь 3 шага: bio, tags, contacts)
@@ -442,6 +445,27 @@ export function CardEditor({
     }
   }, [lastName, user.last_name, handleSaveName]);
 
+  // Username save handler
+  const handleUsernameBlur = useCallback(async () => {
+    const trimmed = username.trim().replace(/^@/, "");
+    if (trimmed === (user.username || "")) return;
+    setIsSavingUsername(true);
+    try {
+      const updatedUser = await userApi.update(user.id, {
+        username: trimmed || null,
+      });
+      onUserUpdate?.(updatedUser);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Ошибка сохранения имени пользователя",
+      );
+    } finally {
+      setIsSavingUsername(false);
+    }
+  }, [username, user.id, user.username, onUserUpdate]);
+
   // Avatar upload
   const handleAvatarUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -715,6 +739,31 @@ export function CardEditor({
             placeholder="Фамилия"
             maxLength={50}
           />
+        </Card>
+
+        {/* User id */}
+        <Card className="card-editor__card">
+          <div className="card-editor__section-header">
+            <h2 className="card-editor__section-title">ID пользователя</h2>
+            {isSavingUsername && (
+              <span className="card-editor__section-action">
+                <span className="card-editor__spinner" /> Сохранение...
+              </span>
+            )}
+          </div>
+          <div className="card-editor__username-field">
+            <span className="card-editor__username-prefix">@</span>
+            <Input
+              type="text"
+              variant="transparent"
+              className="card-editor__input card-editor__input--username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.replace(/^@/, ""))}
+              onBlur={handleUsernameBlur}
+              placeholder="username"
+              maxLength={50}
+            />
+          </div>
         </Card>
 
         {/* Bio Section */}

@@ -41,6 +41,7 @@ export interface User {
   bio: string | null;
   ai_generated_bio: string | null;
   position?: string | null;
+  username?: string | null;
   status: string;
   tags: TagInfo[];
   search_tags: string[];
@@ -93,6 +94,7 @@ export interface UserUpdate {
   bio?: string | null;
   location?: string | null;
   position?: string | null;
+  username?: string | null;
 }
 
 export interface QRCodeResponse {

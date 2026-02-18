@@ -62,6 +62,7 @@ from infrastructure.dependencies import (
 from domain.repositories.company import CompanyMemberRepositoryInterface
 from domain.repositories.business_card import BusinessCardRepositoryInterface
 from application.services.email_verification import EmailVerificationError
+from domain.exceptions.user import UsernameAlreadyTakenError
 from application.services.contact_sync import HashedContact
 from infrastructure.storage import CloudinaryService
 from infrastructure.storage.cloudinary_service import CloudinaryError, InvalidFileError
@@ -150,14 +151,18 @@ async def update_user_profile(
     is_onboarding = len(existing_cards) == 0
 
     # Обновляем профиль
-    user = await user_service.update_profile(
-        user_id=user_id,
-        first_name=data.first_name,
-        last_name=data.last_name,
-        avatar_url=data.avatar_url,
-        bio=data.bio,
-        position=data.position if data.position is not None else ...,
-    )
+    try:
+        user = await user_service.update_profile(
+            user_id=user_id,
+            first_name=data.first_name,
+            last_name=data.last_name,
+            avatar_url=data.avatar_url,
+            bio=data.bio,
+            position=data.position if data.position is not None else ...,
+            username=data.username if data.username is not None else ...,
+        )
+    except UsernameAlreadyTakenError as e:
+        raise HTTPException(status_code=409, detail=e.detail)
 
     # Если это онбординг - создаём первую карточку автоматически
     if is_onboarding:
@@ -937,6 +942,7 @@ def _user_to_response(user) -> UserResponse:
         bio=user.bio,
         ai_generated_bio=user.ai_generated_bio,
         position=user.position,
+        username=user.username,
         status=user.status.value,
         tags=[
             TagInfo(

@@ -7,6 +7,7 @@ from domain.enums.contact import ContactType
 from domain.exceptions import (
     UserNotFoundError,
     UserAlreadyExistsError,
+    UsernameAlreadyTakenError,
     ConfigurationError,
     InvalidBioError,
 )
@@ -75,8 +76,17 @@ class UserService:
         avatar_url: str | None = None,
         bio: str | None = None,
         position: str | None = ...,
+        username: str | None = ...,
     ) -> User:
         """Обновить профиль пользователя."""
+        # Проверка уникальности username
+        if username is not ... and username:
+            normalized = username.strip().lstrip("@")
+            if normalized:
+                existing = await self._user_repository.find_by_username(normalized)
+                if existing and existing.id != user_id:
+                    raise UsernameAlreadyTakenError(normalized)
+
         user = await self.get_user(user_id)
         user.update_profile(
             first_name=first_name,
@@ -84,6 +94,7 @@ class UserService:
             avatar_url=avatar_url,
             bio=bio,
             position=position,
+            username=username,
         )
         return await self._user_repository.update(user)
 

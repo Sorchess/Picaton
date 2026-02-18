@@ -45,6 +45,7 @@ class User(Entity):
     # Основные данные
     first_name: str = field(default="")
     last_name: str = field(default="")
+    username: str | None = field(default=None)  # @username пользователя
     email: str = field(default="")
     hashed_password: str = field(default="")
     phone_hash: str | None = field(default=None)  # SHA-256 hash телефона для sync
@@ -223,6 +224,7 @@ class User(Entity):
         avatar_url: str | None = None,
         bio: str | None = None,
         position: str | None = ...,
+        username: str | None = ...,
     ) -> None:
         """Обновить основные данные профиля."""
         if first_name is not None:
@@ -247,6 +249,9 @@ class User(Entity):
 
         if position is not ...:
             self.position = position.strip() if position else None
+
+        if username is not ...:
+            self.username = username.strip().lstrip("@") if username else None
 
         self._recalculate_completeness()
 

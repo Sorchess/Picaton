@@ -131,6 +131,17 @@
     gap: 10px;
   }
 
+  &__username {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto,
+      sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1;
+    color: #0081ff;
+    margin-top: -2px;
+  }
+
   &__dot {
     width: 5px;
     height: 5px;
@@ -187,9 +198,12 @@
 // Light theme
 [data-theme="dark"] {
   .profile-hero {
-
     &__role {
       color: #585e67;
+    }
+
+    &__username {
+      color: #2873ed;
     }
 
     &__dot {

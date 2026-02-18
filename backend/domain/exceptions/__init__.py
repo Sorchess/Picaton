@@ -14,6 +14,7 @@ from domain.exceptions.user import (
     InvalidRandomFactError,
     UserNotFoundError,
     UserAlreadyExistsError,
+    UsernameAlreadyTakenError,
 )
 from domain.exceptions.contact import (
     ContactException,

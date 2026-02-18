@@ -345,6 +345,7 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
               key={card.id}
               className="share-contact-page__card"
               onClick={() => toggleCardSelection(card.id)}
+              style={{ border: "none" }}
             >
               <div className="share-contact-page__card-select">
                 <div className="share-contact-page__card-check">

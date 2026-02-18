@@ -127,3 +127,15 @@ class UserAlreadyExistsError(UserException):
         if email:
             self.detail = f"User with email {email} already exists"
         super().__init__()
+
+
+class UsernameAlreadyTakenError(UserException):
+    """Имя пользователя уже занято."""
+
+    detail = "Это имя пользователя уже занято"
+    status_code = 409
+
+    def __init__(self, username: str = ""):
+        if username:
+            self.detail = f"Имя @{username} уже занято"
+        super().__init__()

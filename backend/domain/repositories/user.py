@@ -81,3 +81,8 @@ class UserRepositoryInterface(ABC):
     async def find_by_telegram_usernames(self, usernames: list[str]) -> list[User]:
         """Найти пользователей по Telegram username."""
         pass
+
+    @abstractmethod
+    async def find_by_username(self, username: str) -> User | None:
+        """Найти пользователя по username (ID пользователя)."""
+        pass

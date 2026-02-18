@@ -39,6 +39,7 @@ class UserUpdate(BaseModel):
     )
     location: str | None = Field(default=None, max_length=200, examples=["Москва"])
     position: str | None = Field(default=None, max_length=100, examples=["Разработчик"])
+    username: str | None = Field(default=None, max_length=50, examples=["ivan_dev"])
 
 
 class EmailUpdate(BaseModel):
@@ -136,6 +137,7 @@ class UserResponse(BaseModel):
     bio: str | None
     ai_generated_bio: str | None
     position: str | None = None
+    username: str | None = None
     status: str
     tags: list[TagInfo]
     search_tags: list[str]

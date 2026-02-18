@@ -253,14 +253,8 @@
     height: 34px;
     padding: 0 16px;
     border-radius: 17px;
-    background: rgba(255, 255, 255, 0.08);
     border: none;
     cursor: pointer;
-    transition: background 0.2s;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.14);
-    }
 
     &--editing {
       padding: 0 12px;
@@ -293,7 +287,7 @@
     font-weight: 500;
     font-size: 14px;
     line-height: 34px;
-    color: var(--color-text-primary, rgba(255, 255, 255, 0.9));
+    color: var(--color-text-secondary);
     width: 120px;
     min-width: 80px;
     padding: 0;
@@ -515,6 +509,27 @@
     background: var(--color-border, #303030);
     border-radius: 55px;
     margin: 0;
+  }
+
+  &__username-field {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  &__username-prefix {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-accent, #0081ff);
+    padding-left: 6px;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  &__input--username {
+    .input__field {
+      padding-left: 2px;
+    }
   }
 
   &__section-action {

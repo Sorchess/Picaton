@@ -136,6 +136,8 @@ async def get_current_user(
         location=user.location,
         bio=user.bio,
         ai_generated_bio=user.ai_generated_bio,
+        position=user.position,
+        username=user.username,
         status=user.status.value,
         tags=[
             TagInfo(

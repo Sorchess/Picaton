@@ -31,6 +31,7 @@ class MongoUserRepository(UserRepositoryInterface):
             "telegram_username": user.telegram_username,
             "location": user.location,
             "position": user.position,
+            "username": user.username,
             "tags": [
                 {
                     "id": str(tag.id),
@@ -94,6 +95,7 @@ class MongoUserRepository(UserRepositoryInterface):
             telegram_username=doc.get("telegram_username"),
             location=doc.get("location"),
             position=doc.get("position"),
+            username=doc.get("username"),
             tags=tags,
             search_tags=doc.get("search_tags", []),
             contacts=contacts,
@@ -292,3 +294,11 @@ class MongoUserRepository(UserRepositoryInterface):
         async for doc in cursor:
             users.append(self._from_document(doc))
         return users
+
+    async def find_by_username(self, username: str) -> User | None:
+        """Найти пользователя по username (без учёта регистра)."""
+        normalized = username.lstrip("@").lower()
+        doc = await self._collection.find_one(
+            {"username": {"$regex": f"^{normalized}$", "$options": "i"}}
+        )
+        return self._from_document(doc) if doc else None
