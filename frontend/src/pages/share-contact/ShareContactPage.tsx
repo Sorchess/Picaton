@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type FC } from "react";
-import { IconButton, Modal, Button, Tabs } from "@/shared";
+import { IconButton, Modal, Button, Tabs, Card } from "@/shared";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
@@ -341,7 +341,7 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
         {/* Cards List */}
         <div className="share-contact-page__cards">
           {localCards.map((card) => (
-            <div
+            <Card
               key={card.id}
               className="share-contact-page__card"
               onClick={() => toggleCardSelection(card.id)}
@@ -371,7 +371,7 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
               >
                 <ArrowIcon />
               </button>
-            </div>
+            </Card>
           ))}
 
           {/* Add New Card Button */}

@@ -399,7 +399,7 @@ export function OnboardingPage() {
           </div>
 
           <div className="onboarding__bottom">
-            <Card className="onboarding__card" padding="sm">
+            <Card className="onboarding__card">
               <Typography variant="h1" className="onboarding__title">
                 {slides[currentStep].title}
               </Typography>

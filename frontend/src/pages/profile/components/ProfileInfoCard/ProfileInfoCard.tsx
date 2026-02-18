@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from "react";
-import { EndorsableSkill } from "@/shared";
+import { Card, EndorsableSkill } from "@/shared";
 import type { SkillWithEndorsements } from "@/api/endorsementApi";
 import "./ProfileInfoCard.scss";
 
@@ -69,16 +69,17 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
     <div className={`profile-info-cards ${className}`}>
       {/* Bio Card */}
       {bio && (
-        <div className="profile-info-cards__card">
+        <Card className="profile-info-cards__card">
           <span className="profile-info-cards__label">Bio</span>
           <p className="profile-info-cards__bio-text">{bio}</p>
-        </div>
+        </Card>
       )}
 
       {/* Username Card */}
       {username && (
-        <div
-          className="profile-info-cards__card profile-info-cards__card--clickable"
+        <Card
+          className="profile-info-cards__card"
+          variant="interactive"
           onClick={onUsernameClick}
         >
           <div className="profile-info-cards__row">
@@ -123,12 +124,12 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
               </svg>
             </span>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Phone Card */}
       {displayPhone && (
-        <div className="profile-info-cards__card">
+        <Card className="profile-info-cards__card">
           <span className="profile-info-cards__label">Phone</span>
           <a
             href={`tel:${displayPhone}`}
@@ -136,12 +137,12 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
           >
             {displayPhone}
           </a>
-        </div>
+        </Card>
       )}
 
       {/* Other contacts cards */}
       {otherContacts.map((contact, index) => (
-        <div
+        <Card
           key={`${contact.type}-${index}`}
           className="profile-info-cards__card"
         >
@@ -182,12 +183,12 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
           ) : (
             <span className="profile-info-cards__value">{contact.value}</span>
           )}
-        </div>
+        </Card>
       ))}
 
       {/* Skills Card with Endorsements */}
       {skillsWithEndorsements.length > 0 ? (
-        <div className="profile-info-cards__card">
+        <Card className="profile-info-cards__card">
           <span className="profile-info-cards__label">Навыки</span>
           <div className="profile-info-cards__tags">
             {skillsWithEndorsements.map((skill) => (
@@ -198,9 +199,9 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
               />
             ))}
           </div>
-        </div>
+        </Card>
       ) : tags.length > 0 ? (
-        <div className="profile-info-cards__card">
+        <Card className="profile-info-cards__card">
           <span className="profile-info-cards__label">Навыки</span>
           <div className="profile-info-cards__tags">
             {tags.map((tag) => (
@@ -223,7 +224,7 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
               </span>
             ))}
           </div>
-        </div>
+        </Card>
       ) : null}
     </div>
   );

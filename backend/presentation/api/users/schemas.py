@@ -143,6 +143,7 @@ class UserResponse(BaseModel):
     random_facts: list[str]
     profile_completeness: int
     is_public: bool = True
+    is_onboarded: bool = False
 
 
 class UserPublicResponse(BaseModel):

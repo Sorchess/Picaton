@@ -157,6 +157,7 @@ async def get_current_user(
         ],
         random_facts=user.random_facts,
         profile_completeness=user.profile_completeness,
+        is_onboarded=user.is_onboarded,
     )
 
 

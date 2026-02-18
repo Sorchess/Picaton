@@ -179,6 +179,10 @@ async def update_user_profile(
             avatar_url=user.avatar_url,
             contacts=user.contacts,
         )
+
+        # Отмечаем онбординг как пройденный
+        user.is_onboarded = True
+        user = await user_service.update_onboarded(user_id)
     else:
         # Синхронизируем аватар с существующими карточками, если он был передан
         if data.avatar_url is not None:
@@ -956,6 +960,7 @@ def _user_to_response(user) -> UserResponse:
         random_facts=user.random_facts,
         profile_completeness=user.profile_completeness,
         is_public=user.is_public,
+        is_onboarded=user.is_onboarded,
     )
 
 

@@ -100,24 +100,6 @@
     overflow: hidden;
   }
 
-  &__card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--color-border);
-    transition: all 0.2s ease;
-    cursor: pointer;
-
-    &:hover {
-      background: var(--color-bg-tertiary);
-    }
-
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-
   &__card-check {
     width: 18px;
     height: 18px;

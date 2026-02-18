@@ -87,6 +87,12 @@ class UserService:
         )
         return await self._user_repository.update(user)
 
+    async def update_onboarded(self, user_id: UUID) -> User:
+        """Отметить пользователя как прошедшего онбординг."""
+        user = await self.get_user(user_id)
+        user.is_onboarded = True
+        return await self._user_repository.update(user)
+
     async def update_visibility(self, user_id: UUID, is_public: bool) -> User:
         """
         Изменить видимость профиля.

@@ -57,6 +57,7 @@ class MongoUserRepository(UserRepositoryInterface):
             "embedding": user.embedding,
             "profile_completeness": user.profile_completeness,
             "is_public": user.is_public,
+            "is_onboarded": user.is_onboarded,
         }
 
     def _from_document(self, doc: dict) -> User:
@@ -103,6 +104,7 @@ class MongoUserRepository(UserRepositoryInterface):
             embedding=doc.get("embedding", []),
             profile_completeness=doc.get("profile_completeness", 0),
             is_public=doc.get("is_public", True),
+            is_onboarded=doc.get("is_onboarded", True),
         )
 
     async def get_by_id(self, user_id: UUID) -> User | None:

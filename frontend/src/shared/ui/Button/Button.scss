@@ -17,17 +17,17 @@
 
   // Размеры
   &--sm {
-    padding: $spacing-md $spacing-xl;
+    padding: $spacing-xxs $spacing-md;
     font-size: $font-size-sm;
   }
 
   &--md {
-    padding: $spacing-lg $spacing-4xl;
+    padding: $spacing-lg $spacing-md;
     font-size: $font-size-base;
   }
 
   &--lg {
-    padding: $spacing-xl $spacing-4xl;
+    padding: $spacing-xl $spacing-lg;
     font-size: $font-size-base;
   }
 
@@ -67,7 +67,7 @@
   &--secondary {
     background: transparent;
     color: var(--color-text-primary);
-    border: 1px solid var(--color-glass-border);
+    border: 1px solid var(--color-border);
     backdrop-filter: blur($blur-sm);
 
     &:hover {

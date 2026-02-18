@@ -1,7 +1,7 @@
 import type { ReactNode, HTMLAttributes } from "react";
 import "./Card.scss";
 
-export type CardVariant = "default" | "interactive" | "static";
+export type CardVariant = "default" | "interactive";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;
@@ -12,7 +12,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export function Card(Props: CardProps) {
   const {
     variant = "default",
-    padding = "md",
+    padding = "lg",
     className = "",
     children,
     ...props

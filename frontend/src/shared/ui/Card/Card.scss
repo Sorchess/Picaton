@@ -2,13 +2,9 @@
 @use "../../styles/mixins" as *;
 
 .card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
   background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
   border-radius: 25px;
+  overflow: hidden;
 
   // Padding варианты
   &--padding-none {
@@ -16,30 +12,25 @@
   }
 
   &--padding-sm {
-    padding: $spacing-xl;
+    padding: $spacing-sm;
   }
 
   &--padding-md {
-    padding: $spacing-4xl;
+    padding: $spacing-md;
   }
 
   &--padding-lg {
-    padding: $spacing-5xl;
+    padding: $spacing-lg;
   }
 
   &--interactive {
     cursor: pointer;
   }
 
-  &--static {
-    &:hover {
-      transform: none;
-      box-shadow: none;
-    }
-  }
-
   &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     position: relative;
-    z-index: 1;
   }
 }

@@ -48,6 +48,7 @@ export interface User {
   random_facts: string[];
   profile_completeness: number;
   is_public: boolean;
+  is_onboarded?: boolean;
   created_at?: string;
   updated_at?: string;
 }

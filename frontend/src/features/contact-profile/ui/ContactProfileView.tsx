@@ -6,6 +6,7 @@ import {
   IconButton,
   Tabs,
   Loader,
+  Card,
 } from "@/shared";
 import type { UserPublic, ContactInfo } from "@/entities/user";
 import { getFullName } from "@/entities/user";
@@ -606,15 +607,15 @@ export function ContactProfileView({
 
           {/* Bio Card */}
           {bio && (
-            <div className="contact-profile-view__card">
+            <Card className="contact-profile-view__card">
               <span className="contact-profile-view__card-label">Bio</span>
               <p className="contact-profile-view__bio-text">{bio}</p>
-            </div>
+            </Card>
           )}
 
           {/* Skills Card */}
           {(hasEndorsementData || fallbackTags.length > 0) && (
-            <div className="contact-profile-view__card">
+            <Card className="contact-profile-view__card">
               <div className="contact-profile-view__card-header">
                 <span className="contact-profile-view__card-label">Навыки</span>
                 {canEndorse && hasEndorsementData && (
@@ -640,12 +641,12 @@ export function ContactProfileView({
                       </Tag>
                     ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Contacts Card */}
           {contacts.length > 0 && (
-            <div className="contact-profile-view__card">
+            <Card className="contact-profile-view__card">
               <span className="contact-profile-view__card-label">
                 Контакты для связи
               </span>
@@ -654,15 +655,15 @@ export function ContactProfileView({
                   <ContactLink key={idx} contact={contact} />
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {contacts.length === 0 && (
-            <div className="contact-profile-view__card">
+            <Card className="contact-profile-view__card">
               <p className="contact-profile-view__no-contacts">
                 Пользователь не указал контакты для связи
               </p>
-            </div>
+            </Card>
           )}
         </div>
       </div>

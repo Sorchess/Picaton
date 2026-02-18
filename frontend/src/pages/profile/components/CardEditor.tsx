@@ -12,6 +12,8 @@ import {
   AvatarEmojiButton,
   Avatar,
   Input,
+  Card,
+  Button,
 } from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import "./CardEditor.scss";
@@ -598,10 +600,13 @@ export function CardEditor({
         </button>
 
         <div className="card-editor__info">
-          <h1 className="card-editor__name">{cardDisplayName || "—"}</h1>
           <div className="card-editor__roles">
             {isEditingRole ? (
-              <div className="card-editor__role-chip card-editor__role-chip--editing">
+              <Button
+                className="card-editor__role-chip card-editor__role-chip--editing"
+                variant="liquid"
+                size="sm"
+              >
                 <input
                   ref={roleInputRef}
                   type="text"
@@ -614,27 +619,38 @@ export function CardEditor({
                   maxLength={50}
                 />
                 {isSavingRole && <span className="card-editor__spinner" />}
-              </div>
+              </Button>
             ) : (
               <button
                 type="button"
                 className="card-editor__role-chip"
                 onClick={handleEditRoleClick}
               >
-                <span className="card-editor__role-chip-text">
-                  {user.position || "Пользователь"}
-                </span>
-                <svg
-                  className="card-editor__role-chip-icon"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                <Button
+                  variant="liquid"
+                  size="sm"
+                  className="card-editor__role-chip-button"
                 >
-                  <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                </svg>
+                  <span className="card-editor__role-chip-text">
+                    {user.position || "Пользователь"}
+                  </span>
+                </Button>
+                <IconButton
+                  className="card-editor__role-chip-icon-btn"
+                  aria-label="Редактировать роль"
+                >
+                  <svg
+                    className="card-editor__role-chip-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                  </svg>
+                </IconButton>
               </button>
             )}
           </div>
@@ -644,7 +660,7 @@ export function CardEditor({
       {/* Content */}
       <div className="card-editor__content">
         {/* Card Name Section */}
-        <div className="card-editor__card">
+        <Card className="card-editor__card">
           <div className="card-editor__section-header">
             <h2 className="card-editor__section-title">Название визитки</h2>
             {isSavingSettings && (
@@ -663,10 +679,10 @@ export function CardEditor({
             placeholder="Например: Работа, Личная, Фриланс..."
             maxLength={50}
           />
-        </div>
+        </Card>
 
         {/* Name Section */}
-        <div className="card-editor__card">
+        <Card className="card-editor__card">
           <div className="card-editor__section-header">
             <h2 className="card-editor__section-title">Имя</h2>
             {isSavingName && (
@@ -685,10 +701,10 @@ export function CardEditor({
             placeholder="Имя"
             maxLength={50}
           />
+          <div className="card-editor__section-divider" />
           <div className="card-editor__section-header">
             <h2 className="card-editor__section-title">Фамилия</h2>
           </div>
-          <div className="card-editor__section-divider" />
           <Input
             type="text"
             variant="transparent"
@@ -699,10 +715,10 @@ export function CardEditor({
             placeholder="Фамилия"
             maxLength={50}
           />
-        </div>
+        </Card>
 
         {/* Bio Section */}
-        <div className="card-editor__card">
+        <Card className="card-editor__card">
           <UnifiedBioEditor
             card={selectedCard}
             userId={user.id}
@@ -713,10 +729,10 @@ export function CardEditor({
             onTagsLoading={setIsGeneratingTags}
             onBioTextChange={setCurrentBioText}
           />
-        </div>
+        </Card>
 
         {/* Tags Section */}
-        <div className="card-editor__card">
+        <Card className="card-editor__card">
           <div className="card-editor__section-header">
             <h2 className="card-editor__section-title">Навыки и теги</h2>
             {isGeneratingTags && (
@@ -740,10 +756,10 @@ export function CardEditor({
           {isApplyingTags && (
             <span className="card-editor__section-action">Сохранение...</span>
           )}
-        </div>
+        </Card>
 
         {/* Contacts Section */}
-        <div className="card-editor__card">
+        <Card className="card-editor__card">
           <div className="card-editor__section-header">
             <h2 className="card-editor__section-title">Контакты</h2>
           </div>
@@ -848,7 +864,7 @@ export function CardEditor({
               Добавить контакт
             </button>
           )}
-        </div>
+        </Card>
       </div>
 
       {/* Delete confirmation modal */}

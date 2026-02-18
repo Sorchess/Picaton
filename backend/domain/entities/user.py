@@ -85,6 +85,9 @@ class User(Entity):
     # Приватный профиль виден только внутри компании
     is_public: bool = field(default=True)
 
+    # Прошёл ли пользователь онбординг
+    is_onboarded: bool = field(default=False)
+
     def __post_init__(self) -> None:
         """Валидация данных при создании сущности."""
         if self.email:

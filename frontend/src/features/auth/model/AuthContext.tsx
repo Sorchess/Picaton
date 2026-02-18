@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         random_facts: [],
         profile_completeness: 0,
         is_public: true,
+        is_onboarded: false,
       });
     } finally {
       setIsLoading(false);

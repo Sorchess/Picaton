@@ -777,11 +777,10 @@ function UnauthenticatedApp() {
   );
 }
 
-// Проверяем, нужно ли показывать онбординг (новый пользователь без имени)
+// Проверяем, нужно ли показывать онбординг (новый пользователь, не прошёл онбординг)
 function needsOnboarding(user: ReturnType<typeof useAuth>["user"]): boolean {
   if (!user) return false;
-  // Если у пользователя нет имени или фамилии — показываем онбординг
-  return !user.first_name?.trim() || !user.last_name?.trim();
+  return !user.is_onboarded;
 }
 
 function AppContent() {
