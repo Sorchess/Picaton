@@ -1,117 +1,279 @@
+@use "../../../shared/styles/mixins/glass" as *;
+
 .company-detail {
-  display: flex;
   min-height: 100vh;
+  padding: 0 16px 100px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   background: var(--color-bg-primary);
 
-  // Sidebar
-  &__sidebar {
-    width: 280px;
-    height: 100vh;
-    max-height: 100vh;
-    background: var(--color-glass-bg);
-    border-right: 1px solid var(--color-glass-border);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    position: sticky;
-    top: 0;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-
-  &__back {
+  // ═══════════ Top Bar ═══════════
+  &__topbar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    background: transparent;
-    border: none;
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.2s;
-    margin-bottom: 24px;
-
-    &:hover {
-      background: var(--color-glass-bg-hover);
-      color: var(--color-text-primary);
-    }
-
-    span:first-child {
-      font-size: 1.1rem;
-    }
+    justify-content: space-between;
+    padding: 16px 0 0;
   }
 
-  &__sidebar-header {
+  &__topbar-title {
+    @include liquid-glass;
     display: flex;
-    gap: 12px;
-    margin-bottom: 32px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--color-glass-border);
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    border-radius: 25px;
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
   }
 
-  &__sidebar-logo {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+  // ═══════════ Content ═══════════
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  // ═══════════ Hero Block ═══════════
+  &__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 10px;
+    position: relative;
+  }
+
+  &__hero-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
     background: linear-gradient(
       135deg,
-      rgba(99, 102, 241, 0.2),
-      rgba(139, 92, 246, 0.2)
+      rgba(99, 102, 241, 0.25),
+      rgba(139, 92, 246, 0.25)
     );
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
     overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15);
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+  }
 
-    span {
-      font-size: 1.25rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+  &__hero-logo-letter {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__hero-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  &__hero-name {
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.2;
+    margin: 0;
+    text-align: center;
+    color: var(--color-text-primary);
+  }
+
+  &__hero-domain {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1;
+    color: #6f7884;
+  }
+
+  &__hero-stats {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  &__hero-stat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 27px;
+    padding: 0 14px;
+    border-radius: 54px;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 12px;
+    border: 1px solid transparent;
+
+    &--members {
+      background: rgba(0, 129, 255, 0.1);
+      border-color: rgba(0, 129, 255, 0.1);
+      color: #0081ff;
+    }
+
+    &--role {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.15);
+      color: #8b5cf6;
     }
   }
 
-  &__sidebar-info {
-    overflow: hidden;
+  // ═══════════ Navigation Buttons ═══════════
+  &__nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
-    h3 {
-      font-family: "Syne", sans-serif;
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+  &__nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    color: inherit;
+    box-shadow: 0 1px 3px var(--color-shadow);
+
+    &:active {
+      transform: scale(0.99);
     }
   }
 
-  // Блок с ролью и правами
-  &__role-info {
-    margin: 16px 0;
-    padding: 12px;
-    background: var(--color-bg-tertiary);
+  &__nav-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
     border-radius: 12px;
+    background: var(--color-bg-tertiary, rgba(0, 0, 0, 0.04));
+    font-size: 20px;
   }
 
+  &__nav-item-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  &__nav-item-arrow {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+  }
+
+  // ═══════════ Info Cards ═══════════
+  &__cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__card {
+    .company-detail__card-hint {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    &--danger {
+      border-color: rgba(239, 68, 68, 0.2) !important;
+    }
+  }
+
+  &__card-label {
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+    display: block;
+    margin-bottom: 8px;
+
+    &--danger {
+      color: var(--color-error) !important;
+    }
+  }
+
+  &__card-text {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--color-text-primary);
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  &__card-value {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.3;
+    color: var(--color-text-primary);
+  }
+
+  &__card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+
+  &__card-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  &__card-chevron {
+    font-size: 24px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+
+  // ═══════════ Role badge (in card) ═══════════
   &__role-badge {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
-    background: var(--color-bg-secondary);
-    border: 2px solid;
-    border-radius: 10px;
     margin-bottom: 10px;
   }
 
@@ -124,7 +286,7 @@
 
   &__role-name {
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 15px;
     color: var(--color-text-primary);
   }
 
@@ -134,11 +296,11 @@
     gap: 6px;
   }
 
-  &__perm-item {
-    font-size: 0.75rem;
-    padding: 4px 8px;
+  &__perm-tag {
+    font-size: 12px;
+    padding: 4px 10px;
     background: var(--color-bg-secondary);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--color-text-secondary);
 
     &--active {
@@ -147,367 +309,142 @@
     }
   }
 
-  // Navigation
-  &__nav {
+  // ═══════════ Sections ═══════════
+  &__section {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    flex: 1;
+    gap: 8px;
+    margin-top: 4px;
   }
 
-  &__nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    background: transparent;
-    border: none;
-    color: var(--color-text-secondary);
-    font-size: 0.95rem;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 10px;
-    transition: all 0.2s;
-
-    &:hover {
-      background: var(--color-glass-bg-hover);
-      color: var(--color-text-primary);
-    }
-
-    &--active {
-      background: rgba(99, 102, 241, 0.15);
-      color: var(--color-text-primary);
-
-      .company-detail__nav-icon {
-        filter: none;
-      }
-    }
-  }
-
-  &__nav-icon {
-    font-size: 1.1rem;
-    opacity: 0.9;
-  }
-
-  &__nav-count {
-    margin-left: auto;
-    padding: 2px 8px;
-    background: var(--color-glass-bg);
-    border-radius: 10px;
-    font-size: 0.8rem;
-    color: var(--color-text-secondary);
-  }
-
-  // Card selection section
-  &__card-select {
-    padding: 16px;
-    margin-top: 24px;
-    background: rgba(99, 102, 241, 0.05);
-    border: 1px solid rgba(99, 102, 241, 0.15);
-    border-radius: 12px;
-  }
-
-  &__card-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 12px;
-    margin-top: 8px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      background: var(--color-glass-bg-hover);
-      border-color: rgba(139, 92, 246, 0.4);
-    }
-  }
-
-  &__card-icon {
-    font-size: 1.2rem;
-  }
-
-  &__card-name {
-    flex: 1;
-    text-align: left;
-    font-size: 0.9rem;
-    color: var(--color-text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__card-arrow {
-    font-size: 1.2rem;
-    color: var(--color-text-muted);
-  }
-
-  &__sidebar-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 20px;
-    margin-top: auto;
-    border-top: 1px solid var(--color-glass-border);
-    flex-shrink: 0;
-  }
-
-  &__leave-btn {
-    padding: 6px 12px;
-    background: transparent;
-    border: 1px solid var(--color-glass-border);
-    border-radius: 6px;
-    color: var(--color-text-secondary);
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: rgba(239, 68, 68, 0.3);
-      color: var(--color-error);
-    }
-  }
-
-  // Main content
-  &__main {
-    flex: 1;
-    padding: 32px 40px;
-    max-width: 900px;
-  }
-
-  &__loading {
-    display: flex;
-    justify-content: center;
-    padding: 60px;
-  }
-
-  // My card section (in main content)
-  &__my-card {
-    padding: 20px;
-    margin-bottom: 24px;
-    background: linear-gradient(
-      135deg,
-      rgba(99, 102, 241, 0.08),
-      rgba(139, 92, 246, 0.08)
-    );
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    border-radius: 16px;
-  }
-
-  &__my-card-header {
-    margin-bottom: 12px;
-
-    h3 {
-      font-family: "Syne", sans-serif;
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-  }
-
-  &__my-card-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      background: var(--color-glass-bg-hover);
-      border-color: rgba(139, 92, 246, 0.4);
-    }
-  }
-
-  &__my-card-icon {
-    font-size: 1.5rem;
-    flex-shrink: 0;
-  }
-
-  &__my-card-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    text-align: left;
-    overflow: hidden;
-  }
-
-  &__my-card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__my-card-subtitle {
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__my-card-placeholder {
-    flex: 1;
-    text-align: left;
-    font-size: 0.95rem;
-    color: var(--color-text-secondary);
-  }
-
-  &__my-card-action {
-    padding: 6px 12px;
-    background: rgba(139, 92, 246, 0.15);
-    border-radius: 8px;
-    font-size: 0.85rem;
+  &__section-title {
     font-weight: 500;
-    color: var(--color-accent);
-    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    padding: 8px 0 4px;
   }
 
-  // Members section
-  &__members-header {
+  // ═══════════ Invite Button ═══════════
+  &__invite-btn {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 32px;
-
-    h2 {
-      font-family: "Syne", sans-serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-  }
-
-  &__invitations {
-    margin-bottom: 32px;
-    padding: 20px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    background: rgba(0, 129, 255, 0.1);
+    border: 1px dashed rgba(0, 129, 255, 0.3);
     border-radius: 16px;
+    color: #0081ff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
 
-    h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 16px;
+    &:hover {
+      background: rgba(0, 129, 255, 0.15);
+      border-color: rgba(0, 129, 255, 0.5);
     }
   }
 
-  &__invitations-list {
+  &__invite-btn-icon {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  // ═══════════ Pending invitations ═══════════
+  &__pending {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
+  // ═══════════ Members List ═══════════
   &__members-list {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  &__member-card {
+    &--clickable {
+      cursor: pointer;
+    }
+  }
+
+  &__member-row {
+    display: flex;
+    align-items: center;
     gap: 12px;
   }
 
-  // Roles section
-  &__roles {
-    h2 {
-      font-family: "Syne", sans-serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 32px;
+  &__member-avatar {
+    &--invite {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
     }
   }
 
-  // Settings section
-  &__settings {
-    h2 {
-      font-family: "Syne", sans-serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 32px;
-    }
-  }
-}
-
-// Member card
-.member-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  background: var(--color-glass-bg);
-  border: 1px solid var(--color-glass-border);
-  border-radius: 14px;
-  transition: all 0.2s;
-
-  &:hover {
-    background: var(--color-glass-bg-hover);
-  }
-
-  &--has-card {
-    &:hover {
-      border-color: rgba(139, 92, 246, 0.4);
-      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
-    }
-  }
-
-  &__info {
+  &__member-info {
     flex: 1;
     min-width: 0;
-
-    p:first-child {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
-  &__card-hint {
-    display: block;
-    margin-top: 4px;
-    font-size: 0.75rem;
-    color: #a78bfa;
-    opacity: 0;
-    transition: opacity 0.2s;
+  &__member-name {
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  &--has-card:hover &__card-hint {
-    opacity: 1;
+  &__member-email {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  // Бейдж роли с цветной точкой
-  &__role-badge {
+  &__member-role {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
   }
 
-  &__role-dot {
+  &__member-role-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
   }
 
-  &__actions {
+  &__member-controls {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-border);
   }
 
-  // Стилизованный select для роли
-  &__role-select {
-    padding: 6px 28px 6px 10px;
+  &__member-select {
+    flex: 1;
+    padding: 8px 28px 8px 12px;
     background-color: var(--color-bg-secondary);
-    border: 2px solid var(--color-glass-border);
-    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
     color: var(--color-text-primary);
-    font-size: 0.85rem;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     -webkit-appearance: none;
@@ -518,10 +455,6 @@
     background-position: right 8px center;
     transition: all 0.2s ease;
 
-    &:hover {
-      background-color: var(--color-bg-tertiary);
-    }
-
     &:focus {
       outline: none;
       box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
@@ -530,7 +463,6 @@
     option {
       background-color: var(--color-bg-primary);
       color: var(--color-text-primary);
-      padding: 8px;
     }
 
     [data-theme="light"] & {
@@ -538,118 +470,88 @@
     }
   }
 
-  &__remove {
+  &__member-action {
     width: 28px;
     height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: transparent;
-    border: 1px solid var(--color-glass-border);
-    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
     color: var(--color-text-secondary);
-    font-size: 0.9rem;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
-
-    &:hover {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: rgba(239, 68, 68, 0.3);
-      color: var(--color-error);
-    }
-  }
-}
-
-// Invitation item
-.invitation-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--color-glass-bg-hover);
-  border-radius: 10px;
-
-  &__icon {
-    font-size: 1.2rem;
-  }
-
-  &__info {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  &__role {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  &__role-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
     flex-shrink: 0;
-  }
 
-  &__cancel {
-    padding: 6px 12px;
-    background: transparent;
-    border: 1px solid var(--color-glass-border);
-    border-radius: 6px;
-    color: var(--color-text-secondary);
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: rgba(239, 68, 68, 0.3);
-      color: var(--color-error);
+    &--cancel,
+    &--remove {
+      &:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: var(--color-error);
+      }
     }
   }
-}
 
-// Settings section
-.settings-section {
-  padding: 24px;
-  background: var(--color-glass-bg);
-  border: 1px solid var(--color-glass-border);
-  border-radius: 16px;
-  margin-bottom: 24px;
-
-  h3 {
-    font-family: "Syne", sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 20px;
+  // ═══════════ Loading ═══════════
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
   }
 
-  &--danger {
-    border-color: rgba(239, 68, 68, 0.2);
-    background: rgba(239, 68, 68, 0.03);
-
-    h3 {
-      color: var(--color-error);
-    }
+  // ═══════════ Settings ═══════════
+  &__settings-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 16px;
   }
-}
 
-.settings-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-
-  &__row {
+  &__settings-row {
     display: flex;
     flex-direction: column;
     gap: 4px;
   }
+
+  &__settings-label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+
+  &__settings-value {
+    font-size: 15px;
+    color: var(--color-text-primary);
+  }
+
+  // ═══════════ Leave Button ═══════════
+  &__leave-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 14px;
+    margin-top: 8px;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: var(--color-error);
+    }
+  }
 }
 
-// Forms
+// ═══════════ Forms ═══════════
 .invite-form,
 .edit-company-form,
 .delete-confirm {
@@ -696,113 +598,7 @@
   padding-top: 8px;
 }
 
-.checkbox-field {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #6366f1;
-  }
-
-  span {
-    font-size: 0.95rem;
-    color: var(--color-text-secondary);
-  }
-}
-
-// Responsive
-@media (max-width: 900px) {
-  .company-detail {
-    flex-direction: column;
-
-    &__sidebar {
-      width: 100%;
-      height: auto;
-      max-height: none;
-      position: relative;
-      padding: 16px;
-      border-right: none;
-      border-bottom: 1px solid var(--color-glass-border);
-      overflow: visible;
-    }
-
-    &__back {
-      margin-bottom: 16px;
-    }
-
-    &__sidebar-header {
-      margin-bottom: 16px;
-      padding-bottom: 16px;
-    }
-
-    &__nav {
-      flex-direction: row;
-      gap: 8px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
-    }
-
-    &__nav-item {
-      flex: 1;
-      min-width: 0;
-      justify-content: center;
-      padding: 10px 8px;
-      font-size: 0.85rem;
-
-      span:not(.company-detail__nav-icon):not(.company-detail__nav-count) {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
-
-    &__nav-icon {
-      flex-shrink: 0;
-    }
-
-    &__nav-count {
-      display: none;
-    }
-
-    &__sidebar-footer {
-      display: none;
-    }
-
-    &__main {
-      padding: 24px 16px;
-    }
-
-    &__card-select {
-      display: none;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .company-detail {
-    &__nav-item {
-      padding: 8px 6px;
-      font-size: 0.8rem;
-      gap: 6px;
-    }
-
-    &__nav-icon {
-      font-size: 1rem;
-    }
-  }
-}
-
-// Card select modal
+// ═══════════ Card select modal ═══════════
 .card-select-modal {
   display: flex;
   flex-direction: column;
@@ -821,15 +617,15 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    background: var(--color-glass-bg);
-    border: 1px solid var(--color-glass-border);
-    border-radius: 12px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
     cursor: pointer;
     transition: all 0.2s;
     text-align: left;
 
     &:hover {
-      background: var(--color-glass-bg-hover);
+      background: var(--color-bg-tertiary);
       border-color: rgba(139, 92, 246, 0.4);
     }
 
@@ -861,7 +657,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.95rem;
+    font-size: 15px;
     font-weight: 600;
     color: var(--color-text-primary);
   }
@@ -871,7 +667,7 @@
   }
 
   &__item-bio {
-    font-size: 0.8rem;
+    font-size: 13px;
     color: var(--color-text-secondary);
     white-space: nowrap;
     overflow: hidden;
@@ -885,12 +681,12 @@
   }
 
   &__clear {
-    padding: 10px 16px;
+    padding: 12px 16px;
     background: transparent;
-    border: 1px solid var(--color-glass-border);
-    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
     color: var(--color-text-secondary);
-    font-size: 0.9rem;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
 
@@ -903,6 +699,19 @@
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+  }
+}
+
+// ═══════════ Dark theme adjustments ═══════════
+[data-theme="dark"] {
+  .company-detail {
+    &__hero-stat {
+      &--members {
+        background: rgba(40, 115, 237, 0.1);
+        border-color: rgba(40, 115, 237, 0.15);
+        color: #2873ed;
+      }
     }
   }
 }

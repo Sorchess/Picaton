@@ -511,7 +511,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
   // Detail view - полноэкранная страница компании с sidebar
   if (viewMode === "detail" && selectedCompany) {
     return (
-      <div className="company-page company-page--detail">
+      <div className="company-page">
         {/* Toast */}
         {toast && (
           <div
