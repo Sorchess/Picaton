@@ -336,7 +336,7 @@
         border-radius: 20px 20px 4px 20px;
       }
       &.chats-page__message--middle .chats-page__bubble {
-        background: rgba(var(--color-accent-rgb), 0.20);
+        background: rgba(var(--color-accent-rgb), 0.2);
         border-radius: 20px 4px 4px 20px;
       }
       &.chats-page__message--last .chats-page__bubble {
@@ -359,7 +359,7 @@
         background: rgba(40, 115, 237, 0.16);
       }
       .chats-page__message--own.chats-page__message--last .chats-page__bubble {
-        background: rgba(40, 115, 237, 0.20);
+        background: rgba(40, 115, 237, 0.2);
       }
     }
 

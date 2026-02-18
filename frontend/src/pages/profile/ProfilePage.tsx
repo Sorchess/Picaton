@@ -31,6 +31,8 @@ interface ProfilePageProps {
   onCardOpened?: () => void;
   /** Navigate to contacts page */
   onNavigateToContacts?: () => void;
+  /** Navigate to notifications page */
+  onOpenNotifications?: () => void;
 }
 
 export function ProfilePage({
@@ -38,6 +40,7 @@ export function ProfilePage({
   openCardId,
   onCardOpened,
   onNavigateToContacts,
+  onOpenNotifications,
 }: ProfilePageProps) {
   const { user: authUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
@@ -410,7 +413,7 @@ export function ProfilePage({
             handleOpenCard(selectedCard);
           }
         }}
-        onRightClick={handleShareProfile}
+        onRightClick={onOpenNotifications}
         contactsCount={savedContactsCount}
         contactAvatars={savedContactAvatars}
         onContactsClick={onNavigateToContacts}

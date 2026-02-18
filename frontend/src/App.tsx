@@ -13,6 +13,7 @@ import {
   ChatsPage,
 } from "./pages";
 import { SettingsPage } from "./pages/settings";
+import { NotificationsPage } from "./pages/notifications";
 import { AuthProvider, useAuth } from "./features/auth";
 import { EmailModal } from "./features/email-modal";
 import { companyApi } from "./entities/company";
@@ -60,7 +61,8 @@ type ExtendedPageType =
   | PageType
   | "contact-profile"
   | "share-contact"
-  | "company";
+  | "company"
+  | "notifications";
 
 // Контекст для навигации на профиль контакта
 interface ContactProfileNavData {
@@ -606,7 +608,9 @@ function AuthenticatedApp() {
                 ? previousPage
                 : currentPage === "company"
                   ? "settings"
-                  : (currentPage as PageType)
+                  : currentPage === "notifications"
+                    ? "profile"
+                    : (currentPage as PageType)
             }
             onChange={handlePageChange}
             onSearchSubmit={handleTabBarSearch}
@@ -689,6 +693,7 @@ function AuthenticatedApp() {
             openCardId={profileOpenCardId}
             onCardOpened={() => setProfileOpenCardId(undefined)}
             onNavigateToContacts={() => handlePageChange("contacts")}
+            onOpenNotifications={() => setCurrentPage("notifications")}
           />
         )}
         {currentPage === "settings" && (
@@ -696,6 +701,9 @@ function AuthenticatedApp() {
             onOpenCompanies={() => setCurrentPage("company")}
             onBack={() => handlePageChange("profile")}
           />
+        )}
+        {currentPage === "notifications" && (
+          <NotificationsPage onBack={() => setCurrentPage("profile")} />
         )}
         {currentPage === "company" && (
           <CompanyPage
@@ -752,7 +760,9 @@ function AuthenticatedApp() {
               ? previousPage
               : currentPage === "company"
                 ? "settings"
-                : (currentPage as PageType)
+                : currentPage === "notifications"
+                  ? "profile"
+                  : (currentPage as PageType)
           }
           onChange={handlePageChange}
           onSearchSubmit={handleTabBarSearch}
