@@ -389,22 +389,25 @@ export function ChatsPage({
     }
   };
 
+  // Общее число непрочитанных сообщений
+  const totalUnread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
+
   // Табы
   const chatTabs: Tab[] = [
-    { id: "all", label: "Все чаты" },
     {
-      id: "projects",
+      id: "all",
       label: (
         <>
-          Проекты
-          {conversations.length > 0 && (
+          Все чаты
+          {totalUnread > 0 && (
             <span className="chats-page__tab-badge">
-              {conversations.length}
+              {totalUnread > 99 ? "99+" : totalUnread}
             </span>
           )}
         </>
       ),
     },
+    { id: "projects", label: "Проекты" },
     { id: "companies", label: "Компании" },
   ];
 
@@ -527,7 +530,6 @@ export function ChatsPage({
           <EmptyState
             emoji="💬"
             title="Нет сообщений"
-            description="Откройте профиль контакта и нажмите «Написать»"
           />
         ) : (
           <div className="chats-page__list">
