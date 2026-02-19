@@ -14,6 +14,7 @@ import {
   Input,
   Card,
   Button,
+  GlassSelect,
 } from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import "./CardEditor.scss";
@@ -851,17 +852,14 @@ export function CardEditor({
           {showContactForm ? (
             <div className="card-editor__contact-form">
               <div className="card-editor__contact-form-row">
-                <select
-                  className="card-editor__select"
+                <GlassSelect
+                  options={CONTACT_TYPES.map((ct) => ({
+                    value: ct.type,
+                    label: ct.label,
+                  }))}
                   value={newContactType}
-                  onChange={(e) => setNewContactType(e.target.value)}
-                >
-                  {CONTACT_TYPES.map((ct) => (
-                    <option key={ct.type} value={ct.type}>
-                      {ct.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setNewContactType(v)}
+                />
                 <Input
                   type="text"
                   className="card-editor__input"
