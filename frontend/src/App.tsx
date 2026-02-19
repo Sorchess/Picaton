@@ -678,6 +678,14 @@ function AuthenticatedApp() {
         {currentPage === "contacts" && (
           <ContactsPage
             onOpenContact={(user) => navigateToChat(user)}
+            onViewSearchProfile={(user, cardId) =>
+              navigateToContactProfile({
+                user,
+                cardId,
+                savedContact: null,
+                returnPage: "contacts",
+              })
+            }
             initialSearchQuery={tabBarSearchQuery}
             onSearchQueryConsumed={() => setTabBarSearchQuery(undefined)}
           />

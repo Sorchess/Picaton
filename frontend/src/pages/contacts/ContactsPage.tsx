@@ -80,6 +80,8 @@ interface ContactsPageProps {
     cardId?: string,
     savedContact?: SavedContact | null,
   ) => void;
+  /** Открыть профиль контакта из поиска (без чата) */
+  onViewSearchProfile?: (user: UserPublic, cardId?: string) => void;
   /** Pre-filled search query from the tab-bar search button */
   initialSearchQuery?: string;
   /** Called after the initial search query has been consumed */
@@ -88,6 +90,7 @@ interface ContactsPageProps {
 
 export function ContactsPage({
   onOpenContact,
+  onViewSearchProfile,
   initialSearchQuery,
   onSearchQueryConsumed,
 }: ContactsPageProps) {
@@ -274,8 +277,10 @@ export function ContactsPage({
   }, [initialSearchQuery]);
 
   const handleSearchResultClick = (user: UserPublic) => {
-    if (onOpenContact) {
-      const cardId = (user as UserPublic & { card_id?: string }).card_id;
+    const cardId = (user as UserPublic & { card_id?: string }).card_id;
+    if (onViewSearchProfile) {
+      onViewSearchProfile(user, cardId);
+    } else if (onOpenContact) {
       onOpenContact(user, cardId);
     }
   };
