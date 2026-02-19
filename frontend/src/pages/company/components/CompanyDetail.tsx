@@ -898,7 +898,7 @@ export function CompanyDetail({
         onClose={() => setIsCardSelectModalOpen(false)}
         title="Выберите визитку"
       >
-        <div className="card-select-modal">
+        <div className="card-select-modal" style={{ padding: "20px" }}>
           <Typography variant="body" color="secondary">
             Выберите визитку, которую будут видеть участники компании{" "}
             <strong>{company.company.name}</strong>

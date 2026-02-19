@@ -72,6 +72,9 @@ export function ProfilePage({
     SkillWithEndorsements[]
   >([]);
 
+  // Company names for tags
+  const [myCompanyNames, setMyCompanyNames] = useState<string[]>([]);
+
   // Saved contacts count & avatars
   const [savedContactsCount, setSavedContactsCount] = useState<number>(0);
   const [savedContactAvatars, setSavedContactAvatars] = useState<
@@ -106,6 +109,15 @@ export function ProfilePage({
     try {
       const assignments = await companyApi.getMyCardAssignments();
       setCardAssignments(assignments);
+    } catch {
+      // Ignore errors
+    }
+  }, []);
+
+  const loadMyCompanies = useCallback(async () => {
+    try {
+      const companies = await companyApi.getMyCompanies();
+      setMyCompanyNames(companies.map((c) => c.company.name));
     } catch {
       // Ignore errors
     }
@@ -167,8 +179,15 @@ export function ProfilePage({
     loadUser();
     loadCards();
     loadCardAssignments();
+    loadMyCompanies();
     loadSavedContactsCount();
-  }, [loadUser, loadCards, loadCardAssignments, loadSavedContactsCount]);
+  }, [
+    loadUser,
+    loadCards,
+    loadCardAssignments,
+    loadMyCompanies,
+    loadSavedContactsCount,
+  ]);
 
   // Load endorsements when selected card changes
   useEffect(() => {
@@ -445,6 +464,7 @@ export function ProfilePage({
           contacts={displayContacts}
           tags={tags}
           skillsWithEndorsements={skillsWithEndorsements}
+          companyNames={myCompanyNames}
           phone={displayContacts.find((c) => c.type === "phone")?.value}
           username={user.telegram_username || undefined}
           userHandle={user.username}

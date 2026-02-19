@@ -30,6 +30,7 @@ interface ProfileInfoCardProps {
   contacts?: ContactInfo[];
   tags?: TagInfo[];
   skillsWithEndorsements?: SkillWithEndorsements[];
+  companyNames?: string[];
   phone?: string;
   username?: string;
   userHandle?: string | null;
@@ -45,6 +46,7 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
   contacts = [],
   tags = [],
   skillsWithEndorsements = [],
+  companyNames = [],
   phone,
   username,
   userHandle,
@@ -63,6 +65,7 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
     userHandle ||
     tags.length > 0 ||
     skillsWithEndorsements.length > 0 ||
+    companyNames.length > 0 ||
     displayPhone ||
     otherContacts.length > 0;
 
@@ -223,6 +226,15 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
         <Card className="profile-info-cards__card">
           <span className="profile-info-cards__label">Навыки</span>
           <div className="profile-info-cards__tags">
+            {companyNames.map((name) => (
+              <span
+                key={`company-${name}`}
+                className="profile-info-cards__tag profile-info-cards__tag--company"
+              >
+                <span className="profile-info-cards__tag-icon">🏢</span>
+                {name}
+              </span>
+            ))}
             {skillsWithEndorsements.map((skill) => (
               <EndorsableSkill
                 key={skill.tag_id}
@@ -232,10 +244,19 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
             ))}
           </div>
         </Card>
-      ) : tags.length > 0 ? (
+      ) : tags.length > 0 || companyNames.length > 0 ? (
         <Card className="profile-info-cards__card">
           <span className="profile-info-cards__label">Навыки</span>
           <div className="profile-info-cards__tags">
+            {companyNames.map((name) => (
+              <span
+                key={`company-${name}`}
+                className="profile-info-cards__tag profile-info-cards__tag--company"
+              >
+                <span className="profile-info-cards__tag-icon">🏢</span>
+                {name}
+              </span>
+            ))}
             {tags.map((tag) => (
               <span key={tag.id} className="profile-info-cards__tag">
                 <span className="profile-info-cards__tag-icon">

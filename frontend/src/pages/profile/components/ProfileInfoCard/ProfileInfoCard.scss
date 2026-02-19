@@ -101,6 +101,17 @@
   &__tag-icon {
     font-size: 12px;
   }
+
+  &__tag--company {
+    background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+    border: none;
+    color: #ffffff;
+    font-weight: 500;
+
+    .profile-info-cards__tag-icon {
+      filter: none;
+    }
+  }
 }
 
 [data-theme="dark"] {
@@ -112,6 +123,12 @@
     &__tag {
       background: #352525;
       border-color: #442626;
+    }
+
+    &__tag--company {
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+      border: none;
+      color: #ffffff;
     }
   }
 }
