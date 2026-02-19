@@ -4,6 +4,7 @@
   align-items: center;
   text-align: center;
   padding: 1rem 0;
+  padding: 40px;
 
   &__icon {
     width: 64px;
@@ -70,7 +71,7 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 25px;
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
