@@ -250,15 +250,33 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    height: 34px;
-    padding: 0 16px;
-    border-radius: 17px;
+    height: auto;
+    padding: 0;
+    border-radius: 25px;
     border: none;
+    background: none;
     cursor: pointer;
+
+    // Prevent inner buttons from capturing hover/active states
+    .button,
+    .icon-button {
+      pointer-events: none;
+      transition: none;
+
+      &:active,
+      &:hover {
+        transform: none;
+      }
+    }
 
     &--editing {
       padding: 0 12px;
       cursor: default;
+
+      .button {
+        pointer-events: auto;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
 
       &:hover {
         background: rgba(255, 255, 255, 0.08);
