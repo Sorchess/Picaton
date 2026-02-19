@@ -103,9 +103,18 @@
   }
 
   &__tag--company {
-    background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+    background:
+      linear-gradient(0deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
+      conic-gradient(
+        from 90deg,
+        rgba(11, 11, 255, 0.4) 0deg,
+        rgba(97, 0, 255, 0.4) 48.46deg,
+        rgba(0, 208, 255, 0.4) 145.31deg,
+        rgba(0, 12, 255, 0.4) 353.79deg,
+        rgba(11, 11, 255, 0.4) 360deg
+      );
     border: none;
-    color: #ffffff;
+    color: #000000;
     font-weight: 500;
 
     .profile-info-cards__tag-icon {
@@ -126,9 +135,22 @@
     }
 
     &__tag--company {
-      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+      background:
+        linear-gradient(
+          0deg,
+          rgba(255, 255, 255, 0.3),
+          rgba(255, 255, 255, 0.3)
+        ),
+        conic-gradient(
+          from 90deg,
+          rgba(11, 11, 255, 0.4) 0deg,
+          rgba(97, 0, 255, 0.4) 48.46deg,
+          rgba(0, 208, 255, 0.4) 145.31deg,
+          rgba(0, 12, 255, 0.4) 353.79deg,
+          rgba(11, 11, 255, 0.4) 360deg
+        );
       border: none;
-      color: #ffffff;
+      color: #000000;
     }
   }
 }
