@@ -862,7 +862,7 @@ export function CardEditor({
                     </option>
                   ))}
                 </select>
-                <input
+                <Input
                   type="text"
                   className="card-editor__input"
                   value={newContactValue}
