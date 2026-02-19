@@ -10,6 +10,12 @@
   background: var(--color-bg-primary);
   box-sizing: border-box;
   overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   &--loading {
     display: flex;
@@ -262,6 +268,12 @@
     padding: 8px 16px;
     overflow-y: auto;
     gap: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   &__messages-empty {
@@ -327,39 +339,42 @@
     &--own {
       justify-content: flex-end;
 
+      .chats-page__bubble {
+        color: #fff;
+      }
+
+      .chats-page__bubble-text {
+        color: #fff;
+      }
+
+      .chats-page__bubble-time,
+      .chats-page__bubble-edited {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .chats-page__bubble-status {
+        color: rgba(255, 255, 255, 0.7);
+
+        &--read {
+          color: #fff;
+        }
+      }
+
       &.chats-page__message--single .chats-page__bubble {
-        background: rgba(var(--color-accent-rgb), 0.22);
+        background: linear-gradient(180deg, #4ba1f5 0%, #2e89f0 100%);
         border-radius: 20px 20px 4px 20px;
       }
       &.chats-page__message--first .chats-page__bubble {
-        background: rgba(var(--color-accent-rgb), 0.16);
+        background: linear-gradient(180deg, #5aabf7 0%, #3f99f3 100%);
         border-radius: 20px 20px 4px 20px;
       }
       &.chats-page__message--middle .chats-page__bubble {
-        background: rgba(var(--color-accent-rgb), 0.2);
+        background: linear-gradient(180deg, #3f99f3 0%, #2e89f0 100%);
         border-radius: 20px 4px 4px 20px;
       }
       &.chats-page__message--last .chats-page__bubble {
-        background: rgba(var(--color-accent-rgb), 0.24);
+        background: linear-gradient(180deg, #2e89f0 0%, #2078e6 100%);
         border-radius: 20px 4px 20px 20px;
-      }
-    }
-
-    // Light theme overrides for own messages
-    @at-root [data-theme="light"] {
-      .chats-page__message--own.chats-page__message--single
-        .chats-page__bubble {
-        background: rgba(40, 115, 237, 0.18);
-      }
-      .chats-page__message--own.chats-page__message--first .chats-page__bubble {
-        background: rgba(40, 115, 237, 0.12);
-      }
-      .chats-page__message--own.chats-page__message--middle
-        .chats-page__bubble {
-        background: rgba(40, 115, 237, 0.16);
-      }
-      .chats-page__message--own.chats-page__message--last .chats-page__bubble {
-        background: rgba(40, 115, 237, 0.2);
       }
     }
 
@@ -429,11 +444,18 @@
   }
 
   &__bubble-status {
-    font-size: 12px;
-    color: var(--color-text-muted);
+    display: inline-flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.7);
+
+    svg {
+      display: block;
+      width: auto;
+      height: 8px;
+    }
 
     &--read {
-      color: var(--color-accent);
+      color: #fff;
     }
   }
 
