@@ -1,5 +1,7 @@
 import { useAuth } from "@/features/auth";
-import { Avatar, IconButton } from "@/shared";
+import { IconButton, GlassSelect } from "@/shared";
+import { useTheme } from "@/shared/config";
+import { useMemo } from "react";
 import "./SettingsPage.scss";
 
 interface SettingsPageProps {
@@ -8,10 +10,50 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ onOpenCompanies, onBack }: SettingsPageProps) {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
-  const userInitials =
-    (user?.first_name?.[0] || "") + (user?.last_name?.[0] || "");
+  const themeOptions = useMemo(
+    () => [
+      {
+        value: "light",
+        label: "Светлая",
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle
+              cx="12"
+              cy="12"
+              r="5"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <path
+              d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        ),
+      },
+      {
+        value: "dark",
+        label: "Тёмная",
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="settings-page">
@@ -36,24 +78,49 @@ export function SettingsPage({ onOpenCompanies, onBack }: SettingsPageProps) {
 
       {/* Аккаунт */}
       <div className="settings-page__list">
+        {/* Тема */}
         <div className="settings-page__card">
-          <div className="settings-page__card-avatar">
-            <Avatar
-              src={user?.avatar_url || undefined}
-              initials={userInitials || "?"}
-              size="md"
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              width="32"
+              height="32"
+              rx="8.96"
+              fill="url(#paint0_linear_theme)"
             />
-          </div>
+            <path
+              d="M16 7C20.9706 7 25 11.0294 25 16C25 20.9706 20.9706 25 16 25L15.5537 24.9893C15.5498 24.9891 15.5459 24.9885 15.542 24.9883C15.4963 24.986 15.4508 24.9805 15.4053 24.9775C15.3025 24.9707 15.1999 24.9644 15.0977 24.9541C13.602 24.8052 12.2146 24.2903 11.0254 23.5C11.0173 23.4947 11.009 23.4897 11.001 23.4844C10.8947 23.4132 10.7905 23.3392 10.6875 23.2637C10.6691 23.2502 10.6502 23.2373 10.6318 23.2236C10.5516 23.1639 10.4736 23.1014 10.3955 23.0391C10.3603 23.0111 10.3239 22.9846 10.2891 22.9561C10.2097 22.8908 10.1327 22.8228 10.0557 22.7549C9.91253 22.6289 9.77137 22.4999 9.63574 22.3643C9.49979 22.2283 9.37039 22.0869 9.24414 21.9434C9.17628 21.8663 9.1082 21.7894 9.04297 21.71C9.00042 21.6581 8.96026 21.6045 8.91895 21.5518C8.87082 21.4905 8.82194 21.4297 8.77539 21.3672C8.74796 21.3303 8.72215 21.2922 8.69531 21.2549C7.79486 20.0054 7.20557 18.5169 7.04492 16.9014C7.01492 16.6032 7 16.3024 7 16C7 15.6973 7.01485 15.3962 7.04492 15.0977C7.20574 13.4823 7.79478 11.9935 8.69531 10.7441C8.72215 10.7068 8.74796 10.6688 8.77539 10.6318C8.8351 10.5516 8.89767 10.4736 8.95996 10.3955C8.98797 10.3603 9.01441 10.3239 9.04297 10.2891C9.10821 10.2097 9.17627 10.1327 9.24414 10.0557C9.37024 9.91236 9.49996 9.77152 9.63574 9.63574C9.77351 9.49798 9.917 9.36705 10.0625 9.23926C10.1375 9.1733 10.2118 9.10644 10.2891 9.04297C10.326 9.01263 10.365 8.98479 10.4023 8.95508C10.4784 8.8946 10.5539 8.83343 10.6318 8.77539C10.6688 8.74796 10.7068 8.72215 10.7441 8.69531C10.829 8.63414 10.9139 8.5729 11.001 8.51465C11.0143 8.50572 11.0286 8.49811 11.042 8.48926C12.2275 7.70508 13.6088 7.19314 15.0977 7.04492C15.1999 7.03463 15.3025 7.02829 15.4053 7.02148C15.4508 7.01851 15.4963 7.01303 15.542 7.01074C15.6942 7.003 15.8469 7 16 7ZM16 23.5C20.1421 23.5 23.5 20.1421 23.5 16C23.5 11.8579 20.1421 8.5 16 8.5V23.5Z"
+              fill="white"
+            />
+            <defs>
+              <linearGradient
+                id="paint0_linear_theme"
+                x1="16"
+                y1="0"
+                x2="16"
+                y2="32"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop stopColor="#7EADFF" />
+                <stop offset="1" stopColor="#36A8DC" />
+              </linearGradient>
+            </defs>
+          </svg>
           <div className="settings-page__card-content">
             <div className="settings-page__card-top">
-              <span className="settings-page__card-name">
-                {user?.first_name} {user?.last_name}
-              </span>
-            </div>
-            <div className="settings-page__card-bottom">
-              <span className="settings-page__card-preview">
-                {user?.email || "Нет email"}
-              </span>
+              <span className="settings-page__card-name">Тема</span>
+              <GlassSelect
+                options={themeOptions}
+                value={theme}
+                onChange={(v) => {
+                  if (v !== theme) toggleTheme();
+                }}
+              />
             </div>
           </div>
         </div>

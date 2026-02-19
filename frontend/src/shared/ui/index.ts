@@ -38,6 +38,9 @@ export { Container } from "./Container";
 export { TapBar } from "./TapBar";
 export type { TapBarOption } from "./TapBar";
 
+export { GlassSelect } from "./GlassSelect";
+export type { GlassSelectOption } from "./GlassSelect";
+
 export { Tabs } from "./Tabs";
 export type { Tab } from "./Tabs";
 
