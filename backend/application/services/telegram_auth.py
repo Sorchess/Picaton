@@ -409,6 +409,11 @@ class TelegramAuthService:
         # Пользователь сможет потом добавить реальный email
         placeholder_email = f"tg_{tg_data.id}@telegram.placeholder"
 
+        # Генерируем уникальный username
+        username = await self._user_service._generate_unique_username(
+            tg_data.first_name, tg_data.last_name or ""
+        )
+
         # Сначала создаём пользователя без аватара
         user = User(
             first_name=tg_data.first_name,
@@ -417,6 +422,7 @@ class TelegramAuthService:
             telegram_id=tg_data.id,
             telegram_username=tg_data.username,
             avatar_url=None,
+            username=username,
         )
 
         user = await self._user_repo.create(user)

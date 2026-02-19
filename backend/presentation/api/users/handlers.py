@@ -130,6 +130,17 @@ async def get_user_full(
 ):
     """Получить полную информацию о пользователе (для владельца)."""
     user = await user_service.get_user(user_id)
+
+    # Автоматически генерируем username, если его нет
+    if not user.username:
+        username = await user_service._generate_unique_username(
+            user.first_name, user.last_name
+        )
+        user = await user_service.update_profile(
+            user_id=user_id,
+            username=username,
+        )
+
     return _user_to_response(user)
 
 

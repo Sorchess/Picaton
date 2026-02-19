@@ -1,3 +1,5 @@
+import random
+import string
 from uuid import UUID
 import bcrypt
 
@@ -59,11 +61,15 @@ class UserService:
         # Хэшируем пароль
         hashed_password = self._hash_password(password)
 
+        # Генерируем уникальный username
+        username = await self._generate_unique_username(first_name, last_name)
+
         user = User(
             email=email,
             hashed_password=hashed_password,
             first_name=first_name,
             last_name=last_name,
+            username=username,
         )
 
         return await self._user_repository.create(user)
@@ -277,6 +283,48 @@ class UserService:
         ct = ContactType(contact_type.upper())
         user.update_contact_visibility(ct, value, is_visible)
         return await self._user_repository.update(user)
+
+    async def _generate_unique_username(
+        self,
+        first_name: str = "",
+        last_name: str = "",
+    ) -> str:
+        """
+        Сгенерировать уникальный username для пользователя.
+
+        Формат: имя + случайный суффикс, например 'ivan_a3kx' или 'user_m8qz'.
+        """
+        # Формируем базу из имени (латиницей, lowercase)
+        base = ""
+        for name in (first_name, last_name):
+            if name:
+                # Берём только ASCII-буквы
+                ascii_name = "".join(
+                    c for c in name.lower() if c in string.ascii_lowercase
+                )
+                if ascii_name:
+                    base = ascii_name
+                    break
+
+        if not base:
+            base = "user"
+
+        # Ограничиваем длину базы
+        base = base[:12]
+
+        # Пробуем сгенерировать уникальный username
+        for _ in range(20):
+            suffix = "".join(
+                random.choices(string.ascii_lowercase + string.digits, k=4)
+            )
+            candidate = f"{base}_{suffix}"
+            existing = await self._user_repository.find_by_username(candidate)
+            if not existing:
+                return candidate
+
+        # Fallback: более длинный суффикс
+        suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        return f"{base}_{suffix}"
 
     @staticmethod
     def _hash_password(password: str) -> str:
