@@ -26,6 +26,8 @@ interface ProfileTopBarProps {
   contactAvatars?: ContactAvatarData[];
   /** On contacts badge click */
   onContactsClick?: () => void;
+  /** Unread notifications count */
+  unreadCount?: number;
   /** Additional CSS class */
   className?: string;
 }
@@ -103,6 +105,7 @@ export const ProfileTopBar: FC<ProfileTopBarProps> = ({
   contactsCount,
   contactAvatars = [],
   onContactsClick,
+  unreadCount = 0,
   className = "",
 }) => {
   const visibleAvatars = contactAvatars.slice(0, MAX_AVATARS);
@@ -155,9 +158,16 @@ export const ProfileTopBar: FC<ProfileTopBarProps> = ({
         </button>
       )}
 
-      <IconButton onClick={onRightClick} aria-label={rightLabel}>
-        {rightIcon}
-      </IconButton>
+      <div className="profile-top-bar__bell-wrapper">
+        <IconButton onClick={onRightClick} aria-label={rightLabel}>
+          {rightIcon}
+        </IconButton>
+        {unreadCount > 0 && (
+          <span className="profile-top-bar__badge">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </div>
     </div>
   );
 };

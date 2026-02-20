@@ -43,6 +43,8 @@ from presentation.api.users.schemas import (
     ContactSyncRequest,
     ContactSyncResponse,
     AvatarUploadResponse,
+    NotificationResponse,
+    UnreadCountResponse,
 )
 from domain.enums.contact import ContactType
 from domain.enums.privacy import PrivacyLevel
@@ -63,6 +65,7 @@ from infrastructure.dependencies import (
     get_business_card_repository,
     get_privacy_checker,
     get_current_user_id_optional,
+    get_notification_service,
 )
 from domain.repositories.company import CompanyMemberRepositoryInterface
 from domain.repositories.business_card import BusinessCardRepositoryInterface
@@ -828,6 +831,7 @@ async def save_contact(
     user_id: UUID,
     data: SavedContactCreate,
     contact_service=Depends(get_contact_service),
+    notification_service=Depends(get_notification_service),
 ):
     """Сохранить контакт другого пользователя или его визитную карточку."""
     contact = await contact_service.save_user_contact(
@@ -837,6 +841,14 @@ async def save_contact(
         search_tags=data.search_tags,
         notes=data.notes,
     )
+    # Создаём уведомление для сохранённого пользователя
+    try:
+        await notification_service.notify_contact_added(
+            owner_id=user_id,
+            target_user_id=data.user_id,
+        )
+    except Exception:
+        pass  # Не ломаем основную логику если уведомление не удалось
     return _contact_to_response(contact)
 
 
@@ -1124,3 +1136,70 @@ def _contact_to_response(contact) -> SavedContactResponse:
         created_at=contact.created_at,
         updated_at=contact.updated_at,
     )
+
+
+# ============ Notifications ============
+
+
+@router.get("/{user_id}/notifications", response_model=list[NotificationResponse])
+async def get_notifications(
+    user_id: UUID,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    notification_service=Depends(get_notification_service),
+):
+    """Получить уведомления пользователя."""
+    notifications = await notification_service.get_notifications(
+        user_id=user_id, skip=skip, limit=limit
+    )
+    return [
+        NotificationResponse(
+            id=n.id,
+            user_id=n.user_id,
+            type=n.type,
+            title=n.title,
+            message=n.message,
+            is_read=n.is_read,
+            actor_id=n.actor_id,
+            actor_name=n.actor_name,
+            actor_avatar_url=n.actor_avatar_url,
+            data=n.data,
+            created_at=n.created_at,
+        )
+        for n in notifications
+    ]
+
+
+@router.get("/{user_id}/notifications/unread-count", response_model=UnreadCountResponse)
+async def get_unread_notifications_count(
+    user_id: UUID,
+    notification_service=Depends(get_notification_service),
+):
+    """Получить количество непрочитанных уведомлений."""
+    count = await notification_service.get_unread_count(user_id)
+    return UnreadCountResponse(count=count)
+
+
+@router.post("/{user_id}/notifications/read-all")
+async def mark_all_notifications_read(
+    user_id: UUID,
+    notification_service=Depends(get_notification_service),
+):
+    """Отметить все уведомления как прочитанные."""
+    count = await notification_service.mark_all_as_read(user_id)
+    return {"marked": count}
+
+
+@router.post("/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: UUID,
+    notification_service=Depends(get_notification_service),
+):
+    """Отметить уведомление как прочитанное."""
+    success = await notification_service.mark_as_read(notification_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Уведомление не найдено",
+        )
+    return {"success": True}

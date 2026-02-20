@@ -80,6 +80,7 @@ export function ProfilePage({
   const [savedContactAvatars, setSavedContactAvatars] = useState<
     ContactAvatarData[]
   >([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
   const loadUser = useCallback(async () => {
     if (!authUser?.id) return;
@@ -145,6 +146,16 @@ export function ProfilePage({
     }
   }, [authUser?.id]);
 
+  const loadUnreadNotifCount = useCallback(async () => {
+    if (!authUser?.id) return;
+    try {
+      const { count } = await userApi.getUnreadNotificationsCount(authUser.id);
+      setUnreadNotifCount(count);
+    } catch {
+      // Ignore errors
+    }
+  }, [authUser?.id]);
+
   // Get current selected card based on active role
   const getSelectedCard = useCallback((): BusinessCard | null => {
     if (!activeRoleId || cards.length === 0) return null;
@@ -181,12 +192,14 @@ export function ProfilePage({
     loadCardAssignments();
     loadMyCompanies();
     loadSavedContactsCount();
+    loadUnreadNotifCount();
   }, [
     loadUser,
     loadCards,
     loadCardAssignments,
     loadMyCompanies,
     loadSavedContactsCount,
+    loadUnreadNotifCount,
   ]);
 
   // Load endorsements when selected card changes
@@ -436,6 +449,7 @@ export function ProfilePage({
         contactsCount={savedContactsCount}
         contactAvatars={savedContactAvatars}
         onContactsClick={onNavigateToContacts}
+        unreadCount={unreadNotifCount}
       />
 
       {/* Content */}

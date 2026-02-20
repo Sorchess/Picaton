@@ -18,6 +18,7 @@ from domain.repositories.project_member import ProjectMemberRepositoryInterface
 from domain.repositories.chat_message import ChatMessageRepositoryInterface
 from domain.repositories.conversation import ConversationRepositoryInterface
 from domain.repositories.direct_message import DirectMessageRepositoryInterface
+from domain.repositories.notification import NotificationRepositoryInterface
 
 __all__ = [
     "UserRepositoryInterface",
@@ -39,4 +40,5 @@ __all__ = [
     "ChatMessageRepositoryInterface",
     "ConversationRepositoryInterface",
     "DirectMessageRepositoryInterface",
+    "NotificationRepositoryInterface",
 ]

@@ -36,7 +36,7 @@
   }
 
   &__contacts-text {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     line-height: 24px;
     color: var(--color-text-primary);
@@ -86,5 +86,29 @@
     color: var(--color-text-primary);
     white-space: nowrap;
     margin-left: 2px;
+  }
+
+  &__bell-wrapper {
+    position: relative;
+    display: inline-flex;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    pointer-events: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transform: translate(30%, -30%);
   }
 }

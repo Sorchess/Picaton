@@ -25,6 +25,7 @@ from infrastructure.database.repositories import (
     MongoShareLinkRepository,
     MongoConversationRepository,
     MongoDirectMessageRepository,
+    MongoNotificationRepository,
 )
 from infrastructure.database.repositories.company_role import MongoCompanyRoleRepository
 from infrastructure.database.repositories.company_card import MongoCompanyCardRepository
@@ -59,6 +60,7 @@ from domain.repositories.company_role import CompanyRoleRepositoryInterface
 from domain.repositories.pending_hash import PendingHashRepositoryInterface
 from domain.repositories.idea_comment import IdeaCommentRepositoryInterface
 from domain.repositories.gamification import GamificationRepositoryInterface
+from domain.repositories.notification import NotificationRepositoryInterface
 from application.services import (
     UserService,
     SavedContactService,
@@ -102,6 +104,7 @@ from application.services.privacy_checker import PrivacyChecker
 from application.services.ai_team_matching import AITeamMatchingService
 from application.services.ai_prd_generator import AIPRDGeneratorService
 from application.services.gamification import GamificationService
+from application.services.notification import NotificationService
 from infrastructure.llm.gigachat_client import GigaChatClient
 from infrastructure.llm.local_llm_client import LocalLLMClient
 from infrastructure.llm.embedding_service import EmbeddingService
@@ -729,6 +732,13 @@ def get_gamification_repository(
     return MongoGamificationRepository(db["gamification"], db)
 
 
+def get_notification_repository(
+    db: Database,
+) -> NotificationRepositoryInterface:
+    """Получить репозиторий уведомлений."""
+    return MongoNotificationRepository(db["notifications"])
+
+
 IdeaRepository = Annotated[IdeaRepositoryInterface, Depends(get_idea_repository)]
 IdeaSwipeRepository = Annotated[
     IdeaSwipeRepositoryInterface, Depends(get_idea_swipe_repository)
@@ -753,6 +763,9 @@ IdeaCommentRepository = Annotated[
 ]
 GamificationRepository = Annotated[
     GamificationRepositoryInterface, Depends(get_gamification_repository)
+]
+NotificationRepository = Annotated[
+    NotificationRepositoryInterface, Depends(get_notification_repository)
 ]
 
 
@@ -838,3 +851,11 @@ def get_gamification_service(
 ) -> GamificationService:
     """Получить сервис геймификации."""
     return GamificationService(gamification_repo)
+
+
+def get_notification_service(
+    notification_repo: NotificationRepository,
+    user_repo: UserRepository,
+) -> NotificationService:
+    """Получить сервис уведомлений."""
+    return NotificationService(notification_repo, user_repo)

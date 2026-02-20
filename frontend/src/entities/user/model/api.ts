@@ -9,6 +9,7 @@ import type {
   SavedContact,
   ImportResult,
   PrivacySettings,
+  UserNotification,
 } from "./types";
 
 export const userApi = {
@@ -236,4 +237,26 @@ export const userApi = {
 
   updatePrivacySettings: (userId: string, data: Partial<PrivacySettings>) =>
     api.patch<PrivacySettings>(`/users/${userId}/privacy`, data),
+
+  // ============ Notifications ============
+
+  // Получить уведомления
+  getNotifications: (userId: string, skip = 0, limit = 50) =>
+    api.get<UserNotification[]>(
+      `/users/${userId}/notifications?skip=${skip}&limit=${limit}`,
+    ),
+
+  // Количество непрочитанных
+  getUnreadNotificationsCount: (userId: string) =>
+    api.get<{ count: number }>(`/users/${userId}/notifications/unread-count`),
+
+  // Отметить все как прочитанные
+  markAllNotificationsRead: (userId: string) =>
+    api.post<{ marked: number }>(`/users/${userId}/notifications/read-all`),
+
+  // Отметить одно как прочитанное
+  markNotificationRead: (notificationId: string) =>
+    api.post<{ success: boolean }>(
+      `/users/notifications/${notificationId}/read`,
+    ),
 };

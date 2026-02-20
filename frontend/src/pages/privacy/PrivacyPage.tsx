@@ -160,7 +160,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
           <div className="privacy-page__card-content">
             <div className="privacy-page__card-top">
               <span className="privacy-page__card-name">
-                Кто видит мой профиль в поиске
+                Кто видит меня в поиске
               </span>
               <GlassSelect
                 options={profileVisibilityOptions}
@@ -176,7 +176,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
           <div className="privacy-page__card-content">
             <div className="privacy-page__card-top">
               <span className="privacy-page__card-name">
-                Приглашения в компании
+                Кто может приглашать в компании
               </span>
               <GlassSelect
                 options={companyInviteOptions}

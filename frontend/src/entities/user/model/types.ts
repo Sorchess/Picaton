@@ -169,3 +169,17 @@ export interface PrivacySettings {
   who_can_see_profile: string;
   who_can_invite: string;
 }
+
+export interface UserNotification {
+  id: string;
+  user_id: string;
+  type: string; // "contact_added", ...
+  title: string;
+  message: string;
+  is_read: boolean;
+  actor_id: string | null;
+  actor_name: string | null;
+  actor_avatar_url: string | null;
+  data: Record<string, unknown>;
+  created_at: string;
+}

@@ -4,6 +4,8 @@ import {
   companyApi,
   getRoleName,
 } from "@/entities/company";
+import { type UserNotification, userApi } from "@/entities/user";
+import { useAuth } from "@/features/auth";
 import { IconButton, Loader, Button } from "@/shared";
 import "./NotificationsPage.scss";
 
@@ -12,7 +14,9 @@ interface NotificationsPageProps {
 }
 
 export function NotificationsPage({ onBack }: NotificationsPageProps) {
+  const { user: authUser } = useAuth();
   const [invitations, setInvitations] = useState<InvitationWithCompany[]>([]);
+  const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{
@@ -27,21 +31,38 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
     }
   }, [toast]);
 
-  const loadInvitations = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await companyApi.getMyInvitations();
-      setInvitations(data);
+      const [invData, notifData] = await Promise.all([
+        companyApi
+          .getMyInvitations()
+          .catch(() => [] as InvitationWithCompany[]),
+        authUser?.id
+          ? userApi
+              .getNotifications(authUser.id)
+              .catch(() => [] as UserNotification[])
+          : Promise.resolve([] as UserNotification[]),
+      ]);
+      setInvitations(invData);
+      setNotifications(notifData);
     } catch (err) {
-      console.error("Failed to load invitations:", err);
+      console.error("Failed to load notifications:", err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [authUser?.id]);
 
   useEffect(() => {
-    loadInvitations();
-  }, [loadInvitations]);
+    loadData();
+  }, [loadData]);
+
+  // Отмечаем все уведомления как прочитанные при входе на страницу
+  useEffect(() => {
+    if (authUser?.id && notifications.some((n) => !n.is_read)) {
+      userApi.markAllNotificationsRead(authUser.id).catch(() => {});
+    }
+  }, [authUser?.id, notifications]);
 
   const handleAccept = async (inv: InvitationWithCompany) => {
     setProcessingIds((prev) => new Set(prev).add(inv.id));
@@ -81,7 +102,9 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    // Бэкенд отдаёт UTC без суффикса Z — добавляем его для корректного парсинга
+    const normalized = dateStr.endsWith("Z") ? dateStr : dateStr + "Z";
+    const date = new Date(normalized);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMin = Math.floor(diffMs / 60000);
@@ -97,6 +120,8 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
       month: "short",
     });
   };
+
+  const hasContent = invitations.length > 0 || notifications.length > 0;
 
   return (
     <div className="notifications-page">
@@ -137,7 +162,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
         <div className="notifications-page__loading">
           <Loader />
         </div>
-      ) : invitations.length === 0 ? (
+      ) : !hasContent ? (
         <div className="notifications-page__empty">
           <div className="notifications-page__empty-icon">🔔</div>
           <p className="notifications-page__empty-title">Нет уведомлений</p>
@@ -147,6 +172,47 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
         </div>
       ) : (
         <div className="notifications-page__list">
+          {/* Уведомления о добавлении в контакты */}
+          {notifications.map((notif) => (
+            <div
+              key={notif.id}
+              className={`notifications-page__card${!notif.is_read ? " notifications-page__card--unread" : ""}`}
+            >
+              <div className="notifications-page__card-avatar">
+                {notif.actor_avatar_url ? (
+                  <img
+                    src={notif.actor_avatar_url}
+                    alt={notif.actor_name || ""}
+                    className="notifications-page__card-avatar-img"
+                  />
+                ) : (
+                  <span className="notifications-page__card-avatar-placeholder">
+                    {notif.actor_name
+                      ? notif.actor_name
+                          .split(" ")
+                          .map((w) => w[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)
+                      : "?"}
+                  </span>
+                )}
+              </div>
+              <div className="notifications-page__card-body">
+                <div className="notifications-page__card-top">
+                  <span className="notifications-page__card-title">
+                    {notif.title}
+                  </span>
+                  <span className="notifications-page__card-time">
+                    {formatDate(notif.created_at)}
+                  </span>
+                </div>
+                <p className="notifications-page__card-text">{notif.message}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* Приглашения в компании */}
           {invitations.map((inv) => {
             const isProcessing = processingIds.has(inv.id);
             return (

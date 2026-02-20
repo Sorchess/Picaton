@@ -40,6 +40,9 @@ from infrastructure.database.repositories.conversation import (
 from infrastructure.database.repositories.direct_message import (
     MongoDirectMessageRepository,
 )
+from infrastructure.database.repositories.notification import (
+    MongoNotificationRepository,
+)
 
 __all__ = [
     "MongoUserRepository",
@@ -63,4 +66,5 @@ __all__ = [
     # Direct Messages
     "MongoConversationRepository",
     "MongoDirectMessageRepository",
+    "MongoNotificationRepository",
 ]

@@ -510,3 +510,28 @@ class AvatarUploadResponse(BaseModel):
 
 # Обновляем forward reference
 SearchResult.model_rebuild()
+
+
+# ============ Notifications ============
+
+
+class NotificationResponse(BaseModel):
+    """Ответ с уведомлением."""
+
+    id: UUID
+    user_id: UUID
+    type: str
+    title: str
+    message: str
+    is_read: bool
+    actor_id: UUID | None = None
+    actor_name: str | None = None
+    actor_avatar_url: str | None = None
+    data: dict = {}
+    created_at: datetime
+
+
+class UnreadCountResponse(BaseModel):
+    """Количество непрочитанных уведомлений."""
+
+    count: int
