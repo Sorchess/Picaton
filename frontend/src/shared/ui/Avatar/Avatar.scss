@@ -5,7 +5,7 @@
   position: relative;
   flex-shrink: 0;
 
-    &__glow {
+  &__glow {
     position: absolute;
     top: 0;
     left: -1.5px;
@@ -16,6 +16,14 @@
     opacity: 0.5;
     background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
     z-index: -1;
+    transition:
+      background 0.5s ease,
+      opacity 0.5s ease;
+
+    &--dynamic {
+      background: rgba(var(--avatar-glow-color), 0.9);
+      opacity: 0.65;
+    }
   }
 
   // Размеры
