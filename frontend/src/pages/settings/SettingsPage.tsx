@@ -6,10 +6,15 @@ import "./SettingsPage.scss";
 
 interface SettingsPageProps {
   onOpenCompanies?: () => void;
+  onOpenPrivacy?: () => void;
   onBack?: () => void;
 }
 
-export function SettingsPage({ onOpenCompanies, onBack }: SettingsPageProps) {
+export function SettingsPage({
+  onOpenCompanies,
+  onOpenPrivacy,
+  onBack,
+}: SettingsPageProps) {
   const { logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -177,10 +182,71 @@ export function SettingsPage({ onOpenCompanies, onBack }: SettingsPageProps) {
                 <path
                   d="M1 1L7 7L1 13"
                   stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                  stroke-opacity="0.3"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+            </div>
+          </div>
+        </button>
+
+        {/* Приватность */}
+        <button
+          className="settings-page__card"
+          onClick={onOpenPrivacy}
+          type="button"
+        >
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              width="32"
+              height="32"
+              rx="8.96"
+              fill="url(#paint0_linear_1147_31537)"
+            />
+            <path
+              d="M11.5826 25.2243C10.9037 25.2243 10.3886 25.0397 10.0372 24.6705C9.68586 24.3072 9.51017 23.7593 9.51017 23.0268V16.6933C9.51017 15.9667 9.68586 15.4218 10.0372 15.0586C10.3886 14.6953 10.9037 14.5136 11.5826 14.5136H19.9439C20.6228 14.5136 21.138 14.6953 21.4893 15.0586C21.8407 15.4218 22.0164 15.9667 22.0164 16.6933V23.0268C22.0164 23.7593 21.8407 24.3072 21.4893 24.6705C21.138 25.0397 20.6228 25.2243 19.9439 25.2243H11.5826ZM11.1449 15.264V12.4233C11.1449 11.3216 11.3593 10.4015 11.7881 9.66303C12.2228 8.91861 12.7916 8.35881 13.4943 7.98362C14.197 7.60843 14.9534 7.42084 15.7633 7.42084C16.5732 7.42084 17.3295 7.60843 18.0323 7.98362C18.735 8.35881 19.3007 8.91861 19.7295 9.66303C20.1643 10.4015 20.3816 11.3216 20.3816 12.4233V15.264H18.7112V12.2536C18.7112 11.5568 18.5742 10.9702 18.3003 10.4938C18.0323 10.0114 17.6749 9.64516 17.2283 9.39503C16.7816 9.14491 16.2933 9.01985 15.7633 9.01985C15.2333 9.01985 14.7449 9.14491 14.2983 9.39503C13.8516 9.64516 13.4943 10.0114 13.2263 10.4938C12.9583 10.9702 12.8243 11.5568 12.8243 12.2536V15.264H11.1449Z"
+              fill="white"
+            />
+            <defs>
+              <linearGradient
+                id="paint0_linear_1147_31537"
+                x1="16"
+                y1="0"
+                x2="16"
+                y2="32"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop stopColor="#FFC574" />
+                <stop offset="1" stopColor="#FF9400" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="settings-page__card-content">
+            <div className="settings-page__card-top">
+              <span className="settings-page__card-name">Приватность</span>
+              <svg
+                className="settings-page__card-arrow"
+                width="8"
+                height="14"
+                viewBox="0 0 8 14"
+                fill="none"
+              >
+                <path
+                  d="M1 1L7 7L1 13"
+                  stroke="currentColor"
+                  stroke-opacity="0.3"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
               </svg>
             </div>
           </div>

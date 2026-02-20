@@ -6,6 +6,7 @@ export { LoginPage } from "./login";
 export { OnboardingPage } from "./onboarding";
 export { CompanyPage } from "./company";
 export { SettingsPage } from "./settings";
+export { PrivacyPage } from "./privacy";
 export { CollaborationPage } from "./collaboration";
 export { ChatsPage } from "./chats";
 export { NotificationsPage } from "./notifications";

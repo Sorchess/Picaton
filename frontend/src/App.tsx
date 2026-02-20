@@ -13,6 +13,7 @@ import {
   ChatsPage,
 } from "./pages";
 import { SettingsPage } from "./pages/settings";
+import { PrivacyPage } from "./pages/privacy";
 import { NotificationsPage } from "./pages/notifications";
 import { AuthProvider, useAuth } from "./features/auth";
 import { EmailModal } from "./features/email-modal";
@@ -62,6 +63,7 @@ type ExtendedPageType =
   | "contact-profile"
   | "share-contact"
   | "company"
+  | "privacy"
   | "notifications";
 
 // Контекст для навигации на профиль контакта
@@ -707,8 +709,12 @@ function AuthenticatedApp() {
         {currentPage === "settings" && (
           <SettingsPage
             onOpenCompanies={() => setCurrentPage("company")}
+            onOpenPrivacy={() => setCurrentPage("privacy")}
             onBack={() => handlePageChange("profile")}
           />
+        )}
+        {currentPage === "privacy" && (
+          <PrivacyPage onBack={() => setCurrentPage("settings")} />
         )}
         {currentPage === "notifications" && (
           <NotificationsPage onBack={() => setCurrentPage("profile")} />

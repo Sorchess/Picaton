@@ -66,12 +66,12 @@ const ArrowIcon = () => (
   <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
     <path
       d="M1 1L7 7L1 13"
-      stroke="black"
-      strokeOpacity="0.3"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+      stroke="currentColor"
+      stroke-opacity="0.3"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    ></path>
   </svg>
 );
 
@@ -332,7 +332,6 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
           }}
           className="share-contact-page__tabs"
         />
-
 
         {/* Cards List */}
         <div className="share-contact-page__cards">
