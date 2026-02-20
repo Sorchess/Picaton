@@ -333,10 +333,6 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
           className="share-contact-page__tabs"
         />
 
-        {/* Section Label */}
-        <div className="share-contact-page__section-label">
-          Название ссылки / QR
-        </div>
 
         {/* Cards List */}
         <div className="share-contact-page__cards">
