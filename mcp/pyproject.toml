@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "picaton-mcp"
+version = "0.1.0"
+description = "Picaton MCP Server — доступ к базе специалистов Picaton для AI-агентов"
+authors = []
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+# Official MCP Python SDK — pinned to v1.x to avoid breaking changes in v2
+mcp = ">=1.0.0,<2.0.0"
+# Async HTTP client for backend API calls
+httpx = ">=0.27.0,<1.0.0"
+# ASGI server
+uvicorn = {extras = ["standard"], version = ">=0.30.0,<1.0.0"}
+# Web framework (transitive dep of mcp, but used directly in server.py)
+starlette = ">=0.40.0,<2.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
