@@ -248,10 +248,21 @@ async def update_profile_visibility(
     Изменить видимость профиля.
 
     - is_public=True: публичный профиль, виден всем при поиске
-    - is_public=False: приватный профиль, виден только внутри компании
+      (автоматически ставит who_can_see_profile=all)
+    - is_public=False: приватный профиль
+      (автоматически ставит who_can_see_profile=nobody)
+
+    Рекомендуется использовать PATCH /{user_id}/privacy для более гибких настроек.
     """
     # Обновляем видимость пользователя
     user = await user_service.update_visibility(user_id, data.is_public)
+
+    # Синхронизируем настройку приватности who_can_see_profile
+    new_privacy = PrivacyLevel.ALL if data.is_public else PrivacyLevel.NOBODY
+    user = await user_service.update_privacy_settings(
+        user_id,
+        who_can_see_profile=new_privacy,
+    )
 
     # Синхронизируем видимость всех карточек
     await card_service.update_visibility_for_owner(user_id, data.is_public)
@@ -278,6 +289,7 @@ async def update_privacy_settings(
     user_id: UUID,
     data: PrivacySettingsUpdate,
     user_service=Depends(get_user_service),
+    card_service=Depends(get_business_card_service),
 ):
     """
     Обновить настройки приватности профиля.
@@ -285,6 +297,9 @@ async def update_privacy_settings(
     - who_can_message: кто может писать сообщения (all, contacts, contacts_of_contacts, company_colleagues)
     - who_can_see_profile: кто видит профиль (all, contacts, contacts_of_contacts, company_colleagues)
     - who_can_invite: кто может приглашать в компании (all, contacts, contacts_of_contacts, company_colleagues, nobody)
+
+    При изменении who_can_see_profile автоматически синхронизируется
+    видимость визитных карточек (is_public).
     """
     try:
         who_can_message = (
@@ -308,6 +323,13 @@ async def update_privacy_settings(
         who_can_see_profile=who_can_see_profile,
         who_can_invite=who_can_invite,
     )
+
+    # Синхронизируем видимость карточек: ALL → is_public=True, иначе → False
+    if who_can_see_profile is not None:
+        is_public = who_can_see_profile == PrivacyLevel.ALL
+        await user_service.update_visibility(user_id, is_public)
+        await card_service.update_visibility_for_owner(user_id, is_public)
+
     return PrivacySettingsResponse(
         who_can_message=user.privacy_who_can_message.value,
         who_can_see_profile=user.privacy_who_can_see_profile.value,
@@ -711,6 +733,7 @@ async def search_experts(
     owner_id: UUID | None = None,
     search_service=Depends(get_search_service),
     user_service=Depends(get_user_service),
+    current_user_id: UUID | None = Depends(get_current_user_id_optional),
     company_member_repo: CompanyMemberRepositoryInterface = Depends(
         get_company_member_repository
     ),
@@ -754,6 +777,7 @@ async def search_experts(
             include_users=data.include_users,
             include_contacts=data.include_contacts,
             company_card_ids=company_card_ids,
+            current_user_id=current_user_id,
         )
 
         # Получаем данные владельцев карточек для имён

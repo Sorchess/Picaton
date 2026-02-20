@@ -5,6 +5,7 @@ from uuid import UUID
 from domain.entities.user import User
 from domain.entities.business_card import BusinessCard
 from domain.entities.saved_contact import SavedContact
+from domain.enums.privacy import PrivacyLevel
 from domain.repositories.user import UserRepositoryInterface
 from domain.repositories.business_card import BusinessCardRepositoryInterface
 from domain.repositories.saved_contact import SavedContactRepositoryInterface
@@ -795,6 +796,7 @@ class AssociativeSearchService:
     - Декомпозицию задач в навыки для поиска специалистов
     - AI-расширение запросов для релевантного поиска
     - Ассоциативный поиск по тегам и семантике
+    - Фильтрацию результатов по настройкам приватности
     """
 
     def __init__(
@@ -802,6 +804,7 @@ class AssociativeSearchService:
         user_repository: UserRepositoryInterface,
         card_repository: BusinessCardRepositoryInterface,
         contact_repository: SavedContactRepositoryInterface,
+        privacy_checker: "PrivacyChecker | None" = None,
         ai_search_service: "AISearchServiceInterface | None" = None,
         query_classifier: "QueryClassifierInterface | None" = None,
         task_decomposer: "TaskDecomposerInterface | None" = None,
@@ -810,6 +813,7 @@ class AssociativeSearchService:
         self._user_repository = user_repository
         self._card_repository = card_repository
         self._contact_repository = contact_repository
+        self._privacy_checker = privacy_checker
         self._ai_search_service = ai_search_service
         self._query_classifier = query_classifier
         self._task_decomposer = task_decomposer
@@ -823,6 +827,7 @@ class AssociativeSearchService:
         include_users: bool = True,
         include_contacts: bool = True,
         company_card_ids: list[UUID] | None = None,
+        current_user_id: UUID | None = None,
     ) -> SearchResult:
         """
         Выполнить умный поиск с автоопределением типа запроса.
@@ -831,6 +836,7 @@ class AssociativeSearchService:
         1. Классифицировать запрос (TASK или SKILL) через GigaChat
         2. Если TASK → декомпозировать задачу в навыки → искать специалистов
         3. Если SKILL → расширить запрос через AI → искать по тегам
+        4. Отфильтровать результаты по настройкам приватности (who_can_see_profile)
 
         Args:
             query: Поисковый запрос (задача или навыки)
@@ -839,13 +845,10 @@ class AssociativeSearchService:
             include_users: Включать ли пользователей/карточки в результат
             include_contacts: Включать ли сохраненные контакты
             company_card_ids: Список ID карточек для фильтрации (члены компаний)
+            current_user_id: ID текущего пользователя для проверки приватности
 
         Returns:
             SearchResult с найденными карточками и контактами
-
-        Examples:
-            "Нужно создать сайт" → TASK → ["frontend", "html", "css", "react", ...]
-            "python" → SKILL → ["python", "django", "fastapi", ...]
         """
         users = []
         cards = []
@@ -853,6 +856,9 @@ class AssociativeSearchService:
 
         # Шаг 1: Умная классификация и расширение запроса
         expanded_tags = await self._smart_expand_query(query)
+
+        # Запрашиваем больше карточек, т.к. часть будет отфильтрована по приватности
+        fetch_limit = limit * 3 if self._privacy_checker else limit
 
         # Поиск визитных карточек (основной поиск)
         if include_users:
@@ -862,14 +868,20 @@ class AssociativeSearchService:
                 # Сначала ищем по расширенным тегам в search_tags
                 if expanded_tags:
                     cards = await self._card_repository.search_by_tags_and_ids(
-                        expanded_tags, company_card_ids, limit
+                        expanded_tags,
+                        company_card_ids,
+                        fetch_limit,
+                        public_only=False,
                     )
 
                 # Поиск по ключевым словам в bio
-                if len(cards) < limit and expanded_tags:
+                if len(cards) < fetch_limit and expanded_tags:
                     bio_results = (
                         await self._card_repository.search_by_bio_keywords_and_ids(
-                            expanded_tags, company_card_ids, limit - len(cards)
+                            expanded_tags,
+                            company_card_ids,
+                            fetch_limit - len(cards),
+                            public_only=False,
                         )
                     )
                     existing_ids = {c.id for c in cards}
@@ -878,9 +890,12 @@ class AssociativeSearchService:
                             cards.append(card)
 
                 # Если мало результатов, добавляем полнотекстовый поиск
-                if len(cards) < limit:
+                if len(cards) < fetch_limit:
                     text_results = await self._card_repository.search_by_text_and_ids(
-                        query, company_card_ids, limit - len(cards)
+                        query,
+                        company_card_ids,
+                        fetch_limit - len(cards),
+                        public_only=False,
                     )
                     existing_ids = {c.id for c in cards}
                     for card in text_results:
@@ -891,13 +906,17 @@ class AssociativeSearchService:
                 # Сначала ищем по расширенным тегам в search_tags
                 if expanded_tags:
                     cards = await self._card_repository.search_by_tags(
-                        expanded_tags, limit
+                        expanded_tags,
+                        fetch_limit,
+                        public_only=False,
                     )
 
                 # Поиск по ключевым словам в bio
-                if len(cards) < limit and expanded_tags:
+                if len(cards) < fetch_limit and expanded_tags:
                     bio_results = await self._card_repository.search_by_bio_keywords(
-                        expanded_tags, limit - len(cards)
+                        expanded_tags,
+                        fetch_limit - len(cards),
+                        public_only=False,
                     )
                     existing_ids = {c.id for c in cards}
                     for card in bio_results:
@@ -905,15 +924,20 @@ class AssociativeSearchService:
                             cards.append(card)
 
                 # Если мало результатов, добавляем полнотекстовый поиск
-                if len(cards) < limit:
+                if len(cards) < fetch_limit:
                     text_results = await self._card_repository.search_by_text(
-                        query, limit - len(cards)
+                        query,
+                        fetch_limit - len(cards),
+                        public_only=False,
                     )
                     # Добавляем только уникальные
                     existing_ids = {c.id for c in cards}
                     for card in text_results:
                         if card.id not in existing_ids:
                             cards.append(card)
+
+            # Фильтрация по настройкам приватности (who_can_see_profile)
+            cards = await self._filter_cards_by_privacy(cards, current_user_id)
 
         # Поиск в сохраненных контактах
         if include_contacts and owner_id:
@@ -982,6 +1006,59 @@ class AssociativeSearchService:
             include_contacts=True,
         )
         return result.contacts
+
+    async def _filter_cards_by_privacy(
+        self,
+        cards: list[BusinessCard],
+        current_user_id: UUID | None,
+    ) -> list[BusinessCard]:
+        """
+        Фильтрация карточек по настройкам приватности владельца.
+
+        Проверяет privacy_who_can_see_profile каждого владельца:
+        - ALL: карточка видна всем
+        - CONTACTS: видна только контактам владельца
+        - CONTACTS_OF_CONTACTS: видна контактам и контактам контактов
+        - COMPANY_COLLEAGUES: видна коллегам по компании
+        - NOBODY: не видна никому (кроме самого владельца)
+        """
+        if not self._privacy_checker:
+            return cards
+
+        if not current_user_id:
+            # Анонимный пользователь — показываем только публичные карточки
+            # (владельцы с privacy_who_can_see_profile == ALL)
+            filtered = []
+            checked_owners: dict[UUID, bool] = {}
+            for card in cards:
+                if card.owner_id not in checked_owners:
+                    owner = await self._user_repository.get_by_id(card.owner_id)
+                    if owner:
+                        checked_owners[card.owner_id] = (
+                            owner.privacy_who_can_see_profile == PrivacyLevel.ALL
+                        )
+                    else:
+                        checked_owners[card.owner_id] = False
+                if checked_owners[card.owner_id]:
+                    filtered.append(card)
+            return filtered
+
+        # Авторизованный пользователь — проверяем can_view_profile
+        filtered = []
+        checked_owners: dict[UUID, bool] = {}
+        for card in cards:
+            oid = card.owner_id
+            if oid == current_user_id:
+                # Свои карточки всегда видны
+                filtered.append(card)
+                continue
+            if oid not in checked_owners:
+                checked_owners[oid] = await self._privacy_checker.can_view_profile(
+                    current_user_id, oid
+                )
+            if checked_owners[oid]:
+                filtered.append(card)
+        return filtered
 
     def _extract_tags(self, query: str) -> list[str]:
         """Извлечь теги из поискового запроса с нормализацией синонимов."""
