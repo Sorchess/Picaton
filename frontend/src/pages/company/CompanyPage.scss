@@ -2,8 +2,8 @@
 @use "../../shared/styles/mixins/glass" as *;
 
 .company-page {
-  min-height: 100vh;
-  padding: 0 16px 100px;
+  min-height: 100%;
+  padding: 0 16px 20px;
   max-width: 480px;
   width: 100%;
   margin: 0 auto;
@@ -19,6 +19,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-bg-primary);
   }
 
   &__title-container {
