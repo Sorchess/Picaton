@@ -50,6 +50,9 @@ export interface User {
   profile_completeness: number;
   is_public: boolean;
   is_onboarded?: boolean;
+  privacy_who_can_message?: string;
+  privacy_who_can_see_profile?: string;
+  privacy_who_can_invite?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -159,4 +162,10 @@ export interface ImportResult {
   imported_count: number;
   skipped_count: number;
   errors: string[];
+}
+
+export interface PrivacySettings {
+  who_can_message: string;
+  who_can_see_profile: string;
+  who_can_invite: string;
 }

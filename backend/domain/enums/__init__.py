@@ -13,6 +13,7 @@ from domain.enums.permission import (
 )
 from domain.enums.idea import IdeaStatus, IdeaVisibility, SwipeDirection
 from domain.enums.project import ProjectStatus, ProjectMemberRole, MessageType
+from domain.enums.privacy import PrivacyLevel
 
 __all__ = [
     "UserStatus",
@@ -32,4 +33,6 @@ __all__ = [
     "ProjectStatus",
     "ProjectMemberRole",
     "MessageType",
+    # Privacy
+    "PrivacyLevel",
 ]

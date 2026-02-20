@@ -1,5 +1,7 @@
 import { IconButton, GlassSelect } from "@/shared";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/features/auth";
+import { userApi } from "@/entities/user";
 import "./PrivacyPage.scss";
 
 interface PrivacyPageProps {
@@ -26,9 +28,71 @@ const companyInviteOptions = [
 ];
 
 export function PrivacyPage({ onBack }: PrivacyPageProps) {
+  const { user } = useAuth();
   const [whoCanMessage, setWhoCanMessage] = useState("all");
   const [whoCanSeeProfile, setWhoCanSeeProfile] = useState("all");
   const [whoCanInvite, setWhoCanInvite] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Загрузить текущие настройки
+  useEffect(() => {
+    if (!user) return;
+    userApi
+      .getPrivacySettings(user.id)
+      .then((settings) => {
+        setWhoCanMessage(settings.who_can_message);
+        setWhoCanSeeProfile(settings.who_can_see_profile);
+        setWhoCanInvite(settings.who_can_invite);
+      })
+      .finally(() => setIsLoading(false));
+  }, [user]);
+
+  const updateSetting = useCallback(
+    (field: string, value: string) => {
+      if (!user) return;
+      userApi.updatePrivacySettings(user.id, { [field]: value });
+    },
+    [user],
+  );
+
+  const handleMessageChange = (v: string) => {
+    setWhoCanMessage(v);
+    updateSetting("who_can_message", v);
+  };
+
+  const handleProfileChange = (v: string) => {
+    setWhoCanSeeProfile(v);
+    updateSetting("who_can_see_profile", v);
+  };
+
+  const handleInviteChange = (v: string) => {
+    setWhoCanInvite(v);
+    updateSetting("who_can_invite", v);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="privacy-page">
+        <header className="privacy-page__header">
+          <IconButton aria-label="Назад" onClick={onBack}>
+            <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+              <path
+                d="M9 1L1 9L9 17"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </IconButton>
+          <div className="privacy-page__title-container">
+            <h1 className="privacy-page__title">Приватность</h1>
+          </div>
+          <div style={{ width: 36 }} />
+        </header>
+      </div>
+    );
+  }
 
   return (
     <div className="privacy-page">
@@ -63,7 +127,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
               <GlassSelect
                 options={messagingOptions}
                 value={whoCanMessage}
-                onChange={setWhoCanMessage}
+                onChange={handleMessageChange}
               />
             </div>
           </div>
@@ -79,7 +143,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
               <GlassSelect
                 options={profileVisibilityOptions}
                 value={whoCanSeeProfile}
-                onChange={setWhoCanSeeProfile}
+                onChange={handleProfileChange}
               />
             </div>
           </div>
@@ -95,7 +159,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
               <GlassSelect
                 options={companyInviteOptions}
                 value={whoCanInvite}
-                onChange={setWhoCanInvite}
+                onChange={handleInviteChange}
               />
             </div>
           </div>

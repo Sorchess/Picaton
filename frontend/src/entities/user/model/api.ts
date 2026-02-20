@@ -8,6 +8,7 @@ import type {
   SearchResult,
   SavedContact,
   ImportResult,
+  PrivacySettings,
 } from "./types";
 
 export const userApi = {
@@ -75,7 +76,7 @@ export const userApi = {
       include_contacts?: boolean;
       owner_id?: string;
       company_ids?: string[];
-    }
+    },
   ) =>
     api.post<SearchResult>("/users/search", {
       query,
@@ -91,7 +92,7 @@ export const userApi = {
     targetUserId: string,
     cardId?: string,
     searchTags?: string[],
-    notes?: string
+    notes?: string,
   ) =>
     api.post<SavedContact>(`/users/${userId}/contacts`, {
       user_id: targetUserId,
@@ -112,13 +113,13 @@ export const userApi = {
       messenger_value?: string;
       notes?: string;
       search_tags?: string[];
-    }
+    },
   ) => api.post<SavedContact>(`/users/${userId}/contacts/manual`, data),
 
   // Получить контакты пользователя
   getContacts: (userId: string, skip = 0, limit = 100) =>
     api.get<SavedContact[]>(
-      `/users/${userId}/contacts?skip=${skip}&limit=${limit}`
+      `/users/${userId}/contacts?skip=${skip}&limit=${limit}`,
     ),
 
   // Обновить контакт
@@ -133,7 +134,7 @@ export const userApi = {
       messenger_value?: string;
       notes?: string;
       search_tags?: string[];
-    }
+    },
   ) => api.patch<SavedContact>(`/users/contacts/${contactId}`, data),
 
   // Удалить контакт
@@ -143,13 +144,13 @@ export const userApi = {
   // Импорт контактов
   importContacts: (
     userId: string,
-    contacts: Array<{ name: string; phone?: string; email?: string }>
+    contacts: Array<{ name: string; phone?: string; email?: string }>,
   ) => api.post<ImportResult>(`/users/${userId}/contacts/import`, { contacts }),
 
   // Синхронизация контактов (Enterprise/Privacy-First)
   syncContacts: (
     userId: string,
-    hashedContacts: Array<{ name: string; hash: string }>
+    hashedContacts: Array<{ name: string; hash: string }>,
   ) =>
     api.post<{
       found: Array<{
@@ -181,7 +182,7 @@ export const userApi = {
       value: string;
       is_primary?: boolean;
       is_visible?: boolean;
-    }
+    },
   ) => api.post<User>(`/users/${userId}/profile-contacts`, data),
 
   // Обновить видимость контакта
@@ -189,27 +190,27 @@ export const userApi = {
     userId: string,
     contactType: string,
     value: string,
-    isVisible: boolean
+    isVisible: boolean,
   ) =>
     api.patch<User>(
       `/users/${userId}/profile-contacts?contact_type=${encodeURIComponent(
-        contactType
+        contactType,
       )}&value=${encodeURIComponent(value)}`,
-      { is_visible: isVisible }
+      { is_visible: isVisible },
     ),
 
   // Удалить контакт из профиля
   deleteProfileContact: (userId: string, contactType: string, value: string) =>
     api.delete<User>(
       `/users/${userId}/profile-contacts?contact_type=${encodeURIComponent(
-        contactType
-      )}&value=${encodeURIComponent(value)}`
+        contactType,
+      )}&value=${encodeURIComponent(value)}`,
     ),
 
   // Синхронизировать контакты профиля с визитной карточкой
   syncProfileToCard: (userId: string) =>
     api.post<{ synced_count: number; total_contacts: number }>(
-      `/users/${userId}/sync-contacts`
+      `/users/${userId}/sync-contacts`,
     ),
 
   // Изменить видимость профиля (публичный/приватный)
@@ -226,6 +227,13 @@ export const userApi = {
   verifyEmailCode: (userId: string, code: string) =>
     api.post<{ message: string; email: string }>(
       `/users/${userId}/email/verify`,
-      { code }
+      { code },
     ),
+
+  // Настройки приватности
+  getPrivacySettings: (userId: string) =>
+    api.get<PrivacySettings>(`/users/${userId}/privacy`),
+
+  updatePrivacySettings: (userId: string, data: Partial<PrivacySettings>) =>
+    api.patch<PrivacySettings>(`/users/${userId}/privacy`, data),
 };

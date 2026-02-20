@@ -114,6 +114,31 @@ class ProfileVisibilityUpdate(BaseModel):
     )
 
 
+class PrivacySettingsUpdate(BaseModel):
+    """Обновление настроек приватности."""
+
+    who_can_message: str | None = Field(
+        default=None,
+        description="Кто может писать сообщения: all, contacts, contacts_of_contacts",
+    )
+    who_can_see_profile: str | None = Field(
+        default=None,
+        description="Кто видит профиль: all, contacts, contacts_of_contacts",
+    )
+    who_can_invite: str | None = Field(
+        default=None,
+        description="Кто может приглашать в компании: all, contacts, contacts_of_contacts, nobody",
+    )
+
+
+class PrivacySettingsResponse(BaseModel):
+    """Текущие настройки приватности."""
+
+    who_can_message: str
+    who_can_see_profile: str
+    who_can_invite: str
+
+
 class TagInfo(BaseModel):
     """Информация о теге."""
 
@@ -146,6 +171,9 @@ class UserResponse(BaseModel):
     profile_completeness: int
     is_public: bool = True
     is_onboarded: bool = False
+    privacy_who_can_message: str = "all"
+    privacy_who_can_see_profile: str = "all"
+    privacy_who_can_invite: str = "all"
 
 
 class UserPublicResponse(BaseModel):

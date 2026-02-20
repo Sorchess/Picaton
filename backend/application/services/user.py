@@ -6,6 +6,7 @@ import bcrypt
 from domain.entities.user import User
 from domain.entities.tag import Tag
 from domain.enums.contact import ContactType
+from domain.enums.privacy import PrivacyLevel
 from domain.exceptions import (
     UserNotFoundError,
     UserAlreadyExistsError,
@@ -120,6 +121,31 @@ class UserService:
         """
         user = await self.get_user(user_id)
         user.is_public = is_public
+        return await self._user_repository.update(user)
+
+    async def update_privacy_settings(
+        self,
+        user_id: UUID,
+        who_can_message: PrivacyLevel | None = None,
+        who_can_see_profile: PrivacyLevel | None = None,
+        who_can_invite: PrivacyLevel | None = None,
+    ) -> User:
+        """
+        Обновить настройки приватности профиля.
+
+        Args:
+            user_id: ID пользователя
+            who_can_message: Кто может писать сообщения
+            who_can_see_profile: Кто может видеть профиль
+            who_can_invite: Кто может приглашать в компании
+        """
+        user = await self.get_user(user_id)
+        if who_can_message is not None:
+            user.privacy_who_can_message = who_can_message
+        if who_can_see_profile is not None:
+            user.privacy_who_can_see_profile = who_can_see_profile
+        if who_can_invite is not None:
+            user.privacy_who_can_invite = who_can_invite
         return await self._user_repository.update(user)
 
     async def update_email(self, user_id: UUID, email: str) -> User:

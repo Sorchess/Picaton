@@ -7,6 +7,7 @@ from domain.entities.user import User
 from domain.entities.tag import Tag
 from domain.enums.contact import ContactType
 from domain.enums.status import UserStatus
+from domain.enums.privacy import PrivacyLevel
 from domain.repositories.user import UserRepositoryInterface
 from domain.values.contact import Contact
 
@@ -59,6 +60,9 @@ class MongoUserRepository(UserRepositoryInterface):
             "profile_completeness": user.profile_completeness,
             "is_public": user.is_public,
             "is_onboarded": user.is_onboarded,
+            "privacy_who_can_message": user.privacy_who_can_message.value,
+            "privacy_who_can_see_profile": user.privacy_who_can_see_profile.value,
+            "privacy_who_can_invite": user.privacy_who_can_invite.value,
         }
 
     def _from_document(self, doc: dict) -> User:
@@ -107,6 +111,15 @@ class MongoUserRepository(UserRepositoryInterface):
             profile_completeness=doc.get("profile_completeness", 0),
             is_public=doc.get("is_public", True),
             is_onboarded=doc.get("is_onboarded", True),
+            privacy_who_can_message=PrivacyLevel(
+                doc.get("privacy_who_can_message", "all")
+            ),
+            privacy_who_can_see_profile=PrivacyLevel(
+                doc.get("privacy_who_can_see_profile", "all")
+            ),
+            privacy_who_can_invite=PrivacyLevel(
+                doc.get("privacy_who_can_invite", "all")
+            ),
         )
 
     async def get_by_id(self, user_id: UUID) -> User | None:

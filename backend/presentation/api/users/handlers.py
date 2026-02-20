@@ -29,6 +29,8 @@ from presentation.api.users.schemas import (
     UserContactUpdate,
     UserContactDelete,
     ProfileVisibilityUpdate,
+    PrivacySettingsUpdate,
+    PrivacySettingsResponse,
     EmailUpdate,
     EmailVerificationRequest,
     EmailVerificationConfirm,
@@ -43,6 +45,7 @@ from presentation.api.users.schemas import (
     AvatarUploadResponse,
 )
 from domain.enums.contact import ContactType
+from domain.enums.privacy import PrivacyLevel
 from infrastructure.dependencies import (
     get_user_service,
     get_contact_service,
@@ -236,6 +239,62 @@ async def update_profile_visibility(
     await card_service.update_visibility_for_owner(user_id, data.is_public)
 
     return _user_to_response(user)
+
+
+@router.get("/{user_id}/privacy", response_model=PrivacySettingsResponse)
+async def get_privacy_settings(
+    user_id: UUID,
+    user_service=Depends(get_user_service),
+):
+    """Получить текущие настройки приватности пользователя."""
+    user = await user_service.get_user(user_id)
+    return PrivacySettingsResponse(
+        who_can_message=user.privacy_who_can_message.value,
+        who_can_see_profile=user.privacy_who_can_see_profile.value,
+        who_can_invite=user.privacy_who_can_invite.value,
+    )
+
+
+@router.patch("/{user_id}/privacy", response_model=PrivacySettingsResponse)
+async def update_privacy_settings(
+    user_id: UUID,
+    data: PrivacySettingsUpdate,
+    user_service=Depends(get_user_service),
+):
+    """
+    Обновить настройки приватности профиля.
+
+    - who_can_message: кто может писать сообщения (all, contacts, contacts_of_contacts)
+    - who_can_see_profile: кто видит профиль (all, contacts, contacts_of_contacts)
+    - who_can_invite: кто может приглашать в компании (all, contacts, contacts_of_contacts, nobody)
+    """
+    try:
+        who_can_message = (
+            PrivacyLevel(data.who_can_message) if data.who_can_message else None
+        )
+        who_can_see_profile = (
+            PrivacyLevel(data.who_can_see_profile) if data.who_can_see_profile else None
+        )
+        who_can_invite = (
+            PrivacyLevel(data.who_can_invite) if data.who_can_invite else None
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Недопустимое значение приватности: {e}",
+        )
+
+    user = await user_service.update_privacy_settings(
+        user_id,
+        who_can_message=who_can_message,
+        who_can_see_profile=who_can_see_profile,
+        who_can_invite=who_can_invite,
+    )
+    return PrivacySettingsResponse(
+        who_can_message=user.privacy_who_can_message.value,
+        who_can_see_profile=user.privacy_who_can_see_profile.value,
+        who_can_invite=user.privacy_who_can_invite.value,
+    )
 
 
 @router.post("/{user_id}/email/send-code", response_model=EmailVerificationResponse)
@@ -978,6 +1037,9 @@ def _user_to_response(user) -> UserResponse:
         profile_completeness=user.profile_completeness,
         is_public=user.is_public,
         is_onboarded=user.is_onboarded,
+        privacy_who_can_message=user.privacy_who_can_message.value,
+        privacy_who_can_see_profile=user.privacy_who_can_see_profile.value,
+        privacy_who_can_invite=user.privacy_who_can_invite.value,
     )
 
 

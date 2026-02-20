@@ -6,6 +6,7 @@ from domain.entities.base import Entity
 from domain.entities.tag import Tag
 from domain.enums.contact import ContactType
 from domain.enums.status import UserStatus
+from domain.enums.privacy import PrivacyLevel
 from domain.exceptions.user import (
     InvalidAvatarUrlError,
     InvalidBioError,
@@ -88,6 +89,11 @@ class User(Entity):
 
     # Прошёл ли пользователь онбординг
     is_onboarded: bool = field(default=False)
+
+    # Настройки приватности
+    privacy_who_can_message: PrivacyLevel = PrivacyLevel.ALL
+    privacy_who_can_see_profile: PrivacyLevel = PrivacyLevel.ALL
+    privacy_who_can_invite: PrivacyLevel = PrivacyLevel.ALL
 
     def __post_init__(self) -> None:
         """Валидация данных при создании сущности."""
