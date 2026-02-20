@@ -493,6 +493,15 @@ def get_speech_recognition_service():
         )
 
 
+def get_privacy_checker(
+    user_repo: UserRepository,
+    contact_repo: ContactRepository,
+    member_repo: CompanyMemberRepository,
+) -> PrivacyChecker:
+    """Получить сервис проверки приватности."""
+    return PrivacyChecker(user_repo, contact_repo, member_repo)
+
+
 def get_search_service(
     user_repo: UserRepository,
     card_repo: BusinessCardRepository,
@@ -808,15 +817,6 @@ def get_chat_service(
 ) -> ChatService:
     """Получить сервис чата."""
     return ChatService(message_repo, member_repo)
-
-
-def get_privacy_checker(
-    user_repo: UserRepository,
-    contact_repo: ContactRepository,
-    member_repo: CompanyMemberRepository,
-) -> PrivacyChecker:
-    """Получить сервис проверки приватности."""
-    return PrivacyChecker(user_repo, contact_repo, member_repo)
 
 
 def get_direct_chat_service(
