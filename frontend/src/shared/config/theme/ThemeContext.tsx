@@ -1,8 +1,4 @@
-import {
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import type { Theme } from "./types";
 import { ThemeContext } from "./context";
 
@@ -28,9 +24,7 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(
-    defaultTheme ?? getInitialTheme
-  );
+  const [theme] = useState<Theme>(defaultTheme ?? getInitialTheme);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -39,11 +33,14 @@ export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
+    const newTheme = theme === "dark" ? "light" : "dark";
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+    window.location.reload();
   };
 
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+    window.location.reload();
   };
 
   return (
