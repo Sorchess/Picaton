@@ -56,7 +56,7 @@ export interface User {
 
 // Computed getter-like function
 export function getFullName(user: User | UserPublic): string {
-  const parts = [user.last_name, user.first_name];
+  const parts = [user.first_name, user.last_name];
   if ("middle_name" in user && user.middle_name) {
     parts.push(user.middle_name);
   }
