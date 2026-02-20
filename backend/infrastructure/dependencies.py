@@ -98,6 +98,7 @@ from application.services.swipe import SwipeService
 from application.services.project import ProjectService
 from application.services.chat import ChatService
 from application.services.direct_chat import DirectChatService
+from application.services.privacy_checker import PrivacyChecker
 from application.services.ai_team_matching import AITeamMatchingService
 from application.services.ai_prd_generator import AIPRDGeneratorService
 from application.services.gamification import GamificationService
@@ -113,6 +114,7 @@ from settings.config import settings
 
 
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user_id(
@@ -142,6 +144,26 @@ async def get_current_user_id(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
         )
+
+
+async def get_current_user_id_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security),
+) -> UUID | None:
+    """Получить ID текущего пользователя из JWT токена (опционально)."""
+    if credentials is None:
+        return None
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            settings.jwt.secret_key,
+            algorithms=[settings.jwt.algorithm],
+        )
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+        return UUID(user_id)
+    except (ExpiredSignatureError, JWTError, ValueError):
+        return None
 
 
 # ==================== База данных ====================
@@ -771,6 +793,15 @@ def get_chat_service(
 ) -> ChatService:
     """Получить сервис чата."""
     return ChatService(message_repo, member_repo)
+
+
+def get_privacy_checker(
+    user_repo: UserRepository,
+    contact_repo: ContactRepository,
+    member_repo: CompanyMemberRepository,
+) -> PrivacyChecker:
+    """Получить сервис проверки приватности."""
+    return PrivacyChecker(user_repo, contact_repo, member_repo)
 
 
 def get_direct_chat_service(

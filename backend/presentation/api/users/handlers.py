@@ -61,10 +61,13 @@ from infrastructure.dependencies import (
     get_email_verification_service,
     get_company_member_repository,
     get_business_card_repository,
+    get_privacy_checker,
+    get_current_user_id_optional,
 )
 from domain.repositories.company import CompanyMemberRepositoryInterface
 from domain.repositories.business_card import BusinessCardRepositoryInterface
 from application.services.email_verification import EmailVerificationError
+from application.services.privacy_checker import PrivacyChecker
 from domain.exceptions.user import UsernameAlreadyTakenError
 from application.services.contact_sync import HashedContact
 from infrastructure.storage import CloudinaryService
@@ -120,9 +123,21 @@ async def create_user(
 async def get_user(
     user_id: UUID,
     user_service=Depends(get_user_service),
+    privacy_checker: PrivacyChecker = Depends(get_privacy_checker),
+    current_user_id: UUID | None = Depends(get_current_user_id_optional),
 ):
     """Получить публичную информацию о пользователе."""
     user = await user_service.get_user(user_id)
+
+    # Проверка приватности: может ли текущий пользователь видеть профиль
+    if current_user_id and current_user_id != user_id:
+        can_view = await privacy_checker.can_view_profile(current_user_id, user_id)
+        if not can_view:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User's privacy settings do not allow you to view this profile",
+            )
+
     return _user_to_public_response(user)
 
 
@@ -264,9 +279,9 @@ async def update_privacy_settings(
     """
     Обновить настройки приватности профиля.
 
-    - who_can_message: кто может писать сообщения (all, contacts, contacts_of_contacts)
-    - who_can_see_profile: кто видит профиль (all, contacts, contacts_of_contacts)
-    - who_can_invite: кто может приглашать в компании (all, contacts, contacts_of_contacts, nobody)
+    - who_can_message: кто может писать сообщения (all, contacts, contacts_of_contacts, company_colleagues)
+    - who_can_see_profile: кто видит профиль (all, contacts, contacts_of_contacts, company_colleagues)
+    - who_can_invite: кто может приглашать в компании (all, contacts, contacts_of_contacts, company_colleagues, nobody)
     """
     try:
         who_can_message = (

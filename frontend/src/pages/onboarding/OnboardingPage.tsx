@@ -334,7 +334,28 @@ export function OnboardingPage() {
     if (!user) return;
     setIsSubmitting(true);
     try {
+      // Маппинг уровней приватности онбординга → бекенд
+      const privacyMap: Record<
+        PrivacyLevel,
+        { who_can_see_profile: string; who_can_message: string }
+      > = {
+        public: { who_can_see_profile: "all", who_can_message: "all" },
+        contacts: {
+          who_can_see_profile: "contacts",
+          who_can_message: "contacts",
+        },
+        company: {
+          who_can_see_profile: "company_colleagues",
+          who_can_message: "company_colleagues",
+        },
+        private: {
+          who_can_see_profile: "nobody",
+          who_can_message: "contacts",
+        },
+      };
+
       await userApi.updateVisibility(user.id, privacy === "public");
+      await userApi.updatePrivacySettings(user.id, privacyMap[privacy]);
       setCurrentStep((prev) => prev + 1);
     } finally {
       setIsSubmitting(false);

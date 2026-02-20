@@ -7,4 +7,5 @@ class PrivacyLevel(str, Enum):
     ALL = "all"
     CONTACTS = "contacts"
     CONTACTS_OF_CONTACTS = "contacts_of_contacts"
+    COMPANY_COLLEAGUES = "company_colleagues"
     NOBODY = "nobody"

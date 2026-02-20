@@ -11,10 +11,12 @@ from application.services.direct_chat import (
     DMAccessDeniedError,
     DMMessageNotFoundError,
 )
+from application.services.privacy_checker import PrivacyChecker
 from infrastructure.dependencies import (
     get_direct_chat_service,
     get_user_service,
     get_current_user_id,
+    get_privacy_checker,
 )
 from presentation.api.direct_chat.schemas import (
     SendDMRequest,
@@ -131,12 +133,21 @@ async def start_conversation(
     current_user_id: UUID = Depends(get_current_user_id),
     dm_service: DirectChatService = Depends(get_direct_chat_service),
     user_service=Depends(get_user_service),
+    privacy_checker: PrivacyChecker = Depends(get_privacy_checker),
 ):
     """Начать новый диалог или отправить сообщение в существующий."""
     if data.recipient_id == current_user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot start conversation with yourself",
+        )
+
+    # Проверка приватности: может ли текущий пользователь писать получателю
+    can_msg = await privacy_checker.can_message(current_user_id, data.recipient_id)
+    if not can_msg:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Recipient's privacy settings do not allow messages from you",
         )
 
     if data.content and data.content.strip():

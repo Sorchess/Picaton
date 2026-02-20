@@ -27,6 +27,8 @@ from infrastructure.dependencies import (
     get_auth_service,
     get_company_service,
     get_company_role_repository,
+    get_privacy_checker,
+    get_user_service,
 )
 from domain.repositories.company_role import CompanyRoleRepositoryInterface
 from application.services import (
@@ -44,6 +46,8 @@ from application.services import (
     CannotRemoveOwnerError,
     CannotChangeOwnRoleError,
 )
+from application.services.privacy_checker import PrivacyChecker
+from domain.exceptions.user import UserNotFoundError
 from application.tasks import send_company_invitation_email
 from domain.enums.company import InvitationStatus
 from domain.entities.company import InvalidDomainError, InvalidCompanyNameError
@@ -605,9 +609,25 @@ async def create_invitation(
     auth_service: AuthService = Depends(get_auth_service),
     company_service: CompanyService = Depends(get_company_service),
     role_repo: CompanyRoleRepositoryInterface = Depends(get_company_role_repository),
+    privacy_checker: PrivacyChecker = Depends(get_privacy_checker),
+    user_service=Depends(get_user_service),
 ):
     """Создать приглашение в компанию (для владельца/админа)."""
     user = await get_current_user_from_token(credentials, auth_service)
+
+    # Проверка приватности: если приглашаемый зарегистрирован, проверяем его настройки
+    try:
+        target_user = await user_service.get_user_by_email(data.email.lower())
+        can_invite = await privacy_checker.can_invite_to_company(
+            user.id, target_user.id
+        )
+        if not can_invite:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Настройки приватности пользователя не позволяют отправлять приглашения",
+            )
+    except UserNotFoundError:
+        pass  # Пользователь не зарегистрирован — ограничений приватности нет
 
     try:
         invitation = await company_service.create_invitation(

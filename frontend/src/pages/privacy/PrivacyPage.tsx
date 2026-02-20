@@ -11,19 +11,41 @@ interface PrivacyPageProps {
 const messagingOptions = [
   { value: "all", label: "Все" },
   { value: "contacts", label: "Мои контакты" },
-  { value: "contacts_of_contacts", label: "Контакты моих контактов" },
+  {
+    value: "contacts_of_contacts",
+    label: "Мои контакты, их контакты",
+  },
+  {
+    value: "company_colleagues",
+    label: "Мои контакты, их контакты, коллеги",
+  },
 ];
 
 const profileVisibilityOptions = [
   { value: "all", label: "Все" },
   { value: "contacts", label: "Мои контакты" },
-  { value: "contacts_of_contacts", label: "Контакты моих контактов" },
+  {
+    value: "contacts_of_contacts",
+    label: "Мои контакты, их контакты",
+  },
+  {
+    value: "company_colleagues",
+    label: "Мои контакты, их контакты, коллеги",
+  },
+  { value: "nobody", label: "Никто" },
 ];
 
 const companyInviteOptions = [
   { value: "all", label: "Все" },
   { value: "contacts", label: "Мои контакты" },
-  { value: "contacts_of_contacts", label: "Контакты моих контактов" },
+  {
+    value: "contacts_of_contacts",
+    label: "Мои контакты, их контакты",
+  },
+  {
+    value: "company_colleagues",
+    label: "Мои контакты, их контакты, коллеги",
+  },
   { value: "nobody", label: "Никто" },
 ];
 
@@ -133,12 +155,12 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
           </div>
         </div>
 
-        {/* Кто видит мой профиль */}
+        {/* Кто видит мой профиль в поиске */}
         <div className="privacy-page__card">
           <div className="privacy-page__card-content">
             <div className="privacy-page__card-top">
               <span className="privacy-page__card-name">
-                Кто видит мой профиль
+                Кто видит мой профиль в поиске
               </span>
               <GlassSelect
                 options={profileVisibilityOptions}
