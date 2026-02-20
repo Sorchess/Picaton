@@ -12,6 +12,12 @@
     background-color 0.3s ease,
     color 0.3s ease;
 
+  @media (max-width: 768px) {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   &--loading {
     align-items: center;
     justify-content: center;
@@ -199,10 +205,12 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
 
     @media (max-width: 768px) {
+      overflow-y: auto;
       padding-bottom: 80px; // Место для мобильного футера
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
 
     &--chat-open {
@@ -235,7 +243,7 @@
     right: 0;
     z-index: 100;
     padding: 12px 16px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     background: none;
     border-top: none;
 

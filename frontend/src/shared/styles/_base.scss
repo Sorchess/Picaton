@@ -11,6 +11,13 @@
 html {
   scroll-behavior: smooth;
   overflow-y: scroll; // Всегда показывать скроллбар чтобы избежать сдвига контента
+
+  @media (max-width: 768px) {
+    overflow: hidden;
+    height: 100%;
+    height: 100dvh;
+    overscroll-behavior-y: contain;
+  }
 }
 
 body {
@@ -18,6 +25,15 @@ body {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   overflow-x: hidden;
+
+  @media (max-width: 768px) {
+    overflow: hidden;
+    height: 100%;
+    height: 100dvh;
+    position: fixed;
+    width: 100%;
+    overscroll-behavior-y: contain;
+  }
   line-height: $line-height-normal;
   transition:
     background-color 0.3s ease,
