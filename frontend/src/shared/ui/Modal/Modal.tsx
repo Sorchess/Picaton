@@ -1,4 +1,5 @@
 import { useState, useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import "./Modal.scss";
 
 interface ModalProps {
@@ -97,9 +98,7 @@ export function Modal({
     .filter(Boolean)
     .join(" ");
 
-  const modalClassNames = ["modal", className]
-    .filter(Boolean)
-    .join(" ");
+  const modalClassNames = ["modal", className].filter(Boolean).join(" ");
 
   const handleOverlayClick = () => {
     if (closeOnOverlayClick) {
@@ -107,11 +106,12 @@ export function Modal({
     }
   };
 
-  return (
+  return createPortal(
     <div className={overlayClassNames} onClick={handleOverlayClick}>
       <div className={modalClassNames} onClick={(e) => e.stopPropagation()}>
         <div className="modal__content">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
