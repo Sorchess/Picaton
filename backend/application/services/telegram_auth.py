@@ -8,6 +8,7 @@ https://core.telegram.org/widgets/login
 import hashlib
 import hmac
 import logging
+import re
 import secrets
 import time
 from dataclasses import dataclass
@@ -22,6 +23,8 @@ from infrastructure.storage import CloudinaryService
 from settings.config import settings
 
 logger = logging.getLogger(__name__)
+MAX_USER_NAME_LENGTH = 100
+TELEGRAM_NAME_ALLOWED_CHARS = re.compile(r"[^\w\s\-']", re.UNICODE)
 
 
 class TelegramAuthError(Exception):
@@ -139,6 +142,19 @@ class TelegramAuthService:
         self._token_expire_minutes = access_token_expire_minutes
         self._cloudinary = cloudinary_service
         self._card_repo = card_repository
+
+    @staticmethod
+    def _sanitize_telegram_name(value: str | None, fallback: str = "") -> str:
+        """
+        Normalize Telegram name to satisfy domain validation.
+        Keeps letters/digits/underscore/space/hyphen/apostrophe.
+        """
+        if not value:
+            return fallback
+        cleaned = TELEGRAM_NAME_ALLOWED_CHARS.sub("", value).strip()
+        cleaned = re.sub(r"\s+", " ", cleaned)
+        cleaned = cleaned[:MAX_USER_NAME_LENGTH]
+        return cleaned or fallback
 
     # ==================== Deep Link Auth ====================
 
@@ -405,19 +421,22 @@ class TelegramAuthService:
 
     async def _create_user_from_telegram(self, tg_data: TelegramAuthData) -> User:
         """Создать нового пользователя из данных Telegram."""
+        first_name = self._sanitize_telegram_name(tg_data.first_name, fallback="User")
+        last_name = self._sanitize_telegram_name(tg_data.last_name, fallback="")
+
         # Генерируем email-заглушку (Telegram не даёт email)
         # Пользователь сможет потом добавить реальный email
         placeholder_email = f"tg_{tg_data.id}@telegram.placeholder"
 
         # Генерируем уникальный username
         username = await self._user_service._generate_unique_username(
-            tg_data.first_name, tg_data.last_name or ""
+            first_name, last_name
         )
 
         # Сначала создаём пользователя без аватара
         user = User(
-            first_name=tg_data.first_name,
-            last_name=tg_data.last_name or "",
+            first_name=first_name,
+            last_name=last_name,
             email=placeholder_email,
             telegram_id=tg_data.id,
             telegram_username=tg_data.username,
@@ -750,3 +769,5 @@ class TelegramAuthService:
         ]
         for token in expired:
             del _pending_sync_sessions[token]
+
+
