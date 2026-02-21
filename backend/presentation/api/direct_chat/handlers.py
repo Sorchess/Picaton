@@ -72,6 +72,8 @@ def _message_to_response(message, sender=None) -> DirectMessageResponse:
         edited_at=message.edited_at,
         is_deleted=message.is_deleted,
         reply_to_id=message.reply_to_id,
+        forwarded_from_user_id=message.forwarded_from_user_id,
+        forwarded_from_name=message.forwarded_from_name,
         created_at=message.created_at,
     )
 
@@ -301,12 +303,17 @@ async def edit_message(
 async def delete_message(
     conversation_id: UUID,
     message_id: UUID,
+    for_me: bool = Query(default=False),
     current_user_id: UUID = Depends(get_current_user_id),
     dm_service: DirectChatService = Depends(get_direct_chat_service),
 ):
     """Удалить сообщение."""
     try:
-        await dm_service.delete_message(message_id=message_id, user_id=current_user_id)
+        await dm_service.delete_message(
+            message_id=message_id,
+            user_id=current_user_id,
+            for_me=for_me,
+        )
     except DMMessageNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Message not found"

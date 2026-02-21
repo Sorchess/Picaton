@@ -18,6 +18,8 @@ export interface DirectMessage {
   edited_at?: string | null;
   is_deleted: boolean;
   reply_to_id?: string | null;
+  forwarded_from_user_id?: string | null;
+  forwarded_from_name?: string | null;
   created_at: string;
 }
 
@@ -70,6 +72,8 @@ export interface WSDMNewMessage {
     sender_name: string;
     content: string;
     reply_to_id: string | null;
+    forwarded_from_user_id?: string | null;
+    forwarded_from_name?: string | null;
     is_read: boolean;
     created_at: string;
   };
@@ -104,11 +108,18 @@ export interface WSDMReadReceipt {
   read_at: string;
 }
 
+export interface WSDMMessageHiddenForUser {
+  type: "message_hidden_for_user";
+  message_id: string;
+  conversation_id: string;
+}
+
 export type WSDMMessage =
   | WSDMNewMessage
   | WSDMTyping
   | WSDMMessageEdited
   | WSDMMessageDeleted
+  | WSDMMessageHiddenForUser
   | WSDMReadReceipt
   | { type: "pong" }
   | { type: "error"; message: string };

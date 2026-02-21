@@ -18,6 +18,8 @@ import {
   IconButton,
 } from "@/shared";
 import type { Tab } from "@/shared";
+import { MessageActions } from "./components/MessageActions";
+import { useMessageActions } from "./hooks/useMessageActions";
 import "./ChatsPage.scss";
 
 interface ChatsPageProps {
@@ -69,6 +71,9 @@ export function ChatsPage({
   const [inputValue, setInputValue] = useState("");
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [locallyHiddenMessageIds, setLocallyHiddenMessageIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -76,6 +81,15 @@ export function ChatsPage({
   const wsRef = useRef<DMWebSocket | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
+
+  const messageActions = useMessageActions({
+    activeConversationId: activeConversation?.id || null,
+    wsRef,
+    inputRef,
+    setInputValue,
+    setMessages,
+    setLocallyHiddenMessageIds,
+  });
 
   // Загрузить диалоги
   const loadConversations = useCallback(async () => {
@@ -207,6 +221,13 @@ export function ChatsPage({
                 : m,
             ),
           );
+        } else if (data.type === "message_hidden_for_user") {
+          const hiddenData = data as unknown as { message_id: string };
+          setLocallyHiddenMessageIds((prev) => {
+            const next = new Set(prev);
+            next.add(hiddenData.message_id);
+            return next;
+          });
         } else if (data.type === "read_receipt") {
           const readData = data as unknown as { conversation_id: string };
           setMessages((prev) =>
@@ -295,6 +316,7 @@ export function ChatsPage({
       onChatViewChange?.(true);
       setMessages([]);
       setTypingUser(null);
+      setLocallyHiddenMessageIds(new Set());
       await loadMessages(conv.id);
 
       // Пометить как прочитанные
@@ -321,6 +343,8 @@ export function ChatsPage({
     onChatViewChange?.(false);
     setMessages([]);
     setTypingUser(null);
+    messageActions.resetMessageActions();
+    setLocallyHiddenMessageIds(new Set());
     loadConversations();
   };
 
@@ -328,6 +352,26 @@ export function ChatsPage({
   const handleSend = async () => {
     const content = inputValue.trim();
     if (!content || !activeConversation) return;
+
+    if (messageActions.editingMessageId) {
+      const targetId = messageActions.editingMessageId;
+      setInputValue("");
+      messageActions.handleCancelEdit();
+      wsRef.current?.editMessage(activeConversation.id, targetId, content);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === targetId
+            ? {
+                ...m,
+                content,
+                is_edited: true,
+                edited_at: new Date().toISOString(),
+              }
+            : m,
+        ),
+      );
+      return;
+    }
 
     setInputValue("");
 
@@ -413,11 +457,14 @@ export function ChatsPage({
 
   // Фильтрация по табу (пока все показываем в "Все чаты")
   const filteredConversations = conversations;
+  const visibleMessages = messages.filter(
+    (msg) => !msg.is_deleted && !locallyHiddenMessageIds.has(msg.id),
+  );
 
   // Группировка сообщений по дате
   const shouldShowDateSeparator = (msg: DirectMessage, idx: number) => {
     if (idx === 0) return true;
-    const prev = messages[idx - 1];
+    const prev = visibleMessages[idx - 1];
     const prevDate = new Date(prev.created_at).toDateString();
     const currDate = new Date(msg.created_at).toDateString();
     return prevDate !== currDate;
@@ -449,8 +496,9 @@ export function ChatsPage({
     msg: DirectMessage,
     idx: number,
   ): "single" | "first" | "middle" | "last" => {
-    const prevMsg = idx > 0 ? messages[idx - 1] : null;
-    const nextMsg = idx < messages.length - 1 ? messages[idx + 1] : null;
+    const prevMsg = idx > 0 ? visibleMessages[idx - 1] : null;
+    const nextMsg =
+      idx < visibleMessages.length - 1 ? visibleMessages[idx + 1] : null;
 
     const sameAsPrev =
       prevMsg &&
@@ -462,7 +510,7 @@ export function ChatsPage({
       nextMsg &&
       !nextMsg.is_deleted &&
       nextMsg.sender_id === msg.sender_id &&
-      idx + 1 < messages.length &&
+      idx + 1 < visibleMessages.length &&
       !shouldShowDateSeparator(nextMsg, idx + 1);
 
     if (sameAsPrev && sameAsNext) return "middle";
@@ -641,7 +689,7 @@ export function ChatsPage({
           </div>
         )}
 
-        {messages.length === 0 && !isLoadingMessages && (
+        {visibleMessages.length === 0 && !isLoadingMessages && (
           <div className="chats-page__messages-empty">
             <Typography variant="body" color="muted">
               Напишите первое сообщение
@@ -649,8 +697,7 @@ export function ChatsPage({
           </div>
         )}
 
-        {messages.map((msg, idx) => {
-          if (msg.is_deleted) return null;
+        {visibleMessages.map((msg, idx) => {
           const isOwn = msg.sender_id === currentUserId;
           const showDate = shouldShowDateSeparator(msg, idx);
           const position = getMessagePosition(msg, idx);
@@ -665,7 +712,21 @@ export function ChatsPage({
               <div
                 className={`chats-page__message chats-page__message--${isOwn ? "own" : "other"} chats-page__message--${position}`}
               >
-                <div className="chats-page__bubble">
+                <div
+                  className="chats-page__bubble"
+                  onContextMenu={(e) => messageActions.openActionMenu(e, msg)}
+                  onTouchStart={(e) =>
+                    messageActions.handleMessageTouchStart(e, msg)
+                  }
+                  onTouchEnd={messageActions.handleMessageTouchEnd}
+                  onTouchCancel={messageActions.handleMessageTouchEnd}
+                  onTouchMove={messageActions.handleMessageTouchEnd}
+                >
+                  {msg.forwarded_from_name && (
+                    <p className="chats-page__bubble-forwarded">
+                      Переслано от {msg.forwarded_from_name}
+                    </p>
+                  )}
                   <p className="chats-page__bubble-text">{msg.content}</p>
                   <div className="chats-page__bubble-meta">
                     {msg.is_edited && (
@@ -714,6 +775,18 @@ export function ChatsPage({
                       </span>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    className="chats-page__message-actions"
+                    onClick={(e) => messageActions.openActionMenu(e, msg)}
+                    aria-label="Действия с сообщением"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <circle cx="5" cy="12" r="2" fill="currentColor" />
+                      <circle cx="12" cy="12" r="2" fill="currentColor" />
+                      <circle cx="19" cy="12" r="2" fill="currentColor" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -723,13 +796,39 @@ export function ChatsPage({
         <div ref={messagesEndRef} />
       </div>
 
+      <MessageActions
+        controller={messageActions}
+        visibleMessages={visibleMessages}
+        conversations={conversations}
+        currentUserId={currentUserId}
+      />
+
       {/* Ввод сообщения */}
       <div className="chats-page__input-area">
+        {messageActions.editingMessageId && (
+          <div className="chats-page__edit-bar">
+            <div className="chats-page__edit-info">
+              <span className="chats-page__edit-title">Редактирование</span>
+              <span className="chats-page__edit-preview">
+                {messages.find((m) => m.id === messageActions.editingMessageId)?.content || ""}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="chats-page__edit-cancel"
+              onClick={messageActions.handleCancelEdit}
+            >
+              Отмена
+            </button>
+          </div>
+        )}
         <div className="chats-page__input-row">
           <textarea
             ref={inputRef}
             className="chats-page__input"
-            placeholder="Сообщение..."
+            placeholder={
+              messageActions.editingMessageId ? "Изменить сообщение..." : "Сообщение..."
+            }
             value={inputValue}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}

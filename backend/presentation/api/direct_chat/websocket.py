@@ -198,6 +198,12 @@ async def dm_websocket_endpoint(
                                 if message.reply_to_id
                                 else None
                             ),
+                            "forwarded_from_user_id": (
+                                str(message.forwarded_from_user_id)
+                                if message.forwarded_from_user_id
+                                else None
+                            ),
+                            "forwarded_from_name": message.forwarded_from_name,
                             "is_read": False,
                             "created_at": message.created_at.isoformat(),
                         },
@@ -275,28 +281,102 @@ async def dm_websocket_endpoint(
             elif msg_type == "delete_message":
                 message_id = data.get("message_id")
                 conversation_id = data.get("conversation_id")
+                for_me = bool(data.get("for_me", False))
 
                 if not message_id:
                     continue
 
                 try:
                     await dm_service.delete_message(
-                        message_id=UUID(message_id), user_id=user_id
+                        message_id=UUID(message_id), user_id=user_id, for_me=for_me
                     )
 
-                    conv = await dm_service.get_conversation(
-                        UUID(conversation_id), user_id
+                    if for_me:
+                        await dm_manager.send_to_user(
+                            user_id,
+                            {
+                                "type": "message_hidden_for_user",
+                                "message_id": message_id,
+                                "conversation_id": conversation_id,
+                            },
+                        )
+                    else:
+                        conv = await dm_service.get_conversation(
+                            UUID(conversation_id), user_id
+                        )
+                        other_id = conv.get_other_participant(user_id)
+
+                        delete_data = {
+                            "type": "message_deleted",
+                            "message_id": message_id,
+                            "conversation_id": conversation_id,
+                        }
+                        await dm_manager.send_to_user(user_id, delete_data)
+                        await dm_manager.send_to_user(other_id, delete_data)
+
+                except Exception as e:
+                    await websocket.send_json({"type": "error", "message": str(e)})
+
+            elif msg_type == "forward_message":
+                source_message_id = data.get("source_message_id")
+                conversation_id = data.get("conversation_id")
+
+                if not source_message_id or not conversation_id:
+                    continue
+
+                try:
+                    source_message = await msg_repo.get_by_id(UUID(source_message_id))
+                    if not source_message or source_message.is_deleted:
+                        continue
+
+                    forwarded_from_name = user_name
+                    if source_message.sender_id != user_id:
+                        try:
+                            source_sender = await user_service.get_user(
+                                source_message.sender_id
+                            )
+                            forwarded_from_name = (
+                                f"{source_sender.first_name} {source_sender.last_name}"
+                            ).strip()
+                        except Exception:
+                            forwarded_from_name = "Unknown"
+
+                    message = await dm_service.send_message(
+                        conversation_id=UUID(conversation_id),
+                        sender_id=user_id,
+                        content=source_message.content,
+                        forwarded_from_user_id=source_message.sender_id,
+                        forwarded_from_name=forwarded_from_name,
                     )
+
+                    conv = await dm_service.get_conversation(UUID(conversation_id), user_id)
                     other_id = conv.get_other_participant(user_id)
 
-                    delete_data = {
-                        "type": "message_deleted",
-                        "message_id": message_id,
-                        "conversation_id": conversation_id,
+                    msg_data = {
+                        "type": "new_message",
+                        "message": {
+                            "id": str(message.id),
+                            "conversation_id": str(message.conversation_id),
+                            "sender_id": str(message.sender_id),
+                            "sender_name": user_name,
+                            "content": message.content,
+                            "reply_to_id": (
+                                str(message.reply_to_id)
+                                if message.reply_to_id
+                                else None
+                            ),
+                            "forwarded_from_user_id": (
+                                str(message.forwarded_from_user_id)
+                                if message.forwarded_from_user_id
+                                else None
+                            ),
+                            "forwarded_from_name": message.forwarded_from_name,
+                            "is_read": False,
+                            "created_at": message.created_at.isoformat(),
+                        },
                     }
-                    await dm_manager.send_to_user(user_id, delete_data)
-                    await dm_manager.send_to_user(other_id, delete_data)
-
+                    await dm_manager.send_to_user(user_id, msg_data)
+                    await dm_manager.send_to_user(other_id, msg_data)
                 except Exception as e:
                     await websocket.send_json({"type": "error", "message": str(e)})
 

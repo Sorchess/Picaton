@@ -25,6 +25,7 @@ class DirectMessageRepositoryInterface(ABC):
     async def get_by_conversation(
         self,
         conversation_id: UUID,
+        user_id: UUID,
         limit: int = 50,
         before: datetime | None = None,
     ) -> list[DirectMessage]:
@@ -53,6 +54,10 @@ class DirectMessageRepositoryInterface(ABC):
 
     @abstractmethod
     async def soft_delete(self, message_id: UUID) -> bool:
+        pass
+
+    @abstractmethod
+    async def hide_for_user(self, message_id: UUID, user_id: UUID) -> bool:
         pass
 
     @abstractmethod

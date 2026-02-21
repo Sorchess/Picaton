@@ -75,6 +75,8 @@ class DirectChatService:
         sender_id: UUID,
         content: str,
         reply_to_id: UUID | None = None,
+        forwarded_from_user_id: UUID | None = None,
+        forwarded_from_name: str | None = None,
     ) -> DirectMessage:
         """Отправить сообщение в диалог."""
         conv = await self.get_conversation(conversation_id, sender_id)
@@ -85,6 +87,8 @@ class DirectChatService:
             sender_id=sender_id,
             content=content,
             reply_to_id=reply_to_id,
+            forwarded_from_user_id=forwarded_from_user_id,
+            forwarded_from_name=forwarded_from_name,
         )
         message = await self._msg_repo.create(message)
 
@@ -123,7 +127,7 @@ class DirectChatService:
         """Получить сообщения диалога с пагинацией."""
         await self.get_conversation(conversation_id, user_id)
         return await self._msg_repo.get_by_conversation(
-            conversation_id, limit=limit, before=before
+            conversation_id, user_id=user_id, limit=limit, before=before
         )
 
     async def edit_message(
@@ -139,14 +143,23 @@ class DirectChatService:
         message.edit(new_content)
         return await self._msg_repo.update(message)
 
-    async def delete_message(self, message_id: UUID, user_id: UUID) -> bool:
-        """Удалить сообщение (только автор)."""
+    async def delete_message(
+        self, message_id: UUID, user_id: UUID, for_me: bool = False
+    ) -> bool:
+        """Delete message globally for author or hide it for one user."""
         message = await self._msg_repo.get_by_id(message_id)
         if not message:
             raise DMMessageNotFoundError(str(message_id))
-        if message.sender_id != user_id:
+
+        conv = await self.get_conversation(message.conversation_id, user_id)
+        if not conv.is_participant(user_id):
             raise DMAccessDeniedError(str(message.conversation_id), str(user_id))
 
+        if for_me:
+            return await self._msg_repo.hide_for_user(message_id, user_id)
+
+        if message.sender_id != user_id:
+            raise DMAccessDeniedError(str(message.conversation_id), str(user_id))
         return await self._msg_repo.soft_delete(message_id)
 
     async def mark_as_read(self, conversation_id: UUID, user_id: UUID) -> int:

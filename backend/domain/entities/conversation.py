@@ -68,6 +68,9 @@ class DirectMessage(Entity):
     is_deleted: bool = field(default=False)
     deleted_at: datetime | None = field(default=None)
     reply_to_id: UUID | None = field(default=None)
+    forwarded_from_user_id: UUID | None = field(default=None)
+    forwarded_from_name: str | None = field(default=None)
+    hidden_for_user_ids: list[UUID] = field(default_factory=list)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
@@ -99,3 +102,10 @@ class DirectMessage(Entity):
         self.is_deleted = True
         self.deleted_at = datetime.now(timezone.utc)
         self.content = ""
+
+    def hide_for_user(self, user_id: UUID) -> None:
+        if user_id not in self.hidden_for_user_ids:
+            self.hidden_for_user_ids.append(user_id)
+
+    def is_hidden_for_user(self, user_id: UUID) -> bool:
+        return user_id in self.hidden_for_user_ids

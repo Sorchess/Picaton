@@ -27,6 +27,11 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
             "is_deleted": msg.is_deleted,
             "deleted_at": msg.deleted_at,
             "reply_to_id": str(msg.reply_to_id) if msg.reply_to_id else None,
+            "forwarded_from_user_id": (
+                str(msg.forwarded_from_user_id) if msg.forwarded_from_user_id else None
+            ),
+            "forwarded_from_name": msg.forwarded_from_name,
+            "hidden_for_user_ids": [str(uid) for uid in msg.hidden_for_user_ids],
             "created_at": msg.created_at,
         }
 
@@ -43,6 +48,15 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
             is_deleted=doc.get("is_deleted", False),
             deleted_at=doc.get("deleted_at"),
             reply_to_id=UUID(doc["reply_to_id"]) if doc.get("reply_to_id") else None,
+            forwarded_from_user_id=(
+                UUID(doc["forwarded_from_user_id"])
+                if doc.get("forwarded_from_user_id")
+                else None
+            ),
+            forwarded_from_name=doc.get("forwarded_from_name"),
+            hidden_for_user_ids=[
+                UUID(uid) for uid in doc.get("hidden_for_user_ids", [])
+            ],
             created_at=doc.get("created_at", datetime.now(timezone.utc)),
         )
 
@@ -63,12 +77,14 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
     async def get_by_conversation(
         self,
         conversation_id: UUID,
+        user_id: UUID,
         limit: int = 50,
         before: datetime | None = None,
     ) -> list[DirectMessage]:
         query: dict = {
             "conversation_id": str(conversation_id),
             "is_deleted": False,
+            "hidden_for_user_ids": {"$ne": str(user_id)},
         }
         if before:
             query["created_at"] = {"$lt": before}
@@ -84,6 +100,7 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
                 "sender_id": {"$ne": str(reader_id)},
                 "is_read": False,
                 "is_deleted": False,
+                "hidden_for_user_ids": {"$ne": str(reader_id)},
             },
             {
                 "$set": {
@@ -101,6 +118,7 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
                 "sender_id": {"$ne": str(user_id)},
                 "is_read": False,
                 "is_deleted": False,
+                "hidden_for_user_ids": {"$ne": str(user_id)},
             }
         )
 
@@ -110,6 +128,7 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
                 "sender_id": {"$ne": str(user_id)},
                 "is_read": False,
                 "is_deleted": False,
+                "hidden_for_user_ids": {"$ne": str(user_id)},
             }
         )
 
@@ -120,6 +139,7 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
                     "sender_id": {"$ne": str(user_id)},
                     "is_read": False,
                     "is_deleted": False,
+                    "hidden_for_user_ids": {"$ne": str(user_id)},
                 }
             },
             {"$group": {"_id": "$conversation_id", "count": {"$sum": 1}}},
@@ -153,3 +173,10 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
         }
         cursor = self._collection.find(search_query).sort("created_at", -1).limit(limit)
         return [self._from_document(doc) async for doc in cursor]
+
+    async def hide_for_user(self, message_id: UUID, user_id: UUID) -> bool:
+        result = await self._collection.update_one(
+            {"_id": str(message_id)},
+            {"$addToSet": {"hidden_for_user_ids": str(user_id)}},
+        )
+        return result.modified_count > 0

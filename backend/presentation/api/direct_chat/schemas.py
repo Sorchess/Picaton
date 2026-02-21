@@ -54,6 +54,8 @@ class DirectMessageResponse(BaseModel):
     edited_at: datetime | None = None
     is_deleted: bool = False
     reply_to_id: UUID | None = None
+    forwarded_from_user_id: UUID | None = None
+    forwarded_from_name: str | None = None
     created_at: datetime
 
     class Config:

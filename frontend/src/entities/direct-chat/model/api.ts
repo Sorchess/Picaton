@@ -41,8 +41,14 @@ export const directChatApi = {
       { content },
     ),
 
-  deleteMessage: (conversationId: string, messageId: string) =>
-    api.delete(`/dm/conversations/${conversationId}/messages/${messageId}`),
+  deleteMessage: (
+    conversationId: string,
+    messageId: string,
+    forMe = false,
+  ) =>
+    api.delete(
+      `/dm/conversations/${conversationId}/messages/${messageId}?for_me=${forMe ? "true" : "false"}`,
+    ),
 
   // Прочитано
   markAsRead: (conversationId: string) =>
@@ -172,11 +178,24 @@ export class DMWebSocket {
     });
   }
 
-  deleteMessage(conversationId: string, messageId: string): void {
+  deleteMessage(
+    conversationId: string,
+    messageId: string,
+    forMe = false,
+  ): void {
     this.send({
       type: "delete_message",
       conversation_id: conversationId,
       message_id: messageId,
+      for_me: forMe,
+    });
+  }
+
+  forwardMessage(conversationId: string, sourceMessageId: string): void {
+    this.send({
+      type: "forward_message",
+      conversation_id: conversationId,
+      source_message_id: sourceMessageId,
     });
   }
 

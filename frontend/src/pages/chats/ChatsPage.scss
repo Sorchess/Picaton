@@ -327,6 +327,12 @@
     display: flex;
     margin-bottom: 2px;
     animation: chats-message-appear 0.2s ease;
+    position: relative;
+
+    &:hover .chats-page__message-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
     // Отступ между группами
     &--single,
@@ -376,6 +382,10 @@
         background: linear-gradient(180deg, #2e89f0 0%, #2078e6 100%);
         border-radius: 20px 4px 20px 20px;
       }
+
+      .chats-page__message-actions {
+        right: -30px;
+      }
     }
 
     // ── Чужие сообщения ──
@@ -398,6 +408,10 @@
       &.chats-page__message--last .chats-page__bubble {
         background: var(--color-bg-secondary);
         border-radius: 4px 20px 20px 20px;
+      }
+
+      .chats-page__message-actions {
+        left: -30px;
       }
     }
   }
@@ -422,6 +436,13 @@
     color: var(--color-text-primary);
     word-wrap: break-word;
     white-space: pre-wrap;
+  }
+
+  &__bubble-forwarded {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-muted);
   }
 
   &__bubble-meta {
@@ -457,6 +478,184 @@
     &--read {
       color: #fff;
     }
+  }
+
+  &__message-actions {
+    position: absolute;
+    top: 6px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--color-text-primary);
+      transform: scale(1.05);
+    }
+  }
+
+  &__message-menu {
+    position: fixed;
+    z-index: 200;
+    width: 220px;
+    padding: 6px;
+    border-radius: 14px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__message-menu-item {
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: var(--color-glass-bg);
+    }
+  }
+
+  &__edit-bar {
+    @include liquid-glass;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+
+  &__edit-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__edit-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  &__edit-preview {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+  }
+
+  &__edit-cancel {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  &__modal {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+  }
+
+  &__modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--color-text-primary);
+  }
+
+  &__modal-text {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  &__modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  &__modal-btn {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  &__modal-btn--primary {
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+    border-color: transparent;
+  }
+
+  &__modal-btn--danger {
+    background: #ff4d4f;
+    color: #fff;
+    border-color: transparent;
+  }
+
+  &__forward-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  &__forward-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: var(--color-bg-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  &__forward-item--active {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.15);
+  }
+
+  &__forward-name {
+    font-size: 14px;
+    color: var(--color-text-primary);
   }
 
   // ═══════════ Input Area ═══════════
@@ -552,6 +751,20 @@
 
     &__card {
       padding: 12px;
+    }
+
+    &__message-actions {
+      display: none;
+    }
+
+    &__message-menu {
+      left: 12px !important;
+      right: 12px;
+      width: auto;
+      top: auto !important;
+      bottom: 12px;
+      border-radius: 16px;
+      padding: 10px;
     }
   }
 }
