@@ -82,6 +82,7 @@ export function ChatsPage({
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
   const activeConversationIdRef = useRef<string | null>(null);
+  const markReadInFlightRef = useRef<Set<string>>(new Set());
 
   const messageActions = useMessageActions({
     activeConversationId: activeConversation?.id || null,
@@ -97,6 +98,29 @@ export function ChatsPage({
   useEffect(() => {
     activeConversationIdRef.current = activeConversation?.id || null;
   }, [activeConversation?.id]);
+
+  const syncReadState = useCallback(async (conversationId: string) => {
+    if (markReadInFlightRef.current.has(conversationId)) return;
+    markReadInFlightRef.current.add(conversationId);
+    try {
+      await directChatApi.markAsRead(conversationId);
+      wsRef.current?.markRead(conversationId);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.conversation_id === conversationId ? { ...m, is_read: true } : m,
+        ),
+      );
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === conversationId ? { ...c, unread_count: 0 } : c,
+        ),
+      );
+    } catch {
+      /* ignore */
+    } finally {
+      markReadInFlightRef.current.delete(conversationId);
+    }
+  }, []);
 
   // Загрузить диалоги
   const loadConversations = useCallback(async () => {
@@ -141,10 +165,7 @@ export function ChatsPage({
 
           // Обновить сообщения, если открыт тот же диалог
           setMessages((prev) => {
-            if (
-              prev.length > 0 &&
-              prev[0]?.conversation_id === msg.conversation_id
-            ) {
+            if (activeConversationIdRef.current === msg.conversation_id) {
               // Не добавлять дубли
               if (prev.some((m) => m.id === msg.id)) return prev;
 
@@ -177,7 +198,8 @@ export function ChatsPage({
                       last_message_at: msg.created_at,
                       last_message_is_edited: false,
                       unread_count:
-                        msg.sender_id !== currentUserId
+                        msg.sender_id !== currentUserId &&
+                        c.id !== activeConversationIdRef.current
                           ? c.unread_count + 1
                           : c.unread_count,
                     }
@@ -290,6 +312,27 @@ export function ChatsPage({
     };
   }, [currentUserId]);
 
+  useEffect(() => {
+    if (!activeConversation || !currentUserId) return;
+    const hasUnreadIncoming = messages.some(
+      (m) =>
+        m.conversation_id === activeConversation.id &&
+        m.sender_id !== currentUserId &&
+        !m.is_read &&
+        !m.is_deleted &&
+        !locallyHiddenMessageIds.has(m.id),
+    );
+    if (hasUnreadIncoming) {
+      void syncReadState(activeConversation.id);
+    }
+  }, [
+    activeConversation,
+    currentUserId,
+    locallyHiddenMessageIds,
+    messages,
+    syncReadState,
+  ]);
+
   // Загрузить диалоги при монтировании
   useEffect(() => {
     loadConversations();
@@ -359,22 +402,14 @@ export function ChatsPage({
 
       // Пометить как прочитанные
       if (conv.unread_count > 0) {
-        try {
-          await directChatApi.markAsRead(conv.id);
-          wsRef.current?.markRead(conv.id);
-          setConversations((prev) =>
-            prev.map((c) => (c.id === conv.id ? { ...c, unread_count: 0 } : c)),
-          );
-        } catch {
-          /* ignore */
-        }
+        await syncReadState(conv.id);
       }
 
       if (conv.can_send_messages) {
         setTimeout(() => inputRef.current?.focus(), 100);
       }
     },
-    [loadMessages],
+    [loadMessages, syncReadState],
   );
 
   // Назад к списку
