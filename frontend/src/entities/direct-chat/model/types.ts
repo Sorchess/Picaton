@@ -29,6 +29,7 @@ export interface Conversation {
   last_message_content: string | null;
   last_message_sender_id: string | null;
   last_message_at: string | null;
+  last_message_is_edited: boolean;
   unread_count: number;
   can_send_messages: boolean;
   created_at: string;

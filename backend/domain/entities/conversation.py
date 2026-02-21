@@ -24,6 +24,7 @@ class Conversation(Entity):
     last_message_content: str | None = field(default=None)
     last_message_sender_id: UUID | None = field(default=None)
     last_message_at: datetime | None = field(default=None)
+    last_message_is_edited: bool = field(default=False)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -51,6 +52,7 @@ class Conversation(Entity):
         self.last_message_content = content[:100]  # Превью
         self.last_message_sender_id = sender_id
         self.last_message_at = datetime.now(timezone.utc)
+        self.last_message_is_edited = False
         self.updated_at = datetime.now(timezone.utc)
 
 

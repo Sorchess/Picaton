@@ -181,6 +181,11 @@
     color: var(--color-text-muted);
   }
 
+  &__card-edited {
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
   &__card-badge {
     flex-shrink: 0;
     min-width: 20px;

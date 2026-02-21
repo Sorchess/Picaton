@@ -175,6 +175,7 @@ export function ChatsPage({
                       last_message_content: msg.content,
                       last_message_sender_id: msg.sender_id,
                       last_message_at: msg.created_at,
+                      last_message_is_edited: false,
                       unread_count:
                         msg.sender_id !== currentUserId
                           ? c.unread_count + 1
@@ -204,6 +205,7 @@ export function ChatsPage({
         } else if (data.type === "message_edited") {
           const editData = data as unknown as {
             message_id: string;
+            conversation_id: string;
             content: string;
             edited_at: string;
           };
@@ -217,6 +219,17 @@ export function ChatsPage({
                     edited_at: editData.edited_at,
                   }
                 : m,
+            ),
+          );
+          setConversations((prev) =>
+            prev.map((c) =>
+              c.id === editData.conversation_id
+                ? {
+                    ...c,
+                    last_message_content: editData.content,
+                    last_message_is_edited: true,
+                  }
+                : c,
             ),
           );
         } else if (data.type === "message_deleted") {
@@ -635,6 +648,11 @@ export function ChatsPage({
                     <span className="chats-page__card-preview">
                       {conv.last_message_sender_id === currentUserId && (
                         <span className="chats-page__card-you">Вы: </span>
+                      )}
+                      {conv.last_message_is_edited && (
+                        <span className="chats-page__card-edited">
+                          {"\u0440\u0435\u0434. "}
+                        </span>
                       )}
                       {conv.last_message_content || "Начните общение"}
                     </span>

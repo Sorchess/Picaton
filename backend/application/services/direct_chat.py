@@ -133,15 +133,29 @@ class DirectChatService:
     async def edit_message(
         self, message_id: UUID, user_id: UUID, new_content: str
     ) -> DirectMessage:
-        """Редактировать сообщение (только автор)."""
+        """????????????? ????????? (?????? ?????)."""
         message = await self._msg_repo.get_by_id(message_id)
         if not message:
             raise DMMessageNotFoundError(str(message_id))
         if message.sender_id != user_id:
             raise DMAccessDeniedError(str(message.conversation_id), str(user_id))
 
+        old_content_preview = message.content[:100]
         message.edit(new_content)
-        return await self._msg_repo.update(message)
+        updated_message = await self._msg_repo.update(message)
+
+        conv = await self._conv_repo.get_by_id(message.conversation_id)
+        if (
+            conv
+            and conv.last_message_sender_id == user_id
+            and conv.last_message_content == old_content_preview
+        ):
+            conv.last_message_content = new_content[:100]
+            conv.last_message_is_edited = True
+            conv.updated_at = datetime.now(timezone.utc)
+            await self._conv_repo.update(conv)
+
+        return updated_message
 
     async def delete_message(
         self, message_id: UUID, user_id: UUID, for_me: bool = False

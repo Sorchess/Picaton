@@ -25,6 +25,7 @@ class MongoConversationRepository(ConversationRepositoryInterface):
                 else None
             ),
             "last_message_at": conv.last_message_at,
+            "last_message_is_edited": conv.last_message_is_edited,
             "created_at": conv.created_at,
             "updated_at": conv.updated_at,
         }
@@ -40,6 +41,7 @@ class MongoConversationRepository(ConversationRepositoryInterface):
                 else None
             ),
             last_message_at=doc.get("last_message_at"),
+            last_message_is_edited=doc.get("last_message_is_edited", False),
             created_at=doc.get("created_at", datetime.now(timezone.utc)),
             updated_at=doc.get("updated_at", datetime.now(timezone.utc)),
         )
