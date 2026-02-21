@@ -656,7 +656,19 @@ function AuthenticatedApp() {
             onChatOpened={() => setChatTargetUser(null)}
             onChatViewChange={setIsChatOpen}
             onNavigateToContacts={() => handlePageChange("contacts")}
-            onViewProfile={(userId, userData) => {
+            onViewProfile={async (userId, userData) => {
+              let savedContact: SavedContact | null = null;
+
+              if (user?.id) {
+                try {
+                  const contacts = await userApi.getContacts(user.id, 0, 500);
+                  savedContact =
+                    contacts.find((c) => c.saved_user_id === userId) || null;
+                } catch (error) {
+                  console.error("Failed to resolve saved contact from chats:", error);
+                }
+              }
+
               navigateToContactProfile({
                 user: {
                   id: userId,
@@ -671,7 +683,7 @@ function AuthenticatedApp() {
                   contacts: [],
                   profile_completeness: 0,
                 },
-                savedContact: null,
+                savedContact,
                 returnPage: "chats",
               });
             }}
