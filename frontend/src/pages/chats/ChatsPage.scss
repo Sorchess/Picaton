@@ -428,9 +428,12 @@
     border: none;
     box-shadow: none;
     transition: background 0.15s ease;
+    -webkit-touch-callout: none;
 
     @media (max-width: 480px) {
       max-width: 85%;
+      -webkit-user-select: none;
+      user-select: none;
     }
   }
 

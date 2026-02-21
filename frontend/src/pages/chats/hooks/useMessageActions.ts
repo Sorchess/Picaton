@@ -33,6 +33,7 @@ export interface MessageActionsController {
     msg: DirectMessage,
   ) => void;
   handleMessageTouchEnd: () => void;
+  handleMessageTouchMove: (e: TouchEvent<HTMLDivElement>) => void;
   handleCopyMessage: (msg: DirectMessage) => Promise<void>;
   handleStartEdit: (msg: DirectMessage) => void;
   handleCancelEdit: () => void;
@@ -68,6 +69,7 @@ export function useMessageActions({
 
   const menuRef = useRef<HTMLDivElement>(null);
   const touchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const closeActionMenu = useCallback(() => setActionMenu(null), []);
 
@@ -103,14 +105,13 @@ export function useMessageActions({
   const handleMessageTouchStart = useCallback(
     (e: TouchEvent<HTMLDivElement>, msg: DirectMessage) => {
       if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+      const touch = e.touches[0];
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = touch?.clientX ?? rect.left + rect.width / 2;
+      const y = touch?.clientY ?? rect.top + 16;
+      touchStartRef.current = { x, y };
       touchTimeoutRef.current = setTimeout(() => {
-        const touch = e.touches[0];
-        const rect = e.currentTarget.getBoundingClientRect();
-        openActionMenuAt(
-          touch?.clientX ?? rect.left + rect.width / 2,
-          rect.top + 16,
-          msg.id,
-        );
+        openActionMenuAt(x, y, msg.id);
       }, 500);
     },
     [openActionMenuAt],
@@ -121,7 +122,24 @@ export function useMessageActions({
       clearTimeout(touchTimeoutRef.current);
       touchTimeoutRef.current = null;
     }
+    touchStartRef.current = null;
   }, []);
+
+  const handleMessageTouchMove = useCallback(
+    (e: TouchEvent<HTMLDivElement>) => {
+      if (!touchTimeoutRef.current || !touchStartRef.current) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const dx = Math.abs(touch.clientX - touchStartRef.current.x);
+      const dy = Math.abs(touch.clientY - touchStartRef.current.y);
+      // Ignore tiny finger jitter; cancel only on real drag/scroll.
+      if (dx > 10 || dy > 10) {
+        clearTimeout(touchTimeoutRef.current);
+        touchTimeoutRef.current = null;
+      }
+    },
+    [],
+  );
 
   const handleCopyMessage = useCallback(
     async (msg: DirectMessage) => {
@@ -267,6 +285,7 @@ export function useMessageActions({
     openActionMenu,
     handleMessageTouchStart,
     handleMessageTouchEnd,
+    handleMessageTouchMove,
     handleCopyMessage,
     handleStartEdit,
     handleCancelEdit,

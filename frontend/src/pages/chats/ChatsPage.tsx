@@ -802,7 +802,7 @@ export function ChatsPage({
                   }
                   onTouchEnd={messageActions.handleMessageTouchEnd}
                   onTouchCancel={messageActions.handleMessageTouchEnd}
-                  onTouchMove={messageActions.handleMessageTouchEnd}
+                  onTouchMove={messageActions.handleMessageTouchMove}
                 >
                   {msg.forwarded_from_name && (
                     <p className="chats-page__bubble-forwarded">
