@@ -81,6 +81,7 @@ export function ChatsPage({
   const wsRef = useRef<DMWebSocket | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
+  const activeConversationIdRef = useRef<string | null>(null);
 
   const messageActions = useMessageActions({
     activeConversationId: activeConversation?.id || null,
@@ -90,6 +91,12 @@ export function ChatsPage({
     setMessages,
     setLocallyHiddenMessageIds,
   });
+  const isMessagingRestricted =
+    !!activeConversation && !activeConversation.can_send_messages;
+
+  useEffect(() => {
+    activeConversationIdRef.current = activeConversation?.id || null;
+  }, [activeConversation?.id]);
 
   // Загрузить диалоги
   const loadConversations = useCallback(async () => {
@@ -237,6 +244,24 @@ export function ChatsPage({
                 : m,
             ),
           );
+        } else if (data.type === "error") {
+          const errorData = data as unknown as { code?: string };
+          if (errorData.code === "dm_privacy_restricted") {
+            const conversationId = activeConversationIdRef.current;
+            if (!conversationId) return;
+            setActiveConversation((prev) =>
+              prev ? { ...prev, can_send_messages: false } : prev,
+            );
+            setConversations((prev) =>
+              prev.map((c) =>
+                c.id === conversationId
+                  ? { ...c, can_send_messages: false }
+                  : c,
+              ),
+            );
+            setInputValue("");
+            setMessages((prev) => prev.filter((m) => !m.id.startsWith("temp-")));
+          }
         }
       },
       onConnected: () => console.log("DM WebSocket connected"),
@@ -332,7 +357,9 @@ export function ChatsPage({
         }
       }
 
-      setTimeout(() => inputRef.current?.focus(), 100);
+      if (conv.can_send_messages) {
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
     },
     [loadMessages],
   );
@@ -351,7 +378,8 @@ export function ChatsPage({
   // Отправить сообщение
   const handleSend = async () => {
     const content = inputValue.trim();
-    if (!content || !activeConversation) return;
+    if (!content || !activeConversation || !activeConversation.can_send_messages)
+      return;
 
     if (messageActions.editingMessageId) {
       const targetId = messageActions.editingMessageId;
@@ -400,6 +428,7 @@ export function ChatsPage({
 
   // Typing indicator
   const handleInputChange = (value: string) => {
+    if (activeConversation && !activeConversation.can_send_messages) return;
     setInputValue(value);
 
     if (!activeConversation) return;
@@ -805,6 +834,11 @@ export function ChatsPage({
 
       {/* Ввод сообщения */}
       <div className="chats-page__input-area">
+        {isMessagingRestricted && (
+          <div className="chats-page__restricted-note">
+            {"\u041A\u043E\u043D\u0442\u0430\u043A\u0442 \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0438\u043B \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u0438\u0441\u0430\u0442\u044C \u0435\u043C\u0443"}
+          </div>
+        )}
         {messageActions.editingMessageId && (
           <div className="chats-page__edit-bar">
             <div className="chats-page__edit-info">
@@ -827,17 +861,22 @@ export function ChatsPage({
             ref={inputRef}
             className="chats-page__input"
             placeholder={
-              messageActions.editingMessageId ? "Изменить сообщение..." : "Сообщение..."
+              isMessagingRestricted
+                ? "\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430"
+                : messageActions.editingMessageId
+                  ? "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
+                  : "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
             }
             value={inputValue}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
+            disabled={isMessagingRestricted}
           />
           <button
             className={`chats-page__send-btn ${inputValue.trim() ? "chats-page__send-btn--active" : ""}`}
             onClick={handleSend}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || isMessagingRestricted}
             type="button"
           >
             <svg

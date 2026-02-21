@@ -8,6 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
 from application.services.direct_chat import DirectChatService
+from application.services.privacy_checker import PrivacyChecker
 from infrastructure.dependencies import (
     get_direct_chat_service,
     get_user_service,
@@ -125,12 +126,20 @@ async def dm_websocket_endpoint(
     from infrastructure.database.repositories.direct_message import (
         MongoDirectMessageRepository,
     )
+    from infrastructure.database.repositories.saved_contact import (
+        MongoSavedContactRepository,
+    )
+    from infrastructure.database.repositories.company import (
+        MongoCompanyMemberRepository,
+    )
     from infrastructure.database.repositories.user import MongoUserRepository
 
     db = mongodb_client.database
     conv_repo = MongoConversationRepository(db["conversations"])
     msg_repo = MongoDirectMessageRepository(db["direct_messages"])
     user_repo = MongoUserRepository(db["users"])
+    contact_repo = MongoSavedContactRepository(db["saved_contacts"])
+    member_repo = MongoCompanyMemberRepository(db["company_members"])
 
     from application.services.user import UserService
     from application.services.direct_chat import DirectChatService
@@ -139,6 +148,7 @@ async def dm_websocket_endpoint(
     from application.services.ai_tags import AITagsGeneratorService, MockAITagsGenerator
 
     dm_service = DirectChatService(conv_repo, msg_repo)
+    privacy_checker = PrivacyChecker(user_repo, contact_repo, member_repo)
     user_service = UserService(
         user_repo,
         AIBioGeneratorService(AIBioGenerator()),
@@ -174,6 +184,20 @@ async def dm_websocket_endpoint(
                 try:
                     conv_uuid = UUID(conversation_id)
                     reply_uuid = UUID(reply_to_id) if reply_to_id else None
+                    conv = await dm_service.get_conversation(conv_uuid, user_id)
+                    other_id = conv.get_other_participant(user_id)
+                    if not await privacy_checker.can_message(user_id, other_id):
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "message": (
+                                    "Recipient's privacy settings do not allow "
+                                    "messages from you"
+                                ),
+                                "code": "dm_privacy_restricted",
+                            }
+                        )
+                        continue
 
                     message = await dm_service.send_message(
                         conversation_id=conv_uuid,
@@ -181,9 +205,6 @@ async def dm_websocket_endpoint(
                         content=content,
                         reply_to_id=reply_uuid,
                     )
-
-                    conv = await dm_service.get_conversation(conv_uuid, user_id)
-                    other_id = conv.get_other_participant(user_id)
 
                     msg_data = {
                         "type": "new_message",
@@ -329,6 +350,21 @@ async def dm_websocket_endpoint(
                     if not source_message or source_message.is_deleted:
                         continue
 
+                    conv = await dm_service.get_conversation(UUID(conversation_id), user_id)
+                    other_id = conv.get_other_participant(user_id)
+                    if not await privacy_checker.can_message(user_id, other_id):
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "message": (
+                                    "Recipient's privacy settings do not allow "
+                                    "messages from you"
+                                ),
+                                "code": "dm_privacy_restricted",
+                            }
+                        )
+                        continue
+
                     forwarded_from_name = user_name
                     if source_message.sender_id != user_id:
                         try:
@@ -348,9 +384,6 @@ async def dm_websocket_endpoint(
                         forwarded_from_user_id=source_message.sender_id,
                         forwarded_from_name=forwarded_from_name,
                     )
-
-                    conv = await dm_service.get_conversation(UUID(conversation_id), user_id)
-                    other_id = conv.get_other_participant(user_id)
 
                     msg_data = {
                         "type": "new_message",

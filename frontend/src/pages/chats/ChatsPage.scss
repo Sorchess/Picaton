@@ -667,6 +667,17 @@
     flex-shrink: 0;
   }
 
+  &__restricted-note {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(255, 184, 0, 0.12);
+    border: 1px solid rgba(255, 184, 0, 0.28);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
   &__input-row {
     @include liquid-glass;
     display: flex;

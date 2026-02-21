@@ -71,6 +71,7 @@ class ConversationResponse(BaseModel):
     last_message_sender_id: UUID | None = None
     last_message_at: datetime | None = None
     unread_count: int = 0
+    can_send_messages: bool = True
     created_at: datetime
 
     class Config:

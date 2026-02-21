@@ -85,6 +85,7 @@ async def get_conversations(
     current_user_id: UUID = Depends(get_current_user_id),
     dm_service: DirectChatService = Depends(get_direct_chat_service),
     user_service=Depends(get_user_service),
+    privacy_checker: PrivacyChecker = Depends(get_privacy_checker),
 ):
     """Получить список диалогов текущего пользователя."""
     conversations = await dm_service.get_user_conversations(
@@ -110,6 +111,8 @@ async def get_conversations(
                 avatar_url=None,
             )
 
+        can_send_messages = await privacy_checker.can_message(current_user_id, other_id)
+
         responses.append(
             ConversationResponse(
                 id=conv.id,
@@ -118,6 +121,7 @@ async def get_conversations(
                 last_message_sender_id=conv.last_message_sender_id,
                 last_message_at=conv.last_message_at,
                 unread_count=unread_counts.get(conv.id, 0),
+                can_send_messages=can_send_messages,
                 created_at=conv.created_at,
             )
         )
@@ -146,22 +150,18 @@ async def start_conversation(
 
     # Проверка приватности: может ли текущий пользователь писать получателю
     can_msg = await privacy_checker.can_message(current_user_id, data.recipient_id)
-    if not can_msg:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Recipient's privacy settings do not allow messages from you",
-        )
 
-    if data.content and data.content.strip():
+    conv = await dm_service.get_or_create_conversation(
+        current_user_id, data.recipient_id
+    )
+
+    if can_msg and data.content and data.content.strip():
         conv, message = await dm_service.send_first_message(
             sender_id=current_user_id,
             recipient_id=data.recipient_id,
             content=data.content.strip(),
         )
     else:
-        conv = await dm_service.get_or_create_conversation(
-            current_user_id, data.recipient_id
-        )
         message = DirectMessage(
             conversation_id=conv.id,
             sender_id=current_user_id,
@@ -185,6 +185,7 @@ async def start_conversation(
             last_message_sender_id=conv.last_message_sender_id,
             last_message_at=conv.last_message_at,
             unread_count=0,
+            can_send_messages=can_msg,
             created_at=conv.created_at,
         ),
         message=_message_to_response(message, sender),
@@ -245,8 +246,24 @@ async def send_message(
     current_user_id: UUID = Depends(get_current_user_id),
     dm_service: DirectChatService = Depends(get_direct_chat_service),
     user_service=Depends(get_user_service),
+    privacy_checker: PrivacyChecker = Depends(get_privacy_checker),
 ):
     """Отправить сообщение в диалог."""
+    try:
+        conv = await dm_service.get_conversation(conversation_id, current_user_id)
+    except DMAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
+
+    recipient_id = conv.get_other_participant(current_user_id)
+    can_msg = await privacy_checker.can_message(current_user_id, recipient_id)
+    if not can_msg:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Recipient's privacy settings do not allow messages from you",
+        )
+
     try:
         message = await dm_service.send_message(
             conversation_id=conversation_id,

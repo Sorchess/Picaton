@@ -30,6 +30,7 @@ export interface Conversation {
   last_message_sender_id: string | null;
   last_message_at: string | null;
   unread_count: number;
+  can_send_messages: boolean;
   created_at: string;
 }
 
