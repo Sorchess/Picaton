@@ -733,6 +733,8 @@
     position: fixed;
     z-index: 200;
     width: 220px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
     padding: 6px;
     border-radius: 18px;
     display: flex;

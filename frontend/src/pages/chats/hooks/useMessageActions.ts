@@ -77,7 +77,7 @@ export function useMessageActions({
   const openActionMenuAt = useCallback(
     (leftSeed: number, topSeed: number, messageId: string) => {
       const menuWidth = 220;
-      const menuHeight = 220;
+      const menuHeight = 300;
       const padding = 12;
       let left = leftSeed;
       let top = topSeed;
@@ -267,6 +267,30 @@ export function useMessageActions({
     setIsForwardOpen(false);
     setForwardTargetId(null);
   }, []);
+
+  useEffect(() => {
+    if (!actionMenu || !menuRef.current) return;
+
+    const padding = 12;
+    const menuRect = menuRef.current.getBoundingClientRect();
+    let nextLeft = actionMenu.left;
+    let nextTop = actionMenu.top;
+
+    if (nextLeft + menuRect.width > window.innerWidth - padding) {
+      nextLeft = window.innerWidth - menuRect.width - padding;
+    }
+    if (nextTop + menuRect.height > window.innerHeight - padding) {
+      nextTop = window.innerHeight - menuRect.height - padding;
+    }
+    if (nextLeft < padding) nextLeft = padding;
+    if (nextTop < padding) nextTop = padding;
+
+    if (nextLeft !== actionMenu.left || nextTop !== actionMenu.top) {
+      setActionMenu((prev) =>
+        prev ? { ...prev, left: nextLeft, top: nextTop } : prev,
+      );
+    }
+  }, [actionMenu]);
 
   useEffect(() => {
     const handleOutside = (e: globalThis.MouseEvent) => {
