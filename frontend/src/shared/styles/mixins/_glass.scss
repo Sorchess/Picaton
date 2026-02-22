@@ -100,12 +100,19 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.4) 0%,
-      rgba(255, 255, 255, 0.1) 40%,
-      rgba(255, 255, 255, 0.05) 60%,
-      rgba(255, 255, 255, 0.2) 100%
+    // Dark theme: border glow only in two diagonal sectors:
+    // top-left and bottom-right. Other border areas stay transparent.
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg 88deg,
+      rgba(255, 255, 255, 0.06) 88deg,
+      rgba(255, 255, 255, 0.32) 122deg,
+      rgba(255, 255, 255, 0.1) 158deg,
+      transparent 170deg 268deg,
+      rgba(255, 255, 255, 0.08) 268deg,
+      rgba(255, 255, 255, 0.34) 302deg,
+      rgba(255, 255, 255, 0.12) 338deg,
+      transparent 350deg 360deg
     );
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
@@ -138,7 +145,6 @@
   );
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--color-text-secondary);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.12),
