@@ -118,6 +118,9 @@ export function ChatsPage({
   const [locallyHiddenMessageIds, setLocallyHiddenMessageIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(
+    null,
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -191,8 +194,10 @@ export function ChatsPage({
           setMessages(res.messages);
         }
         setHasMoreMessages(res.has_more);
+        return res.messages;
       } catch (err) {
         console.error("Failed to load messages:", err);
+        return [] as DirectMessage[];
       } finally {
         setIsLoadingMessages(false);
       }
@@ -444,7 +449,15 @@ export function ChatsPage({
       setMessages([]);
       setTypingUser(null);
       setLocallyHiddenMessageIds(new Set());
-      await loadMessages(conv.id);
+      setFirstUnreadMessageId(null);
+      const loadedMessages = await loadMessages(conv.id);
+
+      if (conv.unread_count > 0 && currentUserId) {
+        const firstUnreadIncoming = loadedMessages.find(
+          (m) => m.sender_id !== currentUserId && !m.is_deleted && !m.is_read,
+        );
+        setFirstUnreadMessageId(firstUnreadIncoming?.id || null);
+      }
 
       // Пометить как прочитанные
       if (conv.unread_count > 0) {
@@ -455,7 +468,7 @@ export function ChatsPage({
         setTimeout(() => inputRef.current?.focus(), 100);
       }
     },
-    [loadMessages, syncReadState],
+    [currentUserId, loadMessages, syncReadState],
   );
 
   // Назад к списку
@@ -467,6 +480,7 @@ export function ChatsPage({
     messageActions.resetMessageActions();
     setReplyToMessage(null);
     setLocallyHiddenMessageIds(new Set());
+    setFirstUnreadMessageId(null);
     loadConversations();
   };
 
@@ -861,10 +875,15 @@ export function ChatsPage({
           const sharedContact = parseSharedContactCard(msg.content);
 
           return (
-            <div
-              key={msg.id}
-              className={`chats-page__message chats-page__message--${isOwn ? "own" : "other"} chats-page__message--${position}`}
-            >
+            <div key={msg.id}>
+              {msg.id === firstUnreadMessageId && (
+                <div className="chats-page__unread-separator">
+                  <span>Непрочитанные</span>
+                </div>
+              )}
+              <div
+                className={`chats-page__message chats-page__message--${isOwn ? "own" : "other"} chats-page__message--${position}`}
+              >
                 <div
                   className="chats-page__bubble"
                   onContextMenu={(e) => messageActions.openActionMenu(e, msg)}
@@ -992,6 +1011,7 @@ export function ChatsPage({
                     )}
                   </div>
                 </div>
+              </div>
             </div>
           );
         })}
