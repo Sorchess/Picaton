@@ -136,6 +136,7 @@ export function ChatsPage({
   const isTypingRef = useRef(false);
   const activeConversationIdRef = useRef<string | null>(null);
   const markReadInFlightRef = useRef<Set<string>>(new Set());
+  const MAX_INPUT_HEIGHT = 120;
 
   const messageActions = useMessageActions({
     activeConversationId: activeConversation?.id || null,
@@ -521,6 +522,10 @@ export function ChatsPage({
     }
 
     setInputValue("");
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.overflowY = "hidden";
+    }
     const replyToId = replyToMessage?.id || null;
     setReplyToMessage(null);
 
@@ -568,6 +573,16 @@ export function ChatsPage({
       }
     }, 2000);
   };
+
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, MAX_INPUT_HEIGHT);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > MAX_INPUT_HEIGHT ? "auto" : "hidden";
+  }, [inputValue, MAX_INPUT_HEIGHT]);
 
   // Нажатие Enter
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1455,17 +1470,74 @@ export function ChatsPage({
                 type="button"
               >
                 <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
+                  className="chats-page__send-btn-glow"
+                  width="56"
+                  height="56"
+                  viewBox="0 0 56 56"
                   fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
                 >
-                  <path d="M22 2L11 13" />
-                  <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                  <g filter="url(#sendGlowFilter)">
+                    <rect
+                      x="10"
+                      y="10"
+                      width="42"
+                      height="42"
+                      rx="21"
+                      fill="url(#sendGlowGradient)"
+                      fillOpacity="0.4"
+                    />
+                  </g>
+                  <defs>
+                    <filter
+                      id="sendGlowFilter"
+                      x="0"
+                      y="0"
+                      width="62"
+                      height="62"
+                      filterUnits="userSpaceOnUse"
+                      colorInterpolationFilters="sRGB"
+                    >
+                      <feFlood floodOpacity="0" result="BackgroundImageFix" />
+                      <feBlend
+                        mode="normal"
+                        in="SourceGraphic"
+                        in2="BackgroundImageFix"
+                        result="shape"
+                      />
+                      <feGaussianBlur
+                        stdDeviation="5"
+                        result="effect1_foregroundBlur"
+                      />
+                    </filter>
+                    <radialGradient
+                      id="sendGlowGradient"
+                      cx="0"
+                      cy="0"
+                      r="1"
+                      gradientUnits="userSpaceOnUse"
+                      gradientTransform="translate(31 31) rotate(90) scale(30.7 42)"
+                    >
+                      <stop stopColor="#00C3FF" />
+                      <stop offset="0.4" stopColor="#003FFF" />
+                      <stop offset="1" stopColor="#007BFF" />
+                    </radialGradient>
+                  </defs>
+                </svg>
+                <svg
+                  className="chats-page__send-btn-icon"
+                  width="42"
+                  height="42"
+                  viewBox="0 0 42 42"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect width="42" height="42" rx="21" fill="white" fillOpacity="0.3" />
+                  <path
+                    d="M14.0156 19.7852C13.7227 19.7852 13.4785 19.6875 13.2832 19.4922C13.0879 19.2969 12.9902 19.0495 12.9902 18.75C12.9902 18.457 13.1009 18.1966 13.3223 17.9688L19.7578 11.5234C19.8685 11.4128 19.9922 11.3281 20.1289 11.2695C20.2656 11.2109 20.4056 11.1816 20.5488 11.1816C20.6986 11.1816 20.8418 11.2109 20.9785 11.2695C21.1217 11.3281 21.2454 11.4128 21.3496 11.5234L27.7852 17.9688C28.0065 18.1966 28.1172 18.457 28.1172 18.75C28.1172 19.0495 28.0195 19.2969 27.8242 19.4922C27.6289 19.6875 27.3848 19.7852 27.0918 19.7852C26.9421 19.7852 26.8021 19.7591 26.6719 19.707C26.5417 19.6484 26.4277 19.5703 26.3301 19.4727L24.1133 17.2852L20.5488 13.3008L16.9844 17.2852L14.7773 19.4727C14.6797 19.5703 14.5658 19.6484 14.4355 19.707C14.3053 19.7591 14.1654 19.7852 14.0156 19.7852ZM20.5488 29.7266C20.2363 29.7266 19.9792 29.6257 19.7773 29.4238C19.582 29.222 19.4844 28.9616 19.4844 28.6426V16.5234L19.6016 13.3398C19.6016 13.0469 19.6895 12.8125 19.8652 12.6367C20.041 12.4544 20.2689 12.3633 20.5488 12.3633C20.8353 12.3633 21.0664 12.4544 21.2422 12.6367C21.418 12.8125 21.5059 13.0469 21.5059 13.3398L21.623 16.5234V28.6426C21.623 28.9616 21.5221 29.222 21.3203 29.4238C21.125 29.6257 20.8678 29.7266 20.5488 29.7266Z"
+                    fill="black"
+                  />
                 </svg>
               </button>
             </div>

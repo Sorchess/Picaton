@@ -1001,6 +1001,7 @@
     resize: none;
     max-height: 120px;
     line-height: 1.4;
+    overflow-y: hidden;
 
     &::placeholder {
       color: var(--color-text-muted);
@@ -1011,25 +1012,51 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     border: none;
-    background: var(--color-glass-bg);
-    color: var(--color-text-muted);
+    background: transparent;
+    color: inherit;
     cursor: pointer;
     transition: all 0.2s;
     flex-shrink: 0;
+    padding: 0;
+    position: relative;
+    isolation: isolate;
 
     &--active {
-      background: var(--color-accent);
-      color: var(--color-text-on-accent);
-      box-shadow: 0 2px 8px rgba(var(--color-accent-rgb), 0.3);
+      filter: brightness(1.03);
+    }
+
+    &-glow {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    &-icon {
+      position: relative;
+      z-index: 1;
+    }
+
+    &--active &-glow {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    svg {
+      display: block;
     }
 
     &:disabled {
       cursor: default;
-      opacity: 0.5;
+      opacity: 0.45;
     }
 
     &:not(:disabled):active {
