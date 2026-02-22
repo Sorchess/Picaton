@@ -1470,62 +1470,6 @@ export function ChatsPage({
                 type="button"
               >
                 <svg
-                  className="chats-page__send-btn-glow"
-                  width="56"
-                  height="56"
-                  viewBox="0 0 56 56"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <g filter="url(#sendGlowFilter)">
-                    <rect
-                      x="10"
-                      y="10"
-                      width="42"
-                      height="42"
-                      rx="21"
-                      fill="url(#sendGlowGradient)"
-                      fillOpacity="0.4"
-                    />
-                  </g>
-                  <defs>
-                    <filter
-                      id="sendGlowFilter"
-                      x="0"
-                      y="0"
-                      width="62"
-                      height="62"
-                      filterUnits="userSpaceOnUse"
-                      colorInterpolationFilters="sRGB"
-                    >
-                      <feFlood floodOpacity="0" result="BackgroundImageFix" />
-                      <feBlend
-                        mode="normal"
-                        in="SourceGraphic"
-                        in2="BackgroundImageFix"
-                        result="shape"
-                      />
-                      <feGaussianBlur
-                        stdDeviation="5"
-                        result="effect1_foregroundBlur"
-                      />
-                    </filter>
-                    <radialGradient
-                      id="sendGlowGradient"
-                      cx="0"
-                      cy="0"
-                      r="1"
-                      gradientUnits="userSpaceOnUse"
-                      gradientTransform="translate(31 31) rotate(90) scale(30.7 42)"
-                    >
-                      <stop stopColor="#00C3FF" />
-                      <stop offset="0.4" stopColor="#003FFF" />
-                      <stop offset="1" stopColor="#007BFF" />
-                    </radialGradient>
-                  </defs>
-                </svg>
-                <svg
                   className="chats-page__send-btn-icon"
                   width="42"
                   height="42"
