@@ -7,9 +7,16 @@ import {
   Tabs,
   Loader,
   Card,
+  Modal,
 } from "@/shared";
 import type { UserPublic, ContactInfo } from "@/entities/user";
 import { getFullName } from "@/entities/user";
+import {
+  directChatApi,
+  getParticipantName,
+  getParticipantInitials,
+} from "@/entities/direct-chat";
+import type { Conversation } from "@/entities/direct-chat";
 import {
   businessCardApi,
   type BusinessCardPublic,
@@ -146,6 +153,17 @@ export function ContactProfileView({
   >([]);
   const [endorseLoading, setEndorseLoading] = useState<string | null>(null);
   const [, forceUpdate] = useState(0);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareConversations, setShareConversations] = useState<Conversation[]>(
+    [],
+  );
+  const [isLoadingShareConversations, setIsLoadingShareConversations] =
+    useState(false);
+  const [shareTargetConversationId, setShareTargetConversationId] = useState<
+    string | null
+  >(null);
+  const [isSendingToChat, setIsSendingToChat] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   // Загрузка всех карточек контакта
   const loadCards = useCallback(async () => {
@@ -427,6 +445,60 @@ export function ContactProfileView({
 
   const roleTabs = generateRoleTabs();
 
+  const buildContactSharePayload = useCallback((): string => {
+    const primaryRole = getCardRoles()[0] || "";
+    const payload = {
+      type: "contact_card",
+      user_id: user.id,
+      full_name: fullName,
+      role: primaryRole,
+      avatar_url: displayAvatar || null,
+      contacts: contacts.slice(0, 4).map((c) => ({
+        type: c.type,
+        value: c.value,
+      })),
+    };
+    return `contact_card::${JSON.stringify(payload)}`;
+  }, [contacts, displayAvatar, fullName, user.id]);
+
+  const openShareModal = async () => {
+    setIsShareModalOpen(true);
+    setShareError(null);
+    setShareTargetConversationId(null);
+    if (shareConversations.length > 0) return;
+    setIsLoadingShareConversations(true);
+    try {
+      const res = await directChatApi.getConversations();
+      setShareConversations(res.conversations);
+    } catch {
+      setShareError("Не удалось загрузить чаты");
+    } finally {
+      setIsLoadingShareConversations(false);
+    }
+  };
+
+  const closeShareModal = () => {
+    setIsShareModalOpen(false);
+    setShareError(null);
+    setShareTargetConversationId(null);
+  };
+
+  const handleSendToChat = async () => {
+    if (!shareTargetConversationId) return;
+    setIsSendingToChat(true);
+    setShareError(null);
+    try {
+      await directChatApi.sendMessage(shareTargetConversationId, {
+        content: buildContactSharePayload(),
+      });
+      closeShareModal();
+    } catch {
+      setShareError("Не удалось отправить контакт");
+    } finally {
+      setIsSendingToChat(false);
+    }
+  };
+
   return (
     <>
       {/* Loading overlay */}
@@ -571,7 +643,10 @@ export function ContactProfileView({
               </button>
             )}
 
-            <button className="contact-profile-view__action-btn">
+            <button
+              className="contact-profile-view__action-btn"
+              onClick={openShareModal}
+            >
               <span>Поделиться</span>
               <svg
                 width="16"
@@ -667,6 +742,59 @@ export function ContactProfileView({
           )}
         </div>
       </div>
+
+      <Modal isOpen={isShareModalOpen} onClose={closeShareModal}>
+        <div className="contact-profile-view__share-modal">
+          <h3 className="contact-profile-view__share-title">Выберите чат</h3>
+          {isLoadingShareConversations ? (
+            <div className="contact-profile-view__share-loading">
+              <Loader />
+            </div>
+          ) : (
+            <div className="contact-profile-view__share-list">
+              {shareConversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  type="button"
+                  className={`contact-profile-view__share-chat-item ${
+                    shareTargetConversationId === conv.id
+                      ? "contact-profile-view__share-chat-item--active"
+                      : ""
+                  }`}
+                  onClick={() => setShareTargetConversationId(conv.id)}
+                >
+                  <Avatar
+                    src={conv.participant.avatar_url || undefined}
+                    initials={getParticipantInitials(conv.participant)}
+                    size="sm"
+                  />
+                  <span>{getParticipantName(conv.participant)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="contact-profile-view__share-actions">
+            <button
+              type="button"
+              className="contact-profile-view__share-btn"
+              onClick={closeShareModal}
+            >
+              Отмена
+            </button>
+            <button
+              type="button"
+              className="contact-profile-view__share-btn contact-profile-view__share-btn--primary"
+              onClick={handleSendToChat}
+              disabled={!shareTargetConversationId || isSendingToChat}
+            >
+              {isSendingToChat ? "Отправка..." : "Отправить"}
+            </button>
+          </div>
+          {shareError && (
+            <p className="contact-profile-view__share-error">{shareError}</p>
+          )}
+        </div>
+      </Modal>
     </>
   );
 }

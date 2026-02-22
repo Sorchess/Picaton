@@ -114,15 +114,15 @@ export function Avatar({
     .filter(Boolean)
     .join(" ");
 
-  const glowStyle = glowColor
-    ? ({ "--avatar-glow-color": glowColor } as React.CSSProperties)
+  const resolvedGlowColor = glowColor ?? (!src ? "var(--color-accent-rgb)" : undefined);
+
+  const glowStyle = resolvedGlowColor
+    ? ({ "--avatar-glow-color": resolvedGlowColor } as React.CSSProperties)
     : undefined;
 
   return (
     <div className={classNames} style={glowStyle} {...props}>
-      <div
-        className={`avatar__glow${glowColor ? " avatar__glow--dynamic" : ""}`}
-      />
+      {resolvedGlowColor && <div className="avatar__glow avatar__glow--dynamic" />}
       <div className="avatar__inner">
         {src ? (
           <img
@@ -136,7 +136,6 @@ export function Avatar({
         ) : (
           <span className="avatar__initials">{initials}</span>
         )}
-        <div className="avatar__shine" />
       </div>
 
       {online && <span className="avatar__status avatar__status--online" />}

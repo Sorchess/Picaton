@@ -139,33 +139,7 @@ export function getParticipantInitials(participant: DMAuthor): string {
 
 export function formatMessageTime(dateStr: string): string {
   const date = new Date(dateStr);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const messageDate = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-  );
-
-  const time = date.toLocaleTimeString("ru-RU", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  if (messageDate.getTime() === today.getTime()) {
-    return time;
-  }
-
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (messageDate.getTime() === yesterday.getTime()) {
-    return `Вчера, ${time}`;
-  }
-
-  return date.toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "short",
+  return date.toLocaleTimeString("ru-RU", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -209,3 +183,4 @@ export function formatConversationTime(dateStr: string | null): string {
     month: "short",
   });
 }
+

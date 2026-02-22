@@ -22,6 +22,47 @@ import { MessageActions } from "./components/MessageActions";
 import { useMessageActions } from "./hooks/useMessageActions";
 import "./ChatsPage.scss";
 
+const CONTACT_CARD_PREFIX = "contact_card::";
+const CONTACT_CARD_LEGACY_PREFIX = "contact_card:";
+
+interface SharedContactCard {
+  type: "contact_card";
+  user_id?: string;
+  full_name: string;
+  role?: string;
+  avatar_url?: string | null;
+  contacts?: Array<{ type: string; value: string }>;
+}
+
+function parseSharedContactCard(content: string): SharedContactCard | null {
+  if (!content) return null;
+
+  let jsonPayload = "";
+  if (content.startsWith(CONTACT_CARD_PREFIX)) {
+    jsonPayload = content.slice(CONTACT_CARD_PREFIX.length).trim();
+  } else if (content.startsWith(CONTACT_CARD_LEGACY_PREFIX)) {
+    jsonPayload = content.slice(CONTACT_CARD_LEGACY_PREFIX.length).trim();
+  } else {
+    return null;
+  }
+
+  try {
+    const raw = JSON.parse(jsonPayload) as SharedContactCard;
+    if (!raw || raw.type !== "contact_card" || !raw.full_name) return null;
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+function getInitialsFromFullName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+  }
+  return (parts[0] || "").slice(0, 2).toUpperCase();
+}
+
 interface ChatsPageProps {
   /** Открыть конкретный диалог по ID пользователя */
   openUserId?: string;
@@ -583,26 +624,34 @@ export function ChatsPage({
     return prevDate !== currDate;
   };
 
-  const getDateLabel = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const msgDate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-    );
+  const getMessagePreviewText = useCallback((content: string): string => {
+    const sharedContact = parseSharedContactCard(content);
+    if (sharedContact) {
+      return `📇 Контакт: ${sharedContact.full_name}`;
+    }
+    if (
+      content.startsWith(CONTACT_CARD_PREFIX) ||
+      content.startsWith(CONTACT_CARD_LEGACY_PREFIX)
+    ) {
+      return "📇 Контакт";
+    }
+    return content;
+  }, []);
 
-    if (msgDate.getTime() === today.getTime()) return "Сегодня";
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (msgDate.getTime() === yesterday.getTime()) return "Вчера";
-    return date.toLocaleDateString("ru-RU", {
-      day: "numeric",
-      month: "long",
-      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-    });
-  };
+  const handleOpenSharedContact = useCallback(
+    (contact: SharedContactCard) => {
+      if (!contact.user_id || !onViewProfile) return;
+      const parts = contact.full_name.trim().split(/\s+/);
+      const first_name = parts[0] || "Контакт";
+      const last_name = parts.slice(1).join(" ");
+      onViewProfile(contact.user_id, {
+        first_name,
+        last_name,
+        avatar_url: contact.avatar_url || null,
+      });
+    },
+    [onViewProfile],
+  );
 
   // Позиция сообщения в группе (Telegram-стиль)
   const getMessagePosition = (
@@ -725,7 +774,9 @@ export function ChatsPage({
                           {"\u0440\u0435\u0434. "}
                         </span>
                       )}
-                      {conv.last_message_content || "Начните общение"}
+                      {conv.last_message_content
+                        ? getMessagePreviewText(conv.last_message_content)
+                        : "Начните общение"}
                     </span>
                     {conv.unread_count > 0 && (
                       <span className="chats-page__card-badge">
@@ -817,19 +868,14 @@ export function ChatsPage({
 
         {visibleMessages.map((msg, idx) => {
           const isOwn = msg.sender_id === currentUserId;
-          const showDate = shouldShowDateSeparator(msg, idx);
           const position = getMessagePosition(msg, idx);
+          const sharedContact = parseSharedContactCard(msg.content);
 
           return (
-            <div key={msg.id}>
-              {showDate && (
-                <div className="chats-page__date-separator">
-                  <span>{getDateLabel(msg.created_at)}</span>
-                </div>
-              )}
-              <div
-                className={`chats-page__message chats-page__message--${isOwn ? "own" : "other"} chats-page__message--${position}`}
-              >
+            <div
+              key={msg.id}
+              className={`chats-page__message chats-page__message--${isOwn ? "own" : "other"} chats-page__message--${position}`}
+            >
                 <div
                   className="chats-page__bubble"
                   onContextMenu={(e) => messageActions.openActionMenu(e, msg)}
@@ -852,7 +898,9 @@ export function ChatsPage({
                         {(() => {
                           const replied = messagesById.get(msg.reply_to_id || "");
                           if (!replied) return "Сообщение недоступно";
-                          return replied.content || "Сообщение";
+                          return getMessagePreviewText(
+                            replied.content || "Сообщение",
+                          );
                         })()}
                       </span>
                     </div>
@@ -862,7 +910,51 @@ export function ChatsPage({
                       ↪ Переслано от {msg.forwarded_from_name}
                     </p>
                   )}
-                  <p className="chats-page__bubble-text">{msg.content}</p>
+                  {sharedContact ? (
+                    <button
+                      type="button"
+                      className={`chats-page__shared-contact ${
+                        sharedContact.user_id && onViewProfile
+                          ? "chats-page__shared-contact--clickable"
+                          : ""
+                      }`}
+                      onClick={() => handleOpenSharedContact(sharedContact)}
+                      disabled={!sharedContact.user_id || !onViewProfile}
+                    >
+                      <div className="chats-page__shared-contact-top">
+                        <Avatar
+                          src={sharedContact.avatar_url || undefined}
+                          initials={getInitialsFromFullName(sharedContact.full_name)}
+                          size="sm"
+                        />
+                        <div className="chats-page__shared-contact-info">
+                          <div className="chats-page__shared-contact-name">
+                            {sharedContact.full_name}
+                          </div>
+                          {sharedContact.role && (
+                            <div className="chats-page__shared-contact-role">
+                              {sharedContact.role}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {(sharedContact.contacts || []).slice(0, 3).map((item, i) => (
+                        <div
+                          key={`${item.type}-${item.value}-${i}`}
+                          className="chats-page__shared-contact-item"
+                        >
+                          <span className="chats-page__shared-contact-type">
+                            {item.type}
+                          </span>
+                          <span className="chats-page__shared-contact-value">
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </button>
+                  ) : (
+                    <p className="chats-page__bubble-text">{msg.content}</p>
+                  )}
                   <div className="chats-page__bubble-meta">
                     {msg.is_edited && (
                       <span className="chats-page__bubble-edited">ред.</span>
@@ -911,7 +1003,6 @@ export function ChatsPage({
                     )}
                   </div>
                 </div>
-              </div>
             </div>
           );
         })}
@@ -939,7 +1030,10 @@ export function ChatsPage({
             <div className="chats-page__edit-info">
               <span className="chats-page__edit-title">Редактирование</span>
               <span className="chats-page__edit-preview">
-                {messages.find((m) => m.id === messageActions.editingMessageId)?.content || ""}
+                {getMessagePreviewText(
+                  messages.find((m) => m.id === messageActions.editingMessageId)
+                    ?.content || "",
+                )}
               </span>
             </div>
             <button
@@ -958,7 +1052,7 @@ export function ChatsPage({
                 Ответ {getMessageAuthorLabel(replyToMessage)}
               </span>
               <span className="chats-page__edit-preview">
-                {replyToMessage.content}
+                {getMessagePreviewText(replyToMessage.content)}
               </span>
             </div>
             <button

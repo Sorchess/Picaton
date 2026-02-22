@@ -302,22 +302,6 @@
     }
   }
 
-  &__date-separator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 16px 0 12px;
-
-    span {
-      @include liquid-glass--ghost;
-      padding: 4px 14px;
-      border-radius: $radius-full;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--color-text-muted);
-    }
-  }
-
   &__message {
     display: flex;
     margin-bottom: 2px;
@@ -369,6 +353,18 @@
       .chats-page__bubble-reply-author,
       .chats-page__bubble-reply-text {
         color: rgba(255, 255, 255, 0.9);
+      }
+
+      .chats-page__shared-contact {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .chats-page__shared-contact-name,
+      .chats-page__shared-contact-role,
+      .chats-page__shared-contact-type,
+      .chats-page__shared-contact-value {
+        color: rgba(255, 255, 255, 0.92);
       }
 
       &.chats-page__message--single .chats-page__bubble {
@@ -425,6 +421,11 @@
     max-width: 78%;
     padding: 8px 12px;
     position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    column-gap: 6px;
+    row-gap: 2px;
     border: none;
     box-shadow: none;
     transition: background 0.15s ease;
@@ -439,6 +440,8 @@
 
   &__bubble-text {
     margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 14px;
     line-height: 1.5;
     color: var(--color-text-primary);
@@ -446,9 +449,94 @@
     white-space: pre-wrap;
   }
 
+  &__shared-contact {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 100%;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 14px;
+    border: none;
+    min-width: 210px;
+    text-align: left;
+    width: 100%;
+    font: inherit;
+    cursor: default;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+
+    &--clickable {
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      &:active {
+        transform: scale(0.99);
+      }
+    }
+
+    &:disabled {
+      opacity: 1;
+    }
+  }
+
+  &__shared-contact-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__shared-contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__shared-contact-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__shared-contact-role {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    line-height: 1.2;
+  }
+
+  &__shared-contact-item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  &__shared-contact-type {
+    color: var(--color-text-muted);
+    text-transform: lowercase;
+  }
+
+  &__shared-contact-value {
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &__bubble-reply {
     display: flex;
     flex-direction: column;
+    flex: 0 0 100%;
     gap: 2px;
     margin: 0 0 6px;
     padding: 6px 8px;
@@ -474,16 +562,19 @@
   }
 
   &__bubble-forwarded {
+    flex: 0 0 100%;
     font-size: 12px;
     font-weight: 600;
   }
 
   &__bubble-meta {
-    display: flex;
+    display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: flex-end;
     gap: 4px;
-    margin-top: 2px;
+    margin-left: auto;
+    white-space: nowrap;
   }
 
   &__bubble-edited {
