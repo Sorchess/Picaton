@@ -615,15 +615,6 @@ export function ChatsPage({
     [messageActions],
   );
 
-  // Группировка сообщений по дате
-  const shouldShowDateSeparator = (msg: DirectMessage, idx: number) => {
-    if (idx === 0) return true;
-    const prev = visibleMessages[idx - 1];
-    const prevDate = new Date(prev.created_at).toDateString();
-    const currDate = new Date(msg.created_at).toDateString();
-    return prevDate !== currDate;
-  };
-
   const getMessagePreviewText = useCallback((content: string): string => {
     const sharedContact = parseSharedContactCard(content);
     if (sharedContact) {
@@ -665,15 +656,13 @@ export function ChatsPage({
     const sameAsPrev =
       prevMsg &&
       !prevMsg.is_deleted &&
-      prevMsg.sender_id === msg.sender_id &&
-      !shouldShowDateSeparator(msg, idx);
+      prevMsg.sender_id === msg.sender_id;
 
     const sameAsNext =
       nextMsg &&
       !nextMsg.is_deleted &&
       nextMsg.sender_id === msg.sender_id &&
-      idx + 1 < visibleMessages.length &&
-      !shouldShowDateSeparator(nextMsg, idx + 1);
+      idx + 1 < visibleMessages.length;
 
     if (sameAsPrev && sameAsNext) return "middle";
     if (sameAsPrev) return "last";
