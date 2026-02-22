@@ -504,9 +504,6 @@ export function CompanyDetail({
                 )}
 
                 <div className="company-detail__members-group">
-                  <span className="company-detail__section-title">
-                    Members ({members.length})
-                  </span>
 
                   {isLoadingMembers ? (
                     <div className="company-detail__loading">
@@ -522,7 +519,7 @@ export function CompanyDetail({
                               <Avatar
                                 src={member.user.avatar_url || undefined}
                                 initials={`${member.user.first_name.charAt(0)}${member.user.last_name.charAt(0)}`}
-                                size="md"
+                                size="sm"
                               />
                               <div className="company-detail__member-info">
                                 <span className="company-detail__member-name">

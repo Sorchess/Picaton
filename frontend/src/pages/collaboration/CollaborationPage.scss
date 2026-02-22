@@ -352,17 +352,6 @@
   }
 }
 
-// Override Avatar styles for circular avatars in project cards
-.collaboration-page__project-member {
-  .avatar__inner {
-    border-radius: 50% !important;
-  }
-
-  .avatar__image {
-    border-radius: 50% !important;
-  }
-}
-
 // Responsive adjustments
 @media (max-width: 480px) {
   .collaboration-page {

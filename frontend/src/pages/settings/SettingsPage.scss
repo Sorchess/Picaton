@@ -75,11 +75,6 @@
 
   &__card-avatar {
     flex-shrink: 0;
-
-    .avatar__inner,
-    .avatar__image {
-      border-radius: 50% !important;
-    }
   }
 
   &__card-icon {

@@ -850,9 +850,9 @@ export function ContactsPage({
               >
                 <div className="contacts-page__card-avatar">
                   {card.avatarUrl ? (
-                    <Avatar src={card.avatarUrl} alt={card.name} size="lg" />
+                    <Avatar src={card.avatarUrl} alt={card.name} size="md" />
                   ) : (
-                    <Avatar initials={getInitials(card.name)} size="lg" />
+                    <Avatar initials={getInitials(card.name)} size="md" />
                   )}
                 </div>
                 <div className="contacts-page__card-info">

@@ -256,26 +256,6 @@
     }
   }
 
-  &__card-avatar {
-    flex-shrink: 0;
-
-    .avatar {
-      &__inner {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-      }
-
-      &__image {
-        border-radius: 50%;
-      }
-
-      &__initials {
-        font-size: 18px;
-      }
-    }
-  }
-
   &__card-info {
     flex: 1;
     min-width: 0;
@@ -360,7 +340,6 @@
     .avatar__inner {
       width: 80px;
       height: 80px;
-      border-radius: 50%;
     }
   }
 
@@ -496,18 +475,6 @@
     justify-content: flex-end;
     gap: 12px;
     margin-top: 8px;
-  }
-}
-
-// Override Avatar styles for circular avatars in contact cards
-.contacts-page__card-avatar,
-.contacts-page__modal-avatar {
-  .avatar__inner {
-    border-radius: 50% !important;
-  }
-
-  .avatar__image {
-    border-radius: 50% !important;
   }
 }
 
