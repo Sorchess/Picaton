@@ -337,6 +337,8 @@
 
   &__message {
     display: flex;
+    align-items: flex-end;
+    gap: 8px;
     margin-bottom: 2px;
     animation: chats-message-appear 0.2s ease;
     position: relative;
@@ -469,6 +471,10 @@
       -webkit-user-select: none;
       user-select: none;
     }
+  }
+
+  &__bubble--selection-mode {
+    padding-top: 8px;
   }
 
   &__bubble-text {
@@ -634,6 +640,31 @@
 
     &--read {
       color: #fff;
+    }
+  }
+
+  &__message-side-marker {
+    width: 19px;
+    height: 19px;
+    min-width: 19px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1.5px solid rgba(var(--color-accent-rgb), 0.45);
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &--selected {
+      border-color: transparent;
+    }
+
+    svg {
+      display: block;
+      width: 19px;
+      height: 19px;
     }
   }
 
@@ -874,6 +905,42 @@
 
   // ═══════════ Input Area ═══════════
 
+  &__selection-actions {
+    @include liquid-glass;
+    margin: 8px 16px 6px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    flex-shrink: 0;
+  }
+
+  &__selection-actions-info {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  &__selection-actions-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__selection-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+
+    span {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      text-align: center;
+    }
+  }
+
   &__input-area {
     padding: 8px 16px;
     padding-bottom: max(8px, env(safe-area-inset-bottom));
@@ -994,3 +1061,5 @@
     }
   }
 }
+
+

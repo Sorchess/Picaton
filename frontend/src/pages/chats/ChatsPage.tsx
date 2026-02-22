@@ -121,6 +121,10 @@ export function ChatsPage({
   const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(
     null,
   );
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -450,6 +454,8 @@ export function ChatsPage({
       setTypingUser(null);
       setLocallyHiddenMessageIds(new Set());
       setFirstUnreadMessageId(null);
+      setIsMultiSelectMode(false);
+      setSelectedMessageIds(new Set());
       const loadedMessages = await loadMessages(conv.id);
 
       if (conv.unread_count > 0 && currentUserId) {
@@ -481,6 +487,8 @@ export function ChatsPage({
     setReplyToMessage(null);
     setLocallyHiddenMessageIds(new Set());
     setFirstUnreadMessageId(null);
+    setIsMultiSelectMode(false);
+    setSelectedMessageIds(new Set());
     loadConversations();
   };
 
@@ -601,6 +609,32 @@ export function ChatsPage({
   const visibleMessages = messages.filter(
     (msg) => !msg.is_deleted && !locallyHiddenMessageIds.has(msg.id),
   );
+  const selectedMessages = useMemo(
+    () => visibleMessages.filter((m) => selectedMessageIds.has(m.id)),
+    [selectedMessageIds, visibleMessages],
+  );
+  const canForwardSelected = useMemo(
+    () => selectedMessages.some((m) => !m.id.startsWith("temp-")),
+    [selectedMessages],
+  );
+  useEffect(() => {
+    if (!isMultiSelectMode) return;
+    const visibleIds = new Set(visibleMessages.map((m) => m.id));
+    setSelectedMessageIds((prev) => {
+      const next = new Set<string>();
+      prev.forEach((id) => {
+        if (visibleIds.has(id)) next.add(id);
+      });
+      return next;
+    });
+  }, [isMultiSelectMode, visibleMessages]);
+
+  useEffect(() => {
+    if (isMultiSelectMode && selectedMessageIds.size === 0) {
+      setIsMultiSelectMode(false);
+    }
+  }, [isMultiSelectMode, selectedMessageIds]);
+
   const messagesById = useMemo(
     () => new Map(messages.map((m) => [m.id, m])),
     [messages],
@@ -628,6 +662,55 @@ export function ChatsPage({
     },
     [messageActions],
   );
+
+  const startMultiSelectMode = useCallback(
+    (msg: DirectMessage) => {
+      messageActions.closeActionMenu();
+      setIsMultiSelectMode(true);
+      setSelectedMessageIds(new Set([msg.id]));
+    },
+    [messageActions],
+  );
+
+  const exitMultiSelectMode = useCallback(() => {
+    setIsMultiSelectMode(false);
+    setSelectedMessageIds(new Set());
+  }, []);
+
+  const toggleMessageSelection = useCallback((messageId: string) => {
+    setSelectedMessageIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) {
+        next.delete(messageId);
+      } else {
+        next.add(messageId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleForwardSelected = useCallback(() => {
+    messageActions.handleForwardMessages(selectedMessages);
+  }, [messageActions, selectedMessages]);
+
+  const handleDeleteSelectedForMe = useCallback(async () => {
+    if (!activeConversation?.id || selectedMessageIds.size === 0) return;
+    const ids = Array.from(selectedMessageIds);
+    try {
+      await Promise.allSettled(
+        ids.map((id) => directChatApi.deleteMessage(activeConversation.id, id, true)),
+      );
+      setLocallyHiddenMessageIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.add(id));
+        return next;
+      });
+      setSelectedMessageIds(new Set());
+      setIsMultiSelectMode(false);
+    } catch {
+      /* ignore */
+    }
+  }, [activeConversation?.id, selectedMessageIds]);
 
   const shouldShowDateSeparator = (msg: DirectMessage, idx: number) => {
     if (idx === 0) return true;
@@ -903,6 +986,7 @@ export function ChatsPage({
           const position = getMessagePosition(msg, idx);
           const sharedContact = parseSharedContactCard(msg.content);
           const showDate = shouldShowDateSeparator(msg, idx);
+          const isSelected = selectedMessageIds.has(msg.id);
 
           return (
             <div key={msg.id}>
@@ -917,17 +1001,59 @@ export function ChatsPage({
                 </div>
               )}
               <div
-                className={`chats-page__message chats-page__message--${isOwn ? "own" : "other"} chats-page__message--${position}`}
+                className={`chats-page__message chats-page__message--${isOwn ? "own" : "other"} chats-page__message--${position} ${isSelected ? "chats-page__message--selected" : ""}`}
               >
+                {isMultiSelectMode && !isOwn && (
+                  <button
+                    type="button"
+                    className={`chats-page__message-side-marker ${isSelected ? "chats-page__message-side-marker--selected" : ""}`}
+                    onClick={() => toggleMessageSelection(msg.id)}
+                    aria-label={isSelected ? "Снять выбор" : "Выбрать сообщение"}
+                  >
+                    {isSelected && (
+                      <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 19 19"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M9.0791 18.1592C7.8252 18.1592 6.65039 17.9219 5.55469 17.4473C4.45898 16.9785 3.49512 16.3281 2.66309 15.4961C1.83105 14.6641 1.17773 13.7002 0.703125 12.6045C0.234375 11.5088 0 10.334 0 9.08008C0 7.82617 0.234375 6.65137 0.703125 5.55566C1.17773 4.4541 1.83105 3.49023 2.66309 2.66406C3.49512 1.83203 4.45898 1.18164 5.55469 0.712891C6.65039 0.238281 7.8252 0.000976562 9.0791 0.000976562C10.333 0.000976562 11.5078 0.238281 12.6035 0.712891C13.7051 1.18164 14.6719 1.83203 15.5039 2.66406C16.3359 3.49023 16.9863 4.4541 17.4551 5.55566C17.9297 6.65137 18.167 7.82617 18.167 9.08008C18.167 10.334 17.9297 11.5088 17.4551 12.6045C16.9863 13.7002 16.3359 14.6641 15.5039 15.4961C14.6719 16.3281 13.7051 16.9785 12.6035 17.4473C11.5078 17.9219 10.333 18.1592 9.0791 18.1592ZM8.10352 13.4131C8.26758 13.4131 8.41699 13.375 8.55176 13.2988C8.69238 13.2227 8.81543 13.1084 8.9209 12.9561L13.0342 6.54004C13.0928 6.44629 13.1455 6.34668 13.1924 6.24121C13.2393 6.12988 13.2627 6.02441 13.2627 5.9248C13.2627 5.69629 13.1748 5.51172 12.999 5.37109C12.8291 5.23047 12.6357 5.16016 12.4189 5.16016C12.1318 5.16016 11.8945 5.3125 11.707 5.61719L8.06836 11.4355L6.38086 9.29102C6.26367 9.14453 6.14941 9.04199 6.03809 8.9834C5.92676 8.9248 5.80078 8.89551 5.66016 8.89551C5.4375 8.89551 5.24707 8.97754 5.08887 9.1416C4.93652 9.2998 4.86035 9.49023 4.86035 9.71289C4.86035 9.82422 4.88086 9.93262 4.92188 10.0381C4.96289 10.1436 5.02148 10.2461 5.09766 10.3457L7.25098 12.9648C7.37988 13.123 7.51172 13.2373 7.64648 13.3076C7.78125 13.3779 7.93359 13.4131 8.10352 13.4131Z"
+                          fill="#0081FF"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                )}
                 <div
-                  className="chats-page__bubble"
-                  onContextMenu={(e) => messageActions.openActionMenu(e, msg)}
+                  className={`chats-page__bubble ${
+                    isMultiSelectMode ? "chats-page__bubble--selection-mode" : ""
+                  }`}
+                  onContextMenu={(e) => {
+                    if (isMultiSelectMode) {
+                      e.preventDefault();
+                      return;
+                    }
+                    messageActions.openActionMenu(e, msg);
+                  }}
                   onTouchStart={(e) =>
-                    messageActions.handleMessageTouchStart(e, msg)
+                    isMultiSelectMode
+                      ? undefined
+                      : messageActions.handleMessageTouchStart(e, msg)
                   }
-                  onTouchEnd={messageActions.handleMessageTouchEnd}
-                  onTouchCancel={messageActions.handleMessageTouchEnd}
-                  onTouchMove={messageActions.handleMessageTouchMove}
+                  onTouchEnd={
+                    isMultiSelectMode ? undefined : messageActions.handleMessageTouchEnd
+                  }
+                  onTouchCancel={
+                    isMultiSelectMode ? undefined : messageActions.handleMessageTouchEnd
+                  }
+                  onTouchMove={
+                    isMultiSelectMode ? undefined : messageActions.handleMessageTouchMove
+                  }
+                  onClick={() => {
+                    if (isMultiSelectMode) toggleMessageSelection(msg.id);
+                  }}
                 >
                   {msg.reply_to_id && (
                     <div className="chats-page__bubble-reply">
@@ -961,8 +1087,16 @@ export function ChatsPage({
                           ? "chats-page__shared-contact--clickable"
                           : ""
                       }`}
-                      onClick={() => handleOpenSharedContact(sharedContact)}
-                      disabled={!sharedContact.user_id || !onViewProfile}
+                      onClick={() => {
+                        if (isMultiSelectMode) {
+                          toggleMessageSelection(msg.id);
+                          return;
+                        }
+                        handleOpenSharedContact(sharedContact);
+                      }}
+                      disabled={
+                        (!sharedContact.user_id || !onViewProfile) && !isMultiSelectMode
+                      }
                     >
                       <div className="chats-page__shared-contact-top">
                         <Avatar
@@ -1046,6 +1180,29 @@ export function ChatsPage({
                     )}
                   </div>
                 </div>
+                {isMultiSelectMode && isOwn && (
+                  <button
+                    type="button"
+                    className={`chats-page__message-side-marker ${isSelected ? "chats-page__message-side-marker--selected" : ""}`}
+                    onClick={() => toggleMessageSelection(msg.id)}
+                    aria-label={isSelected ? "Снять выбор" : "Выбрать сообщение"}
+                  >
+                    {isSelected && (
+                      <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 19 19"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M9.0791 18.1592C7.8252 18.1592 6.65039 17.9219 5.55469 17.4473C4.45898 16.9785 3.49512 16.3281 2.66309 15.4961C1.83105 14.6641 1.17773 13.7002 0.703125 12.6045C0.234375 11.5088 0 10.334 0 9.08008C0 7.82617 0.234375 6.65137 0.703125 5.55566C1.17773 4.4541 1.83105 3.49023 2.66309 2.66406C3.49512 1.83203 4.45898 1.18164 5.55469 0.712891C6.65039 0.238281 7.8252 0.000976562 9.0791 0.000976562C10.333 0.000976562 11.5078 0.238281 12.6035 0.712891C13.7051 1.18164 14.6719 1.83203 15.5039 2.66406C16.3359 3.49023 16.9863 4.4541 17.4551 5.55566C17.9297 6.65137 18.167 7.82617 18.167 9.08008C18.167 10.334 17.9297 11.5088 17.4551 12.6045C16.9863 13.7002 16.3359 14.6641 15.5039 15.4961C14.6719 16.3281 13.7051 16.9785 12.6035 17.4473C11.5078 17.9219 10.333 18.1592 9.0791 18.1592ZM8.10352 13.4131C8.26758 13.4131 8.41699 13.375 8.55176 13.2988C8.69238 13.2227 8.81543 13.1084 8.9209 12.9561L13.0342 6.54004C13.0928 6.44629 13.1455 6.34668 13.1924 6.24121C13.2393 6.12988 13.2627 6.02441 13.2627 5.9248C13.2627 5.69629 13.1748 5.51172 12.999 5.37109C12.8291 5.23047 12.6357 5.16016 12.4189 5.16016C12.1318 5.16016 11.8945 5.3125 11.707 5.61719L8.06836 11.4355L6.38086 9.29102C6.26367 9.14453 6.14941 9.04199 6.03809 8.9834C5.92676 8.9248 5.80078 8.89551 5.66016 8.89551C5.4375 8.89551 5.24707 8.97754 5.08887 9.1416C4.93652 9.2998 4.86035 9.49023 4.86035 9.71289C4.86035 9.82422 4.88086 9.93262 4.92188 10.0381C4.96289 10.1436 5.02148 10.2461 5.09766 10.3457L7.25098 12.9648C7.37988 13.123 7.51172 13.2373 7.64648 13.3076C7.78125 13.3779 7.93359 13.4131 8.10352 13.4131Z"
+                          fill="#0081FF"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -1060,7 +1217,75 @@ export function ChatsPage({
         conversations={conversations}
         currentUserId={currentUserId}
         onReplyMessage={handleReplyMessage}
+        onStartMultiSelect={startMultiSelectMode}
       />
+
+      {isMultiSelectMode && (
+        <div className="chats-page__selection-actions">
+          <div className="chats-page__selection-actions-info">
+            Выбрано: {selectedMessageIds.size}
+          </div>
+          <div className="chats-page__selection-actions-row">
+            <div className="chats-page__selection-action">
+              <IconButton
+                variant="default"
+                size="md"
+                onClick={handleForwardSelected}
+                disabled={!canForwardSelected}
+                aria-label="Переслать выбранные"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" />
+                  <path
+                    d="M22 2L15 22L11 13L2 9L22 2Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </IconButton>
+              <span>Переслать</span>
+            </div>
+            <div className="chats-page__selection-action">
+              <IconButton
+                variant="danger"
+                size="md"
+                onClick={() => {
+                  void handleDeleteSelectedForMe();
+                }}
+                disabled={selectedMessages.length === 0}
+                aria-label="Удалить выбранные"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M8 6V4h8v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </IconButton>
+              <span>Удалить</span>
+            </div>
+            <div className="chats-page__selection-action">
+              <IconButton
+                variant="ghost"
+                size="md"
+                onClick={exitMultiSelectMode}
+                aria-label="Отмена выбора"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M18 6L6 18M6 6l12 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </IconButton>
+              <span>Отмена</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ввод сообщения */}
       <div className="chats-page__input-area">

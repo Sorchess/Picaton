@@ -41,6 +41,7 @@ export interface MessageActionsController {
   handleDeleteForMe: (msg: DirectMessage) => Promise<void>;
   handleDeleteForEveryone: (msg: DirectMessage) => void;
   handleForwardMessage: (msg: DirectMessage) => void;
+  handleForwardMessages: (msgs: DirectMessage[]) => void;
   handleConfirmForward: () => void;
   setForwardTargetId: Dispatch<SetStateAction<string | null>>;
   closeForwardModal: () => void;
@@ -63,7 +64,7 @@ export function useMessageActions({
     left: number;
   } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DirectMessage | null>(null);
-  const [forwardMessage, setForwardMessage] = useState<DirectMessage | null>(null);
+  const [forwardMessageIds, setForwardMessageIds] = useState<string[]>([]);
   const [isForwardOpen, setIsForwardOpen] = useState(false);
   const [forwardTargetId, setForwardTargetId] = useState<string | null>(null);
 
@@ -225,7 +226,20 @@ export function useMessageActions({
       closeActionMenu();
       setIsForwardOpen(true);
       setForwardTargetId(activeConversationId || null);
-      setForwardMessage(msg);
+      setForwardMessageIds([msg.id]);
+      setDeleteTarget(null);
+    },
+    [activeConversationId, closeActionMenu],
+  );
+
+  const handleForwardMessages = useCallback(
+    (msgs: DirectMessage[]) => {
+      const ids = msgs.map((m) => m.id).filter((id) => !id.startsWith("temp-"));
+      if (ids.length === 0) return;
+      closeActionMenu();
+      setIsForwardOpen(true);
+      setForwardTargetId(activeConversationId || null);
+      setForwardMessageIds(ids);
       setDeleteTarget(null);
     },
     [activeConversationId, closeActionMenu],
@@ -233,21 +247,23 @@ export function useMessageActions({
 
   const closeForwardModal = useCallback(() => {
     setIsForwardOpen(false);
-    setForwardMessage(null);
+    setForwardMessageIds([]);
   }, []);
 
   const handleConfirmForward = useCallback(() => {
-    if (!forwardMessage || !forwardTargetId) return;
-    wsRef.current?.forwardMessage(forwardTargetId, forwardMessage.id);
+    if (forwardMessageIds.length === 0 || !forwardTargetId) return;
+    forwardMessageIds.forEach((messageId) => {
+      wsRef.current?.forwardMessage(forwardTargetId, messageId);
+    });
     closeForwardModal();
     setForwardTargetId(null);
-  }, [closeForwardModal, forwardMessage, forwardTargetId, wsRef]);
+  }, [closeForwardModal, forwardMessageIds, forwardTargetId, wsRef]);
 
   const resetMessageActions = useCallback(() => {
     setEditingMessageId(null);
     setActionMenu(null);
     setDeleteTarget(null);
-    setForwardMessage(null);
+    setForwardMessageIds([]);
     setIsForwardOpen(false);
     setForwardTargetId(null);
   }, []);
@@ -277,7 +293,7 @@ export function useMessageActions({
     editingMessageId,
     actionMenu,
     deleteTarget,
-    forwardMessage,
+    forwardMessage: null,
     isForwardOpen,
     forwardTargetId,
     menuRef,
@@ -293,6 +309,7 @@ export function useMessageActions({
     handleDeleteForMe,
     handleDeleteForEveryone,
     handleForwardMessage,
+    handleForwardMessages,
     handleConfirmForward,
     setForwardTargetId,
     closeForwardModal,
