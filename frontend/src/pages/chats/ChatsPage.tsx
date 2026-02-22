@@ -16,6 +16,7 @@ import {
   Tabs,
   EmptyState,
   IconButton,
+  Modal,
 } from "@/shared";
 import type { Tab } from "@/shared";
 import { MessageActions } from "./components/MessageActions";
@@ -125,6 +126,7 @@ export function ChatsPage({
   const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [isMultiDeleteOpen, setIsMultiDeleteOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -675,6 +677,7 @@ export function ChatsPage({
   const exitMultiSelectMode = useCallback(() => {
     setIsMultiSelectMode(false);
     setSelectedMessageIds(new Set());
+    setIsMultiDeleteOpen(false);
   }, []);
 
   const toggleMessageSelection = useCallback((messageId: string) => {
@@ -707,10 +710,41 @@ export function ChatsPage({
       });
       setSelectedMessageIds(new Set());
       setIsMultiSelectMode(false);
+      setIsMultiDeleteOpen(false);
     } catch {
       /* ignore */
     }
   }, [activeConversation?.id, selectedMessageIds]);
+
+  const handleDeleteSelectedForEveryone = useCallback(() => {
+    if (!activeConversation?.id || selectedMessages.length === 0) return;
+    selectedMessages.forEach((msg) => {
+      wsRef.current?.deleteMessage(activeConversation.id, msg.id, false);
+    });
+    setMessages((prev) =>
+      prev.map((m) =>
+        selectedMessageIds.has(m.id) ? { ...m, is_deleted: true, content: "" } : m,
+      ),
+    );
+    setSelectedMessageIds(new Set());
+    setIsMultiSelectMode(false);
+    setIsMultiDeleteOpen(false);
+  }, [activeConversation?.id, selectedMessageIds, selectedMessages]);
+
+  const handleForwardComplete = useCallback(
+    (targetConversationId: string) => {
+      setSelectedMessageIds(new Set());
+      setIsMultiSelectMode(false);
+      if (activeConversation?.id === targetConversationId) return;
+      const targetConversation = conversations.find(
+        (c) => c.id === targetConversationId,
+      );
+      if (targetConversation) {
+        void handleOpenConversation(targetConversation);
+      }
+    },
+    [activeConversation?.id, conversations, handleOpenConversation],
+  );
 
   const shouldShowDateSeparator = (msg: DirectMessage, idx: number) => {
     if (idx === 0) return true;
@@ -924,34 +958,51 @@ export function ChatsPage({
           </svg>
         </IconButton>
 
-        <div className="chats-page__chat-user-info">
-          <span className="chats-page__chat-user-name">
-            {getParticipantName(activeConversation.participant)}
-          </span>
-          {typingUser && (
-            <span className="chats-page__typing">печатает...</span>
+        <div
+          className={`chats-page__chat-user-info ${
+            isMultiSelectMode ? "chats-page__chat-user-info--selection" : ""
+          }`}
+        >
+          {isMultiSelectMode ? (
+            <span className="chats-page__chat-user-name chats-page__chat-user-name--selection">
+              {"\u0412\u044b\u0431\u0440\u0430\u043d\u043e: "}{" "}
+              {selectedMessageIds.size}
+            </span>
+          ) : (
+            <>
+              <span className="chats-page__chat-user-name">
+                {getParticipantName(activeConversation.participant)}
+              </span>
+              {typingUser && (
+                <span className="chats-page__typing">печатает...</span>
+              )}
+            </>
           )}
         </div>
 
-        <div
-          className="chats-page__chat-avatar"
-          onClick={() => {
-            if (onViewProfile && activeConversation) {
-              onViewProfile(activeConversation.participant.id, {
-                first_name: activeConversation.participant.first_name,
-                last_name: activeConversation.participant.last_name,
-                avatar_url: activeConversation.participant.avatar_url,
-              });
-            }
-          }}
-          style={{ cursor: onViewProfile ? "pointer" : undefined }}
-        >
-          <Avatar
-            src={activeConversation.participant.avatar_url || undefined}
-            initials={getParticipantInitials(activeConversation.participant)}
-            size="sm"
-          />
-        </div>
+        {isMultiSelectMode ? (
+          <div className="chats-page__chat-avatar-placeholder" />
+        ) : (
+          <div
+            className="chats-page__chat-avatar"
+            onClick={() => {
+              if (onViewProfile && activeConversation) {
+                onViewProfile(activeConversation.participant.id, {
+                  first_name: activeConversation.participant.first_name,
+                  last_name: activeConversation.participant.last_name,
+                  avatar_url: activeConversation.participant.avatar_url,
+                });
+              }
+            }}
+            style={{ cursor: onViewProfile ? "pointer" : undefined }}
+          >
+            <Avatar
+              src={activeConversation.participant.avatar_url || undefined}
+              initials={getParticipantInitials(activeConversation.participant)}
+              size="sm"
+            />
+          </div>
+        )}
       </header>
 
       {/* Сообщения */}
@@ -1218,161 +1269,208 @@ export function ChatsPage({
         currentUserId={currentUserId}
         onReplyMessage={handleReplyMessage}
         onStartMultiSelect={startMultiSelectMode}
+        onForwardComplete={handleForwardComplete}
       />
 
-      {isMultiSelectMode && (
-        <div className="chats-page__selection-actions">
-          <div className="chats-page__selection-actions-info">
-            Выбрано: {selectedMessageIds.size}
-          </div>
-          <div className="chats-page__selection-actions-row">
-            <div className="chats-page__selection-action">
-              <IconButton
-                variant="default"
-                size="md"
-                onClick={handleForwardSelected}
-                disabled={!canForwardSelected}
-                aria-label="Переслать выбранные"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" />
-                  <path
-                    d="M22 2L15 22L11 13L2 9L22 2Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </IconButton>
-              <span>Переслать</span>
-            </div>
-            <div className="chats-page__selection-action">
-              <IconButton
-                variant="danger"
-                size="md"
-                onClick={() => {
-                  void handleDeleteSelectedForMe();
-                }}
-                disabled={selectedMessages.length === 0}
-                aria-label="Удалить выбранные"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M8 6V4h8v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </IconButton>
-              <span>Удалить</span>
-            </div>
-            <div className="chats-page__selection-action">
-              <IconButton
-                variant="ghost"
-                size="md"
-                onClick={exitMultiSelectMode}
-                aria-label="Отмена выбора"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M18 6L6 18M6 6l12 12"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </IconButton>
-              <span>Отмена</span>
-            </div>
+      <Modal
+        isOpen={isMultiDeleteOpen && isMultiSelectMode}
+        onClose={() => setIsMultiDeleteOpen(false)}
+      >
+        <div className="chats-page__modal">
+          <h3 className="chats-page__modal-title">{"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f?"}</h3>
+          <p className="chats-page__modal-text">
+            {"\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435, \u043a\u0430\u043a \u0443\u0434\u0430\u043b\u0438\u0442\u044c"} {selectedMessages.length}{" "}
+            {selectedMessages.length === 1
+              ? "\u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435"
+              : "\u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f"}
+            .
+          </p>
+          <div className="chats-page__modal-actions">
+            <button
+              type="button"
+              className="chats-page__modal-btn"
+              onClick={() => {
+                void handleDeleteSelectedForMe();
+              }}
+            >
+              {"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0443 \u043c\u0435\u043d\u044f"}
+            </button>
+            <button
+              type="button"
+              className="chats-page__modal-btn chats-page__modal-btn--danger"
+              onClick={handleDeleteSelectedForEveryone}
+            >
+              {"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0443 \u0432\u0441\u0435\u0445"}
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Ввод сообщения */}
       <div className="chats-page__input-area">
-        {isMessagingRestricted && (
-          <div className="chats-page__restricted-note">
-            {"\u041A\u043E\u043D\u0442\u0430\u043A\u0442 \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0438\u043B \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u0438\u0441\u0430\u0442\u044C \u0435\u043C\u0443"}
-          </div>
-        )}
-        {messageActions.editingMessageId && (
-          <div className="chats-page__edit-bar">
-            <div className="chats-page__edit-info">
-              <span className="chats-page__edit-title">Редактирование</span>
-              <span className="chats-page__edit-preview">
-                {getMessagePreviewText(
-                  messages.find((m) => m.id === messageActions.editingMessageId)
-                    ?.content || "",
-                )}
-              </span>
+        {isMultiSelectMode ? (
+          <div className="chats-page__selection-actions">
+            <div className="chats-page__selection-actions-row">
+              <div className="chats-page__selection-action">
+                <IconButton
+                  variant="default"
+                  size="md"
+                  onClick={handleForwardSelected}
+                  disabled={!canForwardSelected}
+                  aria-label="Переслать выбранные"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" />
+                    <path
+                      d="M22 2L15 22L11 13L2 9L22 2Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </IconButton>
+                <span>Переслать</span>
+              </div>
+              <div className="chats-page__selection-action">
+                <IconButton
+                  variant="danger"
+                  size="md"
+                  onClick={() => setIsMultiDeleteOpen(true)}
+                  disabled={selectedMessages.length === 0}
+                  aria-label="Удалить выбранные"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M3 6h18"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M8 6V4h8v2"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M19 6l-1 14H6L5 6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </IconButton>
+                <span>Удалить</span>
+              </div>
+              <div className="chats-page__selection-action">
+                <IconButton
+                  variant="ghost"
+                  size="md"
+                  onClick={exitMultiSelectMode}
+                  aria-label="Отмена выбора"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M18 6L6 18M6 6l12 12"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </IconButton>
+                <span>Отмена</span>
+              </div>
             </div>
-            <button
-              type="button"
-              className="chats-page__edit-cancel"
-              onClick={messageActions.handleCancelEdit}
-            >
-              Отмена
-            </button>
           </div>
-        )}
-        {!messageActions.editingMessageId && replyToMessage && (
-          <div className="chats-page__edit-bar chats-page__reply-bar">
-            <div className="chats-page__edit-info">
-              <span className="chats-page__edit-title">
-                Ответ {getMessageAuthorLabel(replyToMessage)}
-              </span>
-              <span className="chats-page__edit-preview">
-                {getMessagePreviewText(replyToMessage.content)}
-              </span>
+        ) : (
+          <>
+            {isMessagingRestricted && (
+              <div className="chats-page__restricted-note">
+                {"\u041A\u043E\u043D\u0442\u0430\u043A\u0442 \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0438\u043B \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u0438\u0441\u0430\u0442\u044C \u0435\u043C\u0443"}
+              </div>
+            )}
+            {messageActions.editingMessageId && (
+              <div className="chats-page__edit-bar">
+                <div className="chats-page__edit-info">
+                  <span className="chats-page__edit-title">Редактирование</span>
+                  <span className="chats-page__edit-preview">
+                    {getMessagePreviewText(
+                      messages.find((m) => m.id === messageActions.editingMessageId)
+                        ?.content || "",
+                    )}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="chats-page__edit-cancel"
+                  onClick={messageActions.handleCancelEdit}
+                >
+                  Отмена
+                </button>
+              </div>
+            )}
+            {!messageActions.editingMessageId && replyToMessage && (
+              <div className="chats-page__edit-bar chats-page__reply-bar">
+                <div className="chats-page__edit-info">
+                  <span className="chats-page__edit-title">
+                    Ответ {getMessageAuthorLabel(replyToMessage)}
+                  </span>
+                  <span className="chats-page__edit-preview">
+                    {getMessagePreviewText(replyToMessage.content)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="chats-page__edit-cancel"
+                  onClick={() => setReplyToMessage(null)}
+                >
+                  Отмена
+                </button>
+              </div>
+            )}
+            <div className="chats-page__input-row">
+              <textarea
+                ref={inputRef}
+                className="chats-page__input"
+                placeholder={
+                  isMessagingRestricted
+                    ? "\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430"
+                    : messageActions.editingMessageId
+                      ? "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
+                      : replyToMessage
+                        ? "\u041E\u0442\u0432\u0435\u0442..."
+                        : "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
+                }
+                value={inputValue}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                disabled={isMessagingRestricted}
+              />
+              <button
+                className={`chats-page__send-btn ${inputValue.trim() ? "chats-page__send-btn--active" : ""}`}
+                onClick={handleSend}
+                disabled={!inputValue.trim() || isMessagingRestricted}
+                type="button"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 2L11 13" />
+                  <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                </svg>
+              </button>
             </div>
-            <button
-              type="button"
-              className="chats-page__edit-cancel"
-              onClick={() => setReplyToMessage(null)}
-            >
-              Отмена
-            </button>
-          </div>
+          </>
         )}
-        <div className="chats-page__input-row">
-          <textarea
-            ref={inputRef}
-            className="chats-page__input"
-            placeholder={
-              isMessagingRestricted
-                ? "\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430"
-                : messageActions.editingMessageId
-                  ? "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
-                  : replyToMessage
-                    ? "\u041E\u0442\u0432\u0435\u0442..."
-                  : "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
-            }
-            value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={1}
-            disabled={isMessagingRestricted}
-          />
-          <button
-            className={`chats-page__send-btn ${inputValue.trim() ? "chats-page__send-btn--active" : ""}`}
-            onClick={handleSend}
-            disabled={!inputValue.trim() || isMessagingRestricted}
-            type="button"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M22 2L11 13" />
-              <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-            </svg>
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -160,7 +160,7 @@ class DirectChatService:
     async def delete_message(
         self, message_id: UUID, user_id: UUID, for_me: bool = False
     ) -> bool:
-        """Delete message globally for author or hide it for one user."""
+        """Delete message globally for any conversation participant or hide for one user."""
         message = await self._msg_repo.get_by_id(message_id)
         if not message:
             raise DMMessageNotFoundError(str(message_id))
@@ -171,9 +171,6 @@ class DirectChatService:
 
         if for_me:
             return await self._msg_repo.hide_for_user(message_id, user_id)
-
-        if message.sender_id != user_id:
-            raise DMAccessDeniedError(str(message.conversation_id), str(user_id))
         return await self._msg_repo.soft_delete(message_id)
 
     async def mark_as_read(self, conversation_id: UUID, user_id: UUID) -> int:

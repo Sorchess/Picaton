@@ -11,6 +11,7 @@ interface MessageActionsProps {
   currentUserId?: string;
   onReplyMessage: (msg: DirectMessage) => void;
   onStartMultiSelect: (msg: DirectMessage) => void;
+  onForwardComplete: (targetConversationId: string) => void;
 }
 
 interface MenuActionButtonProps {
@@ -32,7 +33,7 @@ function MenuActionButton({
       className={`chats-page__message-menu-item ${danger ? "chats-page__message-menu-item--danger" : ""}`}
       onClick={onClick}
     >
-      <span className="chats-page__message-menu-icon">{icon}</span>
+      <span className="chats-page__message-menu-icon" style={{ marginRight: "5px" }}>{icon}</span>
       <span>{label}</span>
     </button>
   );
@@ -45,7 +46,16 @@ export function MessageActions({
   currentUserId,
   onReplyMessage,
   onStartMultiSelect,
+  onForwardComplete,
 }: MessageActionsProps) {
+  const handleConfirmForward = () => {
+    const targetConversationId = controller.forwardTargetId;
+    controller.handleConfirmForward();
+    if (targetConversationId) {
+      onForwardComplete(targetConversationId);
+    }
+  };
+
   return (
     <>
       {controller.actionMenu && (
@@ -108,7 +118,7 @@ export function MessageActions({
                   }
                 />
                 <MenuActionButton
-                  label="Выбрать несколько"
+                  label="Выбрать"
                   onClick={() => onStartMultiSelect(msg)}
                   icon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -283,7 +293,7 @@ export function MessageActions({
             <button
               type="button"
               className="chats-page__modal-btn chats-page__modal-btn--primary"
-              onClick={controller.handleConfirmForward}
+              onClick={handleConfirmForward}
               disabled={!controller.forwardTargetId}
             >
               Переслать
