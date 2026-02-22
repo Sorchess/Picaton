@@ -10,7 +10,7 @@ import {
   Modal,
 } from "@/shared";
 import type { UserPublic, ContactInfo } from "@/entities/user";
-import { getFullName } from "@/entities/user";
+import { getFullName, userApi } from "@/entities/user";
 import {
   directChatApi,
   getParticipantName,
@@ -139,6 +139,40 @@ export function ContactProfileView({
   singleCardMode = false,
 }: ContactProfileViewProps) {
   const { user: authUser } = useAuth();
+  const [resolvedUser, setResolvedUser] = useState<UserPublic>(user);
+  const [hasLoadedPublicProfile, setHasLoadedPublicProfile] = useState(false);
+
+  useEffect(() => {
+    setResolvedUser(user);
+    setHasLoadedPublicProfile(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user.id || hasLoadedPublicProfile || resolvedUser.position) return;
+
+    let cancelled = false;
+
+    const loadPublicUser = async () => {
+      try {
+        const publicUser = await userApi.getPublic(user.id);
+        if (!cancelled) {
+          setResolvedUser((prev) => ({ ...prev, ...publicUser }));
+        }
+      } catch (error) {
+        console.error("Failed to load public user profile:", error);
+      } finally {
+        if (!cancelled) {
+          setHasLoadedPublicProfile(true);
+        }
+      }
+    };
+
+    loadPublicUser();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user.id, resolvedUser.position, hasLoadedPublicProfile]);
 
   // Карточки контакта
   const [cards, setCards] = useState<BusinessCardPublic[]>([]);
@@ -379,17 +413,18 @@ export function ContactProfileView({
   };
 
   const activeCard = getActiveCard();
-  const fullName = activeCard?.display_name || getFullName(user);
+  const fullName = activeCard?.display_name || getFullName(resolvedUser);
   // Используем аватар из активной карточки, с fallback на аватар пользователя
-  const displayAvatar = activeCard?.avatar_url || user.avatar_url;
+  const displayAvatar = activeCard?.avatar_url || resolvedUser.avatar_url;
   // Bio берём только из активной карточки, если карточки загружены
   const bio =
     cards.length > 0
       ? activeCard?.bio || activeCard?.ai_generated_bio
-      : user.bio || user.ai_generated_bio;
-  const contacts = activeCard?.contacts || user.contacts || [];
-  const displayTags = activeCard?.tags || user.tags || [];
-  const displaySearchTags = activeCard?.search_tags || user.search_tags || [];
+      : resolvedUser.bio || resolvedUser.ai_generated_bio;
+  const contacts = activeCard?.contacts || resolvedUser.contacts || [];
+  const displayTags = activeCard?.tags || resolvedUser.tags || [];
+  const displaySearchTags =
+    activeCard?.search_tags || resolvedUser.search_tags || [];
 
   // Роли из тегов
   const getCardRoles = (): string[] => {
@@ -405,8 +440,8 @@ export function ContactProfileView({
       });
     }
 
-    if (roles.length === 0 && user.position) {
-      roles.push(user.position);
+    if (roles.length === 0 && resolvedUser.position) {
+      roles.push(resolvedUser.position);
     }
 
     return roles.length > 0 ? roles : ["Пользователь"];
@@ -422,7 +457,7 @@ export function ContactProfileView({
   );
 
   // Проверяем, можно ли лайкать (нельзя лайкать свои навыки)
-  const canEndorse = authUser?.id !== user.id;
+  const canEndorse = authUser?.id !== resolvedUser.id;
 
   // Инициалы
   const getInitials = (name: string): string => {
@@ -449,7 +484,7 @@ export function ContactProfileView({
     const primaryRole = getCardRoles()[0] || "";
     const payload = {
       type: "contact_card",
-      user_id: user.id,
+      user_id: resolvedUser.id,
       full_name: fullName,
       role: primaryRole,
       avatar_url: displayAvatar || null,
@@ -459,7 +494,7 @@ export function ContactProfileView({
       })),
     };
     return `contact_card::${JSON.stringify(payload)}`;
-  }, [contacts, displayAvatar, fullName, user.id]);
+  }, [contacts, displayAvatar, fullName, resolvedUser.id]);
 
   const openShareModal = async () => {
     setIsShareModalOpen(true);
@@ -598,7 +633,7 @@ export function ContactProfileView({
             {onSaveContact && !isSaved && (
               <button
                 className="contact-profile-view__action-btn"
-                onClick={() => onSaveContact(user)}
+                onClick={() => onSaveContact(resolvedUser)}
               >
                 <span>Добавить</span>
                 <svg
@@ -622,7 +657,7 @@ export function ContactProfileView({
               <button
                 className="contact-profile-view__action-btn contact-profile-view__action-btn"
                 onClick={() =>
-                  (onDeleteContact as (user: UserPublic) => void)(user)
+                  (onDeleteContact as (user: UserPublic) => void)(resolvedUser)
                 }
               >
                 <span>Удалить</span>
