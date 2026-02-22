@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   directChatApi,
   DMWebSocket,
@@ -70,6 +70,9 @@ export function ChatsPage({
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [typingUser, setTypingUser] = useState<string | null>(null);
+  const [replyToMessage, setReplyToMessage] = useState<DirectMessage | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState("all");
   const [locallyHiddenMessageIds, setLocallyHiddenMessageIds] = useState<Set<string>>(
     () => new Set(),
@@ -371,6 +374,7 @@ export function ChatsPage({
           setConversations((prev) => [res.conversation, ...prev]);
           setActiveConversation(res.conversation);
           onChatViewChange?.(true);
+          setReplyToMessage(null);
           setMessages(res.message.content ? [res.message] : []);
         } catch {
           // Может уже существовать — перезагрузим
@@ -395,6 +399,7 @@ export function ChatsPage({
     async (conv: Conversation) => {
       setActiveConversation(conv);
       onChatViewChange?.(true);
+      setReplyToMessage(null);
       setMessages([]);
       setTypingUser(null);
       setLocallyHiddenMessageIds(new Set());
@@ -419,6 +424,7 @@ export function ChatsPage({
     setMessages([]);
     setTypingUser(null);
     messageActions.resetMessageActions();
+    setReplyToMessage(null);
     setLocallyHiddenMessageIds(new Set());
     loadConversations();
   };
@@ -450,6 +456,8 @@ export function ChatsPage({
     }
 
     setInputValue("");
+    const replyToId = replyToMessage?.id || null;
+    setReplyToMessage(null);
 
     // Оптимистичное добавление
     const optimisticMsg: DirectMessage = {
@@ -460,12 +468,13 @@ export function ChatsPage({
       is_read: false,
       is_edited: false,
       is_deleted: false,
+      reply_to_id: replyToId,
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimisticMsg]);
 
     // Отправить через WS
-    wsRef.current?.sendMessage(activeConversation.id, content);
+    wsRef.current?.sendMessage(activeConversation.id, content, replyToId || undefined);
 
     // Остановить typing
     if (isTypingRef.current) {
@@ -536,6 +545,33 @@ export function ChatsPage({
   const filteredConversations = conversations;
   const visibleMessages = messages.filter(
     (msg) => !msg.is_deleted && !locallyHiddenMessageIds.has(msg.id),
+  );
+  const messagesById = useMemo(
+    () => new Map(messages.map((m) => [m.id, m])),
+    [messages],
+  );
+
+  const getMessageAuthorLabel = useCallback(
+    (msg: DirectMessage) => {
+      if (msg.sender_id === currentUserId) return "Вы";
+      if (msg.sender) {
+        const fullName = `${msg.sender.first_name} ${msg.sender.last_name}`.trim();
+        if (fullName) return fullName;
+      }
+      return activeConversation
+        ? getParticipantName(activeConversation.participant)
+        : "Собеседник";
+    },
+    [activeConversation, currentUserId],
+  );
+
+  const handleReplyMessage = useCallback(
+    (msg: DirectMessage) => {
+      messageActions.closeActionMenu();
+      setReplyToMessage(msg);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    },
+    [messageActions],
   );
 
   // Группировка сообщений по дате
@@ -804,6 +840,23 @@ export function ChatsPage({
                   onTouchCancel={messageActions.handleMessageTouchEnd}
                   onTouchMove={messageActions.handleMessageTouchMove}
                 >
+                  {msg.reply_to_id && (
+                    <div className="chats-page__bubble-reply">
+                      <span className="chats-page__bubble-reply-author">
+                        {(() => {
+                          const replied = messagesById.get(msg.reply_to_id || "");
+                          return replied ? getMessageAuthorLabel(replied) : "Сообщение";
+                        })()}
+                      </span>
+                      <span className="chats-page__bubble-reply-text">
+                        {(() => {
+                          const replied = messagesById.get(msg.reply_to_id || "");
+                          if (!replied) return "Сообщение недоступно";
+                          return replied.content || "Сообщение";
+                        })()}
+                      </span>
+                    </div>
+                  )}
                   {msg.forwarded_from_name && (
                     <p className="chats-page__bubble-forwarded">
                       Переслано от {msg.forwarded_from_name}
@@ -857,18 +910,6 @@ export function ChatsPage({
                       </span>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    className="chats-page__message-actions"
-                    onClick={(e) => messageActions.openActionMenu(e, msg)}
-                    aria-label="Действия с сообщением"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <circle cx="5" cy="12" r="2" fill="currentColor" />
-                      <circle cx="12" cy="12" r="2" fill="currentColor" />
-                      <circle cx="19" cy="12" r="2" fill="currentColor" />
-                    </svg>
-                  </button>
                 </div>
               </div>
             </div>
@@ -883,6 +924,7 @@ export function ChatsPage({
         visibleMessages={visibleMessages}
         conversations={conversations}
         currentUserId={currentUserId}
+        onReplyMessage={handleReplyMessage}
       />
 
       {/* Ввод сообщения */}
@@ -909,6 +951,25 @@ export function ChatsPage({
             </button>
           </div>
         )}
+        {!messageActions.editingMessageId && replyToMessage && (
+          <div className="chats-page__edit-bar chats-page__reply-bar">
+            <div className="chats-page__edit-info">
+              <span className="chats-page__edit-title">
+                Ответ {getMessageAuthorLabel(replyToMessage)}
+              </span>
+              <span className="chats-page__edit-preview">
+                {replyToMessage.content}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="chats-page__edit-cancel"
+              onClick={() => setReplyToMessage(null)}
+            >
+              Отмена
+            </button>
+          </div>
+        )}
         <div className="chats-page__input-row">
           <textarea
             ref={inputRef}
@@ -918,6 +979,8 @@ export function ChatsPage({
                 ? "\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430"
                 : messageActions.editingMessageId
                   ? "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
+                  : replyToMessage
+                    ? "\u041E\u0442\u0432\u0435\u0442..."
                   : "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
             }
             value={inputValue}

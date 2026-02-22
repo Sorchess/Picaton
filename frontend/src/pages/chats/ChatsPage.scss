@@ -361,6 +361,16 @@
         }
       }
 
+      .chats-page__bubble-reply {
+        background: rgba(255, 255, 255, 0.16);
+        border-left-color: rgba(255, 255, 255, 0.8);
+      }
+
+      .chats-page__bubble-reply-author,
+      .chats-page__bubble-reply-text {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
       &.chats-page__message--single .chats-page__bubble {
         background: linear-gradient(180deg, #4ba1f5 0%, #2e89f0 100%);
         border-radius: 20px 20px 4px 20px;
@@ -436,6 +446,33 @@
     white-space: pre-wrap;
   }
 
+  &__bubble-reply {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 0 6px;
+    padding: 6px 8px;
+    border-left: 2px solid rgba(var(--color-accent-rgb), 0.8);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &__bubble-reply-author {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(var(--color-accent-rgb), 0.95);
+    line-height: 1.2;
+  }
+
+  &__bubble-reply-text {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   &__bubble-forwarded {
     margin: 0 0 4px;
     font-size: 12px;
@@ -481,8 +518,8 @@
   &__message-actions {
     position: absolute;
     top: 6px;
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
+    background: transparent;
+    border: none;
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -494,10 +531,19 @@
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
     cursor: pointer;
+    outline: none;
+    box-shadow: none;
 
     &:hover {
       color: var(--color-text-primary);
       transform: scale(1.05);
+    }
+
+    &:focus,
+    &:focus-visible,
+    &:active {
+      outline: none;
+      box-shadow: none;
     }
   }
 

@@ -8,6 +8,7 @@ interface MessageActionsProps {
   visibleMessages: DirectMessage[];
   conversations: Conversation[];
   currentUserId?: string;
+  onReplyMessage: (msg: DirectMessage) => void;
 }
 
 export function MessageActions({
@@ -15,6 +16,7 @@ export function MessageActions({
   visibleMessages,
   conversations,
   currentUserId,
+  onReplyMessage,
 }: MessageActionsProps) {
   return (
     <>
@@ -40,6 +42,13 @@ export function MessageActions({
                   onClick={() => controller.handleCopyMessage(msg)}
                 >
                   Скопировать
+                </button>
+                <button
+                  type="button"
+                  className="chats-page__message-menu-item"
+                  onClick={() => onReplyMessage(msg)}
+                >
+                  Ответить
                 </button>
                 {canForward && (
                   <button
