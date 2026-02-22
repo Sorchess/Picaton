@@ -25,6 +25,7 @@ import {
   Tabs,
   type Tab,
   Button,
+  Card,
 } from "@/shared";
 import "./ContactsPage.scss";
 
@@ -843,7 +844,7 @@ export function ContactsPage({
             </div>
           ) : (
             transformedContacts.map((card) => (
-              <div
+              <Card
                 key={card.id}
                 className="contacts-page__card"
                 onClick={() => handleCardClick(card)}
@@ -899,7 +900,7 @@ export function ContactsPage({
                     </svg>
                   </button>
                 )}
-              </div>
+              </Card>
             ))
           )}
         </div>

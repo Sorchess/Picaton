@@ -149,7 +149,6 @@
     font-weight: 500;
     font-size: 18px;
     line-height: 1.2;
-    color: rgba(255, 255, 255, 0.9);
     margin: 0;
     text-align: center;
   }
@@ -439,51 +438,5 @@
     justify-content: center;
     background: var(--color-bg-primary);
     z-index: 50;
-  }
-}
-
-// Light theme
-[data-theme="light"] {
-  .contact-profile-view {
-    &__top-title {
-      color: #000000;
-    }
-
-    &__name {
-      color: #000000;
-    }
-
-    &__role {
-      color: #6b7280;
-    }
-
-    &__card {
-      background: #f9faff;
-      border-color: #e5e7eb;
-    }
-
-    &__card-label {
-      color: #6b7280;
-    }
-
-    &__bio-text {
-      color: #000000;
-    }
-
-    &__contact {
-      background: rgba(0, 0, 0, 0.02);
-      border-color: #e5e7eb;
-      color: #000000;
-
-      &:hover {
-        background: rgba(0, 0, 0, 0.05);
-      }
-    }
-
-    &__hobby {
-      background: rgba(0, 0, 0, 0.04);
-      border-color: rgba(0, 0, 0, 0.06);
-      color: #000000;
-    }
   }
 }
