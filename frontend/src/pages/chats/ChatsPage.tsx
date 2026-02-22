@@ -629,6 +629,35 @@ export function ChatsPage({
     [messageActions],
   );
 
+  const shouldShowDateSeparator = (msg: DirectMessage, idx: number) => {
+    if (idx === 0) return true;
+    const prev = visibleMessages[idx - 1];
+    const prevDate = new Date(prev.created_at).toDateString();
+    const currDate = new Date(msg.created_at).toDateString();
+    return prevDate !== currDate;
+  };
+
+  const getDateLabel = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const msgDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+    );
+
+    if (msgDate.getTime() === today.getTime()) return "Сегодня";
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (msgDate.getTime() === yesterday.getTime()) return "Вчера";
+    return date.toLocaleDateString("ru-RU", {
+      day: "numeric",
+      month: "long",
+      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    });
+  };
+
   const getMessagePreviewText = useCallback((content: string): string => {
     const sharedContact = parseSharedContactCard(content);
     if (sharedContact) {
@@ -873,9 +902,15 @@ export function ChatsPage({
           const isOwn = msg.sender_id === currentUserId;
           const position = getMessagePosition(msg, idx);
           const sharedContact = parseSharedContactCard(msg.content);
+          const showDate = shouldShowDateSeparator(msg, idx);
 
           return (
             <div key={msg.id}>
+              {showDate && (
+                <div className="chats-page__date-separator">
+                  <span>{getDateLabel(msg.created_at)}</span>
+                </div>
+              )}
               {msg.id === firstUnreadMessageId && (
                 <div className="chats-page__unread-separator">
                   <span>Непрочитанные</span>

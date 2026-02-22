@@ -319,6 +319,22 @@
     }
   }
 
+  &__date-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 14px 0 10px;
+
+    span {
+      @include liquid-glass--ghost;
+      padding: 4px 14px;
+      border-radius: $radius-full;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-muted);
+    }
+  }
+
   &__message {
     display: flex;
     margin-bottom: 2px;
