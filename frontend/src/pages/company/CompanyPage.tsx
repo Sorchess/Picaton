@@ -316,13 +316,14 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
         email_domain: createForm.email_domain,
         description: createForm.description || undefined,
       });
-      await loadCompanies();
-      // После создания роль будет загружена через loadRoles
-      const newCompanyWithRole: CompanyWithRole = {
-        company: newCompany,
-        role: null, // Роль загрузится при открытии компании
-        joined_at: new Date().toISOString(),
-      };
+      const freshCompanies = await companyApi.getMyCompanies();
+      setCompanies(freshCompanies);
+      const newCompanyWithRole: CompanyWithRole =
+        freshCompanies.find((c) => c.company.id === newCompany.id) || {
+          company: newCompany,
+          role: null,
+          joined_at: new Date().toISOString(),
+        };
       setIsCreateModalOpen(false);
       setCreateForm({
         name: "",
