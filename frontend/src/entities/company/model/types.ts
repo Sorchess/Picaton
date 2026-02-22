@@ -139,6 +139,7 @@ export interface CompanyInvitation {
   email: string;
   role: CompanyRoleInfo | null;
   invited_by_id: string | null;
+  token?: string | null;
   status: InvitationStatus;
   created_at: string;
   expires_at: string | null;

@@ -696,6 +696,7 @@ async def create_invitation(
             else None
         ),
         invited_by_id=invitation.invited_by_id,
+        token=invitation.token,
         status=invitation.status,
         created_at=invitation.created_at,
         expires_at=invitation.expires_at,
@@ -753,6 +754,7 @@ async def get_company_invitations(
                     else None
                 ),
                 invited_by_id=inv.invited_by_id,
+                token=inv.token,
                 status=inv.status,
                 created_at=inv.created_at,
                 expires_at=inv.expires_at,
@@ -858,6 +860,7 @@ async def resend_invitation(
             else None
         ),
         invited_by_id=invitation.invited_by_id,
+        token=invitation.token,
         status=invitation.status,
         created_at=invitation.created_at,
         expires_at=invitation.expires_at,

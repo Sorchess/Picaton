@@ -81,12 +81,16 @@ export function CompanyDetail({
   onRolesChange,
 }: CompanyDetailProps) {
   void isLoadingInvitations;
+  void onViewMemberCard;
   const [subPage, setSubPage] = useState<SubPage>("main");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCardSelectModalOpen, setIsCardSelectModalOpen] = useState(false);
   const [isSelectingCard, setIsSelectingCard] = useState(false);
+  const [selectedMemberForRole, setSelectedMemberForRole] =
+    useState<CompanyMember | null>(null);
+  const [isMemberActionLoading, setIsMemberActionLoading] = useState(false);
 
   const canManageRolesCheck = canChangeRoles(company.role);
 
@@ -152,6 +156,76 @@ export function CompanyDetail({
   const pendingInvitations = invitations.filter(
     (inv) => inv.status === "pending",
   );
+
+  const pendingInvitationWithToken = pendingInvitations
+    .filter((inv) => Boolean(inv.token))
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )[0];
+
+  const canEditMemberRole = (member: CompanyMember): boolean => {
+    return (
+      canChangeRoles(company.role) &&
+      member.user.id !== currentUserId &&
+      !isOwnerRole(member.role)
+    );
+  };
+
+  const handleCopyInviteLink = async () => {
+    const token = pendingInvitationWithToken?.token;
+    if (!token) {
+      window.alert("Сначала создайте приглашение для участника.");
+      return;
+    }
+
+    const inviteLink = `${window.location.origin}/invite/${token}`;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = inviteLink;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+
+    window.alert("Ссылка приглашения скопирована.");
+  };
+
+  const handleOpenMemberRoleSettings = (member: CompanyMember) => {
+    if (!canEditMemberRole(member)) return;
+    setSelectedMemberForRole(member);
+  };
+
+  const handleMemberRoleChange = async (roleId: string) => {
+    if (!selectedMemberForRole) return;
+    setIsMemberActionLoading(true);
+    try {
+      await onChangeRole(selectedMemberForRole.user.id, roleId);
+      const nextRole = availableRoles.find((role) => role.id === roleId) || null;
+      setSelectedMemberForRole({
+        ...selectedMemberForRole,
+        role: nextRole,
+      });
+    } finally {
+      setIsMemberActionLoading(false);
+    }
+  };
+
+  const handleMemberRemove = async () => {
+    if (!selectedMemberForRole) return;
+    setIsMemberActionLoading(true);
+    try {
+      await onRemoveMember(selectedMemberForRole.user.id);
+      setSelectedMemberForRole(null);
+    } finally {
+      setIsMemberActionLoading(false);
+    }
+  };
 
   // Format join date
   const formatDate = (dateStr: string): string => {
@@ -320,172 +394,178 @@ export function CompanyDetail({
           {/* Members Sub-page */}
           {subPage === "members" && (
             <div className="company-detail__section">
-              {canInvite(company.role) && (
-                <button
-                  className="company-detail__invite-btn"
-                  onClick={() => setIsInviteModalOpen(true)}
-                >
-                  <span className="company-detail__invite-btn-icon">+</span>
-                  <span>Пригласить участника</span>
-                </button>
-              )}
-
-              {canManageMembers(company.role) &&
-                pendingInvitations.length > 0 && (
-                  <div className="company-detail__pending">
-                    <span className="company-detail__section-title">
-                      Ожидающие ({pendingInvitations.length})
+              <div className="company-detail__hero">
+                <div className="company-detail__hero-logo">
+                  {company.company.logo_url ? (
+                    <img src={company.company.logo_url} alt={company.company.name} />
+                  ) : (
+                    <span className="company-detail__hero-logo-letter">
+                      {company.company.name.charAt(0).toUpperCase()}
                     </span>
-                    {pendingInvitations.map((inv) => (
-                      <Card
-                        key={inv.id}
-                        className="company-detail__member-card"
-                      >
-                        <div className="company-detail__member-row">
-                          <div className="company-detail__member-avatar company-detail__member-avatar--invite">
-                            📧
-                          </div>
-                          <div className="company-detail__member-info">
-                            <span className="company-detail__member-name">
-                              {inv.email}
-                            </span>
-                            <Tag
-                              size="sm"
-                              style={{
-                                backgroundColor: inv.role
-                                  ? `${getRoleColor(inv.role)}15`
-                                  : undefined,
-                                borderColor: inv.role
-                                  ? getRoleColor(inv.role)
-                                  : undefined,
-                                color: inv.role
-                                  ? getRoleColor(inv.role)
-                                  : undefined,
-                              }}
-                            >
-                              {getRoleName(inv.role)}
-                            </Tag>
-                          </div>
-                          <button
-                            className="company-detail__member-action company-detail__member-action--cancel"
-                            onClick={() => onCancelInvitation(inv.id)}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </Card>
-                    ))}
+                  )}
+                </div>
+
+                <div className="company-detail__hero-info">
+                  <h1 className="company-detail__hero-name">
+                    {company.company.name}
+                  </h1>
+                  <div className="company-detail__hero-domain">
+                    @{company.company.email_domain}
+                  </div>
+                </div>
+
+                <div className="company-detail__hero-stats">
+                  <div className="company-detail__hero-stat company-detail__hero-stat--members">
+                    {members.length} Участников
+                  </div>
+                  <div
+                    className="company-detail__hero-stat company-detail__hero-stat--role"
+                    style={{
+                      backgroundColor: company.role
+                        ? `${getRoleColor(company.role)}15`
+                        : undefined,
+                      borderColor: company.role
+                        ? `${getRoleColor(company.role)}30`
+                        : undefined,
+                      color: company.role ? getRoleColor(company.role) : undefined,
+                    }}
+                  >
+                    {isOwnerRole(company.role) && "👑 "}
+                    {getRoleName(company.role)}
+                  </div>
+                </div>
+              </div>
+
+              <Card className="company-detail__members-card">
+                {canInvite(company.role) && (
+                  <div className="company-detail__members-actions">
+                    <button
+                      className="company-detail__invite-btn"
+                      onClick={() => setIsInviteModalOpen(true)}
+                    >
+                      <span className="company-detail__invite-btn-icon">+</span>
+                      <span>Invite member</span>
+                    </button>
+                    <button
+                      className="company-detail__invite-btn company-detail__invite-btn--link"
+                      onClick={handleCopyInviteLink}
+                    >
+                      <span>Link</span>
+                      <span>Copy invite link</span>
+                    </button>
                   </div>
                 )}
 
-              <span className="company-detail__section-title">
-                Все участники ({members.length})
-              </span>
-
-              {isLoadingMembers ? (
-                <div className="company-detail__loading">
-                  <Loader />
-                </div>
-              ) : (
-                <div className="company-detail__members-list">
-                  {members.map((member) => (
-                    <Card
-                      key={member.id}
-                      className={`company-detail__member-card ${
-                        member.selected_card_id
-                          ? "company-detail__member-card--clickable"
-                          : ""
-                      }`}
-                      variant={
-                        member.selected_card_id ? "interactive" : "default"
-                      }
-                      onClick={() => {
-                        if (member.selected_card_id && onViewMemberCard) {
-                          onViewMemberCard(
-                            member.user.id,
-                            member.selected_card_id,
-                          );
-                        }
-                      }}
-                    >
-                      <div className="company-detail__member-row">
-                        <Avatar
-                          src={member.user.avatar_url || undefined}
-                          initials={`${member.user.first_name.charAt(
-                            0,
-                          )}${member.user.last_name.charAt(0)}`}
-                          size="md"
-                        />
-                        <div className="company-detail__member-info">
-                          <span className="company-detail__member-name">
-                            {member.user.first_name} {member.user.last_name}
-                          </span>
-                          <span className="company-detail__member-email">
-                            {member.user.email}
-                          </span>
-                        </div>
-                        <div className="company-detail__member-role">
-                          <span
-                            className="company-detail__member-role-dot"
-                            style={{
-                              backgroundColor: getRoleColor(member.role),
-                            }}
-                          />
-                          <Tag
-                            size="sm"
-                            style={{
-                              backgroundColor: member.role
-                                ? `${getRoleColor(member.role)}15`
-                                : undefined,
-                              borderColor: member.role
-                                ? getRoleColor(member.role)
-                                : undefined,
-                              color: member.role
-                                ? getRoleColor(member.role)
-                                : undefined,
-                            }}
-                          >
-                            {isOwnerRole(member.role) && "👑 "}
-                            {getRoleName(member.role)}
-                          </Tag>
-                        </div>
-                      </div>
-
-                      {canChangeRoles(company.role) &&
-                        member.user.id !== currentUserId &&
-                        !isOwnerRole(member.role) && (
-                          <div
-                            className="company-detail__member-controls"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <select
-                              className="company-detail__member-select"
-                              value={member.role?.id || ""}
-                              onChange={(e) =>
-                                onChangeRole(member.user.id, e.target.value)
-                              }
-                            >
-                              {availableRoles
-                                .filter((r) => !isOwnerRole(r))
-                                .map((role) => (
-                                  <option key={role.id} value={role.id}>
-                                    {role.name}
-                                  </option>
-                                ))}
-                            </select>
+                {canManageMembers(company.role) && pendingInvitations.length > 0 && (
+                  <div className="company-detail__members-group">
+                    <span className="company-detail__section-title">
+                      Pending ({pendingInvitations.length})
+                    </span>
+                    <div className="company-detail__members-list">
+                      {pendingInvitations.map((inv) => (
+                        <div key={inv.id} className="company-detail__member-item">
+                          <div className="company-detail__member-row">
+                            <div className="company-detail__member-avatar company-detail__member-avatar--invite">
+                              @
+                            </div>
+                            <div className="company-detail__member-info">
+                              <span className="company-detail__member-name">
+                                {inv.email}
+                              </span>
+                              <Tag
+                                size="sm"
+                                style={{
+                                  backgroundColor: inv.role
+                                    ? `${getRoleColor(inv.role)}15`
+                                    : undefined,
+                                  borderColor: inv.role
+                                    ? getRoleColor(inv.role)
+                                    : undefined,
+                                  color: inv.role
+                                    ? getRoleColor(inv.role)
+                                    : undefined,
+                                }}
+                              >
+                                {getRoleName(inv.role)}
+                              </Tag>
+                            </div>
                             <button
-                              className="company-detail__member-action company-detail__member-action--remove"
-                              onClick={() => onRemoveMember(member.user.id)}
-                              title="Удалить участника"
+                              className="company-detail__member-action company-detail__member-action--cancel"
+                              onClick={() => onCancelInvitation(inv.id)}
+                              title="Cancel invitation"
                             >
-                              ✕
+                              x
                             </button>
                           </div>
-                        )}
-                    </Card>
-                  ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="company-detail__members-group">
+                  <span className="company-detail__section-title">
+                    Members ({members.length})
+                  </span>
+
+                  {isLoadingMembers ? (
+                    <div className="company-detail__loading">
+                      <Loader />
+                    </div>
+                  ) : (
+                    <div className="company-detail__members-list">
+                      {members.map((member) => {
+                        const isRoleEditable = canEditMemberRole(member);
+                        return (
+                          <div key={member.id} className="company-detail__member-item">
+                            <div className="company-detail__member-row">
+                              <Avatar
+                                src={member.user.avatar_url || undefined}
+                                initials={`${member.user.first_name.charAt(0)}${member.user.last_name.charAt(0)}`}
+                                size="md"
+                              />
+                              <div className="company-detail__member-info">
+                                <span className="company-detail__member-name">
+                                  {member.user.first_name} {member.user.last_name}
+                                </span>
+                                <span className="company-detail__member-email">
+                                  {isOwnerRole(member.role) ? "Владелец" : getRoleName(member.role)}
+                                </span>
+                              </div>
+                              <div className="company-detail__member-role">
+                                {isRoleEditable && (
+                                  <button
+                                    type="button"
+                                    className="company-detail__member-open-role"
+                                    onClick={() => handleOpenMemberRoleSettings(member)}
+                                    aria-label="Открыть настройки роли"
+                                  >
+                                    <svg
+                                      className="company-detail__member-arrow"
+                                      width="8"
+                                      height="14"
+                                      viewBox="0 0 8 14"
+                                      fill="none"
+                                    >
+                                      <path
+                                        d="M1 1L7 7L1 13"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
+              </Card>
             </div>
           )}
 
@@ -607,6 +687,47 @@ export function CompanyDetail({
               </Button>
             </div>
           </div>
+        </Modal>
+
+        <Modal
+          isOpen={Boolean(selectedMemberForRole)}
+          onClose={() => setSelectedMemberForRole(null)}
+          title="Настройка роли участника"
+        >
+          {selectedMemberForRole && (
+            <div className="member-role-form">
+              <div className="form-field">
+                <label>Участник</label>
+                <div className="member-role-form__name">
+                  {selectedMemberForRole.user.first_name}{" "}
+                  {selectedMemberForRole.user.last_name}
+                </div>
+              </div>
+              <div className="form-field">
+                <label>Роль</label>
+                <RoleSelect
+                  roles={availableRoles.filter((role) => !isOwnerRole(role))}
+                  selectedRoleId={selectedMemberForRole.role?.id || ""}
+                  onChange={handleMemberRoleChange}
+                />
+              </div>
+              <div className="form-actions">
+                <Button
+                  variant="ghost"
+                  onClick={() => setSelectedMemberForRole(null)}
+                >
+                  Закрыть
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={handleMemberRemove}
+                  disabled={isMemberActionLoading}
+                >
+                  {isMemberActionLoading ? "Удаление..." : "Удалить участника"}
+                </Button>
+              </div>
+            </div>
+          )}
         </Modal>
 
         <Modal

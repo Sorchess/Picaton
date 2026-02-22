@@ -125,6 +125,7 @@ class InvitationResponse(BaseModel):
     email: str
     role: CompanyRoleInfo | None = None
     invited_by_id: UUID | None = None
+    token: str | None = None
     status: InvitationStatus
     created_at: datetime
     expires_at: datetime | None = None
