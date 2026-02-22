@@ -859,7 +859,7 @@ export function ChatsPage({
                   )}
                   {msg.forwarded_from_name && (
                     <p className="chats-page__bubble-forwarded">
-                      Переслано от {msg.forwarded_from_name}
+                      ↪ Переслано от {msg.forwarded_from_name}
                     </p>
                   )}
                   <p className="chats-page__bubble-text">{msg.content}</p>
