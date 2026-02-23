@@ -251,20 +251,6 @@
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 8px;
-
-    .tag {
-      background: var(--color-glass-bg);
-      border: 1px solid var(--color-glass-border);
-      color: var(--color-text-secondary);
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 12px;
-
-      &--outline {
-        background: transparent;
-        border: 1px solid var(--color-border);
-      }
-    }
   }
 
   &__card-action {
