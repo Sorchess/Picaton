@@ -1,3 +1,5 @@
+@use "../../styles/mixins/glass" as *;
+
 .avatar-emoji-button {
   position: absolute;
   bottom: 0;
@@ -46,23 +48,26 @@
   }
 
   &__dropdown {
+    @include liquid-glass;
     width: 360px;
-    background: var(--surface, #fff);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 18px;
     z-index: 10000;
     overflow: hidden;
-    animation: avatarEmojiDropdownAppear 0.2s ease;
+    padding: 0;
+    // Override liquid-glass transition to prevent position animation
+    // when portal sets top/left dynamically
+    transition: none;
+    animation: avatarEmojiDropdownAppear 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @keyframes avatarEmojiDropdownAppear {
     from {
       opacity: 0;
-      transform: scale(0.95);
+      transform: translateY(-6px) scale(0.97);
     }
     to {
       opacity: 1;
-      transform: scale(1);
+      transform: translateY(0) scale(1);
     }
   }
 
@@ -71,13 +76,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid var(--border, #eee);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   &__title {
     font-size: 14px;
     font-weight: 600;
-    color: var(--text-primary, #333);
+    color: var(--color-text-primary, #fff);
   }
 
   &__reset-btn {
@@ -91,7 +96,7 @@
     transition: background 0.2s ease;
 
     &:hover {
-      background: var(--accent-light, #e6f2ff);
+      background: rgba(255, 255, 255, 0.1);
     }
   }
 
@@ -100,7 +105,7 @@
     gap: 6px;
     padding: 12px 16px;
     justify-content: center;
-    border-bottom: 1px solid var(--border, #eee);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   &__slot {
@@ -110,26 +115,27 @@
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    background: var(--surface-secondary, #f5f5f5);
+    background: rgba(255, 255, 255, 0.08);
     border: 2px solid transparent;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
+    color: var(--color-text-primary);
 
     &:hover {
-      background: var(--surface-tertiary, #eee);
+      background: rgba(255, 255, 255, 0.12);
       transform: scale(1.05);
     }
 
     &--active {
       border-color: var(--accent, #007aff);
-      background: var(--accent-light, #e6f2ff);
+      background: rgba(0, 122, 255, 0.15);
     }
 
     &--empty {
       font-size: 16px;
-      color: var(--text-tertiary, #999);
-      border: 2px dashed var(--border, #ddd);
+      color: rgba(255, 255, 255, 0.35);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
       background: transparent;
     }
   }
@@ -138,7 +144,7 @@
     display: flex;
     gap: 4px;
     padding: 8px 12px;
-    border-bottom: 1px solid var(--border, #eee);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     overflow-x: auto;
 
     &::-webkit-scrollbar {
@@ -155,17 +161,17 @@
     font-size: 16px;
     background: transparent;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     flex-shrink: 0;
 
     &:hover {
-      background: var(--surface-secondary, #f5f5f5);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     &--active {
-      background: var(--accent-light, #e6f2ff);
+      background: rgba(255, 255, 255, 0.15);
     }
   }
 
@@ -186,7 +192,7 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background: var(--border, #ddd);
+      background: rgba(255, 255, 255, 0.15);
       border-radius: 3px;
     }
   }
@@ -205,12 +211,12 @@
     transition: all 0.15s ease;
 
     &:hover {
-      background: var(--surface-secondary, #f5f5f5);
+      background: rgba(255, 255, 255, 0.1);
       transform: scale(1.2);
     }
 
     &--selected {
-      background: var(--accent-light, #e6f2ff);
+      background: rgba(255, 255, 255, 0.15);
       position: relative;
 
       &::after {
@@ -227,66 +233,68 @@
   }
 }
 
-// Темная тема
-[data-theme="dark"] {
+// Светлая тема — портал рендерит в body, поэтому используем глобальные селекторы
+[data-theme="light"] {
   .avatar-emoji-button {
-    &__trigger {
-      background: rgba(30, 34, 44, 0.9);
-      border-color: rgba(255, 255, 255, 0.15);
-      color: #a0a8b4;
-    }
-
-    &__dropdown {
-      background: var(--surface, #1e222c);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    }
-
     &__header {
-      border-color: var(--border, #2a2e38);
+      border-color: rgba(0, 0, 0, 0.06);
     }
 
     &__title {
-      color: var(--text-primary, #e0e0e0);
+      color: var(--color-text-primary, #333);
+    }
+
+    &__reset-btn:hover {
+      background: rgba(0, 0, 0, 0.04);
     }
 
     &__selected {
-      border-color: var(--border, #2a2e38);
+      border-color: rgba(0, 0, 0, 0.06);
     }
 
     &__slot {
-      background: var(--surface-secondary, #262a34);
+      background: rgba(0, 0, 0, 0.04);
 
       &:hover {
-        background: var(--surface-tertiary, #2e323c);
+        background: rgba(0, 0, 0, 0.06);
       }
 
       &--active {
-        background: rgba(0, 122, 255, 0.2);
+        background: rgba(0, 122, 255, 0.1);
+      }
+
+      &--empty {
+        color: rgba(0, 0, 0, 0.25);
+        border-color: rgba(0, 0, 0, 0.1);
       }
     }
 
     &__categories {
-      border-color: var(--border, #2a2e38);
+      border-color: rgba(0, 0, 0, 0.06);
     }
 
     &__category-btn {
       &:hover {
-        background: var(--surface-secondary, #262a34);
+        background: rgba(0, 0, 0, 0.04);
       }
 
       &--active {
-        background: rgba(0, 122, 255, 0.2);
+        background: rgba(0, 0, 0, 0.06);
       }
     }
 
     &__grid-emoji {
       &:hover {
-        background: var(--surface-secondary, #262a34);
+        background: rgba(0, 0, 0, 0.04);
       }
 
       &--selected {
-        background: rgba(0, 122, 255, 0.2);
+        background: rgba(0, 0, 0, 0.06);
       }
+    }
+
+    &__grid::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.1);
     }
   }
 }

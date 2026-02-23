@@ -62,12 +62,10 @@ export { TagInput } from "./TagInput";
 export { EndorsableSkill } from "./EndorsableSkill";
 
 export {
-  EmojiPicker,
+  AvatarEmojiButton,
   DEFAULT_PROFILE_EMOJIS,
   EMOJI_CATEGORIES,
-} from "./EmojiPicker";
-
-export { AvatarEmojiButton } from "./AvatarEmojiButton";
+} from "./AvatarEmojiButton";
 
 // ===========================================
 // Figma Design Components

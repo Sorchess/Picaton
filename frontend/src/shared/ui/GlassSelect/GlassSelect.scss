@@ -1,3 +1,5 @@
+@use "../../styles/mixins/glass" as *;
+
 .glass-select {
   position: relative;
   display: inline-flex;
@@ -31,6 +33,7 @@
   // ── Dropdown ──
 
   &__dropdown {
+    @include liquid-glass;
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
@@ -42,50 +45,6 @@
     border-radius: 18px;
     min-width: 160px;
     animation: glass-select-appear 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-    // Liquid glass effect — dark
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.12) 0%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    backdrop-filter: blur(24px) saturate(1.8);
-    -webkit-backdrop-filter: blur(24px) saturate(1.8);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.18),
-      0 2px 8px rgba(0, 0, 0, 0.1),
-      inset 0 1px 1px rgba(255, 255, 255, 0.15);
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      border-radius: 18px 18px 0 0;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.25),
-        transparent
-      );
-    }
-
-    // Liquid glass effect — light
-    @at-root [data-theme="light"] & {
-      background: linear-gradient(
-        145deg,
-        rgba(255, 255, 255, 0.75) 0%,
-        rgba(255, 255, 255, 0.45) 100%
-      );
-      border-color: rgba(255, 255, 255, 0.65);
-      box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.1),
-        0 2px 8px rgba(0, 0, 0, 0.06),
-        inset 0 1px 2px rgba(255, 255, 255, 0.9);
-    }
   }
 
   // ── Option ──
