@@ -104,6 +104,7 @@ export type InvitationStatus =
 export interface Company {
   id: string;
   name: string;
+  company_id: string;
   email_domain: string;
   logo_url: string | null;
   description: string | null;
@@ -176,7 +177,7 @@ export interface SetSelectedCardRequest {
 // Request types
 export interface CreateCompanyRequest {
   name: string;
-  email_domain: string;
+  email_domain?: string;
   logo_url?: string;
   description?: string;
 }

@@ -11,10 +11,12 @@ from domain.enums.company import InvitationStatus
 
 # Валидация
 COMPANY_NAME_REGEX = re.compile(r"^[\w\s\-'.,&()]{2,100}$", re.UNICODE)
+COMPANY_ID_REGEX = re.compile(r"^[a-z0-9][a-z0-9_]{2,29}$")
 DOMAIN_REGEX = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}$")
 URL_REGEX = re.compile(r"^https?://[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+$")
 
 MAX_COMPANY_NAME_LENGTH = 100
+MAX_COMPANY_ID_LENGTH = 30
 MAX_DOMAIN_LENGTH = 255
 MAX_LOGO_URL_LENGTH = 500
 MAX_DESCRIPTION_LENGTH = 1000
@@ -22,6 +24,12 @@ MAX_DESCRIPTION_LENGTH = 1000
 
 class InvalidCompanyNameError(ValueError):
     """Невалидное название компании."""
+
+    pass
+
+
+class InvalidCompanyIdError(ValueError):
+    """Невалидный ID компании."""
 
     pass
 
@@ -47,7 +55,10 @@ class Company(Entity):
 
     # Основные данные
     name: str = field(default="")
-    email_domain: str = field(default="")  # Домен для автоматического присоединения
+    company_id: str = field(default="")  # Уникальный идентификатор компании (slug)
+    email_domain: str = field(
+        default=""
+    )  # Домен для автоматического присоединения (опционально)
     logo_url: str | None = field(default=None)
     description: str | None = field(default=None)
 
@@ -65,6 +76,8 @@ class Company(Entity):
         """Валидация данных при создании сущности."""
         if self.name:
             self._validate_name(self.name)
+        if self.company_id:
+            self._validate_company_id(self.company_id)
         if self.email_domain:
             self._validate_domain(self.email_domain)
         if self.logo_url:
@@ -80,6 +93,18 @@ class Company(Entity):
         if not COMPANY_NAME_REGEX.match(name):
             raise InvalidCompanyNameError(
                 "Название компании содержит недопустимые символы"
+            )
+
+    @staticmethod
+    def _validate_company_id(company_id: str) -> None:
+        """Валидация уникального идентификатора компании."""
+        if len(company_id) > MAX_COMPANY_ID_LENGTH:
+            raise InvalidCompanyIdError(
+                f"ID компании не должен превышать {MAX_COMPANY_ID_LENGTH} символов"
+            )
+        if not COMPANY_ID_REGEX.match(company_id):
+            raise InvalidCompanyIdError(
+                "ID компании может содержать только строчные латинские буквы, цифры и подчёркивание"
             )
 
     @staticmethod

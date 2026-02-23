@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type {
   CompanyWithRole,
   CompanyMember,
   CompanyInvitation,
   CompanyRoleInfo,
 } from "@/entities/company";
+import { companyApi } from "@/entities/company";
 import type { BusinessCard } from "@/entities/business-card";
 import {
   getRoleName,
@@ -93,6 +94,9 @@ export function CompanyDetail({
   const [selectedMemberForRole, setSelectedMemberForRole] =
     useState<CompanyMember | null>(null);
   const [isMemberActionLoading, setIsMemberActionLoading] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
+  const [isLoadingQR, setIsLoadingQR] = useState(false);
 
   const canManageRolesCheck = canChangeRoles(company.role);
 
@@ -110,6 +114,20 @@ export function CompanyDetail({
   });
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleShowQR = useCallback(async () => {
+    setIsQRModalOpen(true);
+    if (qrCodeImage) return;
+    setIsLoadingQR(true);
+    try {
+      const data = await companyApi.getQRCode(company.company.id);
+      setQrCodeImage(data.image_base64);
+    } catch {
+      // ignore
+    } finally {
+      setIsLoadingQR(false);
+    }
+  }, [company.company.id, qrCodeImage]);
 
   const handleInvite = async () => {
     if (!inviteForm.email.trim()) return;
@@ -419,7 +437,7 @@ export function CompanyDetail({
                     {company.company.name}
                   </h1>
                   <div className="company-detail__hero-domain">
-                    @{company.company.email_domain}
+                    @{company.company.company_id}
                   </div>
                 </div>
 
@@ -620,11 +638,9 @@ export function CompanyDetail({
                     </span>
                   </div>
                   <div className="company-detail__settings-row">
-                    <span className="company-detail__settings-label">
-                      {t("companyDetail.domain")}
-                    </span>
+                    <span className="company-detail__settings-label">ID</span>
                     <span className="company-detail__settings-value">
-                      @{company.company.email_domain}
+                      @{company.company.company_id}
                     </span>
                   </div>
                   <div className="company-detail__settings-row">
@@ -888,7 +904,7 @@ export function CompanyDetail({
               {company.company.name}
             </h1>
             <div className="company-detail__hero-domain">
-              @{company.company.email_domain}
+              @{company.company.company_id}
             </div>
           </div>
 
@@ -931,18 +947,85 @@ export function CompanyDetail({
             </Card>
           )}
 
-          {/* Domain card */}
-          <Card className="company-detail__card">
+          {/* Company ID card with QR button */}
+          <Card
+            className="company-detail__card"
+            variant="interactive"
+            onClick={handleShowQR}
+          >
             <div className="company-detail__card-row">
               <div className="company-detail__card-content">
-                <span className="company-detail__card-label">
-                  {t("companyDetail.domain")}
-                </span>
+                <span className="company-detail__card-label">Company ID</span>
                 <span className="company-detail__card-value">
-                  @{company.company.email_domain}
+                  @{company.company.company_id}
                 </span>
               </div>
-              <span className="company-detail__card-icon">🌐</span>
+              <span className="company-detail__card-icon company-detail__card-icon--qr">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect
+                    x="2"
+                    y="2"
+                    width="6"
+                    height="6"
+                    rx="1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <rect
+                    x="12"
+                    y="2"
+                    width="6"
+                    height="6"
+                    rx="1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <rect
+                    x="2"
+                    y="12"
+                    width="6"
+                    height="6"
+                    rx="1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <rect
+                    x="12"
+                    y="12"
+                    width="2"
+                    height="2"
+                    fill="currentColor"
+                  />
+                  <rect
+                    x="16"
+                    y="12"
+                    width="2"
+                    height="2"
+                    fill="currentColor"
+                  />
+                  <rect
+                    x="12"
+                    y="16"
+                    width="2"
+                    height="2"
+                    fill="currentColor"
+                  />
+                  <rect
+                    x="16"
+                    y="16"
+                    width="2"
+                    height="2"
+                    fill="currentColor"
+                  />
+                  <rect
+                    x="14"
+                    y="14"
+                    width="2"
+                    height="2"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
             </div>
           </Card>
 
@@ -1226,6 +1309,40 @@ export function CompanyDetail({
             >
               {t("companyDetail.clearSelection")}
             </button>
+          )}
+        </div>
+      </Modal>
+
+      {/* QR Code Modal */}
+      <Modal
+        isOpen={isQRModalOpen}
+        onClose={() => setIsQRModalOpen(false)}
+        title="QR Code"
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 16,
+            padding: 16,
+          }}
+        >
+          {isLoadingQR ? (
+            <Loader />
+          ) : qrCodeImage ? (
+            <>
+              <img
+                src={qrCodeImage}
+                alt="Company QR Code"
+                style={{ width: 220, height: 220, borderRadius: 12 }}
+              />
+              <div style={{ fontSize: 16, fontWeight: 500, opacity: 0.7 }}>
+                @{company.company.company_id}
+              </div>
+            </>
+          ) : (
+            <div style={{ opacity: 0.5 }}>Failed to load QR code</div>
           )}
         </div>
       </Modal>

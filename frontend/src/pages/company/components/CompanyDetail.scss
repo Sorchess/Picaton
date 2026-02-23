@@ -265,6 +265,12 @@
   &__card-icon {
     font-size: 20px;
     flex-shrink: 0;
+
+    &--qr {
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+    }
   }
 
   &__card-chevron {

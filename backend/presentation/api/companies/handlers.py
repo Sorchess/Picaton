@@ -22,6 +22,7 @@ from presentation.api.companies.schemas import (
     MessageResponse,
     SetSelectedCardRequest,
     CompanyCardAssignment,
+    CompanyQRCodeResponse,
 )
 from infrastructure.dependencies import (
     get_auth_service,
@@ -29,6 +30,7 @@ from infrastructure.dependencies import (
     get_company_role_repository,
     get_privacy_checker,
     get_user_service,
+    get_qrcode_service,
 )
 from domain.repositories.company_role import CompanyRoleRepositoryInterface
 from application.services import (
@@ -97,7 +99,7 @@ async def create_company(
         company = await company_service.create_company(
             owner=user,
             name=data.name,
-            email_domain=data.email_domain,
+            email_domain=data.email_domain or "",
             logo_url=data.logo_url,
             description=data.description,
         )
@@ -120,6 +122,7 @@ async def create_company(
     return CompanyResponse(
         id=company.id,
         name=company.name,
+        company_id=company.company_id,
         email_domain=company.email_domain,
         logo_url=company.logo_url,
         description=company.description,
@@ -146,6 +149,7 @@ async def get_my_companies(
             company=CompanyResponse(
                 id=item["company"].id,
                 name=item["company"].name,
+                company_id=item["company"].company_id,
                 email_domain=item["company"].email_domain,
                 logo_url=item["company"].logo_url,
                 description=item["company"].description,
@@ -207,6 +211,7 @@ async def get_my_invitations(
                 company=CompanyResponse(
                     id=company.id,
                     name=company.name,
+                    company_id=company.company_id,
                     email_domain=company.email_domain,
                     logo_url=company.logo_url,
                     description=company.description,
@@ -359,6 +364,7 @@ async def get_company(
     return CompanyResponse(
         id=company.id,
         name=company.name,
+        company_id=company.company_id,
         email_domain=company.email_domain,
         logo_url=company.logo_url,
         description=company.description,
@@ -366,6 +372,36 @@ async def get_company(
         is_active=company.is_active,
         created_at=company.created_at,
         updated_at=company.updated_at,
+    )
+
+
+# ==================== QR Code ====================
+
+
+@router.get("/{company_id}/qr-code", response_model=CompanyQRCodeResponse)
+async def get_company_qr_code(
+    company_id: UUID,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    company_service: CompanyService = Depends(get_company_service),
+    qrcode_service=Depends(get_qrcode_service),
+):
+    """Получить QR-код для компании."""
+    await get_current_user_from_token(credentials, auth_service)
+
+    try:
+        company = await company_service.get_company(company_id)
+    except CompanyNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Компания не найдена",
+        )
+
+    qr_data = qrcode_service.generate_company_qr(str(company.id))
+
+    return CompanyQRCodeResponse(
+        image_base64=qr_data.image_base64,
+        image_format=qr_data.image_format,
     )
 
 
@@ -402,6 +438,7 @@ async def update_company(
     return CompanyResponse(
         id=company.id,
         name=company.name,
+        company_id=company.company_id,
         email_domain=company.email_domain,
         logo_url=company.logo_url,
         description=company.description,

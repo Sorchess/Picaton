@@ -17,8 +17,11 @@ class CreateCompanyRequest(BaseModel):
     name: str = Field(
         ..., min_length=2, max_length=100, description="Название компании"
     )
-    email_domain: str = Field(
-        ..., min_length=3, max_length=255, description="Домен email компании"
+    email_domain: str | None = Field(
+        None,
+        min_length=3,
+        max_length=255,
+        description="Домен email компании (опционально)",
     )
     logo_url: str | None = Field(None, max_length=500, description="URL логотипа")
     description: str | None = Field(
@@ -43,6 +46,7 @@ class CompanyResponse(BaseModel):
 
     id: UUID
     name: str
+    company_id: str
     email_domain: str
     logo_url: str | None = None
     description: str | None = None
@@ -174,6 +178,16 @@ class CompanyCardAssignment(BaseModel):
     company_id: UUID
     company_name: str
     selected_card_id: UUID | None = None
+
+
+# ==================== QR Code ====================
+
+
+class CompanyQRCodeResponse(BaseModel):
+    """Ответ с QR-кодом компании."""
+
+    image_base64: str
+    image_format: str = "png"
 
 
 # ==================== Generic ====================

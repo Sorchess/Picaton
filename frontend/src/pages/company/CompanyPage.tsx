@@ -99,7 +99,6 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: "",
-    email_domain: "",
     description: "",
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -312,12 +311,11 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
 
   // Создание компании
   const handleCreateCompany = async () => {
-    if (!createForm.name.trim() || !createForm.email_domain.trim()) return;
+    if (!createForm.name.trim()) return;
     setIsSaving(true);
     try {
       const newCompany = await companyApi.create({
         name: createForm.name,
-        email_domain: createForm.email_domain,
         description: createForm.description || undefined,
       });
       const freshCompanies = await companyApi.getMyCompanies();
@@ -332,7 +330,6 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
       setIsCreateModalOpen(false);
       setCreateForm({
         name: "",
-        email_domain: "",
         description: "",
       });
       showSuccess(t("company.createdSuccess"));
@@ -686,14 +683,6 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
             placeholder={t("company.companyPlaceholder")}
           />
           <Input
-            label={t("company.emailDomain")}
-            value={createForm.email_domain}
-            onChange={(e) =>
-              setCreateForm({ ...createForm, email_domain: e.target.value })
-            }
-            placeholder="company.com"
-          />
-          <Input
             label={t("company.descriptionOptional")}
             value={createForm.description}
             onChange={(e) =>
@@ -707,11 +696,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
             </Button>
             <Button
               onClick={handleCreateCompany}
-              disabled={
-                isSaving ||
-                !createForm.name.trim() ||
-                !createForm.email_domain.trim()
-              }
+              disabled={isSaving || !createForm.name.trim()}
             >
               {isSaving ? t("company.creating") : t("company.create")}
             </Button>

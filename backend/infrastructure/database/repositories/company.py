@@ -25,6 +25,7 @@ class MongoCompanyRepository(CompanyRepositoryInterface):
         return {
             "_id": str(company.id),
             "name": company.name,
+            "company_id": company.company_id,
             "email_domain": company.email_domain,
             "logo_url": company.logo_url,
             "description": company.description,
@@ -39,6 +40,7 @@ class MongoCompanyRepository(CompanyRepositoryInterface):
         return Company(
             id=UUID(doc["_id"]),
             name=doc.get("name", ""),
+            company_id=doc.get("company_id", ""),
             email_domain=doc.get("email_domain", ""),
             logo_url=doc.get("logo_url"),
             description=doc.get("description"),
@@ -62,6 +64,11 @@ class MongoCompanyRepository(CompanyRepositoryInterface):
     async def get_by_domain(self, domain: str) -> Company | None:
         """Получить компанию по домену email."""
         doc = await self._collection.find_one({"email_domain": domain.lower()})
+        return self._from_document(doc) if doc else None
+
+    async def get_by_company_id(self, company_id: str) -> Company | None:
+        """Получить компанию по уникальному идентификатору."""
+        doc = await self._collection.find_one({"company_id": company_id})
         return self._from_document(doc) if doc else None
 
     async def get_by_owner(self, owner_id: UUID) -> list[Company]:

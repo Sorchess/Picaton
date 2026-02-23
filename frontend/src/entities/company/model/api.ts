@@ -88,13 +88,13 @@ export const companyApi = {
   deleteRole: (
     companyId: string,
     roleId: string,
-    replacementRoleId?: string
+    replacementRoleId?: string,
   ) => {
     const params = replacementRoleId
       ? `?replacement_role_id=${replacementRoleId}`
       : "";
     return api.delete<MessageResponse>(
-      `/companies/${companyId}/roles/${roleId}${params}`
+      `/companies/${companyId}/roles/${roleId}${params}`,
     );
   },
 
@@ -105,7 +105,7 @@ export const companyApi = {
    */
   getMembers: (companyId: string, skip = 0, limit = 100) =>
     api.get<CompanyMember[]>(
-      `/companies/${companyId}/members?skip=${skip}&limit=${limit}`
+      `/companies/${companyId}/members?skip=${skip}&limit=${limit}`,
     ),
 
   /**
@@ -114,7 +114,7 @@ export const companyApi = {
   updateMemberRole: (companyId: string, userId: string, roleId: string) =>
     api.patch<MessageResponse>(
       `/companies/${companyId}/members/${userId}/role`,
-      { role_id: roleId }
+      { role_id: roleId },
     ),
 
   /**
@@ -144,7 +144,7 @@ export const companyApi = {
     companyId: string,
     status?: InvitationStatus,
     skip = 0,
-    limit = 100
+    limit = 100,
   ) => {
     const params = new URLSearchParams({
       skip: skip.toString(),
@@ -152,7 +152,7 @@ export const companyApi = {
     });
     if (status) params.set("status_filter", status);
     return api.get<CompanyInvitation[]>(
-      `/companies/${companyId}/invitations?${params}`
+      `/companies/${companyId}/invitations?${params}`,
     );
   },
 
@@ -161,7 +161,7 @@ export const companyApi = {
    */
   cancelInvitation: (companyId: string, invitationId: string) =>
     api.delete<MessageResponse>(
-      `/companies/${companyId}/invitations/${invitationId}`
+      `/companies/${companyId}/invitations/${invitationId}`,
     ),
 
   /**
@@ -169,7 +169,7 @@ export const companyApi = {
    */
   resendInvitation: (companyId: string, invitationId: string) =>
     api.post<CompanyInvitation>(
-      `/companies/${companyId}/invitations/${invitationId}/resend`
+      `/companies/${companyId}/invitations/${invitationId}/resend`,
     ),
 
   // ==================== User Invitations ====================
@@ -207,4 +207,14 @@ export const companyApi = {
     api.patch<CompanyCardAssignment>(`/companies/${companyId}/selected-card`, {
       card_id: cardId,
     }),
+
+  // ==================== QR Code ====================
+
+  /**
+   * Получить QR-код компании
+   */
+  getQRCode: (companyId: string) =>
+    api.get<{ image_base64: string; image_format: string }>(
+      `/companies/${companyId}/qr-code`,
+    ),
 };

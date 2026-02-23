@@ -76,6 +76,15 @@ class QRCodeService:
         image_base64 = self._generate_qr_image(profile_url)
         return QRCodeData(image_base64=image_base64)
 
+    def generate_company_qr(self, company_id: str) -> QRCodeData:
+        """
+        Генерирует QR-код для компании.
+        QR-код содержит ссылку на страницу компании.
+        """
+        company_url = f"{self._base_url}/companies/{company_id}"
+        image_base64 = self._generate_qr_image(company_url)
+        return QRCodeData(image_base64=image_base64)
+
     def generate_card_qr(self, card_id: UUID) -> QRCodeData:
         """
         Генерирует QR-код для визитной карточки.

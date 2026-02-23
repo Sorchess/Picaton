@@ -26,6 +26,11 @@ class CompanyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_by_company_id(self, company_id: str) -> Company | None:
+        """Получить компанию по уникальному идентификатору."""
+        pass
+
+    @abstractmethod
     async def get_by_owner(self, owner_id: UUID) -> list[Company]:
         """Получить все компании владельца."""
         pass

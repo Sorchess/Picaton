@@ -1,7 +1,9 @@
 """Сервис управления компаниями и корпоративным пространством."""
 
 import logging
+import random
 import secrets
+import string
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
@@ -115,6 +117,37 @@ class CompanyService:
         self._user_repo = user_repo
         self._role_repo = role_repo
 
+    async def _generate_unique_company_id(self, name: str) -> str:
+        """
+        Сгенерировать уникальный company_id для компании.
+
+        Формат: название + случайный суффикс, например 'acme_x3kz' или 'company_m8qz'.
+        """
+        # Формируем базу из названия (латиницей, lowercase)
+        base = ""
+        ascii_name = "".join(c for c in name.lower() if c in string.ascii_lowercase)
+        if ascii_name:
+            base = ascii_name
+        if not base:
+            base = "company"
+
+        # Ограничиваем длину базы
+        base = base[:12]
+
+        # Пробуем сгенерировать уникальный company_id
+        for _ in range(20):
+            suffix = "".join(
+                random.choices(string.ascii_lowercase + string.digits, k=4)
+            )
+            candidate = f"{base}_{suffix}"
+            existing = await self._company_repo.get_by_company_id(candidate)
+            if not existing:
+                return candidate
+
+        # Fallback: более длинный суффикс
+        suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        return f"{base}_{suffix}"
+
     async def _is_owner(self, company_id: UUID, user_id: UUID) -> bool:
         """Проверить, является ли пользователь владельцем компании."""
         member = await self._member_repo.get_by_company_and_user(company_id, user_id)
@@ -193,7 +226,7 @@ class CompanyService:
         self,
         owner: User,
         name: str,
-        email_domain: str,
+        email_domain: str = "",
         logo_url: str | None = None,
         description: str | None = None,
     ) -> Company:
@@ -203,7 +236,7 @@ class CompanyService:
         Args:
             owner: Пользователь-владелец
             name: Название компании
-            email_domain: Домен email компании
+            email_domain: Домен email компании (опционально)
             logo_url: URL логотипа
             description: Описание компании
 
@@ -213,17 +246,22 @@ class CompanyService:
         Raises:
             CompanyAlreadyExistsError: Компания с таким доменом уже существует
         """
-        # Проверяем, не занят ли домен
-        existing = await self._company_repo.get_by_domain(email_domain.lower())
-        if existing:
-            raise CompanyAlreadyExistsError(
-                f"Компания с доменом {email_domain} уже существует"
-            )
+        # Проверяем, не занят ли домен (если указан)
+        if email_domain:
+            existing = await self._company_repo.get_by_domain(email_domain.lower())
+            if existing:
+                raise CompanyAlreadyExistsError(
+                    f"Компания с доменом {email_domain} уже существует"
+                )
+
+        # Генерируем уникальный company_id
+        company_id = await self._generate_unique_company_id(name)
 
         # Создаём компанию
         company = Company(
             name=name,
-            email_domain=email_domain.lower(),
+            company_id=company_id,
+            email_domain=email_domain.lower() if email_domain else "",
             logo_url=logo_url,
             description=description,
             owner_id=owner.id,
