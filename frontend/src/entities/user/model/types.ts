@@ -35,6 +35,7 @@ export interface User {
   middle_name?: string | null;
   email: string;
   avatar_url: string | null;
+  avatar_gradient?: string[] | null;
   telegram_id?: number | null;
   telegram_username?: string | null;
   location: string | null;
@@ -73,6 +74,7 @@ export interface UserPublic {
   last_name: string;
   middle_name?: string | null;
   avatar_url: string | null;
+  avatar_gradient?: string[] | null;
   bio: string | null;
   ai_generated_bio: string | null;
   location: string | null;

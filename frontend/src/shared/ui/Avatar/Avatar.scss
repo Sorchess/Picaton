@@ -142,6 +142,14 @@
       rgba(var(--color-accent-rgb), 0.2) 0%,
       rgba(var(--color-accent-rgb), 0.38) 100%
     );
+
+    &--custom-gradient {
+      background: linear-gradient(
+        135deg,
+        var(--avatar-gradient-from) 0%,
+        var(--avatar-gradient-to) 100%
+      );
+    }
   }
 
   &__image {
@@ -154,7 +162,7 @@
   &__initials {
     font-family: $font-family-heading;
     font-weight: $font-weight-extrabold;
-    color: var(--color-text-primary);
+    color: #fff;
     text-transform: uppercase;
     letter-spacing: 0.02em;
   }

@@ -157,6 +157,7 @@ class UserResponse(BaseModel):
     last_name: str
     email: str
     avatar_url: str | None
+    avatar_gradient: list[str] | None = None
     telegram_id: int | None = None
     telegram_username: str | None = None
     location: str | None
@@ -185,6 +186,7 @@ class UserPublicResponse(BaseModel):
     first_name: str
     last_name: str
     avatar_url: str | None
+    avatar_gradient: list[str] | None = None
     bio: str | None
     ai_generated_bio: str | None
     location: str | None

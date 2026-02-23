@@ -51,6 +51,7 @@ class AuthUserResponse(BaseModel):
     first_name: str
     last_name: str
     avatar_url: str | None = None
+    avatar_gradient: list[str] | None = None
     telegram_id: int | None = None
     telegram_username: str | None = None
     access_token: str

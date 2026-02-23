@@ -79,6 +79,7 @@ async def register(
         first_name=user.first_name,
         last_name=user.last_name,
         avatar_url=user.avatar_url,
+        avatar_gradient=user.avatar_gradient,
         access_token=token,
     )
 
@@ -106,6 +107,7 @@ async def login(
         first_name=user.first_name,
         last_name=user.last_name,
         avatar_url=user.avatar_url,
+        avatar_gradient=user.avatar_gradient,
         access_token=token,
     )
 
@@ -131,6 +133,7 @@ async def get_current_user(
         last_name=user.last_name,
         email=user.email,
         avatar_url=user.avatar_url,
+        avatar_gradient=user.avatar_gradient,
         telegram_id=user.telegram_id,
         telegram_username=user.telegram_username,
         location=user.location,
@@ -218,6 +221,7 @@ async def verify_magic_link(
         first_name=user.first_name,
         last_name=user.last_name,
         avatar_url=user.avatar_url,
+        avatar_gradient=user.avatar_gradient,
         access_token=access_token,
     )
 
@@ -278,6 +282,7 @@ async def telegram_auth(
         first_name=user.first_name,
         last_name=user.last_name,
         avatar_url=user.avatar_url,
+        avatar_gradient=user.avatar_gradient,
         telegram_id=user.telegram_id,
         telegram_username=user.telegram_username,
         access_token=token,

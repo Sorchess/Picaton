@@ -74,6 +74,7 @@ export function UserCard({
           src={displayAvatar}
           alt={fullName}
           size="lg"
+          gradientColors={user.avatar_gradient}
         />
       </div>
 

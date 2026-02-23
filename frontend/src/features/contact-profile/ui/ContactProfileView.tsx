@@ -599,6 +599,7 @@ export function ContactProfileView({
                 initials={getInitials(fullName)}
                 size="lg"
                 alt={fullName}
+                gradientColors={user.avatar_gradient}
               />
             </div>
 

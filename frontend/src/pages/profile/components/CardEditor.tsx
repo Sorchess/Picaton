@@ -627,6 +627,7 @@ export function CardEditor({
             initials={getInitials(cardDisplayName)}
             size="lg"
             alt={cardDisplayName}
+            gradientColors={user.avatar_gradient}
           />
           <AvatarEmojiButton
             selectedEmojis={selectedCard.emojis || []}

@@ -37,6 +37,10 @@ class UserService:
         user = await self._user_repository.get_by_id(user_id)
         if not user:
             raise UserNotFoundError(str(user_id))
+        # Ленивая миграция: добавляем градиент если его нет
+        if not user.avatar_gradient:
+            user.avatar_gradient = User.generate_random_gradient()
+            await self._user_repository.update(user)
         return user
 
     async def get_user_by_email(self, email: str) -> User:
@@ -44,6 +48,10 @@ class UserService:
         user = await self._user_repository.get_by_email(email)
         if not user:
             raise UserNotFoundError(email)
+        # Ленивая миграция: добавляем градиент если его нет
+        if not user.avatar_gradient:
+            user.avatar_gradient = User.generate_random_gradient()
+            await self._user_repository.update(user)
         return user
 
     async def create_user(
@@ -71,6 +79,7 @@ class UserService:
             first_name=first_name,
             last_name=last_name,
             username=username,
+            avatar_gradient=User.generate_random_gradient(),
         )
 
         return await self._user_repository.create(user)

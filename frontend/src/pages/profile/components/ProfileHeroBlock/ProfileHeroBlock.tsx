@@ -7,6 +7,7 @@ interface ProfileHeroBlockProps {
   /** User name */
   name: string;
   avatarUrl?: string | null;
+  avatarGradient?: string[] | null;
   roles: string[];
   username?: string | null;
   skillsCount: number;
@@ -22,6 +23,7 @@ interface ProfileHeroBlockProps {
 export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
   name,
   avatarUrl,
+  avatarGradient,
   roles,
   skillsCount,
   likesCount,
@@ -60,6 +62,7 @@ export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
           initials={initials}
           size="lg"
           alt={name}
+          gradientColors={avatarGradient}
         />
       </div>
 

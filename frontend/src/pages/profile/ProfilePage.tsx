@@ -462,6 +462,7 @@ export function ProfilePage({
         <ProfileHeroBlock
           name={displayName}
           avatarUrl={displayAvatar}
+          avatarGradient={user.avatar_gradient}
           roles={getCardRoles()}
           username={user.username}
           skillsCount={skillsCount}

@@ -441,6 +441,7 @@ class TelegramAuthService:
             telegram_id=tg_data.id,
             telegram_username=tg_data.username,
             avatar_url=None,
+            avatar_gradient=User.generate_random_gradient(),
             username=username,
         )
 
@@ -769,5 +770,3 @@ class TelegramAuthService:
         ]
         for token in expired:
             del _pending_sync_sessions[token]
-
-

@@ -1,3 +1,4 @@
+import random
 import re
 from dataclasses import dataclass, field
 from uuid import UUID
@@ -35,6 +36,26 @@ MIN_PASSWORD_HASH_LENGTH = 20
 MAX_RANDOM_FACT_LENGTH = 500
 MAX_RANDOM_FACTS_COUNT = 10
 
+# Предустановленные градиенты для аватарок (не зависят от темы)
+AVATAR_GRADIENTS = [
+    ["#FF6B6B", "#EE5A24"],  # Coral → Orange
+    ["#A29BFE", "#6C5CE7"],  # Lavender → Purple
+    ["#55E6C1", "#1ABC9C"],  # Mint → Teal
+    ["#FD79A8", "#E84393"],  # Pink → Magenta
+    ["#FDCB6E", "#F39C12"],  # Yellow → Amber
+    ["#74B9FF", "#0984E3"],  # Sky → Blue
+    ["#FF7675", "#D63031"],  # Salmon → Red
+    ["#00CEC9", "#00B894"],  # Cyan → Green
+    ["#E17055", "#D35400"],  # Terracotta → Burnt Orange
+    ["#81ECEC", "#00CEC9"],  # Light Cyan → Cyan
+    ["#FAB1A0", "#E17055"],  # Peach → Terracotta
+    ["#DFE6E9", "#B2BEC3"],  # Cloud → Gray
+    ["#F8A5C2", "#F78FB3"],  # Rose → Pink
+    ["#63CDDA", "#3DC1D3"],  # Aqua → Water
+    ["#CF6A87", "#B33771"],  # Dusty Rose → Burgundy
+    ["#F19066", "#E55039"],  # Melon → Crimson
+]
+
 
 @dataclass
 class User(Entity):
@@ -51,6 +72,9 @@ class User(Entity):
     hashed_password: str = field(default="")
     phone_hash: str | None = field(default=None)  # SHA-256 hash телефона для sync
     avatar_url: str | None = field(default=None)
+    avatar_gradient: list[str] | None = field(
+        default=None
+    )  # ["#color1", "#color2"] для фона аватарки
 
     # Telegram авторизация
     telegram_id: int | None = field(default=None)  # Telegram user ID
@@ -149,6 +173,11 @@ class User(Entity):
             raise InvalidAvatarUrlError(url, f"Max length is {MAX_AVATAR_URL_LENGTH}")
         if not URL_REGEX.match(url):
             raise InvalidAvatarUrlError(url, "Invalid URL format")
+
+    @staticmethod
+    def generate_random_gradient() -> list[str]:
+        """Сгенерировать случайный градиент для аватарки."""
+        return random.choice(AVATAR_GRADIENTS)
 
     @staticmethod
     def _validate_location(location: str) -> None:

@@ -22,10 +22,19 @@ interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
   online?: boolean;
   /** Показать бейдж верификации */
   verified?: boolean;
+  /** Персональный градиент аватарки ["#color1", "#color2"] */
+  gradientColors?: string[] | null;
 }
 
 // Кэш доминантных цветов по URL, чтобы не перевычислять
 const colorCache = new Map<string, string>();
+
+/** Конвертировать hex цвет в формат "r, g, b" для CSS rgba() */
+function hexToRgb(hex: string): string | undefined {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return undefined;
+  return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
+}
 
 function getDominantColor(img: HTMLImageElement): string {
   try {
@@ -78,6 +87,7 @@ export function Avatar({
   size = "md",
   online,
   className = "",
+  gradientColors,
   ...props
 }: AvatarProps) {
   const [glowColor, setGlowColor] = useState<string | undefined>(
@@ -114,16 +124,43 @@ export function Avatar({
     .filter(Boolean)
     .join(" ");
 
-  const resolvedGlowColor = glowColor ?? (!src ? "var(--color-accent-rgb)" : undefined);
+  // Вычисляем glow цвет на основе градиента пользователя
+  const gradientGlowColor =
+    gradientColors && gradientColors.length >= 1
+      ? hexToRgb(gradientColors[0])
+      : undefined;
 
-  const glowStyle = resolvedGlowColor
-    ? ({ "--avatar-glow-color": resolvedGlowColor } as React.CSSProperties)
-    : undefined;
+  const resolvedGlowColor =
+    glowColor ??
+    gradientGlowColor ??
+    (!src ? "var(--color-accent-rgb)" : undefined);
+
+  const hasCustomGradient =
+    !src && gradientColors && gradientColors.length >= 2;
+
+  const style: React.CSSProperties = {
+    ...(resolvedGlowColor ? { "--avatar-glow-color": resolvedGlowColor } : {}),
+    ...(hasCustomGradient
+      ? {
+          "--avatar-gradient-from": gradientColors![0],
+          "--avatar-gradient-to": gradientColors![1],
+        }
+      : {}),
+  } as React.CSSProperties;
 
   return (
-    <div className={classNames} style={glowStyle} {...props}>
-      {resolvedGlowColor && <div className="avatar__glow avatar__glow--dynamic" />}
-      <div className="avatar__inner">
+    <div className={classNames} style={style} {...props}>
+      {resolvedGlowColor && (
+        <div className="avatar__glow avatar__glow--dynamic" />
+      )}
+      <div
+        className={[
+          "avatar__inner",
+          hasCustomGradient ? "avatar__inner--custom-gradient" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         {src ? (
           <img
             ref={imgRef}
