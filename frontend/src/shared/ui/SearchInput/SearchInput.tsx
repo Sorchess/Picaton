@@ -1,8 +1,12 @@
 import type { FC, InputHTMLAttributes } from "react";
 import { useState, useRef } from "react";
+import { useI18n } from "@/shared/config";
 import "./SearchInput.scss";
 
-interface SearchInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "onSubmit"> {
+interface SearchInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "onSubmit"
+> {
   /** Current value */
   value: string;
   /** Change handler */
@@ -29,10 +33,12 @@ export const SearchInput: FC<SearchInputProps> = ({
   onClear,
   isLoading = false,
   showClear = true,
-  placeholder = "Поиск...",
+  placeholder,
   className = "",
   ...props
 }) => {
+  const { t } = useI18n();
+  const actualPlaceholder = placeholder ?? t("searchInput.placeholder");
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -95,7 +101,7 @@ export const SearchInput: FC<SearchInputProps> = ({
         onKeyDown={handleKeyDown}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholder={placeholder}
+        placeholder={actualPlaceholder}
         {...props}
       />
 
@@ -104,7 +110,7 @@ export const SearchInput: FC<SearchInputProps> = ({
           type="button"
           className="search-input__clear"
           onClick={handleClear}
-          aria-label="Очистить"
+          aria-label={t("searchInput.clear")}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path

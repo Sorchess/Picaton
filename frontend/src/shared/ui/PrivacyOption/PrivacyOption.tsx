@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { useI18n } from "@/shared/config";
 import "./PrivacyOption.scss";
 
 export type PrivacyLevel = "public" | "contacts" | "private" | "company";
@@ -46,7 +47,7 @@ export const PrivacyOption: FC<PrivacyOptionProps> = ({
       data-level={level}
     >
       {icon && <span className="privacy-option__icon">{icon}</span>}
-        <div className="privacy-option__content">
+      <div className="privacy-option__content">
         <h4 className="privacy-option__title">{title}</h4>
         <p className="privacy-option__description">{description}</p>
       </div>
@@ -77,11 +78,12 @@ interface PrivacyOptionListProps {
   className?: string;
 }
 
-  export const PrivacyOptionList: FC<PrivacyOptionListProps> = ({
+export const PrivacyOptionList: FC<PrivacyOptionListProps> = ({
   selectedLevel,
   onChange,
   className = "",
 }) => {
+  const { t } = useI18n();
   const options: Array<{
     level: PrivacyLevel;
     title: string;
@@ -90,24 +92,24 @@ interface PrivacyOptionListProps {
   }> = [
     {
       level: "public",
-      title: "Все",
-      description: "Публичный профиль",
+      title: t("privacyOption.all"),
+      description: t("privacyOption.allDesc"),
     },
     {
       level: "contacts",
-      title: "Контакты",
-      description: "Видно только вашим контактам",
+      title: t("privacyOption.contacts"),
+      description: t("privacyOption.contactsDesc"),
     },
     {
       level: "private",
-      title: "Только я",
-      description: "Информация доступна только вам",
+      title: t("privacyOption.onlyMe"),
+      description: t("privacyOption.onlyMeDesc"),
       icon: "🔒",
     },
     {
       level: "company",
-      title: "Компания",
-      description: "Видно коллегам из компании",
+      title: t("privacyOption.company"),
+      description: t("privacyOption.companyDesc"),
       icon: "🏢",
     },
   ];

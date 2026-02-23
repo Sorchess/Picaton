@@ -207,8 +207,11 @@ export interface MessageResponse {
 }
 
 // Role helper functions
-export function getRoleName(role: CompanyRoleInfo | null): string {
-  if (!role) return "Участник";
+export function getRoleName(
+  role: CompanyRoleInfo | null,
+  t?: (key: string) => string,
+): string {
+  if (!role) return t ? t("company.memberFallback") : "Участник";
   return role.name;
 }
 

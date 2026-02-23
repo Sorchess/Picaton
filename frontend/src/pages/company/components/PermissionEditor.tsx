@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import type { Permission, PermissionGroupInfo } from "@/entities/company";
+import { useI18n } from "@/shared/config";
 import "./PermissionEditor.scss";
 
 interface PermissionEditorProps {
@@ -21,22 +22,22 @@ const GROUP_ICONS: Record<string, string> = {
 
 // Названия групп
 const GROUP_NAMES: Record<string, string> = {
-  company: "Компания",
-  roles: "Роли",
-  members: "Сотрудники",
-  cards: "Визитки",
-  tags: "Теги",
-  organization: "Структура",
+  company: "permissionEditor.groupCompany",
+  roles: "permissionEditor.groupRoles",
+  members: "permissionEditor.groupMembers",
+  cards: "permissionEditor.groupCards",
+  tags: "permissionEditor.groupTags",
+  organization: "permissionEditor.groupOrganization",
 };
 
 // Описания групп
 const GROUP_DESCRIPTIONS: Record<string, string> = {
-  company: "Управление настройками компании",
-  roles: "Создание и назначение ролей",
-  members: "Приглашение и управление сотрудниками",
-  cards: "Работа с визитками",
-  tags: "Управление тегами и навыками",
-  organization: "Должности и отделы",
+  company: "permissionEditor.groupCompanyDesc",
+  roles: "permissionEditor.groupRolesDesc",
+  members: "permissionEditor.groupMembersDesc",
+  cards: "permissionEditor.groupCardsDesc",
+  tags: "permissionEditor.groupTagsDesc",
+  organization: "permissionEditor.groupOrganizationDesc",
 };
 
 export function PermissionEditor({
@@ -45,14 +46,15 @@ export function PermissionEditor({
   onChange,
   disabled = false,
 }: PermissionEditorProps) {
+  const { t } = useI18n();
   const [activeGroup, setActiveGroup] = useState<string>(
-    groups[0]?.value || ""
+    groups[0]?.value || "",
   );
 
   // Текущая активная группа
   const currentGroup = useMemo(
     () => groups.find((g) => g.value === activeGroup) || groups[0],
-    [groups, activeGroup]
+    [groups, activeGroup],
   );
 
   // Статистика по группам
@@ -61,7 +63,7 @@ export function PermissionEditor({
     groups.forEach((group) => {
       const total = group.permissions.length;
       const selected = group.permissions.filter((p) =>
-        selectedPermissions.includes(p.value)
+        selectedPermissions.includes(p.value),
       ).length;
       stats[group.value] = { total, selected };
     });
@@ -84,7 +86,7 @@ export function PermissionEditor({
         onChange([...selectedPermissions, permission]);
       }
     },
-    [disabled, selectedPermissions, onChange]
+    [disabled, selectedPermissions, onChange],
   );
 
   // Выбрать все в группе
@@ -120,7 +122,7 @@ export function PermissionEditor({
       <div className="perm-editor perm-editor--empty">
         <div className="perm-editor__empty-state">
           <span className="perm-editor__empty-icon">🔐</span>
-          <p>Нет доступных прав</p>
+          <p>{t("permissionEditor.noPermissions")}</p>
         </div>
       </div>
     );
@@ -131,7 +133,9 @@ export function PermissionEditor({
       {/* Боковое меню */}
       <div className="perm-editor__sidebar">
         <div className="perm-editor__sidebar-header">
-          <div className="perm-editor__sidebar-title">Категории</div>
+          <div className="perm-editor__sidebar-title">
+            {t("permissionEditor.categories")}
+          </div>
           <div className="perm-editor__sidebar-stats">
             {totalStats.selected}/{totalStats.total}
           </div>
@@ -157,7 +161,9 @@ export function PermissionEditor({
                   {GROUP_ICONS[group.value] || "📋"}
                 </span>
                 <span className="perm-editor__sidebar-name">
-                  {GROUP_NAMES[group.value] || group.name}
+                  {GROUP_NAMES[group.value]
+                    ? t(GROUP_NAMES[group.value])
+                    : group.name}
                 </span>
                 <span
                   className={`perm-editor__sidebar-badge ${
@@ -178,7 +184,7 @@ export function PermissionEditor({
             onClick={selectAll}
             disabled={disabled}
           >
-            ✓ Все права
+            {t("permissionEditor.allRights")}
           </button>
           <button
             type="button"
@@ -186,7 +192,7 @@ export function PermissionEditor({
             onClick={deselectAll}
             disabled={disabled}
           >
-            ✕ Сбросить
+            {t("permissionEditor.resetRights")}
           </button>
         </div>
       </div>
@@ -203,10 +209,14 @@ export function PermissionEditor({
                 </div>
                 <div className="perm-editor__header-text">
                   <h4 className="perm-editor__header-title">
-                    {GROUP_NAMES[currentGroup.value] || currentGroup.name}
+                    {GROUP_NAMES[currentGroup.value]
+                      ? t(GROUP_NAMES[currentGroup.value])
+                      : currentGroup.name}
                   </h4>
                   <p className="perm-editor__header-desc">
-                    {GROUP_DESCRIPTIONS[currentGroup.value] || ""}
+                    {GROUP_DESCRIPTIONS[currentGroup.value]
+                      ? t(GROUP_DESCRIPTIONS[currentGroup.value])
+                      : ""}
                   </p>
                 </div>
               </div>
@@ -217,7 +227,7 @@ export function PermissionEditor({
                   onClick={selectAllInGroup}
                   disabled={disabled}
                 >
-                  Выбрать все
+                  {t("permissionEditor.selectAll")}
                 </button>
                 <button
                   type="button"
@@ -225,7 +235,7 @@ export function PermissionEditor({
                   onClick={deselectAllInGroup}
                   disabled={disabled}
                 >
-                  Снять все
+                  {t("permissionEditor.deselectAll")}
                 </button>
               </div>
             </div>

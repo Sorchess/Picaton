@@ -1,6 +1,9 @@
 import { useAuth } from "@/features/auth";
 import { IconButton, GlassSelect } from "@/shared";
 import { useTheme } from "@/shared/config";
+import { useI18n } from "@/shared/config";
+import type { Language } from "@/shared/config";
+import { userApi } from "@/entities/user";
 import { useMemo } from "react";
 import "./SettingsPage.scss";
 
@@ -15,14 +18,15 @@ export function SettingsPage({
   onOpenPrivacy,
   onBack,
 }: SettingsPageProps) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, t } = useI18n();
 
   const themeOptions = useMemo(
     () => [
       {
         value: "light",
-        label: "Светлая",
+        label: t("settings.themeLight"),
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <circle
@@ -43,7 +47,7 @@ export function SettingsPage({
       },
       {
         value: "dark",
-        label: "Тёмная",
+        label: t("settings.themeDark"),
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path
@@ -60,11 +64,37 @@ export function SettingsPage({
     [],
   );
 
+  const languageOptions = useMemo(
+    () => [
+      {
+        value: "ru",
+        label: t("settings.languageRu"),
+        icon: <span style={{ fontSize: 16 }}>🇷🇺</span>,
+      },
+      {
+        value: "en",
+        label: t("settings.languageEn"),
+        icon: <span style={{ fontSize: 16 }}>🇬🇧</span>,
+      },
+    ],
+    [t],
+  );
+
+  const handleLanguageChange = (newLang: string) => {
+    if (newLang !== language && (newLang === "ru" || newLang === "en")) {
+      setLanguage(newLang as Language);
+      // Save to backend
+      if (user?.id) {
+        userApi.update(user.id, { language: newLang }).catch(() => {});
+      }
+    }
+  };
+
   return (
     <div className="settings-page">
       {/* Заголовок */}
       <header className="settings-page__header">
-        <IconButton aria-label="Назад" onClick={onBack}>
+        <IconButton aria-label={t("common.back")} onClick={onBack}>
           <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
             <path
               d="M9 1L1 9L9 17"
@@ -76,7 +106,7 @@ export function SettingsPage({
           </svg>
         </IconButton>
         <div className="settings-page__title-container">
-          <h1 className="settings-page__title">Настройки</h1>
+          <h1 className="settings-page__title">{t("settings.title")}</h1>
         </div>
         <div style={{ width: 36 }} />
       </header>
@@ -118,13 +148,63 @@ export function SettingsPage({
           </svg>
           <div className="settings-page__card-content">
             <div className="settings-page__card-top">
-              <span className="settings-page__card-name">Тема</span>
+              <span className="settings-page__card-name">
+                {t("settings.theme")}
+              </span>
               <GlassSelect
                 options={themeOptions}
                 value={theme}
                 onChange={(v) => {
                   if (v !== theme) toggleTheme();
                 }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Язык */}
+        <div className="settings-page__card">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              width="32"
+              height="32"
+              rx="8.96"
+              fill="url(#paint0_linear_1897_21547)"
+            />
+            <path
+              d="M18.338 20.0352C18.5859 20.0352 18.7745 20.2586 18.7267 20.5019C18.5486 21.4085 18.3201 22.2264 18.0518 22.9277C17.7187 23.798 17.3408 24.451 16.959 24.873C16.5773 25.295 16.2519 25.4257 16 25.4258C15.748 25.4257 15.4218 25.2951 15.04 24.873C14.6583 24.4509 14.2802 23.798 13.9473 22.9277C13.6789 22.2264 13.4504 21.4084 13.2724 20.5019C13.2246 20.2586 13.4131 20.0352 13.6611 20.0352H18.338ZM23.812 20.0352C24.1012 20.0352 24.2937 20.3325 24.1599 20.589C23.1603 22.5052 21.5465 24.0281 19.5894 24.8777C19.2462 25.0268 18.9327 24.6308 19.0956 24.2939C19.2229 24.0306 19.3422 23.7528 19.4531 23.4629C19.7967 22.5649 20.076 21.5196 20.2776 20.3717C20.3116 20.1781 20.4786 20.0352 20.6752 20.0352H23.812ZM11.3238 20.0352C11.5204 20.0352 11.6874 20.1781 11.7214 20.3717C11.923 21.5196 12.2024 22.5649 12.5459 23.4629C12.6566 23.7524 12.7757 24.0298 12.9027 24.2927C13.0655 24.6297 12.7519 25.0256 12.4087 24.8765C10.4525 24.0268 8.83943 22.5045 7.8401 20.589C7.7063 20.3325 7.89876 20.0352 8.18804 20.0352H11.3238ZM11.0255 13.6055C11.2605 13.6055 11.4446 13.8071 11.4275 14.0414C11.3811 14.6777 11.3564 15.3324 11.3564 16C11.3564 16.7161 11.3846 17.4174 11.4376 18.097C11.456 18.3321 11.2716 18.5352 11.0357 18.5352H7.35953C7.17719 18.5352 7.01707 18.412 6.97696 18.2341C6.81976 17.537 6.73535 16.8109 6.73535 16.0645C6.73535 15.3223 6.81887 14.6004 6.97432 13.907C7.01425 13.7289 7.17447 13.6055 7.357 13.6055H11.0255ZM18.6666 13.6055C18.8728 13.6055 19.0456 13.7622 19.062 13.9678C19.1144 14.6215 19.1426 15.3012 19.1426 16C19.1426 16.7499 19.1103 17.4778 19.0503 18.1752C19.0327 18.3798 18.8604 18.5352 18.6551 18.5352H13.344C13.1387 18.5352 12.9663 18.3798 12.9487 18.1752C12.8887 17.4778 12.8564 16.7499 12.8564 16C12.8564 15.3012 12.8846 14.6215 12.937 13.9678C12.9535 13.7622 13.1262 13.6055 13.3325 13.6055H18.6666ZM24.643 13.6055C24.8255 13.6055 24.9858 13.7289 25.0257 13.907C25.1811 14.6004 25.2646 15.3223 25.2646 16.0645C25.2646 16.8109 25.1802 17.537 25.023 18.2341C24.9829 18.412 24.8228 18.5352 24.6405 18.5352H20.9633C20.7274 18.5352 20.543 18.3321 20.5614 18.097C20.6144 17.4174 20.6426 16.7161 20.6426 16C20.6426 15.3324 20.6179 14.6777 20.5715 14.0414C20.5544 13.8071 20.7385 13.6055 20.9735 13.6055H24.643ZM12.3323 7.28416C12.6712 7.1332 12.9872 7.51774 12.8321 7.85473C12.7315 8.07344 12.6361 8.30138 12.5459 8.53711C12.1887 9.47096 11.9012 10.5641 11.6981 11.7664C11.6652 11.9611 11.4977 12.1055 11.3002 12.1055H8.18228C7.89322 12.1055 7.70074 11.8085 7.83406 11.552C8.81988 9.65554 10.4063 8.14223 12.3323 7.28416ZM16 6.57422C16.2519 6.57433 16.5773 6.70503 16.959 7.12695C17.3408 7.54903 17.7187 8.20196 18.0518 9.07227C18.3342 9.81041 18.5732 10.6776 18.755 11.6414C18.8008 11.8839 18.6126 12.1055 18.3657 12.1055H13.6333C13.3865 12.1055 13.1982 11.8839 13.244 11.6414C13.4258 10.6776 13.6649 9.81041 13.9473 9.07227C14.2802 8.20204 14.6583 7.54906 15.04 7.12695C15.4218 6.70487 15.748 6.57427 16 6.57422ZM19.1662 7.85354C19.011 7.51661 19.3269 7.13205 19.6658 7.28295C21.5927 8.14092 23.1798 9.65484 24.1659 11.552C24.2993 11.8085 24.1068 12.1055 23.8177 12.1055H20.6989C20.5013 12.1055 20.3338 11.9611 20.3009 11.7664C20.0978 10.5641 19.8104 9.47097 19.4531 8.53711C19.3628 8.30091 19.2671 8.07259 19.1662 7.85354Z"
+              fill="white"
+            />
+            <defs>
+              <linearGradient
+                id="paint0_linear_1897_21547"
+                x1="16"
+                y1="0"
+                x2="16"
+                y2="32"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop stop-color="#C885FF" />
+                <stop offset="1" stop-color="#9F2DFC" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          <div className="settings-page__card-content">
+            <div className="settings-page__card-top">
+              <span className="settings-page__card-name">
+                {t("settings.language")}
+              </span>
+              <GlassSelect
+                options={languageOptions}
+                value={language}
+                onChange={handleLanguageChange}
               />
             </div>
           </div>
@@ -171,7 +251,9 @@ export function SettingsPage({
           </svg>
           <div className="settings-page__card-content">
             <div className="settings-page__card-top">
-              <span className="settings-page__card-name">Компании</span>
+              <span className="settings-page__card-name">
+                {t("settings.companies")}
+              </span>
               <svg
                 className="settings-page__card-arrow"
                 width="8"
@@ -231,7 +313,9 @@ export function SettingsPage({
           </svg>
           <div className="settings-page__card-content">
             <div className="settings-page__card-top">
-              <span className="settings-page__card-name">Приватность</span>
+              <span className="settings-page__card-name">
+                {t("settings.privacy")}
+              </span>
               <svg
                 className="settings-page__card-arrow"
                 width="8"
@@ -275,7 +359,7 @@ export function SettingsPage({
           <div className="settings-page__card-content">
             <div className="settings-page__card-top">
               <span className="settings-page__card-name">
-                Выйти из аккаунта
+                {t("settings.logout")}
               </span>
             </div>
           </div>

@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import type { Conversation, DirectMessage } from "@/entities/direct-chat";
-import { getParticipantInitials, getParticipantName } from "@/entities/direct-chat";
+import {
+  getParticipantInitials,
+  getParticipantName,
+} from "@/entities/direct-chat";
 import { Avatar, Modal } from "@/shared";
+import { useI18n } from "@/shared/config";
 import type { MessageActionsController } from "../hooks/useMessageActions";
 
 interface MessageActionsProps {
@@ -33,7 +37,12 @@ function MenuActionButton({
       className={`chats-page__message-menu-item ${danger ? "chats-page__message-menu-item--danger" : ""}`}
       onClick={onClick}
     >
-      <span className="chats-page__message-menu-icon" style={{ marginRight: "5px" }}>{icon}</span>
+      <span
+        className="chats-page__message-menu-icon"
+        style={{ marginRight: "5px" }}
+      >
+        {icon}
+      </span>
       <span>{label}</span>
     </button>
   );
@@ -48,6 +57,8 @@ export function MessageActions({
   onStartMultiSelect,
   onForwardComplete,
 }: MessageActionsProps) {
+  const { t } = useI18n();
+
   const handleConfirmForward = () => {
     const targetConversationId = controller.forwardTargetId;
     controller.handleConfirmForward();
@@ -62,7 +73,10 @@ export function MessageActions({
         <div
           ref={controller.menuRef}
           className="chats-page__message-menu"
-          style={{ top: controller.actionMenu.top, left: controller.actionMenu.left }}
+          style={{
+            top: controller.actionMenu.top,
+            left: controller.actionMenu.left,
+          }}
         >
           {(() => {
             const msg = visibleMessages.find(
@@ -75,7 +89,7 @@ export function MessageActions({
             return (
               <>
                 <MenuActionButton
-                  label="Скопировать"
+                  label={t("chats.copy")}
                   onClick={() => controller.handleCopyMessage(msg)}
                   icon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -97,7 +111,7 @@ export function MessageActions({
                   }
                 />
                 <MenuActionButton
-                  label="Ответить"
+                  label={t("chats.replyAction")}
                   onClick={() => onReplyMessage(msg)}
                   icon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -118,7 +132,7 @@ export function MessageActions({
                   }
                 />
                 <MenuActionButton
-                  label="Выбрать"
+                  label={t("chats.select")}
                   onClick={() => onStartMultiSelect(msg)}
                   icon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -140,10 +154,15 @@ export function MessageActions({
                 />
                 {canForward && (
                   <MenuActionButton
-                    label="Переслать"
+                    label={t("chats.forwardAction")}
                     onClick={() => controller.handleForwardMessage(msg)}
                     icon={
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
                         <path
                           d="M22 2L11 13"
                           stroke="currentColor"
@@ -163,10 +182,15 @@ export function MessageActions({
                 )}
                 {isOwn && (
                   <MenuActionButton
-                    label="Изменить"
+                    label={t("chats.edit")}
                     onClick={() => controller.handleStartEdit(msg)}
                     icon={
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
                         <path
                           d="M12 20h9"
                           stroke="currentColor"
@@ -185,7 +209,7 @@ export function MessageActions({
                   />
                 )}
                 <MenuActionButton
-                  label="Удалить"
+                  label={t("chats.deleteAction")}
                   onClick={() => controller.openDeleteDialog(msg)}
                   danger
                   icon={
@@ -222,9 +246,11 @@ export function MessageActions({
         onClose={() => controller.setDeleteTarget(null)}
       >
         <div className="chats-page__modal">
-          <h3 className="chats-page__modal-title">Удалить сообщение?</h3>
+          <h3 className="chats-page__modal-title">
+            {t("chats.deleteMessage")}
+          </h3>
           <p className="chats-page__modal-text">
-            Выберите, как удалить это сообщение.
+            {t("chats.chooseDeleteSingle")}
           </p>
           <div className="chats-page__modal-actions">
             <button
@@ -236,7 +262,7 @@ export function MessageActions({
                 }
               }}
             >
-              Удалить у меня
+              {t("chats.deleteForMe")}
             </button>
             {controller.deleteTarget?.sender_id === currentUserId && (
               <button
@@ -248,17 +274,24 @@ export function MessageActions({
                   }
                 }}
               >
-                Удалить у всех
+                {t("chats.deleteForEveryone")}
               </button>
             )}
           </div>
         </div>
       </Modal>
 
-      <Modal isOpen={controller.isForwardOpen} onClose={controller.closeForwardModal}>
+      <Modal
+        isOpen={controller.isForwardOpen}
+        onClose={controller.closeForwardModal}
+      >
         <div className="chats-page__modal">
-          <h3 className="chats-page__modal-title">Переслать сообщение</h3>
-          <p className="chats-page__modal-text">Выберите диалог для пересылки.</p>
+          <h3 className="chats-page__modal-title">
+            {t("chats.forwardMessage")}
+          </h3>
+          <p className="chats-page__modal-text">
+            {t("chats.chooseForwardDialog")}
+          </p>
           <div className="chats-page__forward-list">
             {conversations.map((conv) => (
               <button
@@ -288,7 +321,7 @@ export function MessageActions({
               className="chats-page__modal-btn"
               onClick={controller.closeForwardModal}
             >
-              Отмена
+              {t("chats.cancel")}
             </button>
             <button
               type="button"
@@ -296,7 +329,7 @@ export function MessageActions({
               onClick={handleConfirmForward}
               disabled={!controller.forwardTargetId}
             >
-              Переслать
+              {t("chats.forwardAction")}
             </button>
           </div>
         </div>
@@ -304,4 +337,3 @@ export function MessageActions({
     </>
   );
 }
-

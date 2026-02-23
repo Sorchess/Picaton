@@ -1,8 +1,11 @@
 import type { FormHTMLAttributes, ReactNode } from "react";
+import { useI18n } from "@/shared/config";
 import "./SearchBox.scss";
 
-interface SearchBoxProps
-  extends Omit<FormHTMLAttributes<HTMLFormElement>, "onSubmit"> {
+interface SearchBoxProps extends Omit<
+  FormHTMLAttributes<HTMLFormElement>,
+  "onSubmit"
+> {
   value?: string;
   onValueChange?: (value: string) => void;
   placeholder?: string;
@@ -12,16 +15,19 @@ interface SearchBoxProps
 }
 
 export function SearchBox(Props: SearchBoxProps) {
+  const { t } = useI18n();
   const {
     value,
     onValueChange,
-    placeholder = "Поиск...",
+    placeholder,
     onSearch,
-    buttonText = "Найти",
+    buttonText,
     icon,
     className = "",
     ...props
   } = Props;
+  const actualPlaceholder = placeholder ?? t("searchBox.placeholder");
+  const actualButtonText = buttonText ?? t("searchBox.find");
   const classNames = ["search-box", className].filter(Boolean).join(" ");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -48,7 +54,7 @@ export function SearchBox(Props: SearchBoxProps) {
       <input
         type="text"
         className="search-box__input"
-        placeholder={placeholder}
+        placeholder={actualPlaceholder}
         value={value}
         onChange={(e) => onValueChange?.(e.target.value)}
       />
@@ -63,7 +69,7 @@ export function SearchBox(Props: SearchBoxProps) {
           <circle cx="11" cy="11" r="8" />
           <path d="M21 21l-4.35-4.35" />
         </svg>
-        {buttonText}
+        {actualButtonText}
       </button>
     </form>
   );

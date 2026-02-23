@@ -49,8 +49,8 @@ export const RoleTabs: FC<RoleTabsProps> = ({
 };
 
 // Default roles for demo
-export const defaultRoles: RoleTab[] = [
-  { id: "personal", name: "Личный", emoji: "🔥" },
+export const getDefaultRoles = (t: (key: string) => string): RoleTab[] => [
+  { id: "personal", name: t("profile.personal"), emoji: "🔥" },
   { id: "uiux", name: "UI/UX Lead", emoji: "🌟" },
   { id: "marketing", name: "Маркетолог", emoji: "✨" },
   { id: "travel", name: "Путешественник", emoji: "🧭" },

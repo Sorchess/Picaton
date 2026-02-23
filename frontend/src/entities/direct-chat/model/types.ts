@@ -137,15 +137,22 @@ export function getParticipantInitials(participant: DMAuthor): string {
   return (first + last).toUpperCase() || "?";
 }
 
-export function formatMessageTime(dateStr: string): string {
+export function formatMessageTime(
+  dateStr: string,
+  locale: string = "ru-RU",
+): string {
   const date = new Date(dateStr);
-  return date.toLocaleTimeString("ru-RU", {
+  return date.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
-export function formatConversationTime(dateStr: string | null): string {
+export function formatConversationTime(
+  dateStr: string | null,
+  locale: string = "ru-RU",
+  t?: (key: string) => string,
+): string {
   if (!dateStr) return "";
 
   const date = new Date(dateStr);
@@ -158,7 +165,7 @@ export function formatConversationTime(dateStr: string | null): string {
   );
 
   if (messageDate.getTime() === today.getTime()) {
-    return date.toLocaleTimeString("ru-RU", {
+    return date.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -168,19 +175,18 @@ export function formatConversationTime(dateStr: string | null): string {
   yesterday.setDate(yesterday.getDate() - 1);
 
   if (messageDate.getTime() === yesterday.getTime()) {
-    return "Вчера";
+    return t ? t("common.yesterday") : "Вчера";
   }
 
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
 
   if (messageDate.getTime() > weekAgo.getTime()) {
-    return date.toLocaleDateString("ru-RU", { weekday: "short" });
+    return date.toLocaleDateString(locale, { weekday: "short" });
   }
 
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
   });
 }
-

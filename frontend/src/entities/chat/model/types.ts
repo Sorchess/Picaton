@@ -122,22 +122,29 @@ export type WSChatMessage =
   | { type: "error"; message: string };
 
 // Helper функции
-export function getAuthorName(message: ChatMessage): string {
-  if (!message.author) return "Система";
+export function getAuthorName(
+  message: ChatMessage,
+  t?: (key: string) => string,
+): string {
+  if (!message.author) return t ? t("common.system") : "Система";
   return `${message.author.first_name} ${message.author.last_name}`.trim();
 }
 
-export function formatMessageTime(dateStr: string): string {
+export function formatMessageTime(
+  dateStr: string,
+  locale: string = "ru-RU",
+  t?: (key: string, params?: Record<string, string>) => string,
+): string {
   const date = new Date(dateStr);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const messageDate = new Date(
     date.getFullYear(),
     date.getMonth(),
-    date.getDate()
+    date.getDate(),
   );
 
-  const time = date.toLocaleTimeString("ru-RU", {
+  const time = date.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -150,10 +157,10 @@ export function formatMessageTime(dateStr: string): string {
   yesterday.setDate(yesterday.getDate() - 1);
 
   if (messageDate.getTime() === yesterday.getTime()) {
-    return `Вчера, ${time}`;
+    return t ? t("common.yesterdayWithTime", { time }) : `Вчера, ${time}`;
   }
 
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     hour: "2-digit",

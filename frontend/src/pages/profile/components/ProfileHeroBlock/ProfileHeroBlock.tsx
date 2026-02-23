@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { Avatar } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./ProfileHeroBlock.scss";
 
 interface ProfileHeroBlockProps {
@@ -28,6 +29,8 @@ export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
   onSkillsClick,
   onLikesClick,
 }) => {
+  const { t } = useI18n();
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -80,14 +83,14 @@ export const ProfileHeroBlock: FC<ProfileHeroBlockProps> = ({
           className="profile-hero__stat profile-hero__stat--skills"
           onClick={onSkillsClick}
         >
-          {skillsCount} Навыков
+          {skillsCount} {t("profile.skills")}
         </button>
         <button
           type="button"
           className="profile-hero__stat profile-hero__stat--likes"
           onClick={onLikesClick}
         >
-          {likesCount} Лайков
+          {likesCount} {t("profile.likes")}
         </button>
       </div>
     </div>

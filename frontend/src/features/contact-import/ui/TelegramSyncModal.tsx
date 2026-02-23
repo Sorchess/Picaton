@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Modal, Loader } from "@/shared";
+import { useI18n } from "@/shared/config";
 import { authApi } from "@/features/auth";
 import type { TelegramFoundContact } from "@/features/auth/model/types";
 import "./TelegramSyncModal.scss";
@@ -24,6 +25,7 @@ export function TelegramSyncModal({
   const [error, setError] = useState<string | null>(null);
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number>(0);
+  const { t } = useI18n();
 
   const pollingRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
@@ -88,7 +90,7 @@ export function TelegramSyncModal({
             if (countdownRef.current) clearInterval(countdownRef.current);
 
             setStatus("error");
-            setError("Время синхронизации истекло. Попробуйте ещё раз.");
+            setError(t("telegramSync.syncExpired"));
           }
         } catch (err) {
           console.error("Polling error:", err);
@@ -130,7 +132,7 @@ export function TelegramSyncModal({
     } catch (err) {
       console.error("Failed to start sync:", err);
       setStatus("error");
-      setError("Не удалось начать синхронизацию");
+      setError(t("telegramSync.syncFailed"));
     }
   };
 
@@ -156,9 +158,7 @@ export function TelegramSyncModal({
   };
 
   const handleInvite = () => {
-    const inviteText = encodeURIComponent(
-      "Привет! Присоединяйся к Picaton — сервису для создания профессиональной сети. Создай свой профиль и находи нужных специалистов!",
-    );
+    const inviteText = encodeURIComponent(t("telegramSync.shareText"));
     const inviteUrl = encodeURIComponent(window.location.origin);
 
     // tg://msg_url для десктопа, https://t.me/share для мобильных
@@ -188,7 +188,7 @@ export function TelegramSyncModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Синхронизация контактов"
+      title={t("contactImport.syncTitle")}
     >
       <div className="telegram-sync-modal">
         {status === "idle" && (
@@ -200,26 +200,25 @@ export function TelegramSyncModal({
             </div>
 
             <p className="telegram-sync-modal__description">
-              Найдите знакомых, которые уже есть в Picaton. Перешлите боту
-              контакты из Telegram — мы покажем, кто уже зарегистрирован.
+              {t("telegramSync.description")}
             </p>
 
             <div className="telegram-sync-modal__steps">
               <div className="telegram-sync-modal__step">
                 <span className="telegram-sync-modal__step-num">1</span>
-                <span>Нажмите кнопку ниже</span>
+                <span>{t("telegramSync.step1")}</span>
               </div>
               <div className="telegram-sync-modal__step">
                 <span className="telegram-sync-modal__step-num">2</span>
-                <span>Откроется Telegram бот</span>
+                <span>{t("telegramSync.step2")}</span>
               </div>
               <div className="telegram-sync-modal__step">
                 <span className="telegram-sync-modal__step-num">3</span>
-                <span>Перешлите контакты, которые хотите найти</span>
+                <span>{t("telegramSync.step3Full")}</span>
               </div>
               <div className="telegram-sync-modal__step">
                 <span className="telegram-sync-modal__step-num">4</span>
-                <span>Нажмите "Готово" в боте</span>
+                <span>{t("telegramSync.step4")}</span>
               </div>
             </div>
 
@@ -228,7 +227,7 @@ export function TelegramSyncModal({
                 className="telegram-sync-modal__btn telegram-sync-modal__btn--secondary"
                 onClick={handleClose}
               >
-                Отмена
+                {t("common.cancel")}
               </button>
               <button
                 className="telegram-sync-modal__btn telegram-sync-modal__btn--primary"
@@ -242,12 +241,12 @@ export function TelegramSyncModal({
                 >
                   <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                 </svg>
-                Открыть Telegram
+                {t("telegramSync.openTelegram")}
               </button>
             </div>
 
             <div className="telegram-sync-modal__divider">
-              <span>или</span>
+              <span>{t("common.or")}</span>
             </div>
 
             <button
@@ -265,7 +264,7 @@ export function TelegramSyncModal({
                 <path d="M22 2L11 13" />
                 <path d="M22 2L15 22L11 13L2 9L22 2Z" />
               </svg>
-              Пригласить друга в Picaton
+              {t("telegramSync.inviteFriend")}
             </button>
           </>
         )}
@@ -273,7 +272,7 @@ export function TelegramSyncModal({
         {status === "loading" && (
           <div className="telegram-sync-modal__loading">
             <Loader />
-            <p>Создаём сессию синхронизации...</p>
+            <p>{t("telegramSync.creatingSession")}</p>
           </div>
         )}
 
@@ -281,10 +280,10 @@ export function TelegramSyncModal({
           <>
             <div className="telegram-sync-modal__waiting-icon">📱</div>
             <p className="telegram-sync-modal__waiting-title">
-              Ожидаем контакты из Telegram
+              {t("telegramSync.waitingContacts")}
             </p>
             <p className="telegram-sync-modal__waiting-subtitle">
-              Перешлите контакты боту и нажмите "Готово"
+              {t("telegramSync.forwardInstruction")}
             </p>
             <div className="telegram-sync-modal__timer">
               {formatTime(remaining)}
@@ -297,7 +296,7 @@ export function TelegramSyncModal({
                 rel="noopener noreferrer"
                 className="telegram-sync-modal__open-link"
               >
-                Открыть Telegram
+                {t("telegramSync.openTelegram")}
               </a>
             )}
 
@@ -305,7 +304,7 @@ export function TelegramSyncModal({
               className="telegram-sync-modal__btn telegram-sync-modal__btn--text"
               onClick={handleRetry}
             >
-              Отмена
+              {t("common.cancel")}
             </button>
           </>
         )}
@@ -314,17 +313,17 @@ export function TelegramSyncModal({
           <>
             <div className="telegram-sync-modal__success-icon">✅</div>
             <p className="telegram-sync-modal__success-title">
-              Синхронизация завершена!
+              {t("telegramSync.syncComplete")}
             </p>
             <p className="telegram-sync-modal__success-subtitle">
               {foundContacts.length > 0
-                ? `Найдено ${foundContacts.length} ${getNoun(
+                ? `${t("telegramSync.foundContacts", { n: String(foundContacts.length) })} ${getNoun(
                     foundContacts.length,
-                    "контакт",
-                    "контакта",
-                    "контактов",
-                  )} в Picaton`
-                : "К сожалению, никого не нашли среди ваших контактов"}
+                    t("telegramSync.contactOne"),
+                    t("telegramSync.contactFew"),
+                    t("telegramSync.contactMany"),
+                  )}`
+                : t("telegramSync.noOneFound")}
             </p>
 
             {foundContacts.length > 0 && (
@@ -359,7 +358,9 @@ export function TelegramSyncModal({
                 ))}
                 {foundContacts.length > 5 && (
                   <p className="telegram-sync-modal__more">
-                    и ещё {foundContacts.length - 5}
+                    {t("telegramSync.andMore", {
+                      n: String(foundContacts.length - 5),
+                    })}
                   </p>
                 )}
               </div>
@@ -381,7 +382,7 @@ export function TelegramSyncModal({
                   <path d="M22 2L11 13" />
                   <path d="M22 2L15 22L11 13L2 9L22 2Z" />
                 </svg>
-                Пригласить друзей в Picaton
+                {t("telegramSync.inviteFriends")}
               </button>
             )}
 
@@ -389,7 +390,7 @@ export function TelegramSyncModal({
               className="telegram-sync-modal__btn telegram-sync-modal__btn--primary"
               onClick={handleClose}
             >
-              Готово
+              {t("common.done")}
             </button>
           </>
         )}
@@ -397,7 +398,9 @@ export function TelegramSyncModal({
         {status === "error" && (
           <>
             <div className="telegram-sync-modal__error-icon">❌</div>
-            <p className="telegram-sync-modal__error-title">Ошибка</p>
+            <p className="telegram-sync-modal__error-title">
+              {t("common.error")}
+            </p>
             <p className="telegram-sync-modal__error-text">{error}</p>
 
             <div className="telegram-sync-modal__actions">
@@ -405,13 +408,13 @@ export function TelegramSyncModal({
                 className="telegram-sync-modal__btn telegram-sync-modal__btn--secondary"
                 onClick={handleClose}
               >
-                Закрыть
+                {t("common.close")}
               </button>
               <button
                 className="telegram-sync-modal__btn telegram-sync-modal__btn--primary"
                 onClick={handleRetry}
               >
-                Попробовать снова
+                {t("common.tryAgain")}
               </button>
             </div>
           </>

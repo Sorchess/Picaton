@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { useI18n } from "@/shared/config";
 import "./ContactCard.scss";
 
 interface ContactCardProps {
@@ -40,6 +41,8 @@ export const ContactCard: FC<ContactCardProps> = ({
   onSave,
   className = "",
 }) => {
+  const { t } = useI18n();
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -61,7 +64,11 @@ export const ContactCard: FC<ContactCardProps> = ({
     >
       <div className="contact-card__avatar">
         {avatarUrl ? (
-          <img src={avatarUrl} alt={name} className="contact-card__avatar-img" />
+          <img
+            src={avatarUrl}
+            alt={name}
+            className="contact-card__avatar-img"
+          />
         ) : (
           <span className="contact-card__avatar-initials">{initials}</span>
         )}
@@ -69,11 +76,11 @@ export const ContactCard: FC<ContactCardProps> = ({
 
       <div className="contact-card__content">
         <h3 className="contact-card__name">{name}</h3>
-        
+
         {roles.length > 0 && (
           <p className="contact-card__roles">{roles.join(" • ")}</p>
         )}
-        
+
         {companies.length > 0 && (
           <p className="contact-card__companies">{companies.join(", ")}</p>
         )}
@@ -101,15 +108,26 @@ export const ContactCard: FC<ContactCardProps> = ({
           type="button"
           className={`contact-card__save ${isSaved ? "contact-card__save--saved" : ""}`}
           onClick={handleSaveClick}
-          aria-label={isSaved ? "Удалить из контактов" : "Сохранить контакт"}
+          aria-label={
+            isSaved
+              ? t("contactCard.removeContact")
+              : t("contactCard.saveContact")
+          }
         >
           {isSaved ? (
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.42 4 5.5 4c1.26 0 2.47.58 3.25 1.49L10 6.85l1.25-1.36C12.03 4.58 13.24 4 14.5 4 16.58 4 18 5.42 18 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z"/>
+              <path d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.42 4 5.5 4c1.26 0 2.47.58 3.25 1.49L10 6.85l1.25-1.36C12.03 4.58 13.24 4 14.5 4 16.58 4 18 5.42 18 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z" />
             </svg>
           ) : (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.42 4 5.5 4c1.26 0 2.47.58 3.25 1.49L10 6.85l1.25-1.36C12.03 4.58 13.24 4 14.5 4 16.58 4 18 5.42 18 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M10 18l-1.45-1.32C4.4 12.36 2 10.28 2 7.5 2 5.42 3.42 4 5.5 4c1.26 0 2.47.58 3.25 1.49L10 6.85l1.25-1.36C12.03 4.58 13.24 4 14.5 4 16.58 4 18 5.42 18 7.5c0 2.78-2.4 4.86-6.55 9.18L10 18z" />
             </svg>
           )}
         </button>
@@ -121,9 +139,9 @@ export const ContactCard: FC<ContactCardProps> = ({
 /**
  * Container for contact cards list
  */
-export const ContactCardList: FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = "",
-}) => {
+export const ContactCardList: FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = "" }) => {
   return <div className={`contact-card-list ${className}`}>{children}</div>;
 };

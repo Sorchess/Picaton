@@ -7,6 +7,7 @@ import { businessCardApi } from "@/entities/business-card";
 import type { CompanyCardAssignment } from "@/entities/company";
 import { companyApi } from "@/entities/company";
 import { useAuth } from "@/features/auth";
+import { useI18n } from "@/shared/config";
 import { endorsementApi } from "@/api/endorsementApi";
 import type { SkillWithEndorsements } from "@/api/endorsementApi";
 import { Loader, Button, Modal } from "@/shared";
@@ -43,6 +44,7 @@ export function ProfilePage({
   onOpenNotifications,
 }: ProfilePageProps) {
   const { user: authUser } = useAuth();
+  const { t } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +92,7 @@ export function ProfilePage({
       const userData = await userApi.getFull(authUser.id);
       setUser(userData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка загрузки профиля");
+      setError(err instanceof Error ? err.message : t("profile.loadingError"));
     } finally {
       setIsLoading(false);
     }
@@ -271,7 +273,9 @@ export function ProfilePage({
       setShowCreateModal(false);
       handleOpenCard(newCard);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка создания карточки");
+      setError(
+        err instanceof Error ? err.message : t("profile.cardCreationError"),
+      );
     } finally {
       setIsCreating(false);
     }
@@ -292,7 +296,7 @@ export function ProfilePage({
     if (primaryCard) {
       roles.push({
         id: primaryCard.id,
-        name: primaryCard.title || "Личный",
+        name: primaryCard.title || t("profile.personal"),
         emoji: "🔥",
       });
     }
@@ -348,7 +352,7 @@ export function ProfilePage({
       <div className="profile">
         <div className="profile__loading">
           <Loader />
-          <p>Загрузка профиля...</p>
+          <p>{t("profile.loading")}</p>
         </div>
       </div>
     );
@@ -359,8 +363,8 @@ export function ProfilePage({
     return (
       <div className="profile">
         <div className="profile__error">
-          <p>{error || "Не удалось загрузить профиль"}</p>
-          <button onClick={loadUser}>Повторить</button>
+          <p>{error || t("profile.loadFailed")}</p>
+          <button onClick={loadUser}>{t("common.retry")}</button>
         </div>
       </div>
     );
@@ -416,7 +420,7 @@ export function ProfilePage({
     }
 
     if (roles.length === 0) {
-      roles.push("Пользователь");
+      roles.push(t("profile.defaultRole"));
     }
 
     return roles;
@@ -499,7 +503,7 @@ export function ProfilePage({
           >
             <span className="profile__add-card-icon"></span>
             <span className="profile__add-card-text">
-              Создать новую визитку
+              {t("profile.createNewCard")}
             </span>
           </button>
         )}
@@ -509,19 +513,18 @@ export function ProfilePage({
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Новая визитка"
+        title={t("profile.newCard")}
       >
         <div className="profile__create-modal">
           <p className="profile__create-hint">
-            Придумайте название для вашей визитки. Например: "Разработчик",
-            "Дизайнер" или "Личная"
+            {t("profile.newCardDescription")}
           </p>
           <input
             type="text"
             className="profile__create-input"
             value={newCardTitle}
             onChange={(e) => setNewCardTitle(e.target.value)}
-            placeholder="Название визитки"
+            placeholder={t("profile.cardNamePlaceholder")}
             maxLength={50}
           />
           <div className="profile__create-actions">
@@ -529,14 +532,14 @@ export function ProfilePage({
               variant="secondary"
               onClick={() => setShowCreateModal(false)}
             >
-              Отмена
+              {t("common.cancel")}
             </Button>
             <Button
               variant="primary"
               onClick={handleCreateCard}
               disabled={!newCardTitle.trim() || isCreating}
             >
-              {isCreating ? "Создание..." : "Создать"}
+              {isCreating ? t("common.creating") : t("common.create")}
             </Button>
           </div>
         </div>

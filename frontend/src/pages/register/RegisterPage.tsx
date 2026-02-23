@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth";
 import { Typography, Button, Input } from "@/shared";
 import { ApiError } from "@/shared/api";
+import { useI18n } from "@/shared/config";
 import "./AuthPage.scss";
 
 interface AuthPageProps {
@@ -10,6 +11,7 @@ interface AuthPageProps {
 
 export function RegisterPage({ onSwitchToLogin }: AuthPageProps) {
   const { register, isLoading } = useAuth();
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,12 +31,12 @@ export function RegisterPage({ onSwitchToLogin }: AuthPageProps) {
     setError(null);
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Пароли не совпадают");
+      setError(t("register.passwordsMismatch"));
       return;
     }
 
     if (formData.password.length < 6) {
-      setError("Пароль должен быть не менее 6 символов");
+      setError(t("register.passwordTooShort"));
       return;
     }
 
@@ -48,13 +50,15 @@ export function RegisterPage({ onSwitchToLogin }: AuthPageProps) {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
-          setError("Пользователь с таким email уже существует");
+          setError(t("register.emailExists"));
         } else {
           const data = err.data as { detail?: string } | null;
-          setError(data?.detail || "Ошибка регистрации");
+          setError(data?.detail || t("register.registrationError"));
         }
       } else {
-        setError(err instanceof Error ? err.message : "Ошибка регистрации");
+        setError(
+          err instanceof Error ? err.message : t("register.registrationError"),
+        );
       }
     }
   };
@@ -118,7 +122,7 @@ export function RegisterPage({ onSwitchToLogin }: AuthPageProps) {
             Picaton
           </Typography>
           <Typography variant="body" className="auth-page__subtitle">
-            Создайте новый аккаунт
+            {t("register.createAccount")}
           </Typography>
         </div>
 
@@ -131,23 +135,27 @@ export function RegisterPage({ onSwitchToLogin }: AuthPageProps) {
 
           <div className="auth-page__row">
             <div className="auth-page__field">
-              <label className="auth-page__label">Имя</label>
+              <label className="auth-page__label">
+                {t("register.firstName")}
+              </label>
               <Input
                 type="text"
                 value={formData.first_name}
                 onChange={handleChange("first_name")}
-                placeholder="Иван"
+                placeholder={t("register.firstNamePlaceholder")}
                 required
               />
             </div>
 
             <div className="auth-page__field">
-              <label className="auth-page__label">Фамилия</label>
+              <label className="auth-page__label">
+                {t("register.lastName")}
+              </label>
               <Input
                 type="text"
                 value={formData.last_name}
                 onChange={handleChange("last_name")}
-                placeholder="Иванов"
+                placeholder={t("register.lastNamePlaceholder")}
                 required
               />
             </div>
@@ -165,7 +173,7 @@ export function RegisterPage({ onSwitchToLogin }: AuthPageProps) {
           </div>
 
           <div className="auth-page__field">
-            <label className="auth-page__label">Пароль</label>
+            <label className="auth-page__label">{t("register.password")}</label>
             <Input
               type="password"
               value={formData.password}
@@ -176,7 +184,9 @@ export function RegisterPage({ onSwitchToLogin }: AuthPageProps) {
           </div>
 
           <div className="auth-page__field">
-            <label className="auth-page__label">Подтвердите пароль</label>
+            <label className="auth-page__label">
+              {t("register.confirmPassword")}
+            </label>
             <Input
               type="password"
               value={formData.confirmPassword}
@@ -192,19 +202,19 @@ export function RegisterPage({ onSwitchToLogin }: AuthPageProps) {
             className="auth-page__submit"
             disabled={isLoading}
           >
-            {isLoading ? "Регистрация..." : "Зарегистрироваться"}
+            {isLoading ? t("register.registering") : t("register.register")}
           </Button>
         </form>
 
         <div className="auth-page__footer">
           <Typography variant="small">
-            Уже есть аккаунт?{" "}
+            {t("register.haveAccount")}{" "}
             <button
               type="button"
               className="auth-page__link"
               onClick={onSwitchToLogin}
             >
-              Войти
+              {t("register.login")}
             </button>
           </Typography>
         </div>

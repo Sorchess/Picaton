@@ -1,6 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Loader } from "@/shared";
-import { resizeImage, createPreviewUrl, revokePreviewUrl } from "../lib/resizeImage";
+import { useI18n } from "@/shared/config";
+import {
+  resizeImage,
+  createPreviewUrl,
+  revokePreviewUrl,
+} from "../lib/resizeImage";
 import "./AvatarUpload.scss";
 
 interface AvatarUploadProps {
@@ -18,6 +23,7 @@ export function AvatarUpload({
   name = "",
   showHint = true,
 }: AvatarUploadProps) {
+  const { t } = useI18n();
   const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,13 +43,13 @@ export function AvatarUpload({
     async (file: File) => {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        setError("Выберите изображение");
+        setError(t("avatar.selectImage"));
         return;
       }
 
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        setError("Максимальный размер файла: 5MB");
+        setError(t("avatar.maxSize"));
         return;
       }
 
@@ -65,13 +71,13 @@ export function AvatarUpload({
         // Upload
         await onUpload(resizedFile);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка загрузки");
+        setError(err instanceof Error ? err.message : t("avatar.uploadError"));
         setPreview(null);
       } finally {
         setIsUploading(false);
       }
     },
-    [onUpload]
+    [onUpload],
   );
 
   const handleFileChange = useCallback(
@@ -83,7 +89,7 @@ export function AvatarUpload({
       // Reset input
       e.target.value = "";
     },
-    [handleFile]
+    [handleFile],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -109,7 +115,7 @@ export function AvatarUpload({
         handleFile(file);
       }
     },
-    [handleFile]
+    [handleFile],
   );
 
   const handleClick = useCallback(() => {
@@ -143,9 +149,7 @@ export function AvatarUpload({
             className="avatar-upload__image"
           />
         ) : (
-          <div className="avatar-upload__placeholder">
-            {getInitials(name)}
-          </div>
+          <div className="avatar-upload__placeholder">{getInitials(name)}</div>
         )}
 
         <div className="avatar-upload__overlay">
@@ -182,9 +186,7 @@ export function AvatarUpload({
       )}
 
       {showHint && (
-        <span className="avatar-upload__hint">
-          Нажмите или перетащите изображение
-        </span>
+        <span className="avatar-upload__hint">{t("avatar.clickOrDrag")}</span>
       )}
     </div>
   );

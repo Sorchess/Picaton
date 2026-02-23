@@ -13,6 +13,7 @@ import {
   type CompanyWithRole,
 } from "@/entities/company";
 import { useAuth } from "@/features/auth";
+import { useI18n } from "@/shared/config";
 import { ContactImportButton } from "@/features/contact-import";
 import {
   Tag,
@@ -96,6 +97,7 @@ export function ContactsPage({
   onSearchQueryConsumed,
 }: ContactsPageProps) {
   const { user: authUser } = useAuth();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabType>("my");
   const [contacts, setContacts] = useState<SavedContact[]>([]);
   const [companyMembers, setCompanyMembers] = useState<CompanyMember[]>([]);
@@ -150,7 +152,7 @@ export function ContactsPage({
       });
       setSavedContactIds(ids);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка загрузки");
+      setError(err instanceof Error ? err.message : t("contacts.loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -300,9 +302,7 @@ export function ContactsPage({
       });
       await loadContacts();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Ошибка сохранения контакта",
-      );
+      setError(err instanceof Error ? err.message : t("contacts.saveError"));
     }
   };
 
@@ -313,13 +313,13 @@ export function ContactsPage({
   }, [activeTab, loadRecommendations]);
 
   const handleDeleteContact = async (contactId: string) => {
-    if (!confirm("Удалить контакт?")) return;
+    if (!confirm(t("contacts.deleteConfirm"))) return;
     try {
       await userApi.deleteContact(contactId);
       setContacts((prev) => prev.filter((c) => c.id !== contactId));
       setSelectedContact(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка удаления");
+      setError(err instanceof Error ? err.message : t("contacts.deleteError"));
     }
   };
 
@@ -345,7 +345,7 @@ export function ContactsPage({
       setNewContactTags([]);
       setIsAddModalOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка добавления");
+      setError(err instanceof Error ? err.message : t("contacts.addError"));
     }
   };
 
@@ -362,9 +362,7 @@ export function ContactsPage({
       await loadContacts();
       setRecommendations((prev) => prev.filter((r) => r.id !== user.id));
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Ошибка сохранения контакта",
-      );
+      setError(err instanceof Error ? err.message : t("contacts.saveError"));
     }
   };
 
@@ -471,7 +469,7 @@ export function ContactsPage({
         onOpenContact(userData, undefined, null);
       }
     } catch {
-      setError("Не удалось загрузить профиль");
+      setError(t("contacts.profileLoadFailed"));
     }
   };
 
@@ -523,7 +521,7 @@ export function ContactsPage({
       });
       setEditContactTags([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка обновления");
+      setError(err instanceof Error ? err.message : t("contacts.updateError"));
     } finally {
       setIsSaving(false);
     }
@@ -664,9 +662,9 @@ export function ContactsPage({
   };
 
   const tabs: Tab[] = [
-    { id: "my", label: "Мои контакты" },
-    { id: "company", label: "Компания" },
-    { id: "recommendations", label: "Рекомендации" },
+    { id: "my", label: t("contacts.myContacts") },
+    { id: "company", label: t("contacts.companyTab") },
+    { id: "recommendations", label: t("contacts.recommendations") },
   ];
 
   if (isLoading) {
@@ -674,7 +672,7 @@ export function ContactsPage({
       <div className="contacts-page contacts-page--loading">
         <Loader />
         <Typography variant="body" color="muted">
-          Загрузка контактов...
+          {t("contacts.loadingContacts")}
         </Typography>
       </div>
     );
@@ -686,7 +684,7 @@ export function ContactsPage({
       <header className="contacts-page__header">
         <IconButton
           onClick={() => setIsAddModalOpen(true)}
-          aria-label="Редактировать"
+          aria-label={t("common.edit")}
         >
           <svg
             width="18"
@@ -703,11 +701,11 @@ export function ContactsPage({
           </svg>
         </IconButton>
         <div className="contacts-page__title-container">
-          <h1 className="contacts-page__title">Контакты</h1>
+          <h1 className="contacts-page__title">{t("contacts.title")}</h1>
         </div>
         <IconButton
           onClick={() => setIsAddModalOpen(true)}
-          aria-label="Добавить контакт"
+          aria-label={t("contacts.addContact")}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
@@ -741,7 +739,7 @@ export function ContactsPage({
         <div className="contacts-page__search-results">
           <div className="contacts-page__search-results-header">
             <Typography variant="body" color="secondary">
-              Найдено:{" "}
+              {t("contacts.foundCount")}{" "}
               <strong>
                 {
                   apiSearchResults.cards.filter(
@@ -753,7 +751,7 @@ export function ContactsPage({
             {apiSearchResults.expanded_tags &&
               apiSearchResults.expanded_tags.length > 0 && (
                 <div className="contacts-page__search-suggested">
-                  <span>Похожие:</span>
+                  <span>{t("contacts.similarLabel")}</span>
                   {apiSearchResults.expanded_tags
                     .slice(0, 5)
                     .map((tag: string, i: number) => (
@@ -794,8 +792,8 @@ export function ContactsPage({
           {apiSearchResults.cards.filter((c) => c.owner_id !== authUser?.id)
             .length === 0 && (
             <div className="contacts-page__empty">
-              <h3>Никого не найдено</h3>
-              <p>Попробуйте изменить поисковый запрос</p>
+              <h3>{t("contacts.noOneFound")}</h3>
+              <p>{t("contacts.tryChangeQuery")}</p>
             </div>
           )}
         </div>
@@ -822,24 +820,23 @@ export function ContactsPage({
               <h3>
                 {activeTab === "my" &&
                   contactsWithoutSelf.length === 0 &&
-                  "Нет контактов"}
+                  t("contacts.noContacts")}
                 {activeTab === "my" &&
                   contactsWithoutSelf.length > 0 &&
-                  "Ничего не найдено"}
-                {activeTab === "company" && "Нет коллег"}
-                {activeTab === "recommendations" && "Нет рекомендаций"}
+                  t("contacts.nothingFound")}
+                {activeTab === "company" && t("contacts.noColleagues")}
+                {activeTab === "recommendations" &&
+                  t("contacts.noRecommendations")}
               </h3>
               <p>
                 {activeTab === "my" &&
                   contactsWithoutSelf.length === 0 &&
-                  "Добавляйте экспертов из поиска или создавайте контакты вручную"}
+                  t("contacts.addFromSearch")}
                 {activeTab === "my" &&
                   contactsWithoutSelf.length > 0 &&
-                  "Попробуйте изменить поисковый запрос"}
-                {activeTab === "company" &&
-                  "Присоединитесь к компании, чтобы видеть коллег"}
-                {activeTab === "recommendations" &&
-                  "Заполните теги в профиле для получения рекомендаций"}
+                  t("contacts.tryChangeQuery")}
+                {activeTab === "company" && t("contacts.joinCompany")}
+                {activeTab === "recommendations" && t("contacts.fillTags")}
               </p>
             </div>
           ) : (
@@ -917,7 +914,7 @@ export function ContactsPage({
       <Modal
         isOpen={!!selectedContact}
         onClose={() => setSelectedContact(null)}
-        title="Детали контакта"
+        title={t("contacts.details")}
       >
         {selectedContact && (
           <div className="contacts-page__modal">
@@ -971,14 +968,14 @@ export function ContactsPage({
 
             {selectedContact.notes && (
               <div className="contacts-page__modal-notes">
-                <h4>Заметки</h4>
+                <h4>{t("contacts.notesLabel")}</h4>
                 <p>{selectedContact.notes}</p>
               </div>
             )}
 
             {selectedContact.search_tags.length > 0 && (
               <div className="contacts-page__modal-tags">
-                <h4>Теги</h4>
+                <h4>{t("contacts.tagsLabel")}</h4>
                 <div className="contacts-page__tags-list">
                   {selectedContact.search_tags.map((tag) => (
                     <Tag key={tag}>{tag}</Tag>
@@ -992,13 +989,13 @@ export function ContactsPage({
                 className="contacts-page__btn contacts-page__btn--secondary"
                 onClick={() => handleOpenEditModal(selectedContact)}
               >
-                Редактировать
+                {t("common.edit")}
               </button>
               <button
                 className="contacts-page__btn contacts-page__btn--danger"
                 onClick={() => handleDeleteContact(selectedContact.id)}
               >
-                Удалить
+                {t("common.delete")}
               </button>
             </div>
           </div>
@@ -1012,12 +1009,12 @@ export function ContactsPage({
           setIsEditModalOpen(false);
           setEditingContactId(null);
         }}
-        title="Редактировать контакт"
+        title={t("contacts.editContact")}
       >
         <div className="contacts-page__add-form">
           <div className="contacts-page__add-form-row">
             <Input
-              label="Имя *"
+              label={t("contacts.firstNameLabel")}
               value={editContact.first_name}
               onChange={(e) =>
                 setEditContact((prev) => ({
@@ -1025,11 +1022,11 @@ export function ContactsPage({
                   first_name: e.target.value,
                 }))
               }
-              placeholder="Иван"
+              placeholder={t("contacts.firstNamePlaceholder")}
               required
             />
             <Input
-              label="Фамилия"
+              label={t("contacts.lastNameLabel")}
               value={editContact.last_name}
               onChange={(e) =>
                 setEditContact((prev) => ({
@@ -1037,7 +1034,7 @@ export function ContactsPage({
                   last_name: e.target.value,
                 }))
               }
-              placeholder="Иванов"
+              placeholder={t("contacts.lastNamePlaceholder")}
             />
           </div>
           <Input
@@ -1050,7 +1047,7 @@ export function ContactsPage({
             placeholder="ivan@example.com"
           />
           <Input
-            label="Телефон"
+            label={t("contacts.phoneLabel")}
             type="tel"
             value={editContact.phone}
             onChange={(e) =>
@@ -1059,13 +1056,13 @@ export function ContactsPage({
             placeholder="+7 999 123 45 67"
           />
           <div className="contacts-page__add-form-notes">
-            <label>Заметки</label>
+            <label>{t("contacts.notesLabel")}</label>
             <textarea
               value={editContact.notes}
               onChange={(e) =>
                 setEditContact((prev) => ({ ...prev, notes: e.target.value }))
               }
-              placeholder="Дизайнер из Яндекса, познакомились на конференции..."
+              placeholder={t("contacts.notesPlaceholder")}
               rows={3}
             />
           </div>
@@ -1077,14 +1074,14 @@ export function ContactsPage({
                 setEditingContactId(null);
               }}
             >
-              Отмена
+              {t("common.cancel")}
             </button>
             <button
               className="contacts-page__btn contacts-page__btn--primary"
               onClick={handleUpdateContact}
               disabled={!editContact.first_name.trim() || isSaving}
             >
-              {isSaving ? "Сохранение..." : "Сохранить"}
+              {isSaving ? t("common.saving") : t("common.save")}
             </button>
           </div>
         </div>
@@ -1094,12 +1091,12 @@ export function ContactsPage({
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Добавить контакт"
+        title={t("contacts.addContact")}
       >
         <div className="contacts-page__add-form">
           <div className="contacts-page__add-form-row">
             <Input
-              label="Имя *"
+              label={t("contacts.firstNameLabel")}
               value={newContact.first_name}
               onChange={(e) =>
                 setNewContact((prev) => ({
@@ -1107,11 +1104,11 @@ export function ContactsPage({
                   first_name: e.target.value,
                 }))
               }
-              placeholder="Иван"
+              placeholder={t("contacts.firstNamePlaceholder")}
               required
             />
             <Input
-              label="Фамилия"
+              label={t("contacts.lastNameLabel")}
               value={newContact.last_name}
               onChange={(e) =>
                 setNewContact((prev) => ({
@@ -1119,7 +1116,7 @@ export function ContactsPage({
                   last_name: e.target.value,
                 }))
               }
-              placeholder="Иванов"
+              placeholder={t("contacts.lastNamePlaceholder")}
             />
           </div>
           <Input
@@ -1132,7 +1129,7 @@ export function ContactsPage({
             placeholder="ivan@example.com"
           />
           <Input
-            label="Телефон"
+            label={t("contacts.phoneLabel")}
             type="tel"
             value={newContact.phone}
             onChange={(e) =>
@@ -1141,13 +1138,13 @@ export function ContactsPage({
             placeholder="+7 999 123 45 67"
           />
           <div className="contacts-page__add-form-notes">
-            <label>Заметки</label>
+            <label>{t("contacts.notesLabel")}</label>
             <textarea
               value={newContact.notes}
               onChange={(e) =>
                 setNewContact((prev) => ({ ...prev, notes: e.target.value }))
               }
-              placeholder="Дизайнер из Яндекса, познакомились на конференции..."
+              placeholder={t("contacts.notesPlaceholder")}
               rows={3}
             />
           </div>
@@ -1157,7 +1154,7 @@ export function ContactsPage({
               variant="secondary"
               onClick={() => setIsAddModalOpen(false)}
             >
-              Отмена
+              {t("common.cancel")}
             </Button>
             <Button
               className="contacts-page__btn contacts-page__btn--primary"
@@ -1165,7 +1162,7 @@ export function ContactsPage({
               onClick={handleAddContact}
               disabled={!newContact.first_name.trim()}
             >
-              Добавить
+              {t("common.add")}
             </Button>
           </div>
         </div>

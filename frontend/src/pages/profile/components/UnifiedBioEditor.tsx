@@ -19,6 +19,7 @@ import {
   type DragEvent,
 } from "react";
 import { useUndoRedo, useDebouncedCallback } from "@/shared/hooks";
+import { useI18n } from "@/shared/config";
 import { aiWebSocket, type WSMessage } from "@/shared/api";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
@@ -59,6 +60,8 @@ export function UnifiedBioEditor({
   minLength = 20,
   maxLength = 2000,
 }: UnifiedBioEditorProps) {
+  const { t } = useI18n();
+
   const cardId = card.id;
   const ownerId = userId;
   const initialBio = card.bio || "";
@@ -87,7 +90,9 @@ export function UnifiedBioEditor({
   // Document upload state
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [transcribeSuccess, setTranscribeSuccess] = useState<string | null>(null);
+  const [transcribeSuccess, setTranscribeSuccess] = useState<string | null>(
+    null,
+  );
 
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -113,7 +118,7 @@ export function UnifiedBioEditor({
       if (text.trim().length >= minLength && wsConnected) {
         console.log(
           "[BioEditor] Requesting tags for text:",
-          text.slice(0, 50) + "..."
+          text.slice(0, 50) + "...",
         );
         onTagsLoadingRef.current?.(true);
         const sent = aiWebSocket.send("suggest_tags", { bio_text: text });
@@ -126,11 +131,11 @@ export function UnifiedBioEditor({
           "[BioEditor] Cannot request tags - wsConnected:",
           wsConnected,
           "textLength:",
-          text.trim().length
+          text.trim().length,
         );
       }
     },
-    [wsConnected, minLength]
+    [wsConnected, minLength],
   );
 
   // Keep requestTags ref updated
@@ -178,7 +183,7 @@ export function UnifiedBioEditor({
     const unsubError = aiWebSocket.on("error", (data: WSMessage) => {
       if (!mounted) return;
       setIsGenerating(false);
-      setError(data.message || "Произошла ошибка");
+      setError(data.message || t("bio.errorOccurred"));
 
       // Restore previous bio on error
       if (preGenerationBioRef.current) {
@@ -239,7 +244,7 @@ export function UnifiedBioEditor({
         onBioTextChange?.(newValue);
       }
     },
-    [setBio, debouncedTagUpdate, maxLength, onBioTextChange]
+    [setBio, debouncedTagUpdate, maxLength, onBioTextChange],
   );
 
   // ── Document Upload Handlers ──────────────────────────────────
@@ -265,14 +270,12 @@ export function UnifiedBioEditor({
   const handleFileTranscribe = useCallback(
     async (file: File) => {
       if (!isValidFile(file)) {
-        setError(
-          "Неподдерживаемый формат. Загрузите PDF, DOCX, TXT или RTF файл."
-        );
+        setError(t("bio.unsupportedFormat"));
         return;
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        setError("Файл слишком большой. Максимальный размер: 10 МБ.");
+        setError(t("bio.fileTooLarge"));
         return;
       }
 
@@ -295,22 +298,21 @@ export function UnifiedBioEditor({
         onBioTextChange?.(trimmedBio);
         debouncedTagUpdate(trimmedBio);
 
-        const truncNote = result.was_truncated ? " (текст был сокращён)" : "";
+        const truncNote = result.was_truncated
+          ? ` (${t("bio.textTruncated")})`
+          : "";
         setTranscribeSuccess(
-          `✓ Текст из «${result.filename}» успешно извлечён${truncNote}`
+          t("bio.textExtracted", { filename: result.filename }) + truncNote,
         );
 
         // Auto-hide success message
         setTimeout(() => setTranscribeSuccess(null), 5000);
       } catch (e) {
-        const msg =
-          e instanceof Error
-            ? e.message
-            : "Не удалось извлечь текст из документа";
+        const msg = e instanceof Error ? e.message : t("bio.extractFailed");
         // Try to parse API error detail
         try {
           const parsed = JSON.parse(
-            (e as { data?: { detail?: string } })?.data?.detail ?? "{}"
+            (e as { data?: { detail?: string } })?.data?.detail ?? "{}",
           );
           setError(parsed.detail || msg);
         } catch {
@@ -320,7 +322,7 @@ export function UnifiedBioEditor({
         setIsTranscribing(false);
       }
     },
-    [bio, maxLength, setBio, debouncedTagUpdate, onBioTextChange, isValidFile]
+    [bio, maxLength, setBio, debouncedTagUpdate, onBioTextChange, isValidFile],
   );
 
   // Click to upload
@@ -338,7 +340,7 @@ export function UnifiedBioEditor({
       // Reset input so the same file can be selected again
       e.target.value = "";
     },
-    [handleFileTranscribe]
+    [handleFileTranscribe],
   );
 
   // Drag and drop handlers
@@ -347,24 +349,25 @@ export function UnifiedBioEditor({
       e.preventDefault();
       e.stopPropagation();
       dragCounterRef.current++;
-      if (e.dataTransfer.types.includes("Files") && !isGenerating && !isTranscribing) {
+      if (
+        e.dataTransfer.types.includes("Files") &&
+        !isGenerating &&
+        !isTranscribing
+      ) {
         setIsDragOver(true);
       }
     },
-    [isGenerating, isTranscribing]
+    [isGenerating, isTranscribing],
   );
 
-  const handleDragLeave = useCallback(
-    (e: DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounterRef.current--;
-      if (dragCounterRef.current === 0) {
-        setIsDragOver(false);
-      }
-    },
-    []
-  );
+  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  }, []);
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -385,7 +388,7 @@ export function UnifiedBioEditor({
         handleFileTranscribe(file);
       }
     },
-    [isGenerating, isTranscribing, handleFileTranscribe]
+    [isGenerating, isTranscribing, handleFileTranscribe],
   );
 
   // ── Voice Recording Handlers ──────────────────────────────────
@@ -424,7 +427,7 @@ export function UnifiedBioEditor({
         });
 
         if (audioBlob.size === 0) {
-          setError("Не удалось записать аудио");
+          setError(t("bio.recordFailed"));
           return;
         }
 
@@ -436,7 +439,7 @@ export function UnifiedBioEditor({
           const result = await businessCardApi.recognizeSpeech(audioBlob);
           const recognized = result.text.trim();
           if (!recognized) {
-            setError("Речь не распознана. Попробуйте ещё раз.");
+            setError(t("bio.speechNotRecognized"));
             return;
           }
 
@@ -450,11 +453,15 @@ export function UnifiedBioEditor({
           onBioTextChange?.(trimmedBio);
           debouncedTagUpdate(trimmedBio);
 
-          setTranscribeSuccess(`Голос распознан: "${recognized.slice(0, 60)}${recognized.length > 60 ? "..." : ""}"`);
+          setTranscribeSuccess(
+            t("bio.voiceRecognized", {
+              text: `${recognized.slice(0, 60)}${recognized.length > 60 ? "..." : ""}`,
+            }),
+          );
           setTimeout(() => setTranscribeSuccess(null), 5000);
         } catch (e) {
           const msg =
-            e instanceof Error ? e.message : "Ошибка распознавания речи";
+            e instanceof Error ? e.message : t("bio.speechRecognitionError");
           setError(msg);
         } finally {
           setIsRecognizing(false);
@@ -473,12 +480,19 @@ export function UnifiedBioEditor({
       }, 30000);
     } catch (e) {
       if (e instanceof DOMException && e.name === "NotAllowedError") {
-        setError("Доступ к микрофону запрещён. Разрешите доступ в настройках браузера.");
+        setError(t("bio.microphoneDenied"));
       } else {
-        setError("Не удалось получить доступ к микрофону");
+        setError(t("bio.microphoneFailed"));
       }
     }
-  }, [isRecording, bio, maxLength, setBio, onBioTextChange, debouncedTagUpdate]);
+  }, [
+    isRecording,
+    bio,
+    maxLength,
+    setBio,
+    onBioTextChange,
+    debouncedTagUpdate,
+  ]);
 
   // Cleanup: stop recording on unmount
   useEffect(() => {
@@ -492,12 +506,12 @@ export function UnifiedBioEditor({
   // AI Improve - saves current bio first, then generates
   const handleAIImprove = useCallback(async () => {
     if (bio.trim().length < minLength) {
-      setError(`Минимум ${minLength} символов для AI-улучшения`);
+      setError(t("bio.minCharsForAi", { n: String(minLength) }));
       return;
     }
 
     if (!wsConnected) {
-      setError("Нет соединения с сервером");
+      setError(t("bio.noServerConnection"));
       return;
     }
 
@@ -515,7 +529,7 @@ export function UnifiedBioEditor({
         onCardUpdate(updatedCard);
       } catch (e) {
         const errorMessage =
-          e instanceof Error ? e.message : "Ошибка сохранения";
+          e instanceof Error ? e.message : t("bio.saveError");
         setError(errorMessage);
         setIsSaving(false);
         return;
@@ -556,7 +570,7 @@ export function UnifiedBioEditor({
       // Request tags after successful save
       requestTags(bio);
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : "Ошибка сохранения";
+      const errorMessage = e instanceof Error ? e.message : t("bio.saveError");
       setError(errorMessage);
       onError(errorMessage);
     } finally {
@@ -593,10 +607,10 @@ export function UnifiedBioEditor({
       {/* Header */}
       <div className="unified-bio-editor__header">
         <div className="unified-bio-editor__title">
-          <h2>О себе</h2>
+          <h2>{t("bio.title")}</h2>
           {!wsConnected && (
             <span className="unified-bio-editor__status unified-bio-editor__status--offline">
-              Офлайн
+              {t("common.offline")}
             </span>
           )}
         </div>
@@ -610,8 +624,10 @@ export function UnifiedBioEditor({
             }`}
             onClick={handleVoiceToggle}
             disabled={isBusy && !isRecording}
-            title={isRecording ? "Остановить запись" : "Голосовой ввод"}
-            aria-label={isRecording ? "Остановить запись" : "Голосовой ввод"}
+            title={isRecording ? t("bio.stopRecording") : t("bio.voiceInput")}
+            aria-label={
+              isRecording ? t("bio.stopRecording") : t("bio.voiceInput")
+            }
           >
             {isRecognizing ? (
               <div className="unified-bio-editor__voice-spinner" />
@@ -640,8 +656,8 @@ export function UnifiedBioEditor({
             className="unified-bio-editor__upload-btn"
             onClick={handleUploadClick}
             disabled={isBusy}
-            title="Загрузить документ (PDF, DOCX, TXT, RTF)"
-            aria-label="Загрузить документ"
+            title={t("bio.uploadDocument")}
+            aria-label={t("bio.uploadDocument")}
           >
             <svg
               width="16"
@@ -663,8 +679,8 @@ export function UnifiedBioEditor({
               className="unified-bio-editor__history-btn"
               onClick={undo}
               disabled={!canUndo || isBusy}
-              title="Отменить (Ctrl+Z)"
-              aria-label="Отменить"
+              title={t("bio.undoShortcut")}
+              aria-label={t("bio.undo")}
             >
               <svg
                 width="16"
@@ -682,8 +698,8 @@ export function UnifiedBioEditor({
               className="unified-bio-editor__history-btn"
               onClick={redo}
               disabled={!canRedo || isBusy}
-              title="Повторить (Ctrl+Y)"
-              aria-label="Повторить"
+              title={t("bio.redoShortcut")}
+              aria-label={t("bio.redo")}
             >
               <svg
                 width="16"
@@ -748,10 +764,10 @@ export function UnifiedBioEditor({
           }`}
           value={displayText}
           onChange={handleBioChange}
-          placeholder="Расскажите о своем опыте, навыках и достижениях...&#10;&#10;💡 Вы также можете перетащить сюда файл (PDF, DOCX, TXT, RTF) — например, своё резюме — и текст будет извлечён автоматически."
+          placeholder={t("bio.placeholder")}
           rows={6}
           disabled={isBusy}
-          aria-label="Описание о себе"
+          aria-label={t("bio.ariaLabel")}
         />
 
         {/* Drag overlay */}
@@ -774,7 +790,7 @@ export function UnifiedBioEditor({
                 <line x1="9" y1="15" x2="12" y2="12" />
                 <line x1="15" y1="15" x2="12" y2="12" />
               </svg>
-              <span>Отпустите файл для извлечения текста</span>
+              <span>{t("bio.dropFile")}</span>
             </div>
           </div>
         )}
@@ -783,7 +799,7 @@ export function UnifiedBioEditor({
         {isTranscribing && (
           <div className="unified-bio-editor__transcribe-overlay">
             <div className="unified-bio-editor__transcribe-spinner" />
-            <span>Извлекаем текст из документа...</span>
+            <span>{t("bio.extractingText")}</span>
           </div>
         )}
 
@@ -791,13 +807,13 @@ export function UnifiedBioEditor({
         {isRecording && (
           <div className="unified-bio-editor__recording-overlay">
             <div className="unified-bio-editor__recording-pulse" />
-            <span>Говорите... (до 30 сек)</span>
+            <span>{t("bio.speak")}</span>
             <button
               type="button"
               className="unified-bio-editor__recording-stop"
               onClick={handleVoiceToggle}
             >
-              Остановить
+              {t("bio.stop")}
             </button>
           </div>
         )}
@@ -806,7 +822,7 @@ export function UnifiedBioEditor({
         {isRecognizing && (
           <div className="unified-bio-editor__transcribe-overlay">
             <div className="unified-bio-editor__transcribe-spinner" />
-            <span>Распознаём речь...</span>
+            <span>{t("bio.recognizing")}</span>
           </div>
         )}
 
@@ -824,12 +840,14 @@ export function UnifiedBioEditor({
             {charCount > 0 && charCount < minLength && (
               <span className="unified-bio-editor__hint">
                 {" "}
-                (минимум {minLength})
+                {t("bio.minimum", { n: String(minLength) })}
               </span>
             )}
           </span>
           {hasUnsavedChanges && !isBusy && (
-            <span className="unified-bio-editor__unsaved">Не сохранено</span>
+            <span className="unified-bio-editor__unsaved">
+              {t("common.unsaved")}
+            </span>
           )}
         </div>
 
@@ -840,7 +858,7 @@ export function UnifiedBioEditor({
               className="unified-bio-editor__btn unified-bio-editor__btn--cancel"
               onClick={handleCancelGeneration}
             >
-              Отмена
+              {t("common.cancel")}
             </button>
           ) : (
             <>
@@ -851,10 +869,10 @@ export function UnifiedBioEditor({
                 disabled={!canImprove || isTranscribing}
                 title={
                   !wsConnected
-                    ? "Нет соединения"
+                    ? t("bio.noConnection")
                     : bio.length < minLength
-                    ? `Минимум ${minLength} символов`
-                    : undefined
+                      ? t("bio.minChars", { n: String(minLength) })
+                      : undefined
                 }
               >
                 <svg
@@ -869,7 +887,7 @@ export function UnifiedBioEditor({
                   <path d="M2 17l10 5 10-5" />
                   <path d="M2 12l10 5 10-5" />
                 </svg>
-                Улучшить с AI
+                {t("bio.improveWithAi")}
               </button>
 
               <button
@@ -878,7 +896,7 @@ export function UnifiedBioEditor({
                 onClick={handleSave}
                 disabled={isSaving || !hasUnsavedChanges || isTranscribing}
               >
-                {isSaving ? "Сохранение..." : "Сохранить"}
+                {isSaving ? t("common.saving") : t("common.save")}
               </button>
             </>
           )}
@@ -892,7 +910,7 @@ export function UnifiedBioEditor({
             <div className="unified-bio-editor__progress-fill" />
           </div>
           <span className="unified-bio-editor__progress-text">
-            AI генерирует текст...
+            {t("bio.aiGenerating")}
           </span>
         </div>
       )}

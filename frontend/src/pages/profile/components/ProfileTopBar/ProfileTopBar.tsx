@@ -1,5 +1,6 @@
 import type { FC, ReactNode } from "react";
 import { IconButton } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./ProfileTopBar.scss";
 
 export interface ContactAvatarData {
@@ -98,16 +99,20 @@ const MAX_AVATARS = 3;
 export const ProfileTopBar: FC<ProfileTopBarProps> = ({
   leftIcon = <EditorIcon />,
   onLeftClick,
-  leftLabel = "Настройки",
+  leftLabel: leftLabelProp,
   rightIcon = <BellIcon />,
   onRightClick,
-  rightLabel = "Уведомления",
+  rightLabel: rightLabelProp,
   contactsCount,
   contactAvatars = [],
   onContactsClick,
   unreadCount = 0,
   className = "",
 }) => {
+  const { t } = useI18n();
+  const leftLabel = leftLabelProp ?? t("settings.title");
+  const rightLabel = rightLabelProp ?? t("profile.notifications");
+
   const visibleAvatars = contactAvatars.slice(0, MAX_AVATARS);
   const extraCount =
     contactAvatars.length > MAX_AVATARS
@@ -127,7 +132,7 @@ export const ProfileTopBar: FC<ProfileTopBarProps> = ({
           onClick={onContactsClick}
         >
           <span className="profile-top-bar__contacts-text">
-            {contactsCount} контактов
+            {contactsCount} {t("profile.contactsCount")}
           </span>
           {visibleAvatars.length > 0 && (
             <div className="profile-top-bar__avatars">

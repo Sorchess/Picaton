@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, type FC } from "react";
+import { useI18n } from "@/shared/config";
 import "./EmojiPicker.scss";
 
 // Популярные эмодзи для быстрого выбора
 const EMOJI_CATEGORIES = {
   smileys: {
-    label: "Смайлы",
+    label: "emojiPicker.smileys",
     emojis: [
       "😀",
       "😃",
@@ -59,7 +60,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   gestures: {
-    label: "Жесты",
+    label: "emojiPicker.gestures",
     emojis: [
       "👋",
       "🤚",
@@ -104,7 +105,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   hearts: {
-    label: "Сердечки",
+    label: "emojiPicker.hearts",
     emojis: [
       "❤️",
       "🧡",
@@ -129,7 +130,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   activities: {
-    label: "Активности",
+    label: "emojiPicker.activities",
     emojis: [
       "⚽",
       "🏀",
@@ -174,7 +175,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   music: {
-    label: "Музыка",
+    label: "emojiPicker.music",
     emojis: [
       "🎵",
       "🎶",
@@ -199,7 +200,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   tech: {
-    label: "Технологии",
+    label: "emojiPicker.technology",
     emojis: [
       "💻",
       "🖥️",
@@ -234,7 +235,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   nature: {
-    label: "Природа",
+    label: "emojiPicker.nature",
     emojis: [
       "🌸",
       "💮",
@@ -269,7 +270,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   objects: {
-    label: "Объекты",
+    label: "emojiPicker.objects",
     emojis: [
       "🎁",
       "🎈",
@@ -304,7 +305,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   symbols: {
-    label: "Символы",
+    label: "emojiPicker.symbols",
     emojis: [
       "⭐",
       "🌟",
@@ -349,7 +350,7 @@ const EMOJI_CATEGORIES = {
     ],
   },
   travel: {
-    label: "Транспорт",
+    label: "emojiPicker.transport",
     emojis: [
       "🚗",
       "🚕",
@@ -412,6 +413,7 @@ export const EmojiPicker: FC<EmojiPickerProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>("smileys");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   // Закрытие при клике вне компонента
   useEffect(() => {
@@ -459,7 +461,9 @@ export const EmojiPicker: FC<EmojiPickerProps> = ({
     <div className="emoji-picker" ref={pickerRef}>
       {/* Отображение выбранных эмодзи */}
       <div className="emoji-picker__selected">
-        <span className="emoji-picker__label">Эмодзи профиля</span>
+        <span className="emoji-picker__label">
+          {t("emojiPicker.profileEmoji")}
+        </span>
         <div className="emoji-picker__emojis">
           {selectedEmojis.slice(0, maxEmojis).map((emoji, index) => (
             <button
@@ -468,7 +472,7 @@ export const EmojiPicker: FC<EmojiPickerProps> = ({
               className={`emoji-picker__emoji-btn ${editingIndex === index ? "emoji-picker__emoji-btn--active" : ""}`}
               onClick={() => handleEmojiClick(index)}
               disabled={disabled}
-              title={`Изменить эмодзи ${index + 1}`}
+              title={t("emojiPicker.changeEmoji", { n: String(index + 1) })}
             >
               {emoji}
             </button>
@@ -483,15 +487,15 @@ export const EmojiPicker: FC<EmojiPickerProps> = ({
           <div className="emoji-picker__header">
             <span className="emoji-picker__title">
               {editingIndex !== null
-                ? `Выберите эмодзи #${editingIndex + 1}`
-                : "Выберите эмодзи"}
+                ? t("emojiPicker.selectEmojiN", { n: String(editingIndex + 1) })
+                : t("emojiPicker.selectEmoji")}
             </span>
             <button
               type="button"
               className="emoji-picker__reset-btn"
               onClick={handleReset}
             >
-              Сбросить
+              {t("emojiPicker.reset")}
             </button>
           </div>
 

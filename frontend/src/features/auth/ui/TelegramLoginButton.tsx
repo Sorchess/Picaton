@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { authApi } from "@/features/auth";
+import { useI18n } from "@/shared/config";
 import { tokenStorage } from "@/shared/api";
 import "./TelegramLoginButton.scss";
 
@@ -15,6 +16,7 @@ export function TelegramLoginButton({
   onError,
 }: TelegramLoginButtonProps) {
   const [status, setStatus] = useState<AuthStatus>("idle");
+  const { t } = useI18n();
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number>(0);
   const [isEnabled, setIsEnabled] = useState(false);
@@ -86,7 +88,7 @@ export function TelegramLoginButton({
             }
 
             setStatus("error");
-            onError?.("Время авторизации истекло. Попробуйте ещё раз.");
+            onError?.(t("auth.telegramAuthExpired"));
           }
           // Если pending - продолжаем polling
         } catch (error) {
@@ -100,7 +102,7 @@ export function TelegramLoginButton({
       // Затем каждые 2 секунды
       pollingRef.current = window.setInterval(poll, 2000);
     },
-    [onSuccess, onError]
+    [onSuccess, onError],
   );
 
   // Таймер обратного отсчёта
@@ -162,7 +164,7 @@ export function TelegramLoginButton({
     } catch (error) {
       console.error("Failed to create deep link:", error);
       setStatus("error");
-      onError?.("Не удалось создать ссылку для авторизации");
+      onError?.(t("auth.telegramLinkFailed"));
     }
   };
 
@@ -206,10 +208,10 @@ export function TelegramLoginButton({
           <div className="telegram-login__icon">📱</div>
           <div className="telegram-login__waiting-text">
             <p className="telegram-login__waiting-title">
-              Подтвердите вход в Telegram
+              {t("auth.telegramConfirm")}
             </p>
             <p className="telegram-login__waiting-subtitle">
-              Нажмите "Start" в боте Picaton
+              {t("auth.telegramInstruction")}
             </p>
           </div>
           <div className="telegram-login__timer">{formatTime(remaining)}</div>
@@ -222,7 +224,7 @@ export function TelegramLoginButton({
             rel="noopener noreferrer"
             className="telegram-login__open-link"
           >
-            Открыть Telegram
+            {t("auth.openTelegram")}
           </a>
         )}
 
@@ -231,7 +233,7 @@ export function TelegramLoginButton({
           className="telegram-login__cancel"
           onClick={handleRetry}
         >
-          Отмена
+          {t("common.cancel")}
         </button>
       </div>
     );
@@ -247,7 +249,7 @@ export function TelegramLoginButton({
           onClick={handleRetry}
         >
           <TelegramIcon />
-          <span>Попробовать снова</span>
+          <span>{t("common.tryAgain")}</span>
         </button>
       </div>
     );
@@ -264,7 +266,9 @@ export function TelegramLoginButton({
       >
         <TelegramIcon />
         <span>
-          {status === "loading" ? "Загрузка..." : "Войти через Telegram"}
+          {status === "loading"
+            ? t("common.loading")
+            : t("auth.signInTelegram")}
         </span>
       </button>
     </div>

@@ -8,6 +8,7 @@ import type {
 } from "@/entities/company";
 import { companyApi } from "@/entities/company";
 import { Typography, Button, Modal, Input, Loader } from "@/shared";
+import { useI18n } from "@/shared/config";
 import { PermissionEditor } from "./PermissionEditor";
 import "./RolesManager.scss";
 
@@ -48,6 +49,7 @@ export function RolesManager({
   canManageRoles,
   onRolesChange,
 }: RolesManagerProps) {
+  const { t } = useI18n();
   const [roles, setRoles] = useState<CompanyRoleFull[]>([]);
   const [permissionGroups, setPermissionGroups] = useState<
     PermissionGroupInfo[]
@@ -100,7 +102,7 @@ export function RolesManager({
       setPermissionGroups(permissionsData.groups);
     } catch (err) {
       console.error("Ошибка загрузки ролей:", err);
-      setError("Не удалось загрузить роли. Попробуйте обновить страницу.");
+      setError(t("roles.loadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -127,11 +129,11 @@ export function RolesManager({
     const errors: typeof formErrors = {};
 
     if (!formData.name.trim()) {
-      errors.name = "Введите название роли";
+      errors.name = t("roles.enterRoleName");
     } else if (formData.name.trim().length < 2) {
-      errors.name = "Название должно быть не менее 2 символов";
+      errors.name = t("roles.nameTooShort");
     } else if (formData.name.trim().length > 50) {
-      errors.name = "Название должно быть не более 50 символов";
+      errors.name = t("roles.nameTooLong");
     }
 
     // Проверка уникальности имени (кроме текущей роли при редактировании)
@@ -141,11 +143,11 @@ export function RolesManager({
         r.id !== selectedRole?.id,
     );
     if (existingRole) {
-      errors.name = "Роль с таким названием уже существует";
+      errors.name = t("roles.nameExists");
     }
 
     if (formData.permissions.length === 0) {
-      errors.permissions = "Выберите хотя бы одно право";
+      errors.permissions = t("roles.selectPermission");
     }
 
     setFormErrors(errors);
@@ -195,11 +197,11 @@ export function RolesManager({
       await companyApi.createRole(companyId, data);
       await loadData();
       setIsCreateModalOpen(false);
-      showToast(`Роль "${data.name}" успешно создана`, "success");
+      showToast(t("roles.roleCreated", { name: data.name }), "success");
       onRolesChange?.();
     } catch (err) {
       console.error("Ошибка создания роли:", err);
-      const errorMessage = parseApiError(err) || "Не удалось создать роль";
+      const errorMessage = parseApiError(err) || t("roles.createFailed");
       showToast(errorMessage, "error");
     } finally {
       setIsSaving(false);
@@ -230,11 +232,11 @@ export function RolesManager({
       await loadData();
       setIsEditModalOpen(false);
       setSelectedRole(null);
-      showToast("Роль успешно обновлена", "success");
+      showToast(t("roles.roleUpdated"), "success");
       onRolesChange?.();
     } catch (err) {
       console.error("Ошибка обновления роли:", err);
-      const errorMessage = parseApiError(err) || "Не удалось обновить роль";
+      const errorMessage = parseApiError(err) || t("roles.updateFailed");
       showToast(errorMessage, "error");
     } finally {
       setIsSaving(false);
@@ -252,12 +254,12 @@ export function RolesManager({
       await companyApi.deleteRole(companyId, selectedRole.id, defaultRole?.id);
       await loadData();
       setIsDeleteModalOpen(false);
-      showToast(`Роль "${selectedRole.name}" удалена`, "success");
+      showToast(t("roles.roleDeleted", { name: selectedRole.name }), "success");
       setSelectedRole(null);
       onRolesChange?.();
     } catch (err) {
       console.error("Ошибка удаления роли:", err);
-      const errorMessage = parseApiError(err) || "Не удалось удалить роль";
+      const errorMessage = parseApiError(err) || t("roles.deleteFailed");
       showToast(errorMessage, "error");
     } finally {
       setIsSaving(false);
@@ -291,18 +293,18 @@ export function RolesManager({
 
   // Получение описания роли
   const getRoleDescription = (role: CompanyRoleFull): string => {
-    if (role.priority === 0) return "Полный доступ ко всем функциям";
+    if (role.priority === 0) return t("roles.fullAccess");
     if (role.is_system && role.name.toLowerCase() === "admin")
-      return "Администратор компании";
-    if (role.is_default) return "Назначается новым сотрудникам";
-    return `${role.permissions.length} прав доступа`;
+      return t("roles.adminDescription");
+    if (role.is_default) return t("roles.defaultDescription");
+    return t("roles.permissionsCount", { n: String(role.permissions.length) });
   };
 
   // Получение бейджа роли
   const getRoleBadge = (role: CompanyRoleFull): string | null => {
-    if (role.priority === 0) return "👑 Владелец";
-    if (role.is_system) return "⚙️ Системная";
-    if (role.is_default) return "✨ По умолчанию";
+    if (role.priority === 0) return t("roles.ownerBadge");
+    if (role.is_system) return t("roles.systemBadge");
+    if (role.is_default) return t("roles.defaultBadge");
     return null;
   };
 
@@ -311,7 +313,7 @@ export function RolesManager({
       <div className="roles-manager__loading">
         <Loader />
         <Typography variant="body" color="secondary">
-          Загрузка ролей...
+          {t("roles.loadingRoles")}
         </Typography>
       </div>
     );
@@ -325,7 +327,7 @@ export function RolesManager({
           {error}
         </Typography>
         <Button variant="ghost" onClick={loadData}>
-          Попробовать снова
+          {t("common.tryAgain")}
         </Button>
       </div>
     );
@@ -336,9 +338,9 @@ export function RolesManager({
       {/* Заголовок */}
       <div className="roles-manager__header">
         <div className="roles-manager__header-content">
-          <Typography variant="h3">Роли компании</Typography>
+          <Typography variant="h3">{t("roles.companyRoles")}</Typography>
           <Typography variant="small" color="secondary">
-            {roles.length} {getRolesWord(roles.length)}
+            {t("roles.rolesCount", { n: roles.length })}
           </Typography>
         </div>
         {canManageRoles && (
@@ -347,7 +349,7 @@ export function RolesManager({
             className="roles-manager__create-btn"
           >
             <span className="roles-manager__create-icon">+</span>
-            Создать роль
+            {t("roles.createRole")}
           </Button>
         )}
       </div>
@@ -384,14 +386,14 @@ export function RolesManager({
       <Modal
         isOpen={isCreateModalOpen}
         onClose={handleCloseCreate}
-        title="Создать новую роль"
+        title={t("roles.createNewRole")}
       >
         <div className="role-form">
           <div className="role-form__section">
             <div className="role-form__row">
               <div className="role-form__field">
                 <Input
-                  label="Название роли"
+                  label={t("roles.roleName")}
                   value={formData.name}
                   onChange={(e) => {
                     setFormData({ ...formData, name: e.target.value });
@@ -399,12 +401,12 @@ export function RolesManager({
                       setFormErrors((prev) => ({ ...prev, name: undefined }));
                     }
                   }}
-                  placeholder="Например: Менеджер проектов"
+                  placeholder={t("roles.roleNamePlaceholder")}
                   error={formErrors.name}
                 />
               </div>
               <div className="role-form__color-picker">
-                <label className="role-form__label">Цвет</label>
+                <label className="role-form__label">{t("roles.color")}</label>
                 <div className="role-form__color-options">
                   {PRESET_COLORS.map((color) => (
                     <button
@@ -447,13 +449,13 @@ export function RolesManager({
 
           <div className="role-form__actions">
             <Button variant="ghost" onClick={handleCloseCreate}>
-              Отмена
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleCreate}
               disabled={isSaving || !formData.name.trim()}
             >
-              {isSaving ? "Создание..." : "Создать роль"}
+              {isSaving ? t("common.creating") : t("roles.createRole")}
             </Button>
           </div>
         </div>
@@ -463,9 +465,9 @@ export function RolesManager({
       <Modal
         isOpen={isEditModalOpen}
         onClose={handleCloseEdit}
-        title={`Редактировать роль${
-          selectedRole ? `: ${selectedRole.name}` : ""
-        }`}
+        title={
+          selectedRole ? t("roles.editRole", { name: selectedRole.name }) : ""
+        }
       >
         <div className="role-form">
           {/* Предупреждение для системных ролей */}
@@ -473,11 +475,8 @@ export function RolesManager({
             <div className="role-form__notice role-form__notice--warning">
               <span className="role-form__notice-icon">⚠️</span>
               <div>
-                <strong>Системная роль</strong>
-                <p>
-                  Название и цвет нельзя изменить. Можно редактировать только
-                  права доступа.
-                </p>
+                <strong>{t("roles.systemRole")}</strong>
+                <p>{t("roles.systemRoleWarning")}</p>
               </div>
             </div>
           )}
@@ -487,11 +486,8 @@ export function RolesManager({
             <div className="role-form__notice role-form__notice--info">
               <span className="role-form__notice-icon">👑</span>
               <div>
-                <strong>Роль владельца</strong>
-                <p>
-                  Владелец имеет полный доступ ко всем функциям. Права нельзя
-                  изменить.
-                </p>
+                <strong>{t("roles.ownerRole")}</strong>
+                <p>{t("roles.ownerRoleWarning")}</p>
               </div>
             </div>
           )}
@@ -502,7 +498,7 @@ export function RolesManager({
               <div className="role-form__row">
                 <div className="role-form__field">
                   <Input
-                    label="Название роли"
+                    label={t("roles.roleName")}
                     value={formData.name}
                     onChange={(e) => {
                       setFormData({ ...formData, name: e.target.value });
@@ -510,12 +506,12 @@ export function RolesManager({
                         setFormErrors((prev) => ({ ...prev, name: undefined }));
                       }
                     }}
-                    placeholder="Например: Менеджер проектов"
+                    placeholder={t("roles.roleNamePlaceholder")}
                     error={formErrors.name}
                   />
                 </div>
                 <div className="role-form__color-picker">
-                  <label className="role-form__label">Цвет</label>
+                  <label className="role-form__label">{t("roles.color")}</label>
                   <div className="role-form__color-options">
                     {PRESET_COLORS.map((color) => (
                       <button
@@ -562,10 +558,10 @@ export function RolesManager({
 
           <div className="role-form__actions">
             <Button variant="ghost" onClick={handleCloseEdit}>
-              Отмена
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleUpdate} disabled={isSaving}>
-              {isSaving ? "Сохранение..." : "Сохранить изменения"}
+              {isSaving ? t("common.saving") : t("roles.saveChanges")}
             </Button>
           </div>
         </div>
@@ -575,24 +571,22 @@ export function RolesManager({
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={handleCloseDelete}
-        title="Удалить роль"
+        title={t("roles.deleteRole")}
       >
         <div className="role-delete">
           <div className="role-delete__icon">🗑️</div>
           <Typography variant="body">
-            Вы уверены, что хотите удалить роль{" "}
-            <strong>"{selectedRole?.name}"</strong>?
+            {t("roles.deleteConfirm")} <strong>"{selectedRole?.name}"</strong>?
           </Typography>
           <div className="role-delete__warning">
             <span className="role-delete__warning-icon">ℹ️</span>
             <Typography variant="small" color="secondary">
-              Все участники с этой ролью будут автоматически переназначены на
-              роль по умолчанию.
+              {t("roles.deleteWarning")}
             </Typography>
           </div>
           <div className="role-form__actions">
             <Button variant="ghost" onClick={handleCloseDelete}>
-              Отмена
+              {t("common.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -600,7 +594,7 @@ export function RolesManager({
               disabled={isSaving}
               className="role-delete__btn"
             >
-              {isSaving ? "Удаление..." : "Удалить роль"}
+              {isSaving ? t("common.deleting") : t("roles.deleteRole")}
             </Button>
           </div>
         </div>
@@ -629,6 +623,7 @@ function RoleCard({
   onEdit,
   onDelete,
 }: RoleCardProps) {
+  const { t } = useI18n();
   return (
     <div
       className="role-card"
@@ -665,7 +660,7 @@ function RoleCard({
               <button
                 className="role-card__btn role-card__btn--edit"
                 onClick={onEdit}
-                title="Редактировать"
+                title={t("common.edit")}
               >
                 ✏️
               </button>
@@ -674,7 +669,7 @@ function RoleCard({
               <button
                 className="role-card__btn role-card__btn--delete"
                 onClick={onDelete}
-                title="Удалить"
+                title={t("common.delete")}
               >
                 🗑️
               </button>
@@ -686,7 +681,7 @@ function RoleCard({
         <div className="role-card__perm-badges">
           {role.permissions.slice(0, 5).map((perm) => (
             <span key={perm} className="role-card__perm-badge">
-              {getPermissionLabel(perm)}
+              {getPermissionLabel(perm, t)}
             </span>
           ))}
           {role.permissions.length > 5 && (
@@ -700,43 +695,32 @@ function RoleCard({
   );
 }
 
-// Вспомогательные функции
-function getRolesWord(count: number): string {
-  const lastDigit = count % 10;
-  const lastTwoDigits = count % 100;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-    return "ролей";
-  }
-
-  if (lastDigit === 1) return "роль";
-  if (lastDigit >= 2 && lastDigit <= 4) return "роли";
-  return "ролей";
-}
-
-function getPermissionLabel(permission: Permission): string {
+function getPermissionLabel(
+  permission: Permission,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
   const labels: Record<Permission, string> = {
-    manage_company: "Компания",
-    delete_company: "Удаление",
-    view_company_settings: "Настройки",
-    manage_roles: "Роли",
-    assign_roles: "Назначение",
-    view_roles: "Просмотр ролей",
-    invite_members: "Приглашения",
-    remove_members: "Удаление",
-    view_members: "Сотрудники",
-    manage_invitations: "Инвайты",
-    edit_own_card: "Своя карточка",
-    edit_any_card: "Карточки",
-    view_cards: "Просмотр",
-    delete_any_card: "Удаление",
-    manage_company_tags: "Теги",
-    edit_own_tags: "Свои теги",
-    edit_any_tags: "Все теги",
-    assign_position: "Должности",
-    assign_department: "Отделы",
-    manage_departments: "Отделы",
-    manage_positions: "Должности",
+    manage_company: t("permission.company"),
+    delete_company: t("permission.delete"),
+    view_company_settings: t("permission.settings"),
+    manage_roles: t("permission.roles"),
+    assign_roles: t("permission.assign"),
+    view_roles: t("permission.viewRoles"),
+    invite_members: t("permission.invitations"),
+    remove_members: t("permission.delete"),
+    view_members: t("permission.employees"),
+    manage_invitations: t("permission.invites"),
+    edit_own_card: t("permission.ownCard"),
+    edit_any_card: t("permission.cards"),
+    view_cards: t("permission.view"),
+    delete_any_card: t("permission.delete"),
+    manage_company_tags: t("permission.tags"),
+    edit_own_tags: t("permission.ownTags"),
+    edit_any_tags: t("permission.allTags"),
+    assign_position: t("permission.positions"),
+    assign_department: t("permission.departments"),
+    manage_departments: t("permission.departments"),
+    manage_positions: t("permission.positions"),
   };
   return labels[permission] || permission;
 }

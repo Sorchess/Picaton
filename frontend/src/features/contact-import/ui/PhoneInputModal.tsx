@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Modal, Loader } from "@/shared";
+import { useI18n } from "@/shared/config";
 import { parsePhoneInput, hashPhones } from "../lib/hashPhone";
 import type { ContactSyncResult, HashedContact } from "../model/types";
 import "./PhoneInputModal.scss";
@@ -21,6 +22,7 @@ export function PhoneInputModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<ContactSyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n();
 
   const handleSync = useCallback(async () => {
     setError(null);
@@ -28,7 +30,7 @@ export function PhoneInputModal({
 
     const parsed = parsePhoneInput(input);
     if (parsed.length === 0) {
-      setError("Введите хотя бы один номер телефона");
+      setError(t("contactImport.enterAtLeastOne"));
       return;
     }
 
@@ -39,7 +41,7 @@ export function PhoneInputModal({
       const hashed = await hashPhones(parsed);
 
       if (hashed.length === 0) {
-        setError("Не удалось обработать номера телефонов");
+        setError(t("contactImport.processFailed"));
         return;
       }
 
@@ -48,7 +50,9 @@ export function PhoneInputModal({
       setResult(syncResult);
       onSyncComplete?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка синхронизации");
+      setError(
+        err instanceof Error ? err.message : t("contactImport.syncError"),
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -56,14 +60,14 @@ export function PhoneInputModal({
 
   const handleInvite = useCallback(async () => {
     if (!navigator.share) {
-      setError("Функция приглашения недоступна в вашем браузере");
+      setError(t("contactImport.shareUnavailable"));
       return;
     }
 
     try {
       await navigator.share({
-        title: "Присоединяйся к Picaton!",
-        text: "Найди экспертов и создай свою профессиональную сеть",
+        title: t("contactImport.joinPicaton"),
+        text: t("contactImport.findExperts"),
         url: window.location.origin,
       });
     } catch {
@@ -84,37 +88,36 @@ export function PhoneInputModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Синхронизация контактов"
+      title={t("contactImport.syncTitle")}
     >
       <div className="phone-input-modal">
         {!result ? (
           <>
             <p className="phone-input-modal__description">
-              Введите номера телефонов для поиска в Picaton. Номера хешируются
-              на вашем устройстве — мы никогда не видим реальные данные.
+              {t("contactImport.description")}
             </p>
 
             <div className="phone-input-modal__input-group">
               <label className="phone-input-modal__label">
-                Номера телефонов
+                {t("contactImport.phoneNumbers")}
               </label>
               <textarea
                 className="phone-input-modal__textarea"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={`Иван: +7 999 123 45 67\nМария - 89161234567\n+79031234567`}
+                placeholder={t("contactImport.phonePlaceholder")}
                 rows={6}
                 disabled={isProcessing}
               />
               <span className="phone-input-modal__hint">
                 {parsedCount > 0
-                  ? `Распознано: ${parsedCount} ${getNoun(
+                  ? `${t("contactImport.recognized", { n: String(parsedCount) })} ${getNoun(
                       parsedCount,
-                      "номер",
-                      "номера",
-                      "номеров",
+                      t("contactImport.phoneCountOne"),
+                      t("contactImport.phoneCountFew"),
+                      t("contactImport.phoneCountMany"),
                     )}`
-                  : "Один номер на строку. Формат: Имя: +7 999 123 45 67"}
+                  : t("contactImport.phoneFormat")}
               </span>
             </div>
 
@@ -126,7 +129,7 @@ export function PhoneInputModal({
                 onClick={handleClose}
                 disabled={isProcessing}
               >
-                Отмена
+                {t("common.cancel")}
               </button>
               <button
                 className="phone-input-modal__btn phone-input-modal__btn--primary"
@@ -136,7 +139,7 @@ export function PhoneInputModal({
                 {isProcessing ? (
                   <>
                     <Loader />
-                    <span>Поиск...</span>
+                    <span>{t("common.searching")}</span>
                   </>
                 ) : (
                   <>
@@ -151,7 +154,7 @@ export function PhoneInputModal({
                       <circle cx="11" cy="11" r="8" />
                       <path d="m21 21-4.3-4.3" />
                     </svg>
-                    <span>Найти в Picaton</span>
+                    <span>{t("contactImport.findInPicaton")}</span>
                   </>
                 )}
               </button>
@@ -177,9 +180,9 @@ export function PhoneInputModal({
                     {result.found.length}{" "}
                     {getNoun(
                       result.found.length,
-                      "контакт найден",
-                      "контакта найдено",
-                      "контактов найдено",
+                      t("contactImport.contactFound"),
+                      t("contactImport.contactFoundFew"),
+                      t("contactImport.contactsFound"),
                     )}
                   </span>
                 </div>
@@ -201,11 +204,11 @@ export function PhoneInputModal({
                     {result.pending_count}{" "}
                     {getNoun(
                       result.pending_count,
-                      "номер",
-                      "номера",
-                      "номеров",
+                      t("contactImport.phoneCountOne"),
+                      t("contactImport.phoneCountFew"),
+                      t("contactImport.phoneCountMany"),
                     )}{" "}
-                    ожидает регистрации
+                    {t("contactImport.awaitingRegistration")}
                   </span>
                 </div>
               )}
@@ -213,7 +216,7 @@ export function PhoneInputModal({
 
             {result.found.length > 0 && (
               <div className="phone-input-modal__found-list">
-                <h4>Найденные пользователи:</h4>
+                <h4>{t("contactImport.foundUsers")}</h4>
                 {result.found.map((user) => (
                   <div
                     key={user.user.id}
@@ -258,7 +261,7 @@ export function PhoneInputModal({
                   <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
                   <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                 </svg>
-                <span>Пригласить друзей</span>
+                <span>{t("contactImport.inviteFriends")}</span>
               </button>
             )}
 
@@ -266,7 +269,7 @@ export function PhoneInputModal({
               className="phone-input-modal__btn phone-input-modal__btn--secondary"
               onClick={handleClose}
             >
-              Закрыть
+              {t("common.close")}
             </button>
           </div>
         )}

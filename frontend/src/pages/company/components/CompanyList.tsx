@@ -1,6 +1,7 @@
 import type { CompanyWithRole } from "@/entities/company";
 import { getRoleName } from "@/entities/company";
 import { Typography, Button } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./CompanyList.scss";
 
 interface CompanyListProps {
@@ -14,26 +15,28 @@ export function CompanyList({
   onSelectCompany,
   onCreateCompany,
 }: CompanyListProps) {
+  const { t } = useI18n();
+
   if (companies.length === 0) {
     return (
       <div className="company-list-empty">
         <div className="company-list-empty__icon">🏢</div>
         <Typography variant="h2" className="company-list-empty__title">
-          Здесь пока нет компаний
+          {t("company.noCompaniesEmpty")}
         </Typography>
         <Typography
           variant="body"
           color="secondary"
           className="company-list-empty__description"
         >
-          Создайте свою первую компанию или дождитесь приглашения от коллег
+          {t("company.noCompaniesHint")}
         </Typography>
         <Button
           onClick={onCreateCompany}
           className="company-list-empty__button"
         >
           <span className="company-list-empty__button-icon">+</span>
-          Создать компанию
+          {t("company.createCompanyBtn")}
         </Button>
       </div>
     );

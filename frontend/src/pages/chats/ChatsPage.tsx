@@ -9,6 +9,7 @@ import {
 } from "@/entities/direct-chat";
 import type { Conversation, DirectMessage } from "@/entities/direct-chat";
 import { useAuth } from "@/features/auth";
+import { useI18n } from "@/shared/config";
 import {
   Avatar,
   Loader,
@@ -100,6 +101,7 @@ export function ChatsPage({
   onNavigateToContacts,
 }: ChatsPageProps) {
   const { user } = useAuth();
+  const { t, language } = useI18n();
   const currentUserId = user?.id;
 
   // Состояния
@@ -116,12 +118,12 @@ export function ChatsPage({
     null,
   );
   const [activeTab, setActiveTab] = useState("all");
-  const [locallyHiddenMessageIds, setLocallyHiddenMessageIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(
-    null,
-  );
+  const [locallyHiddenMessageIds, setLocallyHiddenMessageIds] = useState<
+    Set<string>
+  >(() => new Set());
+  const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<
+    string | null
+  >(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(
     () => new Set(),
@@ -351,7 +353,9 @@ export function ChatsPage({
               ),
             );
             setInputValue("");
-            setMessages((prev) => prev.filter((m) => !m.id.startsWith("temp-")));
+            setMessages((prev) =>
+              prev.filter((m) => !m.id.startsWith("temp-")),
+            );
           }
         }
       },
@@ -498,7 +502,11 @@ export function ChatsPage({
   // Отправить сообщение
   const handleSend = async () => {
     const content = inputValue.trim();
-    if (!content || !activeConversation || !activeConversation.can_send_messages)
+    if (
+      !content ||
+      !activeConversation ||
+      !activeConversation.can_send_messages
+    )
       return;
 
     if (messageActions.editingMessageId) {
@@ -544,7 +552,11 @@ export function ChatsPage({
     setMessages((prev) => [...prev, optimisticMsg]);
 
     // Отправить через WS
-    wsRef.current?.sendMessage(activeConversation.id, content, replyToId || undefined);
+    wsRef.current?.sendMessage(
+      activeConversation.id,
+      content,
+      replyToId || undefined,
+    );
 
     // Остановить typing
     if (isTypingRef.current) {
@@ -608,7 +620,7 @@ export function ChatsPage({
       id: "all",
       label: (
         <>
-          Все чаты
+          {t("chats.allChats")}
           {totalUnread > 0 && (
             <span className="chats-page__tab-badge">
               {totalUnread > 99 ? "99+" : totalUnread}
@@ -617,8 +629,8 @@ export function ChatsPage({
         </>
       ),
     },
-    { id: "projects", label: "Проекты" },
-    { id: "companies", label: "Компании" },
+    { id: "projects", label: t("chats.projects") },
+    { id: "companies", label: t("chats.companies") },
   ];
 
   // Фильтрация по табу (пока все показываем в "Все чаты")
@@ -659,14 +671,15 @@ export function ChatsPage({
 
   const getMessageAuthorLabel = useCallback(
     (msg: DirectMessage) => {
-      if (msg.sender_id === currentUserId) return "Вы";
+      if (msg.sender_id === currentUserId) return t("chats.youLabel");
       if (msg.sender) {
-        const fullName = `${msg.sender.first_name} ${msg.sender.last_name}`.trim();
+        const fullName =
+          `${msg.sender.first_name} ${msg.sender.last_name}`.trim();
         if (fullName) return fullName;
       }
       return activeConversation
         ? getParticipantName(activeConversation.participant)
-        : "Собеседник";
+        : t("chats.interlocutor");
     },
     [activeConversation, currentUserId],
   );
@@ -716,7 +729,9 @@ export function ChatsPage({
     const ids = Array.from(selectedMessageIds);
     try {
       await Promise.allSettled(
-        ids.map((id) => directChatApi.deleteMessage(activeConversation.id, id, true)),
+        ids.map((id) =>
+          directChatApi.deleteMessage(activeConversation.id, id, true),
+        ),
       );
       setLocallyHiddenMessageIds((prev) => {
         const next = new Set(prev);
@@ -738,7 +753,9 @@ export function ChatsPage({
     });
     setMessages((prev) =>
       prev.map((m) =>
-        selectedMessageIds.has(m.id) ? { ...m, is_deleted: true, content: "" } : m,
+        selectedMessageIds.has(m.id)
+          ? { ...m, is_deleted: true, content: "" }
+          : m,
       ),
     );
     setSelectedMessageIds(new Set());
@@ -779,11 +796,11 @@ export function ChatsPage({
       date.getDate(),
     );
 
-    if (msgDate.getTime() === today.getTime()) return "Сегодня";
+    if (msgDate.getTime() === today.getTime()) return t("chats.today");
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    if (msgDate.getTime() === yesterday.getTime()) return "Вчера";
-    return date.toLocaleDateString("ru-RU", {
+    if (msgDate.getTime() === yesterday.getTime()) return t("chats.yesterday");
+    return date.toLocaleDateString(language === "en" ? "en-US" : "ru-RU", {
       day: "numeric",
       month: "long",
       year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
@@ -793,13 +810,13 @@ export function ChatsPage({
   const getMessagePreviewText = useCallback((content: string): string => {
     const sharedContact = parseSharedContactCard(content);
     if (sharedContact) {
-      return `📇 Контакт: ${sharedContact.full_name}`;
+      return `📇 ${t("chats.contact")}: ${sharedContact.full_name}`;
     }
     if (
       content.startsWith(CONTACT_CARD_PREFIX) ||
       content.startsWith(CONTACT_CARD_LEGACY_PREFIX)
     ) {
-      return "📇 Контакт";
+      return `📇 ${t("chats.contact")}`;
     }
     return content;
   }, []);
@@ -808,7 +825,7 @@ export function ChatsPage({
     (contact: SharedContactCard) => {
       if (!contact.user_id || !onViewProfile) return;
       const parts = contact.full_name.trim().split(/\s+/);
-      const first_name = parts[0] || "Контакт";
+      const first_name = parts[0] || t("chats.contact");
       const last_name = parts.slice(1).join(" ");
       onViewProfile(contact.user_id, {
         first_name,
@@ -829,9 +846,7 @@ export function ChatsPage({
       idx < visibleMessages.length - 1 ? visibleMessages[idx + 1] : null;
 
     const sameAsPrev =
-      prevMsg &&
-      !prevMsg.is_deleted &&
-      prevMsg.sender_id === msg.sender_id;
+      prevMsg && !prevMsg.is_deleted && prevMsg.sender_id === msg.sender_id;
 
     const sameAsNext =
       nextMsg &&
@@ -851,7 +866,7 @@ export function ChatsPage({
       <div className="chats-page">
         {/* Заголовок */}
         <header className="chats-page__header">
-          <IconButton aria-label="Назад">
+          <IconButton aria-label={t("chats.back")}>
             <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
               <path
                 d="M9 1L1 9L9 17"
@@ -863,9 +878,12 @@ export function ChatsPage({
             </svg>
           </IconButton>
           <div className="chats-page__title-container">
-            <h1 className="chats-page__title">Чаты</h1>
+            <h1 className="chats-page__title">{t("chats.title")}</h1>
           </div>
-          <IconButton onClick={onNavigateToContacts} aria-label="Написать">
+          <IconButton
+            onClick={onNavigateToContacts}
+            aria-label={t("chats.compose")}
+          >
             <svg
               width="20"
               height="20"
@@ -897,11 +915,11 @@ export function ChatsPage({
           <div className="chats-page chats-page--loading">
             <Loader />
             <Typography variant="body" color="muted">
-              Загрузка чатов...
+              {t("chats.loadingChats")}
             </Typography>
           </div>
         ) : filteredConversations.length === 0 ? (
-          <EmptyState emoji="💬" title="Нет сообщений" />
+          <EmptyState emoji="💬" title={t("chats.noMessages")} />
         ) : (
           <div className="chats-page__list">
             {filteredConversations.map((conv) => (
@@ -931,16 +949,18 @@ export function ChatsPage({
                   <div className="chats-page__card-bottom">
                     <span className="chats-page__card-preview">
                       {conv.last_message_sender_id === currentUserId && (
-                        <span className="chats-page__card-you">Вы: </span>
+                        <span className="chats-page__card-you">
+                          {t("chats.you")}
+                        </span>
                       )}
                       {conv.last_message_is_edited && (
                         <span className="chats-page__card-edited">
-                          {"\u0440\u0435\u0434. "}
+                          {t("chats.edited")}
                         </span>
                       )}
                       {conv.last_message_content
                         ? getMessagePreviewText(conv.last_message_content)
-                        : "Начните общение"}
+                        : t("chats.startConversation")}
                     </span>
                     {conv.unread_count > 0 && (
                       <span className="chats-page__card-badge">
@@ -961,7 +981,7 @@ export function ChatsPage({
     <div className="chats-page chats-page--chat-open">
       {/* Шапка чата */}
       <header className="chats-page__chat-header">
-        <IconButton onClick={handleBack} aria-label="Назад">
+        <IconButton onClick={handleBack} aria-label={t("chats.back")}>
           <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
             <path
               d="M9 1L1 9L9 17"
@@ -980,8 +1000,7 @@ export function ChatsPage({
         >
           {isMultiSelectMode ? (
             <span className="chats-page__chat-user-name chats-page__chat-user-name--selection">
-              {"\u0412\u044b\u0431\u0440\u0430\u043d\u043e: "}{" "}
-              {selectedMessageIds.size}
+              {t("chats.selected")} {selectedMessageIds.size}
             </span>
           ) : (
             <>
@@ -989,7 +1008,7 @@ export function ChatsPage({
                 {getParticipantName(activeConversation.participant)}
               </span>
               {typingUser && (
-                <span className="chats-page__typing">печатает...</span>
+                <span className="chats-page__typing">{t("chats.typing")}</span>
               )}
             </>
           )}
@@ -1029,7 +1048,7 @@ export function ChatsPage({
             disabled={isLoadingMessages}
             type="button"
           >
-            {isLoadingMessages ? "Загрузка..." : "Показать ранние"}
+            {isLoadingMessages ? t("chats.loading") : t("chats.showEarlier")}
           </button>
         )}
 
@@ -1042,7 +1061,7 @@ export function ChatsPage({
         {visibleMessages.length === 0 && !isLoadingMessages && (
           <div className="chats-page__messages-empty">
             <Typography variant="body" color="muted">
-              Напишите первое сообщение
+              {t("chats.writeFirst")}
             </Typography>
           </div>
         )}
@@ -1063,7 +1082,7 @@ export function ChatsPage({
               )}
               {msg.id === firstUnreadMessageId && (
                 <div className="chats-page__unread-separator">
-                  <span>Непрочитанные</span>
+                  <span>{t("chats.unread")}</span>
                 </div>
               )}
               <div
@@ -1074,7 +1093,11 @@ export function ChatsPage({
                     type="button"
                     className={`chats-page__message-side-marker ${isSelected ? "chats-page__message-side-marker--selected" : ""}`}
                     onClick={() => toggleMessageSelection(msg.id)}
-                    aria-label={isSelected ? "Снять выбор" : "Выбрать сообщение"}
+                    aria-label={
+                      isSelected
+                        ? t("chats.deselectMessage")
+                        : t("chats.selectMessage")
+                    }
                   >
                     {isSelected && (
                       <svg
@@ -1094,7 +1117,9 @@ export function ChatsPage({
                 )}
                 <div
                   className={`chats-page__bubble ${
-                    isMultiSelectMode ? "chats-page__bubble--selection-mode" : ""
+                    isMultiSelectMode
+                      ? "chats-page__bubble--selection-mode"
+                      : ""
                   }`}
                   onContextMenu={(e) => {
                     if (isMultiSelectMode) {
@@ -1109,13 +1134,19 @@ export function ChatsPage({
                       : messageActions.handleMessageTouchStart(e, msg)
                   }
                   onTouchEnd={
-                    isMultiSelectMode ? undefined : messageActions.handleMessageTouchEnd
+                    isMultiSelectMode
+                      ? undefined
+                      : messageActions.handleMessageTouchEnd
                   }
                   onTouchCancel={
-                    isMultiSelectMode ? undefined : messageActions.handleMessageTouchEnd
+                    isMultiSelectMode
+                      ? undefined
+                      : messageActions.handleMessageTouchEnd
                   }
                   onTouchMove={
-                    isMultiSelectMode ? undefined : messageActions.handleMessageTouchMove
+                    isMultiSelectMode
+                      ? undefined
+                      : messageActions.handleMessageTouchMove
                   }
                   onClick={() => {
                     if (isMultiSelectMode) toggleMessageSelection(msg.id);
@@ -1125,16 +1156,22 @@ export function ChatsPage({
                     <div className="chats-page__bubble-reply">
                       <span className="chats-page__bubble-reply-author">
                         {(() => {
-                          const replied = messagesById.get(msg.reply_to_id || "");
-                          return replied ? getMessageAuthorLabel(replied) : "Сообщение";
+                          const replied = messagesById.get(
+                            msg.reply_to_id || "",
+                          );
+                          return replied
+                            ? getMessageAuthorLabel(replied)
+                            : t("chats.message");
                         })()}
                       </span>
                       <span className="chats-page__bubble-reply-text">
                         {(() => {
-                          const replied = messagesById.get(msg.reply_to_id || "");
-                          if (!replied) return "Сообщение недоступно";
+                          const replied = messagesById.get(
+                            msg.reply_to_id || "",
+                          );
+                          if (!replied) return t("chats.messageUnavailable");
                           return getMessagePreviewText(
-                            replied.content || "Сообщение",
+                            replied.content || t("chats.message"),
                           );
                         })()}
                       </span>
@@ -1142,7 +1179,9 @@ export function ChatsPage({
                   )}
                   {msg.forwarded_from_name && (
                     <p className="chats-page__bubble-forwarded">
-                      ↪ Переслано от {msg.forwarded_from_name}
+                      {t("chats.forwardedFrom", {
+                        name: msg.forwarded_from_name,
+                      })}
                     </p>
                   )}
                   {sharedContact ? (
@@ -1161,13 +1200,16 @@ export function ChatsPage({
                         handleOpenSharedContact(sharedContact);
                       }}
                       disabled={
-                        (!sharedContact.user_id || !onViewProfile) && !isMultiSelectMode
+                        (!sharedContact.user_id || !onViewProfile) &&
+                        !isMultiSelectMode
                       }
                     >
                       <div className="chats-page__shared-contact-top">
                         <Avatar
                           src={sharedContact.avatar_url || undefined}
-                          initials={getInitialsFromFullName(sharedContact.full_name)}
+                          initials={getInitialsFromFullName(
+                            sharedContact.full_name,
+                          )}
                           size="sm"
                         />
                         <div className="chats-page__shared-contact-info">
@@ -1181,26 +1223,30 @@ export function ChatsPage({
                           )}
                         </div>
                       </div>
-                      {(sharedContact.contacts || []).slice(0, 3).map((item, i) => (
-                        <div
-                          key={`${item.type}-${item.value}-${i}`}
-                          className="chats-page__shared-contact-item"
-                        >
-                          <span className="chats-page__shared-contact-type">
-                            {item.type}
-                          </span>
-                          <span className="chats-page__shared-contact-value">
-                            {item.value}
-                          </span>
-                        </div>
-                      ))}
+                      {(sharedContact.contacts || [])
+                        .slice(0, 3)
+                        .map((item, i) => (
+                          <div
+                            key={`${item.type}-${item.value}-${i}`}
+                            className="chats-page__shared-contact-item"
+                          >
+                            <span className="chats-page__shared-contact-type">
+                              {item.type}
+                            </span>
+                            <span className="chats-page__shared-contact-value">
+                              {item.value}
+                            </span>
+                          </div>
+                        ))}
                     </button>
                   ) : (
                     <p className="chats-page__bubble-text">{msg.content}</p>
                   )}
                   <div className="chats-page__bubble-meta">
                     {msg.is_edited && (
-                      <span className="chats-page__bubble-edited">ред.</span>
+                      <span className="chats-page__bubble-edited">
+                        {t("chats.editedShort")}
+                      </span>
                     )}
                     <span className="chats-page__bubble-time">
                       {formatMessageTime(msg.created_at)}
@@ -1251,7 +1297,11 @@ export function ChatsPage({
                     type="button"
                     className={`chats-page__message-side-marker ${isSelected ? "chats-page__message-side-marker--selected" : ""}`}
                     onClick={() => toggleMessageSelection(msg.id)}
-                    aria-label={isSelected ? "Снять выбор" : "Выбрать сообщение"}
+                    aria-label={
+                      isSelected
+                        ? t("chats.deselectMessage")
+                        : t("chats.selectMessage")
+                    }
                   >
                     {isSelected && (
                       <svg
@@ -1292,12 +1342,14 @@ export function ChatsPage({
         onClose={() => setIsMultiDeleteOpen(false)}
       >
         <div className="chats-page__modal">
-          <h3 className="chats-page__modal-title">{"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f?"}</h3>
+          <h3 className="chats-page__modal-title">
+            {t("chats.deleteMessages")}
+          </h3>
           <p className="chats-page__modal-text">
-            {"\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435, \u043a\u0430\u043a \u0443\u0434\u0430\u043b\u0438\u0442\u044c"} {selectedMessages.length}{" "}
+            {t("chats.chooseDeleteMethod")} {selectedMessages.length}{" "}
             {selectedMessages.length === 1
-              ? "\u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435"
-              : "\u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f"}
+              ? t("chats.messageOne")
+              : t("chats.messageFew")}
             .
           </p>
           <div className="chats-page__modal-actions">
@@ -1308,14 +1360,14 @@ export function ChatsPage({
                 void handleDeleteSelectedForMe();
               }}
             >
-              {"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0443 \u043c\u0435\u043d\u044f"}
+              {t("chats.deleteForMe")}
             </button>
             <button
               type="button"
               className="chats-page__modal-btn chats-page__modal-btn--danger"
               onClick={handleDeleteSelectedForEveryone}
             >
-              {"\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0443 \u0432\u0441\u0435\u0445"}
+              {t("chats.deleteForEveryone")}
             </button>
           </div>
         </div>
@@ -1332,10 +1384,14 @@ export function ChatsPage({
                   size="md"
                   onClick={handleForwardSelected}
                   disabled={!canForwardSelected}
-                  aria-label="Переслать выбранные"
+                  aria-label={t("chats.forward")}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" />
+                    <path
+                      d="M22 2L11 13"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
                     <path
                       d="M22 2L15 22L11 13L2 9L22 2Z"
                       stroke="currentColor"
@@ -1345,7 +1401,7 @@ export function ChatsPage({
                     />
                   </svg>
                 </IconButton>
-                <span>Переслать</span>
+                <span>{t("chats.forward")}</span>
               </div>
               <div className="chats-page__selection-action">
                 <IconButton
@@ -1353,7 +1409,7 @@ export function ChatsPage({
                   size="md"
                   onClick={() => setIsMultiDeleteOpen(true)}
                   disabled={selectedMessages.length === 0}
-                  aria-label="Удалить выбранные"
+                  aria-label={t("chats.delete")}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path
@@ -1376,14 +1432,14 @@ export function ChatsPage({
                     />
                   </svg>
                 </IconButton>
-                <span>Удалить</span>
+                <span>{t("chats.delete")}</span>
               </div>
               <div className="chats-page__selection-action">
                 <IconButton
                   variant="ghost"
                   size="md"
                   onClick={exitMultiSelectMode}
-                  aria-label="Отмена выбора"
+                  aria-label={t("chats.cancel")}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path
@@ -1394,7 +1450,7 @@ export function ChatsPage({
                     />
                   </svg>
                 </IconButton>
-                <span>Отмена</span>
+                <span>{t("chats.cancel")}</span>
               </div>
             </div>
           </div>
@@ -1402,17 +1458,20 @@ export function ChatsPage({
           <>
             {isMessagingRestricted && (
               <div className="chats-page__restricted-note">
-                {"\u041A\u043E\u043D\u0442\u0430\u043A\u0442 \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0438\u043B \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043F\u0438\u0441\u0430\u0442\u044C \u0435\u043C\u0443"}
+                {t("chats.restrictedContact")}
               </div>
             )}
             {messageActions.editingMessageId && (
               <div className="chats-page__edit-bar">
                 <div className="chats-page__edit-info">
-                  <span className="chats-page__edit-title">Редактирование</span>
+                  <span className="chats-page__edit-title">
+                    {t("chats.editing")}
+                  </span>
                   <span className="chats-page__edit-preview">
                     {getMessagePreviewText(
-                      messages.find((m) => m.id === messageActions.editingMessageId)
-                        ?.content || "",
+                      messages.find(
+                        (m) => m.id === messageActions.editingMessageId,
+                      )?.content || "",
                     )}
                   </span>
                 </div>
@@ -1421,7 +1480,7 @@ export function ChatsPage({
                   className="chats-page__edit-cancel"
                   onClick={messageActions.handleCancelEdit}
                 >
-                  Отмена
+                  {t("chats.cancel")}
                 </button>
               </div>
             )}
@@ -1429,7 +1488,9 @@ export function ChatsPage({
               <div className="chats-page__edit-bar chats-page__reply-bar">
                 <div className="chats-page__edit-info">
                   <span className="chats-page__edit-title">
-                    Ответ {getMessageAuthorLabel(replyToMessage)}
+                    {t("chats.replyTo", {
+                      name: getMessageAuthorLabel(replyToMessage),
+                    })}
                   </span>
                   <span className="chats-page__edit-preview">
                     {getMessagePreviewText(replyToMessage.content)}
@@ -1440,7 +1501,7 @@ export function ChatsPage({
                   className="chats-page__edit-cancel"
                   onClick={() => setReplyToMessage(null)}
                 >
-                  Отмена
+                  {t("chats.cancel")}
                 </button>
               </div>
             )}
@@ -1450,12 +1511,12 @@ export function ChatsPage({
                 className="chats-page__input"
                 placeholder={
                   isMessagingRestricted
-                    ? "\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430"
+                    ? t("chats.sendingUnavailable")
                     : messageActions.editingMessageId
-                      ? "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
+                      ? t("chats.editMessage")
                       : replyToMessage
-                        ? "\u041E\u0442\u0432\u0435\u0442..."
-                        : "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435..."
+                        ? t("chats.reply")
+                        : t("chats.messagePlaceholder")
                 }
                 value={inputValue}
                 onChange={(e) => handleInputChange(e.target.value)}
@@ -1477,7 +1538,13 @@ export function ChatsPage({
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <rect width="42" height="42" rx="21" fill="white" fillOpacity="0.3" />
+                  <rect
+                    width="42"
+                    height="42"
+                    rx="21"
+                    fill="white"
+                    fillOpacity="0.3"
+                  />
                   <path
                     d="M14.0156 19.7852C13.7227 19.7852 13.4785 19.6875 13.2832 19.4922C13.0879 19.2969 12.9902 19.0495 12.9902 18.75C12.9902 18.457 13.1009 18.1966 13.3223 17.9688L19.7578 11.5234C19.8685 11.4128 19.9922 11.3281 20.1289 11.2695C20.2656 11.2109 20.4056 11.1816 20.5488 11.1816C20.6986 11.1816 20.8418 11.2109 20.9785 11.2695C21.1217 11.3281 21.2454 11.4128 21.3496 11.5234L27.7852 17.9688C28.0065 18.1966 28.1172 18.457 28.1172 18.75C28.1172 19.0495 28.0195 19.2969 27.8242 19.4922C27.6289 19.6875 27.3848 19.7852 27.0918 19.7852C26.9421 19.7852 26.8021 19.7591 26.6719 19.707C26.5417 19.6484 26.4277 19.5703 26.3301 19.4727L24.1133 17.2852L20.5488 13.3008L16.9844 17.2852L14.7773 19.4727C14.6797 19.5703 14.5658 19.6484 14.4355 19.707C14.3053 19.7591 14.1654 19.7852 14.0156 19.7852ZM20.5488 29.7266C20.2363 29.7266 19.9792 29.6257 19.7773 29.4238C19.582 29.222 19.4844 28.9616 19.4844 28.6426V16.5234L19.6016 13.3398C19.6016 13.0469 19.6895 12.8125 19.8652 12.6367C20.041 12.4544 20.2689 12.3633 20.5488 12.3633C20.8353 12.3633 21.0664 12.4544 21.2422 12.6367C21.418 12.8125 21.5059 13.0469 21.5059 13.3398L21.623 16.5234V28.6426C21.623 28.9616 21.5221 29.222 21.3203 29.4238C21.125 29.6257 20.8678 29.7266 20.5488 29.7266Z"
                     fill="black"

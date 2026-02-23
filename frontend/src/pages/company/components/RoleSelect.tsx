@@ -1,5 +1,6 @@
 import type { CompanyRoleInfo } from "@/entities/company";
 import { isOwnerRole } from "@/entities/company";
+import { useI18n } from "@/shared/config";
 import "./RoleSelect.scss";
 
 interface RoleSelectProps {
@@ -12,15 +13,18 @@ interface RoleSelectProps {
 }
 
 // Описания ролей
-function getRoleDescription(role: CompanyRoleInfo): string {
+function getRoleDescription(
+  role: CompanyRoleInfo,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
   const name = role.name.toLowerCase();
   if (name === "owner" || role.priority === 0) {
-    return "Полный доступ, удаление компании";
+    return t("roleSelect.ownerDescription");
   }
   if (name === "admin" || role.priority === 1) {
-    return "Управление участниками и настройками";
+    return t("roleSelect.adminDescription");
   }
-  return "Базовый доступ к компании";
+  return t("roleSelect.memberDescription");
 }
 
 export function RoleSelect({
@@ -31,6 +35,7 @@ export function RoleSelect({
   disabled = false,
   showDescription = true,
 }: RoleSelectProps) {
+  const { t } = useI18n();
   const filteredRoles = excludeOwner
     ? roles.filter((r) => !isOwnerRole(r))
     : roles;
@@ -64,7 +69,7 @@ export function RoleSelect({
               <span className="role-select__name">{role.name}</span>
               {showDescription && (
                 <span className="role-select__desc">
-                  {getRoleDescription(role)}
+                  {getRoleDescription(role, t)}
                 </span>
               )}
             </div>
@@ -83,7 +88,7 @@ export function RoleSelect({
             className="role-select__preview-dot"
             style={{ backgroundColor: selectedRole.color }}
           />
-          <span>Выбрано: {selectedRole.name}</span>
+          <span>{t("roleSelect.selected", { name: selectedRole.name })}</span>
         </div>
       )}
     </div>

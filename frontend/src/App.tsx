@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { ThemeProvider, ThemeToggle } from "./shared";
+import { ThemeProvider, ThemeToggle, I18nProvider } from "./shared";
+import { useI18n } from "./shared/config";
 import { PageSwitcher } from "./widgets";
 import type { PageType } from "./widgets";
 import {
@@ -84,6 +85,7 @@ interface ShareContactNavData {
 
 function AuthenticatedApp() {
   const { user, logout, refreshUser } = useAuth();
+  const { t } = useI18n();
   const [currentPage, setCurrentPage] = useState<ExtendedPageType>("contacts");
   const [previousPage, setPreviousPage] = useState<PageType>("contacts");
   const [inviteProcessing, setInviteProcessing] = useState(false);
@@ -272,7 +274,7 @@ function AuthenticatedApp() {
         if (!cancelled) {
           setInviteMessage({
             type: "success",
-            text: "Вы успешно присоединились к компании!",
+            text: t("app.joinedCompany"),
           });
           setCurrentPage("company");
         }
@@ -280,9 +282,7 @@ function AuthenticatedApp() {
         if (!cancelled) {
           const error = err as { data?: { detail?: string }; message?: string };
           const errorMessage =
-            error?.data?.detail ||
-            error?.message ||
-            "Не удалось принять приглашение";
+            error?.data?.detail || error?.message || t("app.inviteFailed");
           setInviteMessage({ type: "error", text: errorMessage });
         }
       } finally {
@@ -326,9 +326,7 @@ function AuthenticatedApp() {
         if (!cancelled) {
           const error = err as { data?: { detail?: string }; message?: string };
           const errorMessage =
-            error?.data?.detail ||
-            error?.message ||
-            "Не удалось загрузить профиль пользователя";
+            error?.data?.detail || error?.message || t("app.loadProfileFailed");
           setInviteMessage({ type: "error", text: errorMessage });
         }
       } finally {
@@ -400,9 +398,7 @@ function AuthenticatedApp() {
         if (!cancelled) {
           const error = err as { data?: { detail?: string }; message?: string };
           const errorMessage =
-            error?.data?.detail ||
-            error?.message ||
-            "Не удалось загрузить визитку";
+            error?.data?.detail || error?.message || t("app.loadCardFailed");
           setInviteMessage({ type: "error", text: errorMessage });
         }
       } finally {
@@ -435,7 +431,7 @@ function AuthenticatedApp() {
       <div className="app app--loading">
         <div className="app__loader">
           <div className="app__spinner" />
-          <span>Принимаем приглашение...</span>
+          <span>{t("app.processingInvite")}</span>
         </div>
       </div>
     );
@@ -621,7 +617,11 @@ function AuthenticatedApp() {
 
         <div className="app__actions">
           <span className="app__user">{user?.first_name}</span>
-          <button className="app__logout" onClick={logout} title="Выйти">
+          <button
+            className="app__logout"
+            onClick={logout}
+            title={t("settings.logout")}
+          >
             <svg
               width="20"
               height="20"
@@ -665,7 +665,10 @@ function AuthenticatedApp() {
                   savedContact =
                     contacts.find((c) => c.saved_user_id === userId) || null;
                 } catch (error) {
-                  console.error("Failed to resolve saved contact from chats:", error);
+                  console.error(
+                    "Failed to resolve saved contact from chats:",
+                    error,
+                  );
                 }
               }
 
@@ -754,13 +757,13 @@ function AuthenticatedApp() {
             onContactSaved={() => {
               setInviteMessage({
                 type: "success",
-                text: "Контакт сохранен!",
+                text: t("app.contactSaved"),
               });
             }}
             onContactDeleted={() => {
               setInviteMessage({
                 type: "success",
-                text: "Контакт удален",
+                text: t("app.contactDeleted"),
               });
             }}
             singleCardMode={contactProfileData.singleCardMode}
@@ -837,13 +840,14 @@ function needsOnboarding(user: ReturnType<typeof useAuth>["user"]): boolean {
 
 function AppContent() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { t } = useI18n();
 
   if (isLoading) {
     return (
       <div className="app app--loading">
         <div className="app__loader">
           <div className="app__spinner" />
-          <span>Загрузка...</span>
+          <span>{t("common.loading")}</span>
         </div>
       </div>
     );
@@ -864,9 +868,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </I18nProvider>
     </ThemeProvider>
   );
 }

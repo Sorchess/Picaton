@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type FC } from "react";
 import { createPortal } from "react-dom";
+import { useI18n } from "@/shared/config";
 import { EMOJI_CATEGORIES } from "../EmojiPicker/EmojiPicker";
 import "./AvatarEmojiButton.scss";
 
@@ -23,6 +24,7 @@ export const AvatarEmojiButton: FC<AvatarEmojiButtonProps> = ({
   disabled = false,
   isSaving = false,
 }) => {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("smileys");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -197,7 +199,7 @@ export const AvatarEmojiButton: FC<AvatarEmojiButtonProps> = ({
         className="avatar-emoji-button__trigger"
         onClick={togglePicker}
         disabled={disabled || isSaving}
-        title="Изменить эмодзи профиля"
+        title={t("avatarEmoji.changeEmoji")}
       >
         {isSaving ? (
           <span className="avatar-emoji-button__spinner" />
@@ -235,13 +237,15 @@ export const AvatarEmojiButton: FC<AvatarEmojiButtonProps> = ({
           >
             {/* Заголовок */}
             <div className="avatar-emoji-button__header">
-              <span className="avatar-emoji-button__title">Эмодзи профиля</span>
+              <span className="avatar-emoji-button__title">
+                {t("avatarEmoji.profileEmoji")}
+              </span>
               <button
                 type="button"
                 className="avatar-emoji-button__reset-btn"
                 onClick={handleClear}
               >
-                Очистить
+                {t("avatarEmoji.clear")}
               </button>
             </div>
 

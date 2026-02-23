@@ -1,4 +1,5 @@
 import type { FC, ReactNode } from "react";
+import { useI18n } from "@/shared/config";
 import "./PageHeader.scss";
 
 interface PageHeaderProps {
@@ -33,6 +34,8 @@ export const PageHeader: FC<PageHeaderProps> = ({
   sticky = false,
   className = "",
 }) => {
+  const { t } = useI18n();
+
   return (
     <header
       className={`page-header ${transparent ? "page-header--transparent" : ""} ${
@@ -45,7 +48,7 @@ export const PageHeader: FC<PageHeaderProps> = ({
             type="button"
             className="page-header__back"
             onClick={onBack}
-            aria-label="Назад"
+            aria-label={t("pageHeader.back")}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -96,6 +99,8 @@ export const OnboardingHeader: FC<OnboardingHeaderProps> = ({
   onBack,
   className = "",
 }) => {
+  const { t } = useI18n();
+
   return (
     <header className={`onboarding-header ${className}`}>
       <div className="onboarding-header__left">
@@ -104,7 +109,7 @@ export const OnboardingHeader: FC<OnboardingHeaderProps> = ({
             type="button"
             className="onboarding-header__back"
             onClick={onBack}
-            aria-label="Назад"
+            aria-label={t("pageHeader.back")}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -137,7 +142,7 @@ export const OnboardingHeader: FC<OnboardingHeaderProps> = ({
             className="onboarding-header__skip"
             onClick={onSkip}
           >
-            Пропустить
+            {t("pageHeader.skip")}
           </button>
         )}
       </div>

@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from "react";
 import { Card, EndorsableSkill } from "@/shared";
 import type { SkillWithEndorsements } from "@/api/endorsementApi";
+import { useI18n } from "@/shared/config";
 import "./ProfileInfoCard.scss";
 
 interface InfoField {
@@ -54,6 +55,8 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
   onShareClick,
   className = "",
 }) => {
+  const { t } = useI18n();
+
   const phoneContact = contacts.find((c) => c.type === "phone");
   const displayPhone = phoneContact?.value || phone;
 
@@ -144,7 +147,9 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
         >
           <div className="profile-info-cards__row">
             <div className="profile-info-cards__content">
-              <span className="profile-info-cards__label">ID пользователя</span>
+              <span className="profile-info-cards__label">
+                {t("profile.userId")}
+              </span>
               <span className="profile-info-cards__value profile-info-cards__value--accent">
                 @{userHandle}
               </span>
@@ -224,7 +229,9 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
       {/* Skills Card with Endorsements */}
       {skillsWithEndorsements.length > 0 ? (
         <Card className="profile-info-cards__card">
-          <span className="profile-info-cards__label">Навыки</span>
+          <span className="profile-info-cards__label">
+            {t("profile.skillsLabel")}
+          </span>
           <div className="profile-info-cards__tags">
             {companyNames.map((name) => (
               <span
@@ -246,7 +253,9 @@ export const ProfileInfoCard: FC<ProfileInfoCardProps> = ({
         </Card>
       ) : tags.length > 0 || companyNames.length > 0 ? (
         <Card className="profile-info-cards__card">
-          <span className="profile-info-cards__label">Навыки</span>
+          <span className="profile-info-cards__label">
+            {t("profile.skillsLabel")}
+          </span>
           <div className="profile-info-cards__tags">
             {companyNames.map((name) => (
               <span

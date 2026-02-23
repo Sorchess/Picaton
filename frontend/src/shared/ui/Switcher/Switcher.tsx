@@ -1,4 +1,5 @@
 import type { FC, ReactNode } from "react";
+import type { I18nContextType } from "@/shared/config";
 import "./Switcher.scss";
 
 export interface SwitcherItem {
@@ -75,10 +76,10 @@ export const Switcher: FC<SwitcherProps> = ({
 };
 
 // Default tabs from Figma design
-export const defaultTabs: SwitcherItem[] = [
+export const getDefaultTabs = (t: I18nContextType["t"]): SwitcherItem[] => [
   {
     id: "contacts",
-    label: "Контакты",
+    label: t("switcher.contacts"),
     path: "/contacts",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -94,7 +95,7 @@ export const defaultTabs: SwitcherItem[] = [
   },
   {
     id: "profile",
-    label: "Профиль",
+    label: t("switcher.profile"),
     path: "/profile",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">

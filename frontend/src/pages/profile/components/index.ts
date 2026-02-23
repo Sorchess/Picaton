@@ -1,7 +1,7 @@
 export { CardEditor } from "./CardEditor";
 export { CardPreview } from "./CardPreview";
 export { ProfileHeroBlock } from "./ProfileHeroBlock";
-export { RoleTabs, defaultRoles } from "./RoleTabs";
+export { RoleTabs, getDefaultRoles } from "./RoleTabs";
 export type { RoleTab } from "./RoleTabs";
 export { ProfileInfoCard } from "./ProfileInfoCard";
 export { ProfileTopBar } from "./ProfileTopBar";

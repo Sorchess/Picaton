@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { IconButton, Modal, Button } from "@/shared";
 import { projectApi, type CreateProjectRequest } from "@/entities/project";
+import { useI18n } from "@/shared/config";
 import "./CreateProjectModal.scss";
 
 interface CreateProjectModalProps {
@@ -135,6 +136,7 @@ export function CreateProjectModal({
   const [solution, setSolution] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n();
 
   const resetForm = useCallback(() => {
     setName("");
@@ -154,7 +156,7 @@ export function CreateProjectModal({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      setError("Укажите название проекта");
+      setError(t("createProject.specifyName"));
       return;
     }
 
@@ -180,7 +182,7 @@ export function CreateProjectModal({
       onClose();
     } catch (err) {
       console.error("Failed to create project:", err);
-      setError("Не удалось создать проект. Попробуйте еще раз.");
+      setError(t("createProject.createFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -204,7 +206,7 @@ export function CreateProjectModal({
       <div className="create-project-modal">
         {/* Header */}
         <div className="create-project-modal__header">
-          <IconButton onClick={handleClose} aria-label="Назад">
+          <IconButton onClick={handleClose} aria-label={t("common.back")}>
             <BackArrowIcon />
           </IconButton>
           <Button
@@ -213,7 +215,7 @@ export function CreateProjectModal({
             onClick={handleSubmit}
             disabled={isSubmitting || !name.trim()}
           >
-            {isSubmitting ? "..." : "Готово"}
+            {isSubmitting ? "..." : t("common.done")}
           </Button>
         </div>
 
@@ -233,7 +235,7 @@ export function CreateProjectModal({
             <input
               type="text"
               className="create-project-modal__input create-project-modal__textarea"
-              placeholder="Название проекта"
+              placeholder={t("createProject.projectName")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
@@ -242,10 +244,12 @@ export function CreateProjectModal({
 
           {/* Description */}
           <div className="create-project-modal__field create-project-modal__field--card">
-            <label className="create-project-modal__label">Описание</label>
+            <label className="create-project-modal__label">
+              {t("createProject.description")}
+            </label>
             <textarea
               className="create-project-modal__textarea"
-              placeholder="Опишите ваш проект"
+              placeholder={t("createProject.describePlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
@@ -254,7 +258,9 @@ export function CreateProjectModal({
 
           {/* Tags */}
           <div className="create-project-modal__field create-project-modal__field--card">
-            <label className="create-project-modal__label">Теги</label>
+            <label className="create-project-modal__label">
+              {t("createProject.tags")}
+            </label>
             <div className="create-project-modal__tags">
               {tags.map((tag) => (
                 <span key={tag} className="create-project-modal__tag">
@@ -272,7 +278,7 @@ export function CreateProjectModal({
                 type="button"
                 className="create-project-modal__tag-add"
                 onClick={() => {
-                  const newTag = prompt("Введите тег:");
+                  const newTag = prompt(t("createProject.enterTag"));
                   if (newTag?.trim() && !tags.includes(newTag.trim())) {
                     setTags([...tags, newTag.trim()]);
                   }
@@ -285,7 +291,9 @@ export function CreateProjectModal({
 
           {/* Skills */}
           <div className="create-project-modal__field create-project-modal__field--card">
-            <label className="create-project-modal__label">Навыки</label>
+            <label className="create-project-modal__label">
+              {t("createProject.skills")}
+            </label>
             <div className="create-project-modal__skills">
               {skills.map((skill) => (
                 <span key={skill} className="create-project-modal__skill">
@@ -304,7 +312,7 @@ export function CreateProjectModal({
                 type="button"
                 className="create-project-modal__skill-add"
                 onClick={() => {
-                  const newSkill = prompt("Введите навык:");
+                  const newSkill = prompt(t("createProject.enterSkill"));
                   if (newSkill?.trim() && !skills.includes(newSkill.trim())) {
                     setSkills([...skills, newSkill.trim()]);
                   }
@@ -318,9 +326,13 @@ export function CreateProjectModal({
           {/* Deadline */}
           <div className="create-project-modal__field create-project-modal__field--card create-project-modal__field--row">
             <div className="create-project-modal__field-content">
-              <label className="create-project-modal__label">Дедлайн</label>
+              <label className="create-project-modal__label">
+                {t("createProject.deadline")}
+              </label>
               <span className="create-project-modal__value">
-                {deadline ? formatDate(deadline) : "Не указан"}
+                {deadline
+                  ? formatDate(deadline)
+                  : t("createProject.notSpecified")}
               </span>
             </div>
             <input
@@ -334,25 +346,29 @@ export function CreateProjectModal({
 
           {/* Team Section */}
           <div className="create-project-modal__field create-project-modal__field--card">
-            <label className="create-project-modal__label">Команда</label>
+            <label className="create-project-modal__label">
+              {t("createProject.team")}
+            </label>
             <div className="create-project-modal__team-actions">
               <button className="create-project-modal__team-btn create-project-modal__team-btn--invite">
                 <UserAddIcon />
-                Пригласить
+                {t("createProject.inviteButton")}
               </button>
               <button className="create-project-modal__team-btn create-project-modal__team-btn--candidates">
                 <TargetIcon />
-                Кандидаты
+                {t("createProject.candidates")}
               </button>
             </div>
           </div>
 
           {/* Problem */}
           <div className="create-project-modal__field create-project-modal__field--card">
-            <label className="create-project-modal__label">Проблематика</label>
+            <label className="create-project-modal__label">
+              {t("createProject.problemStatement")}
+            </label>
             <textarea
               className="create-project-modal__textarea"
-              placeholder="Интересный факт или описание вашего опыта"
+              placeholder={t("createProject.factPlaceholder")}
               value={problem}
               onChange={(e) => setProblem(e.target.value)}
               rows={2}
@@ -362,11 +378,11 @@ export function CreateProjectModal({
           {/* Solution */}
           <div className="create-project-modal__field create-project-modal__field--card">
             <label className="create-project-modal__label">
-              Предлагаемое решение
+              {t("createProject.proposedSolution")}
             </label>
             <textarea
               className="create-project-modal__textarea"
-              placeholder="Опишите ваше решение"
+              placeholder={t("createProject.solutionPlaceholder")}
               value={solution}
               onChange={(e) => setSolution(e.target.value)}
               rows={2}
@@ -378,7 +394,7 @@ export function CreateProjectModal({
         <div className="create-project-modal__footer">
           <button className="create-project-modal__ai-btn">
             <AIIcon />
-            Заполнить с AI
+            {t("createProject.fillWithAi")}
           </button>
           <button className="create-project-modal__voice-btn">
             <MicIcon />

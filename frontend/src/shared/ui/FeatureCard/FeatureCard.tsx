@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import type { I18nContextType } from "@/shared/config";
 import "./FeatureCard.scss";
 
 interface FeatureCardProps {
@@ -65,20 +66,20 @@ export const FeatureCardList: FC<FeatureCardListProps> = ({
 };
 
 // Default features from Figma design
-export const defaultFeatures = [
+export const getDefaultFeatures = (t: I18nContextType["t"]) => [
   {
     emoji: "🤝",
-    title: "Находите специалистов",
-    description: "Ищите нужных людей по навыкам и опыту",
+    title: t("featureCard.findExperts"),
+    description: t("featureCard.findExpertsDesc"),
   },
   {
     emoji: "💼",
-    title: "Делитесь визиткой",
-    description: "Создайте профессиональную цифровую визитку",
+    title: t("featureCard.shareCard"),
+    description: t("featureCard.shareCardDesc"),
   },
   {
     emoji: "📱",
-    title: "QR-код",
-    description: "Мгновенный обмен контактами через QR",
+    title: t("featureCard.qrCode"),
+    description: t("featureCard.qrCodeDesc"),
   },
 ];

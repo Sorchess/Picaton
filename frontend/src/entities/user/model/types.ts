@@ -53,6 +53,7 @@ export interface User {
   privacy_who_can_message?: string;
   privacy_who_can_see_profile?: string;
   privacy_who_can_invite?: string;
+  language?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -98,6 +99,7 @@ export interface UserUpdate {
   location?: string | null;
   position?: string | null;
   username?: string | null;
+  language?: string | null;
 }
 
 export interface QRCodeResponse {

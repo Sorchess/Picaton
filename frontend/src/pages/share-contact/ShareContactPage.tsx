@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, type FC } from "react";
+import { useState, useEffect, useRef, useMemo, type FC } from "react";
 import { IconButton, Modal, Button, Tabs, Card } from "@/shared";
+import { useI18n } from "@/shared/config";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
@@ -8,14 +9,6 @@ import "./ShareContactPage.scss";
 
 // Типы длительности
 export type DurationOption = "1d" | "1w" | "1m" | "forever";
-
-// Опции длительности
-const DURATION_OPTIONS: { value: DurationOption; label: string }[] = [
-  { value: "1d", label: "1 день" },
-  { value: "1w", label: "1 неделя" },
-  { value: "1m", label: "1 месяц" },
-  { value: "forever", label: "∞" },
-];
 
 interface ShareContactPageProps {
   /** Business cards to display */
@@ -131,6 +124,18 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
   initialSelectedIds = [],
 }) => {
   const { user } = useAuth();
+  const { t } = useI18n();
+
+  const DURATION_OPTIONS = useMemo<{ value: DurationOption; label: string }[]>(
+    () => [
+      { value: "1d", label: t("share.day1") },
+      { value: "1w", label: t("share.week1") },
+      { value: "1m", label: t("share.month1") },
+      { value: "forever", label: "∞" },
+    ],
+    [t],
+  );
+
   const [localCards, setLocalCards] = useState<BusinessCard[]>(cards);
   const [selectedCardIds, setSelectedCardIds] =
     useState<string[]>(initialSelectedIds);
@@ -239,7 +244,9 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
       setNewCardTitle("");
       setShowCreateModal(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка создания карточки");
+      setError(
+        err instanceof Error ? err.message : t("profile.cardCreationError"),
+      );
     } finally {
       setIsCreating(false);
     }
@@ -269,13 +276,17 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
 
         // Формируем название из всех выбранных визиток
         const cardNames = selectedCards.map((c) =>
-          c.is_primary ? "Личный" : c.title || "Визитка",
+          c.is_primary
+            ? t("profile.personal")
+            : c.title || t("share.cardFallback"),
         );
         setQrCardName(cardNames.join(", "));
         setShowQrModal(true);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка генерации QR");
+      setError(
+        err instanceof Error ? err.message : t("share.qrGenerationError"),
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -295,14 +306,14 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
 
       {/* Header with back and share buttons */}
       <div className="share-contact-page__header">
-        <IconButton onClick={onBack} aria-label="Назад">
+        <IconButton onClick={onBack} aria-label={t("common.back")}>
           <BackArrowIcon />
         </IconButton>
 
         <IconButton
           onClick={handleShare}
           disabled={selectedCardIds.length === 0 || isGenerating}
-          aria-label="Поделиться"
+          aria-label={t("common.share")}
         >
           <ShareArrowIcon />
         </IconButton>
@@ -318,8 +329,8 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
         {/* Tab Switcher */}
         <Tabs
           tabs={[
-            { id: "settings", label: "Настройки" },
-            { id: "preview", label: "Посмотреть" },
+            { id: "settings", label: t("share.settings") },
+            { id: "preview", label: t("share.preview") },
           ]}
           activeId={activeTab}
           onChange={(id) => {
@@ -352,7 +363,9 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
                 </div>
                 <div className="share-contact-page__card-info">
                   <span className="share-contact-page__card-title">
-                    {card.is_primary ? "Личный" : card.title || "Визитка"}
+                    {card.is_primary
+                      ? t("profile.personal")
+                      : card.title || t("share.cardFallback")}
                   </span>
                 </div>
               </div>
@@ -363,7 +376,7 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
                   e.stopPropagation();
                   onOpenCard?.(card);
                 }}
-                aria-label="Открыть визитку"
+                aria-label={t("share.openCard")}
               >
                 <ArrowIcon />
               </button>
@@ -376,12 +389,12 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
             onClick={() => setShowCreateModal(true)}
           >
             <span className="share-contact-page__add-card-text">
-              Создать новую визитку
+              {t("share.createNewCard")}
             </span>
             <button
               type="button"
               className="share-contact-page__add-card-btn"
-              aria-label="Создать новую визитку"
+              aria-label={t("share.createNewCard")}
             >
               <PlusIcon />
             </button>
@@ -390,7 +403,7 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
 
         {/* Duration Label */}
         <div className="share-contact-page__duration-label">
-          Ограничение по времени
+          {t("share.timeLimit")}
         </div>
 
         {/* Duration Selector */}
@@ -447,7 +460,7 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
             onClick={handleShare}
             disabled={selectedCardIds.length === 0 || isGenerating}
           >
-            {isGenerating ? "Генерация..." : "Создать ссылку / QR"}
+            {isGenerating ? t("share.generating") : t("share.createLinkQr")}
           </Button>
         </div>
       </div>
@@ -456,19 +469,18 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Новая визитка"
+        title={t("profile.newCard")}
       >
         <div className="share-contact-page__create-modal">
           <p className="share-contact-page__create-hint">
-            Придумайте название для вашей визитки. Например: "Разработчик",
-            "Дизайнер" или "Личная"
+            {t("profile.newCardDescription")}
           </p>
           <input
             type="text"
             className="share-contact-page__create-input"
             value={newCardTitle}
             onChange={(e) => setNewCardTitle(e.target.value)}
-            placeholder="Название визитки"
+            placeholder={t("profile.cardNamePlaceholder")}
             maxLength={50}
           />
           <div className="share-contact-page__create-actions">
@@ -476,14 +488,14 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
               variant="secondary"
               onClick={() => setShowCreateModal(false)}
             >
-              Отмена
+              {t("common.cancel")}
             </Button>
             <Button
               variant="primary"
               onClick={handleCreateCard}
               disabled={!newCardTitle.trim() || isCreating}
             >
-              {isCreating ? "Создание..." : "Создать"}
+              {isCreating ? t("common.creating") : t("common.create")}
             </Button>
           </div>
         </div>

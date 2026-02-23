@@ -8,9 +8,11 @@ import {
 import { chatApi, ChatWebSocket, type ChatMessage } from "@/entities/chat";
 import { useAuth } from "@/features/auth";
 import { Typography, Loader, Button, Tag } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./ProjectsPage.scss";
 
 export function ProjectsPage() {
+  const { t } = useI18n();
   const [projects, setProjects] = useState<Project[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +20,7 @@ export function ProjectsPage() {
 
   // Состояние для детальной страницы
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -80,7 +82,7 @@ export function ProjectsPage() {
   return (
     <div className="projects-page">
       <header className="projects-page__header">
-        <Typography variant="h1">Проекты</Typography>
+        <Typography variant="h1">{t("projects.title")}</Typography>
       </header>
 
       <div className="projects-page__tabs">
@@ -88,13 +90,15 @@ export function ProjectsPage() {
           variant={tab === "projects" ? "primary" : "ghost"}
           onClick={() => setTab("projects")}
         >
-          Мои проекты {projects.length > 0 && `(${projects.length})`}
+          {t("projects.myProjects")}{" "}
+          {projects.length > 0 && `(${projects.length})`}
         </Button>
         <Button
           variant={tab === "invitations" ? "primary" : "ghost"}
           onClick={() => setTab("invitations")}
         >
-          Приглашения {invitations.length > 0 && `(${invitations.length})`}
+          {t("projects.invitations")}{" "}
+          {invitations.length > 0 && `(${invitations.length})`}
         </Button>
       </div>
 
@@ -102,10 +106,9 @@ export function ProjectsPage() {
         <div className="projects-page__list">
           {projects.length === 0 ? (
             <div className="projects-page__empty">
-              <Typography variant="body">У вас пока нет проектов</Typography>
+              <Typography variant="body">{t("projects.noProjects")}</Typography>
               <Typography variant="small">
-                Создайте идею и соберите команду, или примите приглашение в
-                существующий проект
+                {t("projects.noProjectsDescription")}
               </Typography>
             </div>
           ) : (
@@ -123,10 +126,10 @@ export function ProjectsPage() {
                     }
                   >
                     {project.status === "active"
-                      ? "Активен"
+                      ? t("projects.active")
                       : project.status === "completed"
-                      ? "Завершён"
-                      : "Архив"}
+                        ? t("projects.completed")
+                        : t("projects.archive")}
                   </Tag>
                 </div>
                 <Typography
@@ -136,10 +139,16 @@ export function ProjectsPage() {
                   {project.description}
                 </Typography>
                 <div className="project-card__meta">
-                  <span>👥 {project.members_count} участников</span>
+                  <span>
+                    👥{" "}
+                    {t("projects.membersCount", {
+                      n: String(project.members_count),
+                    })}
+                  </span>
                   {project.unread_messages_count > 0 && (
                     <span className="project-card__unread">
-                      💬 {project.unread_messages_count} новых
+                      💬 {project.unread_messages_count}{" "}
+                      {t("projects.newCount")}
                     </span>
                   )}
                 </div>
@@ -153,7 +162,9 @@ export function ProjectsPage() {
         <div className="projects-page__invitations">
           {invitations.length === 0 ? (
             <div className="projects-page__empty">
-              <Typography variant="body">Нет приглашений</Typography>
+              <Typography variant="body">
+                {t("projects.noInvitations")}
+              </Typography>
             </div>
           ) : (
             invitations.map((invitation) => (
@@ -163,7 +174,9 @@ export function ProjectsPage() {
                     {invitation.project_name}
                   </Typography>
                   <Typography variant="small">
-                    от {invitation.inviter_name || "Неизвестный"}
+                    {t("projects.from", {
+                      name: invitation.inviter_name || t("common.unknown"),
+                    })}
                   </Typography>
                 </div>
                 {invitation.message && (
@@ -180,14 +193,14 @@ export function ProjectsPage() {
                     size="sm"
                     onClick={() => handleAcceptInvitation(invitation.id)}
                   >
-                    Принять
+                    {t("common.accept")}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDeclineInvitation(invitation.id)}
                   >
-                    Отклонить
+                    {t("common.decline")}
                   </Button>
                 </div>
               </div>
@@ -210,6 +223,7 @@ function ProjectDetailSubPage({
   projectId,
   onBack,
 }: ProjectDetailSubPageProps) {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -325,22 +339,25 @@ function ProjectDetailSubPage({
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (date.toDateString() === today.toDateString()) {
-      return "Сегодня";
+      return t("common.today");
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return "Вчера";
+      return t("common.yesterday");
     }
     return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
   };
 
   // Группировка сообщений по дням
-  const groupedMessages = messages.reduce((groups, message) => {
-    const date = formatDate(message.created_at);
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(message);
-    return groups;
-  }, {} as Record<string, ChatMessage[]>);
+  const groupedMessages = messages.reduce(
+    (groups, message) => {
+      const date = formatDate(message.created_at);
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+      return groups;
+    },
+    {} as Record<string, ChatMessage[]>,
+  );
 
   if (isLoading) {
     return (
@@ -354,11 +371,13 @@ function ProjectDetailSubPage({
     <div className="project-detail">
       <header className="project-detail__header">
         <Button variant="ghost" onClick={onBack}>
-          ← Назад
+          {t("projects.back")}
         </Button>
         <div className="project-detail__title">
           <Typography variant="h2">{project?.name}</Typography>
-          <Typography variant="small">{members.length} участников</Typography>
+          <Typography variant="small">
+            {t("projects.membersCount", { n: String(members.length) })}
+          </Typography>
         </div>
       </header>
 
@@ -368,14 +387,14 @@ function ProjectDetailSubPage({
           size="sm"
           onClick={() => setActiveTab("chat")}
         >
-          Чат
+          {t("projects.chatTab")}
         </Button>
         <Button
           variant={activeTab === "members" ? "primary" : "ghost"}
           size="sm"
           onClick={() => setActiveTab("members")}
         >
-          Участники ({members.length})
+          {t("projects.membersTab", { n: String(members.length) })}
         </Button>
       </div>
 
@@ -434,7 +453,7 @@ function ProjectDetailSubPage({
               type="text"
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Написать сообщение..."
+              placeholder={t("projects.writeMessagePlaceholder")}
               className="chat-input__field"
             />
             <Button
@@ -442,7 +461,7 @@ function ProjectDetailSubPage({
               variant="primary"
               disabled={isSending || !messageText.trim()}
             >
-              Отправить
+              {t("common.send")}
             </Button>
           </form>
         </div>
@@ -465,14 +484,14 @@ function ProjectDetailSubPage({
               )}
               <div className="member-card__info">
                 <Typography variant="h4">
-                  {member.user_name || "Неизвестный пользователь"}
+                  {member.user_name || t("projects.unknownUser")}
                 </Typography>
                 <Tag variant="outline" size="sm">
                   {member.role === "owner"
-                    ? "Владелец"
+                    ? t("projects.owner")
                     : member.role === "admin"
-                    ? "Админ"
-                    : "Участник"}
+                      ? t("projects.admin")
+                      : t("projects.memberRole")}
                 </Tag>
               </div>
             </div>

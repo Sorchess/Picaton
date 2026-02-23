@@ -7,6 +7,7 @@ import {
 } from "react";
 import { useAuth, TelegramLoginButton } from "@/features/auth";
 import { Typography, Button, Input } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./AuthPage.scss";
 
 type AuthView = "email" | "sent" | "verifying" | "error";
@@ -14,6 +15,7 @@ type AuthView = "email" | "sent" | "verifying" | "error";
 export function LoginPage() {
   const { requestMagicLink, verifyMagicLink, refreshUser, isLoading } =
     useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [view, setView] = useState<AuthView>("email");
   const [error, setError] = useState<string | null>(null);
@@ -32,11 +34,11 @@ export function LoginPage() {
         setView("error");
 
         if (apiErr.status === 410) {
-          setError("Ссылка для входа истекла. Запросите новую.");
+          setError(t("login.linkExpired"));
         } else if (apiErr.status === 400) {
-          setError(apiErr.data?.detail || "Невалидная ссылка для входа");
+          setError(apiErr.data?.detail || t("login.invalidLink"));
         } else {
-          setError("Ошибка при входе. Попробуйте ещё раз.");
+          setError(t("login.loginError"));
         }
       }
     },
@@ -69,11 +71,11 @@ export function LoginPage() {
     } catch (err: unknown) {
       const apiErr = err as { status?: number; data?: { detail?: string } };
       if (apiErr.status === 429) {
-        setError("Слишком много запросов. Подождите немного.");
+        setError(t("login.tooManyRequests"));
       } else if (apiErr.status === 422) {
-        setError("Введите корректный email");
+        setError(t("login.invalidEmail"));
       } else {
-        setError("Не удалось отправить ссылку. Попробуйте позже.");
+        setError(t("login.sendFailed"));
       }
     }
   };
@@ -99,10 +101,10 @@ export function LoginPage() {
               <div className="auth-page__spinner" />
             </div>
             <Typography variant="h1" className="auth-page__title">
-              Входим...
+              {t("login.signingIn")}
             </Typography>
             <Typography variant="body" className="auth-page__subtitle">
-              Проверяем ссылку для входа
+              {t("login.checkingLink")}
             </Typography>
           </div>
         </div>
@@ -118,7 +120,7 @@ export function LoginPage() {
           <div className="auth-page__header">
             <div className="auth-page__icon auth-page__icon--error">❌</div>
             <Typography variant="h1" className="auth-page__title">
-              Ошибка входа
+              {t("login.errorTitle")}
             </Typography>
             <Typography variant="body" className="auth-page__subtitle">
               {error}
@@ -130,7 +132,7 @@ export function LoginPage() {
             className="auth-page__submit"
             onClick={handleBack}
           >
-            Запросить новую ссылку
+            {t("login.requestNewLink")}
           </Button>
         </div>
       </div>
@@ -145,10 +147,10 @@ export function LoginPage() {
           <div className="auth-page__header">
             <div className="auth-page__icon auth-page__icon--success">✉️</div>
             <Typography variant="h1" className="auth-page__title">
-              Проверьте почту
+              {t("login.checkEmail")}
             </Typography>
             <Typography variant="body" className="auth-page__subtitle">
-              Мы отправили ссылку для входа на
+              {t("login.sentLinkTo")}
             </Typography>
             <Typography variant="body" className="auth-page__email-highlight">
               {email}
@@ -157,22 +159,22 @@ export function LoginPage() {
 
           <div className="auth-page__sent-info">
             <Typography variant="small" className="auth-page__sent-tip">
-              💡 Ссылка действительна 15 минут
+              {t("login.linkValid")}
             </Typography>
             <Typography variant="small" className="auth-page__sent-tip">
-              📧 Проверьте папку "Спам", если письмо не пришло
+              {t("login.checkSpam")}
             </Typography>
           </div>
 
           <div className="auth-page__footer">
             <Typography variant="small">
-              Не получили письмо?{" "}
+              {t("login.didntReceive")}{" "}
               <button
                 type="button"
                 className="auth-page__link"
                 onClick={handleBack}
               >
-                Отправить ещё раз
+                {t("login.sendAgain")}
               </button>
             </Typography>
           </div>
@@ -504,11 +506,11 @@ export function LoginPage() {
             className="auth-page__submit"
             disabled={isLoading || !email}
           >
-            {isLoading ? "Отправка..." : "Получить ссылку для входа"}
+            {isLoading ? t("login.sending") : t("login.getLoginLink")}
           </Button>
 
           <div className="auth-page__divider">
-            <span>или</span>
+            <span>{t("common.or")}</span>
           </div>
 
           <div className="auth-page__social">
@@ -521,7 +523,7 @@ export function LoginPage() {
 
         <div className="auth-page__footer">
           <Typography variant="small" className="auth-page__hint">
-            Версия: 1.0.0
+            {t("login.version")}
           </Typography>
         </div>
       </div>

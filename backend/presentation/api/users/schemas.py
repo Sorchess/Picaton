@@ -40,6 +40,7 @@ class UserUpdate(BaseModel):
     location: str | None = Field(default=None, max_length=200, examples=["Москва"])
     position: str | None = Field(default=None, max_length=100, examples=["Разработчик"])
     username: str | None = Field(default=None, max_length=50, examples=["ivan_dev"])
+    language: str | None = Field(default=None, pattern="^(ru|en)$", examples=["ru"])
 
 
 class EmailUpdate(BaseModel):
@@ -174,6 +175,7 @@ class UserResponse(BaseModel):
     privacy_who_can_message: str = "all"
     privacy_who_can_see_profile: str = "all"
     privacy_who_can_invite: str = "all"
+    language: str = "ru"
 
 
 class UserPublicResponse(BaseModel):

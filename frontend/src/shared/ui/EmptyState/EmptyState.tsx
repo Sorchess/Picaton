@@ -1,4 +1,5 @@
 import type { FC, ReactNode } from "react";
+import { useI18n } from "@/shared/config";
 import "./EmptyState.scss";
 
 interface EmptyStateProps {
@@ -43,26 +44,39 @@ export const EmptyState: FC<EmptyStateProps> = ({
 };
 
 // Preset empty states from Figma
-export const EmptySearchState: FC = () => (
-  <EmptyState
-    emoji="🔍"
-    title="Начните поиск"
-    description="Введите запрос, чтобы найти специалистов по навыкам или имени"
-  />
-);
+export const EmptySearchState: FC = () => {
+  const { t } = useI18n();
+  return (
+    <EmptyState
+      emoji="🔍"
+      title={t("emptyState.startSearch")}
+      description={t("emptyState.startSearchDesc")}
+    />
+  );
+};
 
-export const NoResultsState: FC<{ query?: string }> = ({ query }) => (
-  <EmptyState
-    emoji="😕"
-    title="Ничего не найдено"
-    description={query ? `По запросу "${query}" нет результатов` : "Попробуйте изменить параметры поиска"}
-  />
-);
+export const NoResultsState: FC<{ query?: string }> = ({ query }) => {
+  const { t } = useI18n();
+  return (
+    <EmptyState
+      emoji="😕"
+      title={t("emptyState.nothingFound")}
+      description={
+        query
+          ? t("emptyState.nothingFoundDesc", { query })
+          : t("emptyState.tryChangeParams")
+      }
+    />
+  );
+};
 
-export const EmptyContactsState: FC<{ onAdd?: () => void }> = () => (
-  <EmptyState
-    emoji="👥"
-    title="Нет контактов"
-    description="Сохраняйте интересных специалистов в контакты"
-  />
-);
+export const EmptyContactsState: FC<{ onAdd?: () => void }> = () => {
+  const { t } = useI18n();
+  return (
+    <EmptyState
+      emoji="👥"
+      title={t("emptyState.noContacts")}
+      description={t("emptyState.noContactsDesc")}
+    />
+  );
+};

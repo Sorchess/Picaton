@@ -1,4 +1,5 @@
 import { Button, IconButton, Modal } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./QrModal.scss";
 
 interface QrModalProps {
@@ -88,6 +89,8 @@ export function QrModal({
   onSaveQr,
   onShare,
 }: QrModalProps) {
+  const { t } = useI18n();
+
   const handleSaveQr = () => {
     if (onSaveQr) {
       onSaveQr();
@@ -111,8 +114,8 @@ export function QrModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: userName || "QR код визитки",
-          text: `QR код визитки ${userName || ""}`,
+          title: userName || t("qrModal.qrTitle"),
+          text: t("qrModal.qrText", { name: userName || "" }),
         });
       } catch (err) {
         console.log("Share cancelled or failed");
@@ -125,13 +128,13 @@ export function QrModal({
       <div className="qr-modal">
         {/* Header */}
         <div className="qr-modal__header">
-          <IconButton onClick={onClose} aria-label="Назад">
+          <IconButton onClick={onClose} aria-label={t("common.back")}>
             <BackArrowIcon />
           </IconButton>
 
           <div className="qr-modal__event-badge">
             <span className="qr-modal__event-name">
-              {userName ? `${userName}` : "QR код"}
+              {userName ? `${userName}` : t("qrModal.qrCode")}
             </span>
           </div>
 
@@ -153,14 +156,14 @@ export function QrModal({
         {/* Action buttons */}
         <div className="qr-modal__actions">
           <button className="qr-modal__action-btn" onClick={onOpenCard}>
-            <span className="qr-modal__action-text">Отправить</span>
+            <span className="qr-modal__action-text">{t("qrModal.send")}</span>
             <span className="qr-modal__action-icon">
               <ShareArrowIcon />
             </span>
           </button>
 
           <button className="qr-modal__action-btn" onClick={handleSaveQr}>
-            <span className="qr-modal__action-text">Сохранить</span>
+            <span className="qr-modal__action-text">{t("qrModal.save")}</span>
             <span className="qr-modal__action-icon">
               <DownloadIcon />
             </span>
@@ -175,7 +178,7 @@ export function QrModal({
             className="qr-modal__share-btn"
             onClick={handleShare}
           >
-            Поделиться визиткой
+            {t("qrModal.shareCard")}
           </Button>
         </div>
       </div>

@@ -22,6 +22,7 @@ import {
   type BusinessCardPublic,
 } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
+import { useI18n } from "@/shared/config";
 import { endorsementApi } from "@/api/endorsementApi";
 import type { SkillWithEndorsements } from "@/api/endorsementApi";
 import "./ContactProfileView.scss";
@@ -62,7 +63,7 @@ const CONTACT_ICONS: Record<
   },
   vk: {
     icon: "vk",
-    label: "ВКонтакте",
+    label: "VK",
     getLink: (v) => (v.startsWith("http") ? v : `https://vk.com/${v}`),
   },
   messenger: {
@@ -77,7 +78,7 @@ const CONTACT_ICONS: Record<
   },
   phone: {
     icon: "phone",
-    label: "Телефон",
+    label: "Phone",
     getLink: (v) => `tel:${v.replace(/\D/g, "")}`,
   },
   linkedin: {
@@ -139,6 +140,7 @@ export function ContactProfileView({
   singleCardMode = false,
 }: ContactProfileViewProps) {
   const { user: authUser } = useAuth();
+  const { t } = useI18n();
   const [resolvedUser, setResolvedUser] = useState<UserPublic>(user);
   const [hasLoadedPublicProfile, setHasLoadedPublicProfile] = useState(false);
 
@@ -359,7 +361,7 @@ export function ContactProfileView({
                   id: authUser.id,
                   name:
                     `${authUser.first_name || ""} ${authUser.last_name || ""}`.trim() ||
-                    "Вы",
+                    t("contactProfile.you"),
                   avatar_url: authUser.avatar_url || null,
                 };
                 if (!updatedEndorsers.some((e) => e.id === authUser.id)) {
@@ -407,7 +409,9 @@ export function ContactProfileView({
   const generateRoleTabs = (): RoleTab[] => {
     return cards.map((card) => ({
       id: card.id,
-      name: card.is_primary ? "Личный" : card.title || "Визитка",
+      name: card.is_primary
+        ? t("contactProfile.personal")
+        : card.title || t("contactProfile.card"),
       emoji: card.is_primary ? "🔥" : "🌟",
     }));
   };
@@ -444,7 +448,7 @@ export function ContactProfileView({
       roles.push(resolvedUser.position);
     }
 
-    return roles.length > 0 ? roles : ["Пользователь"];
+    return roles.length > 0 ? roles : [t("contactProfile.userFallback")];
   };
 
   // Skills count
@@ -506,7 +510,7 @@ export function ContactProfileView({
       const res = await directChatApi.getConversations();
       setShareConversations(res.conversations);
     } catch {
-      setShareError("Не удалось загрузить чаты");
+      setShareError(t("contactProfile.loadChatsFailed"));
     } finally {
       setIsLoadingShareConversations(false);
     }
@@ -528,7 +532,7 @@ export function ContactProfileView({
       });
       closeShareModal();
     } catch {
-      setShareError("Не удалось отправить контакт");
+      setShareError(t("contactProfile.sendContactFailed"));
     } finally {
       setIsSendingToChat(false);
     }
@@ -546,7 +550,7 @@ export function ContactProfileView({
       <div className="contact-profile-view">
         {/* Top Bar */}
         <div className="contact-profile-view__top-bar">
-          <IconButton onClick={onClose} aria-label="Назад">
+          <IconButton onClick={onClose} aria-label={t("common.back")}>
             <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
               <path
                 d="M9 1L1 9L9 17"
@@ -559,7 +563,9 @@ export function ContactProfileView({
           </IconButton>
           {!canEndorse && (
             <div className="contact-profile-view__title-container">
-              <h1 className="contact-profile-view__title">Демонстрация</h1>
+              <h1 className="contact-profile-view__title">
+                {t("contactProfile.demo")}
+              </h1>
             </div>
           )}
           <div className="contact-profile-view__top-spacer" />
@@ -617,13 +623,13 @@ export function ContactProfileView({
                 type="button"
                 className="profile-hero__stat profile-hero__stat--skills"
               >
-                {skillsCount} Навыков
+                {skillsCount} {t("contactProfile.skillsCount")}
               </button>
               <button
                 type="button"
                 className="profile-hero__stat profile-hero__stat--likes"
               >
-                {totalLikesCount} Лайков
+                {totalLikesCount} {t("contactProfile.likesCount")}
               </button>
             </div>
           </div>
@@ -635,7 +641,7 @@ export function ContactProfileView({
                 className="contact-profile-view__action-btn"
                 onClick={() => onSaveContact(resolvedUser)}
               >
-                <span>Добавить</span>
+                <span>{t("common.add")}</span>
                 <svg
                   width="16"
                   height="16"
@@ -660,7 +666,7 @@ export function ContactProfileView({
                   (onDeleteContact as (user: UserPublic) => void)(resolvedUser)
                 }
               >
-                <span>Удалить</span>
+                <span>{t("common.delete")}</span>
                 <svg
                   width="16"
                   height="16"
@@ -682,7 +688,7 @@ export function ContactProfileView({
               className="contact-profile-view__action-btn"
               onClick={openShareModal}
             >
-              <span>Поделиться</span>
+              <span>{t("common.share")}</span>
               <svg
                 width="16"
                 height="16"
@@ -727,10 +733,12 @@ export function ContactProfileView({
           {(hasEndorsementData || fallbackTags.length > 0) && (
             <Card className="contact-profile-view__card">
               <div className="contact-profile-view__card-header">
-                <span className="contact-profile-view__card-label">Навыки</span>
+                <span className="contact-profile-view__card-label">
+                  {t("contactProfile.skillsLabel")}
+                </span>
                 {canEndorse && hasEndorsementData && (
                   <span className="contact-profile-view__card-hint">
-                    Нажмите, чтобы подтвердить
+                    {t("contactProfile.endorseHint")}
                   </span>
                 )}
               </div>
@@ -758,7 +766,7 @@ export function ContactProfileView({
           {contacts.length > 0 && (
             <Card className="contact-profile-view__card">
               <span className="contact-profile-view__card-label">
-                Контакты для связи
+                {t("contactProfile.contactsTitle")}
               </span>
               <div className="contact-profile-view__contacts">
                 {contacts.map((contact, idx) => (
@@ -771,7 +779,7 @@ export function ContactProfileView({
           {contacts.length === 0 && (
             <Card className="contact-profile-view__card">
               <p className="contact-profile-view__no-contacts">
-                Пользователь не указал контакты для связи
+                {t("contactProfile.noContacts")}
               </p>
             </Card>
           )}
@@ -780,7 +788,9 @@ export function ContactProfileView({
 
       <Modal isOpen={isShareModalOpen} onClose={closeShareModal}>
         <div className="contact-profile-view__share-modal">
-          <h3 className="contact-profile-view__share-title">Выберите чат</h3>
+          <h3 className="contact-profile-view__share-title">
+            {t("contactProfile.selectChat")}
+          </h3>
           {isLoadingShareConversations ? (
             <div className="contact-profile-view__share-loading">
               <Loader />
@@ -814,7 +824,7 @@ export function ContactProfileView({
               className="contact-profile-view__share-btn"
               onClick={closeShareModal}
             >
-              Отмена
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -822,7 +832,7 @@ export function ContactProfileView({
               onClick={handleSendToChat}
               disabled={!shareTargetConversationId || isSendingToChat}
             >
-              {isSendingToChat ? "Отправка..." : "Отправить"}
+              {isSendingToChat ? t("common.sending") : t("common.send")}
             </button>
           </div>
           {shareError && (

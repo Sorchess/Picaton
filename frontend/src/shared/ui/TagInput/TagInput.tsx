@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, type KeyboardEvent } from "react";
+import { useI18n } from "@/shared/config";
 import { Loader } from "../Loader";
 import "./TagInput.scss";
 
@@ -19,7 +20,7 @@ interface TagInputProps {
 export function TagInput({
   value,
   onChange,
-  placeholder = "Добавьте тег...",
+  placeholder,
   maxTags = 15,
   suggestions = [],
   fallbackSuggestions = [],
@@ -29,6 +30,8 @@ export function TagInput({
   error,
   disabled = false,
 }: TagInputProps) {
+  const { t } = useI18n();
+  const actualPlaceholder = placeholder ?? t("tagInput.addTag");
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,14 +44,14 @@ export function TagInput({
       onChange([...value, trimmed]);
       setInputValue("");
     },
-    [value, onChange, maxTags]
+    [value, onChange, maxTags],
   );
 
   const removeTag = useCallback(
     (index: number) => {
       onChange(value.filter((_, i) => i !== index));
     },
-    [value, onChange]
+    [value, onChange],
   );
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -66,12 +69,12 @@ export function TagInput({
 
   // Filter out already added tags from suggestions
   const filteredSuggestions = suggestions.filter(
-    (s) => !value.includes(s.toLowerCase())
+    (s) => !value.includes(s.toLowerCase()),
   );
 
   // Filter out already added tags from fallback suggestions
   const filteredFallbackSuggestions = fallbackSuggestions.filter(
-    (s) => !value.includes(s.toLowerCase())
+    (s) => !value.includes(s.toLowerCase()),
   );
 
   // Show AI suggestions if available, otherwise show fallback (no loading bar)
@@ -81,7 +84,9 @@ export function TagInput({
       : filteredFallbackSuggestions;
 
   const suggestionsLabel =
-    filteredSuggestions.length > 0 ? "AI предложения:" : "Из вашего описания:";
+    filteredSuggestions.length > 0
+      ? t("tagInput.aiSuggestions")
+      : t("tagInput.fromDescription");
 
   return (
     <div className={`tag-input ${error ? "tag-input--error" : ""}`}>
@@ -104,7 +109,7 @@ export function TagInput({
                   e.stopPropagation();
                   removeTag(index);
                 }}
-                aria-label={`Удалить ${tag}`}
+                aria-label={t("tagInput.removeTag", { tag })}
               >
                 &times;
               </button>
@@ -120,7 +125,7 @@ export function TagInput({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={value.length === 0 ? placeholder : ""}
+            placeholder={value.length === 0 ? actualPlaceholder : ""}
             disabled={disabled}
           />
         )}
@@ -136,7 +141,7 @@ export function TagInput({
             {isLoadingSuggestions && (
               <span className="tag-input__loading-hint">
                 {" "}
-                (AI генерирует...)
+                {t("tagInput.aiGenerating")}
               </span>
             )}
           </span>
@@ -166,7 +171,7 @@ export function TagInput({
           {isLoadingSuggestions ? (
             <>
               <Loader />
-              <span>Генерация...</span>
+              <span>{t("tagInput.generating")}</span>
             </>
           ) : (
             <>
@@ -182,15 +187,17 @@ export function TagInput({
                 <path d="M2 17l10 5 10-5" />
                 <path d="M2 12l10 5 10-5" />
               </svg>
-              <span>AI-подсказки</span>
+              <span>{t("tagInput.aiHints")}</span>
             </>
           )}
         </button>
       )}
 
       <div className="tag-input__hint">
-        {value.length}/{maxTags} тегов. Нажмите Enter или запятую для
-        добавления.
+        {t("tagInput.tagsCount", {
+          current: String(value.length),
+          max: String(maxTags),
+        })}
       </div>
     </div>
   );

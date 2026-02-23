@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal, Button, Input } from "@/shared";
 import { userApi } from "@/entities/user";
+import { useI18n } from "@/shared/config";
 import "./EmailModal.scss";
 
 interface EmailModalProps {
@@ -23,6 +24,7 @@ export function EmailModal({
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useI18n();
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,12 +36,12 @@ export function EmailModal({
     setError(null);
 
     if (!email.trim()) {
-      setError("Введите email");
+      setError(t("emailModal.enterEmail"));
       return;
     }
 
     if (!validateEmail(email)) {
-      setError("Введите корректный email");
+      setError(t("emailModal.invalidEmail"));
       return;
     }
 
@@ -48,7 +50,7 @@ export function EmailModal({
       await userApi.sendEmailVerificationCode(userId, email);
       setStep("code");
     } catch (err) {
-      setError("Не удалось отправить код. Попробуйте ещё раз.");
+      setError(t("emailModal.sendFailed"));
       console.error("Failed to send verification code:", err);
     } finally {
       setIsLoading(false);
@@ -60,12 +62,12 @@ export function EmailModal({
     setError(null);
 
     if (!code.trim()) {
-      setError("Введите код");
+      setError(t("emailModal.enterCode"));
       return;
     }
 
     if (code.length !== 6) {
-      setError("Код должен содержать 6 цифр");
+      setError(t("emailModal.codeMustBe6"));
       return;
     }
 
@@ -78,7 +80,7 @@ export function EmailModal({
       // Попробуем получить детальную ошибку от сервера
       const errorMessage =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail || "Неверный или истёкший код. Попробуйте ещё раз.";
+          ?.detail || t("emailModal.invalidCode");
       setError(errorMessage);
       console.error("Failed to verify code:", err);
     } finally {
@@ -94,7 +96,7 @@ export function EmailModal({
       setCode("");
       setError(null);
     } catch (err) {
-      setError("Не удалось отправить код повторно.");
+      setError(t("emailModal.resendFailed"));
       console.error("Failed to resend code:", err);
     } finally {
       setIsLoading(false);
@@ -117,15 +119,16 @@ export function EmailModal({
       <div className="email-modal">
         <div className="email-modal__header">
           <h2 className="email-modal__title">
-            {step === "email" ? "Укажите ваш email" : "Подтвердите email"}
+            {step === "email"
+              ? t("emailModal.specifyEmail")
+              : t("emailModal.confirmEmail")}
           </h2>
         </div>
 
         {step === "email" ? (
           <form className="email-modal__form" onSubmit={handleSendCode}>
             <p className="email-modal__description">
-              Для завершения регистрации укажите ваш email. На него придёт код
-              подтверждения.
+              {t("emailModal.emailDescription")}
             </p>
             <div className="email-modal__input-wrapper">
               <Input
@@ -141,7 +144,7 @@ export function EmailModal({
             </div>
             <div className="email-modal__actions">
               <Button type="submit" variant="primary" disabled={isLoading}>
-                {isLoading ? "Отправка..." : "Отправить код"}
+                {isLoading ? t("common.sending") : t("emailModal.sendCode")}
               </Button>
               <Button
                 type="button"
@@ -149,15 +152,25 @@ export function EmailModal({
                 onClick={onClose}
                 disabled={isLoading}
               >
-                Позже
+                {t("emailModal.later")}
               </Button>
             </div>
           </form>
         ) : (
           <form className="email-modal__form" onSubmit={handleVerifyCode}>
             <p className="email-modal__description">
-              Мы отправили 6-значный код на <strong>{email}</strong>. Введите
-              его ниже для подтверждения.
+              {t("emailModal.codeDescription", { email })
+                .split(email)
+                .map((part, i, arr) =>
+                  i < arr.length - 1 ? (
+                    <span key={i}>
+                      {part}
+                      <strong>{email}</strong>
+                    </span>
+                  ) : (
+                    <span key={i}>{part}</span>
+                  ),
+                )}
             </p>
             <div className="email-modal__input-wrapper">
               <Input
@@ -177,7 +190,7 @@ export function EmailModal({
             </div>
             <div className="email-modal__actions">
               <Button type="submit" variant="primary" disabled={isLoading}>
-                {isLoading ? "Проверка..." : "Подтвердить"}
+                {isLoading ? t("emailModal.verifying") : t("emailModal.verify")}
               </Button>
             </div>
             <div className="email-modal__footer">
@@ -187,7 +200,7 @@ export function EmailModal({
                 onClick={handleResendCode}
                 disabled={isLoading}
               >
-                Отправить код повторно
+                {t("emailModal.resendCode")}
               </button>
               <span className="email-modal__separator">•</span>
               <button
@@ -196,7 +209,7 @@ export function EmailModal({
                 onClick={handleBackToEmail}
                 disabled={isLoading}
               >
-                Изменить email
+                {t("emailModal.changeEmail")}
               </button>
             </div>
           </form>

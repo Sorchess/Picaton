@@ -7,6 +7,7 @@ import {
 import { type UserNotification, userApi } from "@/entities/user";
 import { useAuth } from "@/features/auth";
 import { IconButton, Loader, Button } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./NotificationsPage.scss";
 
 interface NotificationsPageProps {
@@ -15,6 +16,7 @@ interface NotificationsPageProps {
 
 export function NotificationsPage({ onBack }: NotificationsPageProps) {
   const { user: authUser } = useAuth();
+  const { t, language } = useI18n();
   const [invitations, setInvitations] = useState<InvitationWithCompany[]>([]);
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,11 +72,11 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
       await companyApi.acceptInvitation({ token: inv.token });
       setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
       setToast({
-        message: `Вы присоединились к «${inv.company.name}»`,
+        message: t("notifications.joinedCompany", { name: inv.company.name }),
         type: "success",
       });
     } catch {
-      setToast({ message: "Не удалось принять приглашение", type: "error" });
+      setToast({ message: t("notifications.acceptFailed"), type: "error" });
     } finally {
       setProcessingIds((prev) => {
         const next = new Set(prev);
@@ -89,9 +91,9 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
     try {
       await companyApi.declineInvitation({ token: inv.token });
       setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
-      setToast({ message: "Приглашение отклонено", type: "success" });
+      setToast({ message: t("notifications.declined"), type: "success" });
     } catch {
-      setToast({ message: "Не удалось отклонить приглашение", type: "error" });
+      setToast({ message: t("notifications.declineFailed"), type: "error" });
     } finally {
       setProcessingIds((prev) => {
         const next = new Set(prev);
@@ -111,11 +113,13 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMin < 1) return "только что";
-    if (diffMin < 60) return `${diffMin} мин назад`;
-    if (diffHours < 24) return `${diffHours} ч назад`;
-    if (diffDays < 7) return `${diffDays} дн назад`;
-    return date.toLocaleDateString("ru-RU", {
+    if (diffMin < 1) return t("notifications.justNow");
+    if (diffMin < 60) return t("notifications.minAgo", { n: String(diffMin) });
+    if (diffHours < 24)
+      return t("notifications.hoursAgo", { n: String(diffHours) });
+    if (diffDays < 7)
+      return t("notifications.daysAgo", { n: String(diffDays) });
+    return date.toLocaleDateString(language === "en" ? "en-US" : "ru-RU", {
       day: "numeric",
       month: "short",
     });
@@ -127,7 +131,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
     <div className="notifications-page">
       {/* Header */}
       <header className="notifications-page__header">
-        <IconButton aria-label="Назад" onClick={onBack}>
+        <IconButton aria-label={t("common.back")} onClick={onBack}>
           <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
             <path
               d="M9 1L1 9L9 17"
@@ -139,7 +143,9 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
           </svg>
         </IconButton>
         <div className="notifications-page__title-container">
-          <h1 className="notifications-page__title">Уведомления</h1>
+          <h1 className="notifications-page__title">
+            {t("notifications.title")}
+          </h1>
         </div>
         <div style={{ width: 36 }} />
       </header>
@@ -165,9 +171,11 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
       ) : !hasContent ? (
         <div className="notifications-page__empty">
           <div className="notifications-page__empty-icon">🔔</div>
-          <p className="notifications-page__empty-title">Нет уведомлений</p>
+          <p className="notifications-page__empty-title">
+            {t("notifications.empty")}
+          </p>
           <p className="notifications-page__empty-desc">
-            Здесь будут появляться приглашения в компании и другие уведомления
+            {t("notifications.emptyDescription")}
           </p>
         </div>
       ) : (
@@ -201,13 +209,23 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
               <div className="notifications-page__card-body">
                 <div className="notifications-page__card-top">
                   <span className="notifications-page__card-title">
-                    {notif.title}
+                    {t(`notificationType.${notif.type}.title`) !==
+                    `notificationType.${notif.type}.title`
+                      ? t(`notificationType.${notif.type}.title`)
+                      : notif.title}
                   </span>
                   <span className="notifications-page__card-time">
                     {formatDate(notif.created_at)}
                   </span>
                 </div>
-                <p className="notifications-page__card-text">{notif.message}</p>
+                <p className="notifications-page__card-text">
+                  {t(`notificationType.${notif.type}.message`) !==
+                  `notificationType.${notif.type}.message`
+                    ? t(`notificationType.${notif.type}.message`, {
+                        name: notif.actor_name || "",
+                      })
+                    : notif.message}
+                </p>
               </div>
             </div>
           ))}
@@ -221,7 +239,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                 <div className="notifications-page__card-body">
                   <div className="notifications-page__card-top">
                     <span className="notifications-page__card-title">
-                      Приглашение в компанию
+                      {t("notifications.companyInvitation")}
                     </span>
                     <span className="notifications-page__card-time">
                       {formatDate(inv.created_at)}
@@ -232,13 +250,15 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                     {inv.invited_by && (
                       <>
                         {" "}
-                        · от {inv.invited_by.first_name}{" "}
-                        {inv.invited_by.last_name}
+                        ·{" "}
+                        {t("notifications.invitedBy", {
+                          name: `${inv.invited_by.first_name} ${inv.invited_by.last_name}`,
+                        })}
                       </>
                     )}
                   </p>
                   <span className="notifications-page__card-role">
-                    Роль: {getRoleName(inv.role)}
+                    {t("notifications.role", { role: getRoleName(inv.role) })}
                   </span>
                   <div className="notifications-page__card-actions">
                     <Button
@@ -246,7 +266,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                       onClick={() => handleAccept(inv)}
                       disabled={isProcessing}
                     >
-                      Принять
+                      {t("common.accept")}
                     </Button>
                     <Button
                       size="sm"
@@ -254,7 +274,7 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                       onClick={() => handleDecline(inv)}
                       disabled={isProcessing}
                     >
-                      Отклонить
+                      {t("common.decline")}
                     </Button>
                   </div>
                 </div>

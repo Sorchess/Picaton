@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SkillWithEndorsements, EndorserInfo } from "@/api/endorsementApi";
+import { useI18n } from "@/shared/config";
 import { Avatar } from "../Avatar";
 import "./EndorsableSkill.scss";
 
@@ -16,6 +17,7 @@ export function EndorsableSkill({
   canEndorse = true,
   isLoading = false,
 }: EndorsableSkillProps) {
+  const { t } = useI18n();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showEndorsers, setShowEndorsers] = useState(false);
 
@@ -67,14 +69,16 @@ export function EndorsableSkill({
       {showEndorsers && skill.endorsers.length > 0 && (
         <div className="endorsable-skill__tooltip">
           <div className="endorsable-skill__tooltip-title">
-            Подтвердили навык:
+            {t("endorsableSkill.endorsedBy")}
           </div>
           <div className="endorsable-skill__endorsers">
             {skill.endorsers.slice(0, 5).map((endorser) => (
               <EndorserItem key={endorser.id} endorser={endorser} />
             ))}
             {count > 5 && (
-              <div className="endorsable-skill__more">и ещё {count - 5}</div>
+              <div className="endorsable-skill__more">
+                {t("endorsableSkill.andMore", { n: String(count - 5) })}
+              </div>
             )}
           </div>
         </div>

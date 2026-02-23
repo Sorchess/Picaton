@@ -80,7 +80,11 @@ export { PrimaryButton } from "./PrimaryButton";
 export { SearchInput } from "./SearchInput";
 
 // Feature Card (onboarding)
-export { FeatureCard, FeatureCardList, defaultFeatures } from "./FeatureCard";
+export {
+  FeatureCard,
+  FeatureCardList,
+  getDefaultFeatures,
+} from "./FeatureCard";
 
 // Progress Bar & Dots
 export { ProgressBar, ProgressDots } from "./ProgressBar";
@@ -96,7 +100,7 @@ export { PrivacyOption, PrivacyOptionList } from "./PrivacyOption";
 export type { PrivacyLevel } from "./PrivacyOption";
 
 // Switcher (bottom navigation)
-export { Switcher, defaultTabs } from "./Switcher";
+export { Switcher, getDefaultTabs } from "./Switcher";
 export type { SwitcherItem } from "./Switcher";
 
 // Empty States

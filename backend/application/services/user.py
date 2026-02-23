@@ -84,6 +84,7 @@ class UserService:
         bio: str | None = None,
         position: str | None = ...,
         username: str | None = ...,
+        language: str | None = None,
     ) -> User:
         """Обновить профиль пользователя."""
         # Проверка уникальности username
@@ -103,6 +104,8 @@ class UserService:
             position=position,
             username=username,
         )
+        if language is not None and language in ("ru", "en"):
+            user.language = language
         return await self._user_repository.update(user)
 
     async def update_onboarded(self, user_id: UUID) -> User:

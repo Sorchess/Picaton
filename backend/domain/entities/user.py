@@ -95,6 +95,9 @@ class User(Entity):
     privacy_who_can_see_profile: PrivacyLevel = PrivacyLevel.ALL
     privacy_who_can_invite: PrivacyLevel = PrivacyLevel.ALL
 
+    # Язык интерфейса
+    language: str = field(default="ru")
+
     def __post_init__(self) -> None:
         """Валидация данных при создании сущности."""
         if self.email:

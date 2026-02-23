@@ -1,4 +1,4 @@
-import { useTheme } from "../../config";
+import { useTheme, useI18n } from "../../config";
 import "./ThemeToggle.scss";
 
 interface ThemeToggleProps {
@@ -7,10 +7,12 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ className = "" }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useI18n();
+  const isDark = theme === "dark";
 
   const classNames = [
     "theme-toggle",
-    theme === "dark" ? "theme-toggle--dark" : "theme-toggle--light",
+    isDark ? "theme-toggle--dark" : "theme-toggle--light",
     className,
   ]
     .filter(Boolean)
@@ -20,10 +22,12 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
     <button
       className={classNames}
       onClick={toggleTheme}
-      aria-label={`Переключить на ${
-        theme === "dark" ? "светлую" : "тёмную"
-      } тему`}
-      title={`Переключить на ${theme === "dark" ? "светлую" : "тёмную"} тему`}
+      aria-label={t("themeToggle.switchTo", {
+        theme: isDark ? t("themeToggle.light") : t("themeToggle.dark"),
+      })}
+      title={t("themeToggle.switchTo", {
+        theme: isDark ? t("themeToggle.light") : t("themeToggle.dark"),
+      })}
     >
       <div className="theme-toggle__icon-wrapper">
         {/* Sun icon */}

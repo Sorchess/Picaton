@@ -192,6 +192,7 @@ async def update_user_profile(
             bio=data.bio,
             position=data.position if data.position is not None else ...,
             username=data.username if data.username is not None else ...,
+            language=data.language,
         )
     except UsernameAlreadyTakenError as e:
         raise HTTPException(status_code=409, detail=e.detail)
@@ -1091,6 +1092,7 @@ def _user_to_response(user) -> UserResponse:
         privacy_who_can_message=user.privacy_who_can_message.value,
         privacy_who_can_see_profile=user.privacy_who_can_see_profile.value,
         privacy_who_can_invite=user.privacy_who_can_invite.value,
+        language=user.language,
     )
 
 

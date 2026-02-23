@@ -1,5 +1,6 @@
 import type { BusinessCard } from "@/entities/business-card";
 import type { CompanyCardAssignment } from "@/entities/company";
+import { useI18n } from "@/shared/config";
 import "./CardPreview.scss";
 
 interface CardPreviewProps {
@@ -15,6 +16,8 @@ export function CardPreview({
   onClick,
   onShare,
 }: CardPreviewProps) {
+  const { t } = useI18n();
+
   // Расчёт прогресса
   const getProgress = () => {
     let progress = 0;
@@ -50,7 +53,9 @@ export function CardPreview({
                   <span
                     key={assignment.company_id}
                     className="card-preview__company-badge"
-                    title={`Используется в компании "${assignment.company_name}"`}
+                    title={t("cardPreview.usedInCompany", {
+                      name: assignment.company_name,
+                    })}
                   >
                     🏢 {assignment.company_name}
                   </span>
@@ -61,7 +66,7 @@ export function CardPreview({
               <p className="card-preview__bio">{card.ai_generated_bio}</p>
             ) : (
               <p className="card-preview__bio card-preview__bio--empty">
-                Нажмите, чтобы заполнить карточку
+                {t("cardPreview.clickToFill")}
               </p>
             )}
           </div>
@@ -69,7 +74,7 @@ export function CardPreview({
             <button
               className="card-preview__share-btn"
               onClick={handleShareClick}
-              title="Поделиться"
+              title={t("common.share")}
             >
               <svg
                 width="20"
@@ -107,12 +112,12 @@ export function CardPreview({
           <div className="card-preview__stats">
             {card.search_tags && card.search_tags.length > 0 && (
               <span className="card-preview__stat">
-                {card.search_tags.length} тегов
+                {card.search_tags.length} {t("cardPreview.tagsCount")}
               </span>
             )}
             {card.contacts && card.contacts.length > 0 && (
               <span className="card-preview__stat">
-                {card.contacts.length} контактов
+                {card.contacts.length} {t("cardPreview.contactsCount")}
               </span>
             )}
           </div>

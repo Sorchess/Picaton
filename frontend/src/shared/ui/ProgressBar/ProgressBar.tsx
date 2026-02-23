@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { useI18n } from "@/shared/config";
 import "./ProgressBar.scss";
 
 interface ProgressBarProps {
@@ -24,6 +25,7 @@ export const ProgressBar: FC<ProgressBarProps> = ({
   showPercentage = false,
   className = "",
 }) => {
+  const { t } = useI18n();
   const progress = Math.min(100, Math.max(0, (currentStep / totalSteps) * 100));
 
   return (
@@ -32,7 +34,10 @@ export const ProgressBar: FC<ProgressBarProps> = ({
         <div className="progress-bar__info">
           {showSteps && (
             <span className="progress-bar__steps">
-              Шаг {currentStep} из {totalSteps}
+              {t("progressBar.stepOf", {
+                current: String(currentStep),
+                total: String(totalSteps),
+              })}
             </span>
           )}
           {showPercentage && (
@@ -43,10 +48,7 @@ export const ProgressBar: FC<ProgressBarProps> = ({
         </div>
       )}
       <div className="progress-bar__track">
-        <div
-          className="progress-bar__fill"
-          style={{ width: `${progress}%` }}
-        />
+        <div className="progress-bar__fill" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
@@ -72,6 +74,8 @@ export const ProgressDots: FC<ProgressDotsProps> = ({
   onDotClick,
   className = "",
 }) => {
+  const { t } = useI18n();
+
   return (
     <div className={`progress-dots ${className}`}>
       {Array.from({ length: totalSteps }, (_, i) => {
@@ -88,7 +92,7 @@ export const ProgressDots: FC<ProgressDotsProps> = ({
             } ${isCompleted ? "progress-dots__dot--completed" : ""}`}
             onClick={() => onDotClick?.(step)}
             disabled={!onDotClick}
-            aria-label={`Шаг ${step}`}
+            aria-label={t("progressBar.step", { n: String(step) })}
           />
         );
       })}

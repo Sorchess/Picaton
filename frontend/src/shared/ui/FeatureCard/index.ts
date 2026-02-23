@@ -1,1 +1,5 @@
-export { FeatureCard, FeatureCardList, defaultFeatures } from "./FeatureCard";
+export {
+  FeatureCard,
+  FeatureCardList,
+  getDefaultFeatures,
+} from "./FeatureCard";

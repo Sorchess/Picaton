@@ -1,56 +1,49 @@
 import { IconButton, GlassSelect } from "@/shared";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/features/auth";
 import { userApi } from "@/entities/user";
+import { useI18n } from "@/shared/config";
 import "./PrivacyPage.scss";
 
 interface PrivacyPageProps {
   onBack?: () => void;
 }
 
-const messagingOptions = [
-  { value: "all", label: "Все" },
-  { value: "contacts", label: "Мои контакты" },
-  {
-    value: "contacts_of_contacts",
-    label: "Мои контакты, их контакты",
-  },
-  {
-    value: "company_colleagues",
-    label: "Мои контакты, их контакты, коллеги",
-  },
-];
-
-const profileVisibilityOptions = [
-  { value: "all", label: "Все" },
-  { value: "contacts", label: "Мои контакты" },
-  {
-    value: "contacts_of_contacts",
-    label: "Мои контакты, их контакты",
-  },
-  {
-    value: "company_colleagues",
-    label: "Мои контакты, их контакты, коллеги",
-  },
-  { value: "nobody", label: "Никто" },
-];
-
-const companyInviteOptions = [
-  { value: "all", label: "Все" },
-  { value: "contacts", label: "Мои контакты" },
-  {
-    value: "contacts_of_contacts",
-    label: "Мои контакты, их контакты",
-  },
-  {
-    value: "company_colleagues",
-    label: "Мои контакты, их контакты, коллеги",
-  },
-  { value: "nobody", label: "Никто" },
-];
-
 export function PrivacyPage({ onBack }: PrivacyPageProps) {
   const { user } = useAuth();
+  const { t } = useI18n();
+
+  const messagingOptions = useMemo(
+    () => [
+      { value: "all", label: t("privacy.all") },
+      { value: "contacts", label: t("privacy.contacts") },
+      { value: "contacts_of_contacts", label: t("privacy.contactsOfContacts") },
+      { value: "company_colleagues", label: t("privacy.contactsColleagues") },
+    ],
+    [t],
+  );
+
+  const profileVisibilityOptions = useMemo(
+    () => [
+      { value: "all", label: t("privacy.all") },
+      { value: "contacts", label: t("privacy.contacts") },
+      { value: "contacts_of_contacts", label: t("privacy.contactsOfContacts") },
+      { value: "company_colleagues", label: t("privacy.contactsColleagues") },
+      { value: "nobody", label: t("privacy.nobody") },
+    ],
+    [t],
+  );
+
+  const companyInviteOptions = useMemo(
+    () => [
+      { value: "all", label: t("privacy.all") },
+      { value: "contacts", label: t("privacy.contacts") },
+      { value: "contacts_of_contacts", label: t("privacy.contactsOfContacts") },
+      { value: "company_colleagues", label: t("privacy.contactsColleagues") },
+      { value: "nobody", label: t("privacy.nobody") },
+    ],
+    [t],
+  );
   const [whoCanMessage, setWhoCanMessage] = useState("all");
   const [whoCanSeeProfile, setWhoCanSeeProfile] = useState("all");
   const [whoCanInvite, setWhoCanInvite] = useState("all");
@@ -96,7 +89,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
     return (
       <div className="privacy-page">
         <header className="privacy-page__header">
-          <IconButton aria-label="Назад" onClick={onBack}>
+          <IconButton aria-label={t("common.back")} onClick={onBack}>
             <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
               <path
                 d="M9 1L1 9L9 17"
@@ -108,7 +101,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
             </svg>
           </IconButton>
           <div className="privacy-page__title-container">
-            <h1 className="privacy-page__title">Приватность</h1>
+            <h1 className="privacy-page__title">{t("privacy.title")}</h1>
           </div>
           <div style={{ width: 36 }} />
         </header>
@@ -120,7 +113,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
     <div className="privacy-page">
       {/* Заголовок */}
       <header className="privacy-page__header">
-        <IconButton aria-label="Назад" onClick={onBack}>
+        <IconButton aria-label={t("common.back")} onClick={onBack}>
           <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
             <path
               d="M9 1L1 9L9 17"
@@ -132,7 +125,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
           </svg>
         </IconButton>
         <div className="privacy-page__title-container">
-          <h1 className="privacy-page__title">Приватность</h1>
+          <h1 className="privacy-page__title">{t("privacy.title")}</h1>
         </div>
         <div style={{ width: 36 }} />
       </header>
@@ -144,7 +137,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
           <div className="privacy-page__card-content">
             <div className="privacy-page__card-top">
               <span className="privacy-page__card-name">
-                Кто может писать мне
+                {t("privacy.whoCanMessage")}
               </span>
               <GlassSelect
                 options={messagingOptions}
@@ -160,7 +153,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
           <div className="privacy-page__card-content">
             <div className="privacy-page__card-top">
               <span className="privacy-page__card-name">
-                Кто видит меня в поиске
+                {t("privacy.whoCanSeeProfile")}
               </span>
               <GlassSelect
                 options={profileVisibilityOptions}
@@ -176,7 +169,7 @@ export function PrivacyPage({ onBack }: PrivacyPageProps) {
           <div className="privacy-page__card-content">
             <div className="privacy-page__card-top">
               <span className="privacy-page__card-name">
-                Кто может приглашать в компании
+                {t("privacy.whoCanInvite")}
               </span>
               <GlassSelect
                 options={companyInviteOptions}

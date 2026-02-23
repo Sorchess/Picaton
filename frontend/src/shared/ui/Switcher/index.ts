@@ -1,2 +1,2 @@
-export { Switcher, defaultTabs } from "./Switcher";
+export { Switcher, getDefaultTabs } from "./Switcher";
 export type { SwitcherItem } from "./Switcher";

@@ -9,6 +9,7 @@ import { UserCard } from "@/entities/user";
 import { useAuth } from "@/features/auth";
 import { companyApi, type CompanyWithRole } from "@/entities/company";
 import { Tag, Loader, Typography } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./SearchPage.scss";
 
 // Адаптер для преобразования SearchCardResult в UserPublic-совместимый объект
@@ -45,22 +46,23 @@ function cardToUserLike(
   };
 }
 
-const POPULAR_TAGS = [
-  "Python",
-  "React",
-  "DevOps",
-  "ML",
-  "Аналитика",
-  "Java",
-  "TypeScript",
-];
-
 interface SearchPageProps {
   onOpenContact?: (user: UserPublic, cardId?: string) => void;
 }
 
 export function SearchPage({ onOpenContact }: SearchPageProps) {
+  const { t } = useI18n();
   const { user: authUser } = useAuth();
+
+  const POPULAR_TAGS = [
+    "Python",
+    "React",
+    "DevOps",
+    "ML",
+    t("search.analyticsTag"),
+    "Java",
+    "TypeScript",
+  ];
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,7 +137,7 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
         });
         setResults(searchResults);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка поиска");
+        setError(err instanceof Error ? err.message : t("search.searchError"));
       } finally {
         setIsLoading(false);
       }
@@ -189,7 +191,7 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
       });
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Ошибка сохранения контакта",
+        err instanceof Error ? err.message : t("search.saveContactError"),
       );
     }
   };
@@ -204,11 +206,12 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
     <div className="search-page">
       <div className="search-page__hero">
         <h1 className="search-page__title">
-          Найти <span className="search-page__title-accent">эксперта</span>
+          {t("search.findTitle")}{" "}
+          <span className="search-page__title-accent">
+            {t("search.expertAccent")}
+          </span>
         </h1>
-        <p className="search-page__subtitle">
-          Введите навык или ключевое слово для поиска специалистов
-        </p>
+        <p className="search-page__subtitle">{t("search.subtitle")}</p>
 
         <div className="search-page__search-wrapper">
           <div className="search-page__search-field">
@@ -235,13 +238,15 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
               onClick={() => handleSearch()}
               disabled={isLoading || !query.trim()}
             >
-              {isLoading ? <Loader /> : "Найти"}
+              {isLoading ? <Loader /> : t("search.findButton")}
             </button>
           </div>
         </div>
 
         <div className="search-page__popular">
-          <span className="search-page__popular-label">Популярные:</span>
+          <span className="search-page__popular-label">
+            {t("search.popular")}
+          </span>
           <div className="search-page__popular-tags">
             {POPULAR_TAGS.map((tag) => (
               <button
@@ -259,7 +264,7 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
         {myCompanies.length > 0 && (
           <div className="search-page__company-filter">
             <span className="search-page__company-filter-label">
-              В компаниях:
+              {t("search.inCompanies")}
             </span>
             <div className="search-page__company-tags">
               {myCompanies.map((item) => (
@@ -291,7 +296,7 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
           <div className="search-page__results-header">
             <div className="search-page__results-info">
               <h2 className="search-page__results-title">
-                Найдено:{" "}
+                {t("search.found")}{" "}
                 <span>
                   {
                     results.cards.filter((c) => c.owner_id !== authUser?.id)
@@ -301,7 +306,7 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
               </h2>
               {selectedCompanyIds.size > 0 && (
                 <div className="search-page__filter-info">
-                  <span>в компаниях:</span>
+                  <span>{t("search.inCompaniesFilter")}</span>
                   {myCompanies
                     .filter((c) => selectedCompanyIds.has(c.company.id))
                     .map((c) => (
@@ -312,7 +317,7 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
                   <button
                     className="search-page__filter-clear-btn"
                     onClick={clearCompanyFilter}
-                    title="Сбросить фильтр"
+                    title={t("search.resetFilter")}
                   >
                     ✕
                   </button>
@@ -321,7 +326,7 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
             </div>
             {results.expanded_tags && results.expanded_tags.length > 0 && (
               <div className="search-page__suggested">
-                <span>Похожие:</span>
+                <span>{t("search.similar")}</span>
                 {results.expanded_tags
                   .slice(0, 5)
                   .map((tag: string, i: number) => (
@@ -361,8 +366,8 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
           {results.cards.length === 0 && (
             <div className="search-page__empty">
               <span className="search-page__empty-icon">🔍</span>
-              <h3>Эксперты не найдены</h3>
-              <p>Попробуйте изменить поисковый запрос</p>
+              <h3>{t("search.noExperts")}</h3>
+              <p>{t("search.tryDifferentQuery")}</p>
             </div>
           )}
         </div>
@@ -371,8 +376,8 @@ export function SearchPage({ onOpenContact }: SearchPageProps) {
       {!results && !error && !isLoading && (
         <div className="search-page__placeholder">
           <span className="search-page__placeholder-icon">👥</span>
-          <h3>Начните поиск экспертов</h3>
-          <p>Введите ключевые слова или выберите из популярных тегов</p>
+          <h3>{t("search.startSearch")}</h3>
+          <p>{t("search.enterKeywords")}</p>
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/features/auth";
+import { useI18n } from "@/shared/config";
 import { userApi } from "@/entities/user/model/api";
 import { businessCardApi } from "@/entities/business-card/model/api";
 import {
@@ -23,30 +24,30 @@ const PROFILE_STEPS = 4; // profile, bio, privacy, done
 
 interface SlideData {
   animation: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
 }
 
 const slides: SlideData[] = [
   {
     animation: Loupe,
-    title: "Умный поиск",
-    description: "Найдите экспертов по любым навыкам",
+    titleKey: "onboarding.smartSearch",
+    descriptionKey: "onboarding.smartSearchDesc",
   },
   {
     animation: Handshake,
-    title: "Создавайте связи",
-    description: "Узнайте как вы связаны с нужными людьми",
+    titleKey: "onboarding.createConnections",
+    descriptionKey: "onboarding.createConnectionsDesc",
   },
   {
     animation: House,
-    title: "Компания",
-    description: "Исследуйте структуру и людей вашей организации",
+    titleKey: "onboarding.companyTitle",
+    descriptionKey: "onboarding.companyDesc",
   },
   {
     animation: Stars,
-    title: "AI ассистирование",
-    description: "Экономь время и собственные ресурсы, используя AI",
+    titleKey: "onboarding.aiAssistant",
+    descriptionKey: "onboarding.aiAssistantDesc",
   },
 ];
 
@@ -88,6 +89,7 @@ function ProfileNameStep({
   onNext: (firstName: string, lastName: string) => void;
   isSubmitting: boolean;
 }) {
+  const { t } = useI18n();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [errors, setErrors] = useState<{
@@ -97,8 +99,8 @@ function ProfileNameStep({
 
   const validate = () => {
     const newErrors: typeof errors = {};
-    if (!firstName.trim()) newErrors.firstName = "Введите имя";
-    if (!lastName.trim()) newErrors.lastName = "Введите фамилию";
+    if (!firstName.trim()) newErrors.firstName = t("onboarding.enterFirstName");
+    if (!lastName.trim()) newErrors.lastName = t("onboarding.enterLastName");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -114,15 +116,15 @@ function ProfileNameStep({
       <div className="onboarding__center">
         <div className="onboarding__profile-form">
           <Typography variant="h1" className="onboarding__profile-heading">
-            Создайте профиль
+            {t("onboarding.createProfile")}
           </Typography>
           <Typography variant="body" className="onboarding__profile-subheading">
-            Расскажите о себе
+            {t("onboarding.tellAbout")}
           </Typography>
 
           <div className="onboarding__profile-fields">
             <Input
-              placeholder="Имя"
+              placeholder={t("onboarding.firstNamePlaceholder")}
               value={firstName}
               onChange={(e) => {
                 setFirstName(e.target.value);
@@ -133,7 +135,7 @@ function ProfileNameStep({
               fullWidth
             />
             <Input
-              placeholder="Фамилия"
+              placeholder={t("onboarding.lastNamePlaceholder")}
               value={lastName}
               onChange={(e) => {
                 setLastName(e.target.value);
@@ -154,7 +156,7 @@ function ProfileNameStep({
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Сохранение..." : "Продолжить"}
+          {isSubmitting ? t("common.saving") : t("onboarding.continue")}
         </Button>
       </div>
     </>
@@ -169,6 +171,7 @@ function ProfileBioStep({
   onNext: (bio: string) => void;
   isSubmitting: boolean;
 }) {
+  const { t } = useI18n();
   const [bio, setBio] = useState("");
 
   return (
@@ -176,15 +179,15 @@ function ProfileBioStep({
       <div className="onboarding__center">
         <div className="onboarding__profile-form">
           <Typography variant="h1" className="onboarding__profile-heading">
-            Расскажите о себе
+            {t("onboarding.bioTitle")}
           </Typography>
           <Typography variant="body" className="onboarding__profile-subheading">
-            Это поможет другим людям узнать вас лучше
+            {t("onboarding.bioDescription")}
           </Typography>
 
           <div className="onboarding__profile-fields">
             <Textarea
-              placeholder="Чем вы занимаетесь, ваши интересы и опыт..."
+              placeholder={t("onboarding.bioPlaceholder")}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={5}
@@ -201,7 +204,7 @@ function ProfileBioStep({
           onClick={() => onNext(bio.trim())}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Сохранение..." : "Продолжить"}
+          {isSubmitting ? t("common.saving") : t("onboarding.continue")}
         </Button>
         <Button
           variant="ghost"
@@ -209,7 +212,7 @@ function ProfileBioStep({
           onClick={() => onNext("")}
           disabled={isSubmitting}
         >
-          Пропустить
+          {t("onboarding.skip")}
         </Button>
       </div>
     </>
@@ -224,6 +227,7 @@ function ProfilePrivacyStep({
   onNext: (privacy: PrivacyLevel) => void;
   isSubmitting: boolean;
 }) {
+  const { t } = useI18n();
   const [privacy, setPrivacy] = useState<PrivacyLevel>("public");
 
   return (
@@ -231,10 +235,10 @@ function ProfilePrivacyStep({
       <div className="onboarding__center">
         <div className="onboarding__profile-form">
           <Typography variant="h1" className="onboarding__profile-heading">
-            Конфиденциальность
+            {t("onboarding.privacyTitle")}
           </Typography>
           <Typography variant="body" className="onboarding__profile-subheading">
-            Кто сможет видеть ваш профиль?
+            {t("onboarding.privacyQuestion")}
           </Typography>
 
           <div className="onboarding__profile-fields">
@@ -250,7 +254,7 @@ function ProfilePrivacyStep({
           onClick={() => onNext(privacy)}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Сохранение..." : "Продолжить"}
+          {isSubmitting ? t("common.saving") : t("onboarding.continue")}
         </Button>
       </div>
     </>
@@ -259,15 +263,16 @@ function ProfilePrivacyStep({
 
 /* ── Step 4: Done ── */
 function DoneStep({ onFinish }: { onFinish: () => void }) {
+  const { t } = useI18n();
   return (
     <>
       <div className="onboarding__center">
         <div className="onboarding__profile-form">
           <Typography variant="h1" className="onboarding__profile-heading">
-            Всё готово!
+            {t("onboarding.allReady")}
           </Typography>
           <Typography variant="body" className="onboarding__profile-subheading">
-            Ваш профиль создан. Начните искать нужных людей
+            {t("onboarding.profileCreated")}
           </Typography>
         </div>
         <img src={Done} alt="Done" className="onboarding__animation" />
@@ -279,7 +284,7 @@ function DoneStep({ onFinish }: { onFinish: () => void }) {
           className="onboarding__continue"
           onClick={onFinish}
         >
-          Начать
+          {t("onboarding.start")}
         </Button>
       </div>
     </>
@@ -287,6 +292,7 @@ function DoneStep({ onFinish }: { onFinish: () => void }) {
 }
 
 export function OnboardingPage() {
+  const { t } = useI18n();
   const { user, refreshUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -412,7 +418,7 @@ export function OnboardingPage() {
               <img
                 key={i}
                 src={s.animation}
-                alt={s.title}
+                alt={t(s.titleKey)}
                 className="onboarding__animation"
                 style={{ display: i === currentStep ? "block" : "none" }}
               />
@@ -422,10 +428,10 @@ export function OnboardingPage() {
           <div className="onboarding__bottom">
             <Card className="onboarding__card">
               <Typography variant="h1" className="onboarding__title">
-                {slides[currentStep].title}
+                {t(slides[currentStep].titleKey)}
               </Typography>
               <Typography variant="body" className="onboarding__subtitle">
-                {slides[currentStep].description}
+                {t(slides[currentStep].descriptionKey)}
               </Typography>
             </Card>
 
@@ -434,7 +440,7 @@ export function OnboardingPage() {
               className="onboarding__continue"
               onClick={handleContinue}
             >
-              {isLastSlide ? "Далее" : "Продолжить"}
+              {isLastSlide ? t("onboarding.next") : t("onboarding.continue")}
             </Button>
           </div>
         </>

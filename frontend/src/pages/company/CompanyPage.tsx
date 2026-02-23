@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/features/auth";
+import { useI18n } from "@/shared/config";
 import {
   type CompanyWithRole,
   type CompanyMember,
@@ -22,7 +23,7 @@ import { CompanyList, CompanyDetail } from "./components";
 import "./CompanyPage.scss";
 
 // Парсинг ошибок API
-function parseApiError(err: unknown): string {
+function parseApiError(err: unknown, t: (key: string) => string): string {
   const error = err as {
     data?: { detail?: string | Array<{ msg?: string; loc?: string[] }> };
     message?: string;
@@ -30,12 +31,12 @@ function parseApiError(err: unknown): string {
 
   if (Array.isArray(error.data?.detail)) {
     const messages = error.data.detail.map((item) => {
-      const field = item.loc?.slice(-1)[0] || "Поле";
+      const field = item.loc?.slice(-1)[0] || t("company.fieldDefault");
       const fieldLabels: Record<string, string> = {
-        name: "Название",
-        email_domain: "Домен email",
-        email: "Email",
-        description: "Описание",
+        name: t("company.fieldName"),
+        email_domain: t("company.fieldEmailDomain"),
+        email: t("company.fieldEmail"),
+        description: t("company.fieldDescription"),
       };
       return `${fieldLabels[field] || field}: ${item.msg}`;
     });
@@ -46,7 +47,7 @@ function parseApiError(err: unknown): string {
     return error.data.detail;
   }
 
-  return error.message || "Произошла ошибка";
+  return error.message || t("company.errorOccurred");
 }
 
 type ViewMode = "list" | "detail";
@@ -58,6 +59,7 @@ interface CompanyPageProps {
 
 export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
   const { user: authUser } = useAuth();
+  const { t } = useI18n();
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -126,7 +128,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
       const data = await companyApi.getMyCompanies();
       setCompanies(data);
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
     } finally {
       setIsLoading(false);
     }
@@ -222,9 +224,11 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
         }
         return [...prev, result];
       });
-      showSuccess(cardId ? "Визитка выбрана" : "Выбор визитки снят");
+      showSuccess(
+        cardId ? t("company.cardSelected") : t("company.cardDeselected"),
+      );
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
       throw err;
     }
   };
@@ -274,7 +278,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
       // Навигируем на страницу профиля
       onOpenContact(userForNav, cardId);
     } catch {
-      showError("Не удалось загрузить визитку");
+      showError(t("company.cardLoadFailed"));
     } finally {
       setIsLoadingViewCard(false);
     }
@@ -318,23 +322,24 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
       });
       const freshCompanies = await companyApi.getMyCompanies();
       setCompanies(freshCompanies);
-      const newCompanyWithRole: CompanyWithRole =
-        freshCompanies.find((c) => c.company.id === newCompany.id) || {
-          company: newCompany,
-          role: null,
-          joined_at: new Date().toISOString(),
-        };
+      const newCompanyWithRole: CompanyWithRole = freshCompanies.find(
+        (c) => c.company.id === newCompany.id,
+      ) || {
+        company: newCompany,
+        role: null,
+        joined_at: new Date().toISOString(),
+      };
       setIsCreateModalOpen(false);
       setCreateForm({
         name: "",
         email_domain: "",
         description: "",
       });
-      showSuccess("Компания успешно создана!");
+      showSuccess(t("company.createdSuccess"));
       // Сразу открываем новую компанию
       handleSelectCompany(newCompanyWithRole);
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
     } finally {
       setIsSaving(false);
     }
@@ -349,9 +354,9 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
         role_id: roleId,
       });
       await loadInvitations(selectedCompany.company.id, selectedCompany.role);
-      showSuccess("Приглашение отправлено!");
+      showSuccess(t("company.inviteSent"));
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
       throw err;
     }
   };
@@ -366,7 +371,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
       );
       await loadInvitations(selectedCompany.company.id, selectedCompany.role);
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
       throw err;
     }
   };
@@ -381,39 +386,34 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
         newRoleId,
       );
       await loadMembers(selectedCompany.company.id);
-      showSuccess("Роль изменена");
+      showSuccess(t("company.roleChanged"));
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
       throw err;
     }
   };
 
   // Удалить члена
   const handleRemoveMember = async (userId: string) => {
-    if (!selectedCompany || !confirm("Удалить этого участника из компании?"))
-      return;
+    if (!selectedCompany || !confirm(t("company.removeMemberConfirm"))) return;
     try {
       await companyApi.removeMember(selectedCompany.company.id, userId);
       await loadMembers(selectedCompany.company.id);
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
       throw err;
     }
   };
 
   // Покинуть компанию
   const handleLeaveCompany = async () => {
-    if (
-      !selectedCompany ||
-      !confirm("Вы уверены, что хотите покинуть компанию?")
-    )
-      return;
+    if (!selectedCompany || !confirm(t("company.leaveConfirm"))) return;
     try {
       await companyApi.leave(selectedCompany.company.id);
-      showSuccess("Вы покинули компанию");
+      showSuccess(t("company.leftCompany"));
       handleBackToList();
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
       throw err;
     }
   };
@@ -433,9 +433,9 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
         ...selectedCompany,
         company: updated,
       });
-      showSuccess("Компания обновлена");
+      showSuccess(t("company.companyUpdated"));
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
       throw err;
     }
   };
@@ -445,10 +445,10 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
     if (!selectedCompany) return;
     try {
       await companyApi.delete(selectedCompany.company.id);
-      showSuccess("Компания удалена");
+      showSuccess(t("company.companyDeleted"));
       handleBackToList();
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
       throw err;
     }
   };
@@ -460,9 +460,9 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
       await companyApi.acceptInvitation({ token });
       await loadCompanies();
       await loadMyInvitations();
-      showSuccess("Вы присоединились к компании!");
+      showSuccess(t("company.joinedCompany"));
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
     } finally {
       setIsSaving(false);
     }
@@ -475,7 +475,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
       await companyApi.declineInvitation({ token });
       await loadMyInvitations();
     } catch (err) {
-      showError(parseApiError(err));
+      showError(parseApiError(err, t));
     } finally {
       setIsSaving(false);
     }
@@ -486,7 +486,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
     return (
       <div className="company-page">
         <header className="company-page__header">
-          <IconButton aria-label="Назад" onClick={onBack}>
+          <IconButton aria-label={t("company.back")} onClick={onBack}>
             <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
               <path
                 d="M9 1L1 9L9 17"
@@ -498,7 +498,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
             </svg>
           </IconButton>
           <div className="company-page__title-container">
-            <h1 className="company-page__title">Компании</h1>
+            <h1 className="company-page__title">{t("company.companies")}</h1>
           </div>
           <div style={{ width: 36 }} />
         </header>
@@ -575,7 +575,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
     <div className="company-page">
       {/* Заголовок */}
       <header className="company-page__header">
-        <IconButton aria-label="Назад" onClick={onBack}>
+        <IconButton aria-label={t("company.back")} onClick={onBack}>
           <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
             <path
               d="M9 1L1 9L9 17"
@@ -587,10 +587,10 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
           </svg>
         </IconButton>
         <div className="company-page__title-container">
-          <h1 className="company-page__title">Компании</h1>
+          <h1 className="company-page__title">{t("company.companies")}</h1>
         </div>
         <IconButton
-          aria-label="Создать"
+          aria-label={t("company.create")}
           onClick={() => setIsCreateModalOpen(true)}
         >
           <svg
@@ -635,7 +635,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
                     {inv.company.name}
                   </span>
                   <span className="company-page__invite-role">
-                    Роль: {getRoleName(inv.role)}
+                    {t("company.role", { role: getRoleName(inv.role) })}
                     {inv.invited_by &&
                       ` • ${inv.invited_by.first_name} ${inv.invited_by.last_name}`}
                   </span>
@@ -674,19 +674,19 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Создать компанию"
+        title={t("company.createCompany")}
       >
         <div className="create-company-form">
           <Input
-            label="Название компании"
+            label={t("company.companyName")}
             value={createForm.name}
             onChange={(e) =>
               setCreateForm({ ...createForm, name: e.target.value })
             }
-            placeholder="Моя компания"
+            placeholder={t("company.companyPlaceholder")}
           />
           <Input
-            label="Домен email"
+            label={t("company.emailDomain")}
             value={createForm.email_domain}
             onChange={(e) =>
               setCreateForm({ ...createForm, email_domain: e.target.value })
@@ -694,16 +694,16 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
             placeholder="company.com"
           />
           <Input
-            label="Описание (опционально)"
+            label={t("company.descriptionOptional")}
             value={createForm.description}
             onChange={(e) =>
               setCreateForm({ ...createForm, description: e.target.value })
             }
-            placeholder="Краткое описание компании"
+            placeholder={t("company.briefDescription")}
           />
           <div className="form-actions">
             <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>
-              Отмена
+              {t("company.cancel")}
             </Button>
             <Button
               onClick={handleCreateCompany}
@@ -713,7 +713,7 @@ export function CompanyPage({ onOpenContact, onBack }: CompanyPageProps) {
                 !createForm.email_domain.trim()
               }
             >
-              {isSaving ? "Создание..." : "Создать"}
+              {isSaving ? t("company.creating") : t("company.create")}
             </Button>
           </div>
         </div>

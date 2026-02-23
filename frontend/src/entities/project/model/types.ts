@@ -108,7 +108,20 @@ export interface JoinRequestRequest {
 }
 
 // Helper функции
-export function getStatusLabel(status: ProjectStatus): string {
+export function getStatusLabel(
+  status: ProjectStatus,
+  t?: (key: string) => string,
+): string {
+  if (t) {
+    const keys: Record<ProjectStatus, string> = {
+      forming: "project.forming",
+      active: "project.active",
+      paused: "project.paused",
+      completed: "project.completed",
+      archived: "project.archived",
+    };
+    return t(keys[status]);
+  }
   const labels: Record<ProjectStatus, string> = {
     forming: "Формирование",
     active: "Активный",
@@ -119,7 +132,20 @@ export function getStatusLabel(status: ProjectStatus): string {
   return labels[status];
 }
 
-export function getRoleLabel(role: ProjectMemberRole): string {
+export function getRoleLabel(
+  role: ProjectMemberRole,
+  t?: (key: string) => string,
+): string {
+  if (t) {
+    const keys: Record<ProjectMemberRole, string> = {
+      owner: "project.owner",
+      admin: "project.admin",
+      member: "project.member",
+      pending: "project.pending",
+      invited: "project.invited",
+    };
+    return t(keys[role]);
+  }
   const labels: Record<ProjectMemberRole, string> = {
     owner: "Владелец",
     admin: "Админ",

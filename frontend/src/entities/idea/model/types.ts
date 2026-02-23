@@ -244,12 +244,31 @@ export interface LeaderboardResponse {
 }
 
 // Helper функции
-export function getAuthorFullName(idea: Idea): string {
-  if (!idea.author) return "Неизвестный автор";
+export function getAuthorFullName(
+  idea: Idea,
+  t?: (key: string) => string,
+): string {
+  if (!idea.author) return t ? t("idea.unknownAuthor") : "Неизвестный автор";
   return `${idea.author.first_name} ${idea.author.last_name}`.trim();
 }
 
-export function getStatusLabel(status: IdeaStatus): string {
+export function getStatusLabel(
+  status: IdeaStatus,
+  t?: (key: string) => string,
+): string {
+  if (t) {
+    const keys: Record<IdeaStatus, string> = {
+      draft: "idea.draft",
+      active: "idea.active",
+      team_forming: "idea.recruiting",
+      team_formed: "idea.teamFormed",
+      in_review: "idea.underReview",
+      in_progress: "idea.inProgress",
+      completed: "idea.completed",
+      archived: "idea.archived",
+    };
+    return t(keys[status]) || status;
+  }
   const labels: Record<IdeaStatus, string> = {
     draft: "Черновик",
     active: "Активна",
@@ -263,7 +282,20 @@ export function getStatusLabel(status: IdeaStatus): string {
   return labels[status] || status;
 }
 
-export function getVisibilityLabel(visibility: IdeaVisibility): string {
+export function getVisibilityLabel(
+  visibility: IdeaVisibility,
+  t?: (key: string) => string,
+): string {
+  if (t) {
+    const keys: Record<IdeaVisibility, string> = {
+      public: "idea.public",
+      company: "idea.company",
+      department: "idea.department",
+      private: "idea.private",
+      connections_only: "idea.contactsOnly",
+    };
+    return t(keys[visibility]) || visibility;
+  }
   const labels: Record<IdeaVisibility, string> = {
     public: "Публичная",
     company: "В компании",
@@ -274,7 +306,33 @@ export function getVisibilityLabel(visibility: IdeaVisibility): string {
   return labels[visibility] || visibility;
 }
 
-export function getBadgeLabel(badge: string): string {
+export function getBadgeLabel(
+  badge: string,
+  t?: (key: string) => string,
+): string {
+  if (t) {
+    const keys: Record<string, string> = {
+      innovator: "badge.innovator",
+      idea_machine: "badge.ideaMachine",
+      visionary: "badge.visionary",
+      voter: "badge.voter",
+      active_voter: "badge.activeVoter",
+      super_voter: "badge.superVoter",
+      team_builder: "badge.teamBuilder",
+      collaborator: "badge.collaborator",
+      mentor: "badge.mentor",
+      project_starter: "badge.projectStarter",
+      project_finisher: "badge.projectFinisher",
+      serial_finisher: "badge.serialFinisher",
+      streak_3: "badge.streak3",
+      streak_7: "badge.streak7",
+      streak_30: "badge.streak30",
+      popular: "badge.popular",
+      super_popular: "badge.superPopular",
+      chat_active: "badge.chatActive",
+    };
+    return keys[badge] ? t(keys[badge]) : badge;
+  }
   const labels: Record<string, string> = {
     innovator: "🚀 Инноватор",
     idea_machine: "💡 Генератор идей",

@@ -63,6 +63,7 @@ class MongoUserRepository(UserRepositoryInterface):
             "privacy_who_can_message": user.privacy_who_can_message.value,
             "privacy_who_can_see_profile": user.privacy_who_can_see_profile.value,
             "privacy_who_can_invite": user.privacy_who_can_invite.value,
+            "language": user.language,
         }
 
     def _from_document(self, doc: dict) -> User:
@@ -120,6 +121,7 @@ class MongoUserRepository(UserRepositoryInterface):
             privacy_who_can_invite=PrivacyLevel(
                 doc.get("privacy_who_can_invite", "all")
             ),
+            language=doc.get("language", "ru"),
         )
 
     async def get_by_id(self, user_id: UUID) -> User | None:

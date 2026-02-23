@@ -26,6 +26,7 @@ import {
   Loader,
   IconButton,
 } from "@/shared";
+import { useI18n } from "@/shared/config";
 import { RoleSelect } from "./RoleSelect";
 import { RolesManager } from "./RolesManager";
 import "./CompanyDetail.scss";
@@ -82,6 +83,7 @@ export function CompanyDetail({
 }: CompanyDetailProps) {
   void isLoadingInvitations;
   void onViewMemberCard;
+  const { t, language } = useI18n();
   const [subPage, setSubPage] = useState<SubPage>("main");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -175,7 +177,7 @@ export function CompanyDetail({
   const handleCopyInviteLink = async () => {
     const token = pendingInvitationWithToken?.token;
     if (!token) {
-      window.alert("Сначала создайте приглашение для участника.");
+      window.alert(t("companyDetail.createInviteFirst"));
       return;
     }
 
@@ -193,7 +195,7 @@ export function CompanyDetail({
       document.body.removeChild(textarea);
     }
 
-    window.alert("Ссылка приглашения скопирована.");
+    window.alert(t("companyDetail.inviteLinkCopied"));
   };
 
   const handleOpenMemberRoleSettings = (member: CompanyMember) => {
@@ -206,7 +208,8 @@ export function CompanyDetail({
     setIsMemberActionLoading(true);
     try {
       await onChangeRole(selectedMemberForRole.user.id, roleId);
-      const nextRole = availableRoles.find((role) => role.id === roleId) || null;
+      const nextRole =
+        availableRoles.find((role) => role.id === roleId) || null;
       setSelectedMemberForRole({
         ...selectedMemberForRole,
         role: nextRole,
@@ -231,7 +234,7 @@ export function CompanyDetail({
   const formatDate = (dateStr: string): string => {
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString("ru-RU", {
+      return date.toLocaleDateString(language === "ru" ? "ru-RU" : "en-US", {
         day: "2-digit",
         month: "long",
         year: "numeric",
@@ -245,7 +248,7 @@ export function CompanyDetail({
   const navItems: { id: SubPage; label: string; icon?: React.ReactNode }[] = [
     {
       id: "members",
-      label: "Участники",
+      label: t("companyDetail.members"),
       icon: (
         <svg
           width="40"
@@ -284,7 +287,7 @@ export function CompanyDetail({
   if (canManageRolesCheck) {
     navItems.push({
       id: "roles",
-      label: "Роли",
+      label: t("companyDetail.roles"),
       icon: (
         <svg
           width="40"
@@ -323,7 +326,7 @@ export function CompanyDetail({
   if (canManageMembers(company.role)) {
     navItems.push({
       id: "privacy",
-      label: "Приватность",
+      label: t("companyDetail.privacy"),
       icon: (
         <svg
           width="40"
@@ -364,16 +367,19 @@ export function CompanyDetail({
   if (subPage !== "main") {
     const subPageTitles: Record<SubPage, string> = {
       main: "",
-      members: "Участники",
-      roles: "Роли",
-      privacy: "Приватность",
+      members: t("companyDetail.members"),
+      roles: t("companyDetail.roles"),
+      privacy: t("companyDetail.privacy"),
     };
 
     return (
       <div className="company-detail">
         {/* Sub-page Top Bar */}
         <div className="company-detail__topbar">
-          <IconButton aria-label="Назад" onClick={() => setSubPage("main")}>
+          <IconButton
+            aria-label={t("company.back")}
+            onClick={() => setSubPage("main")}
+          >
             <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
               <path
                 d="M9 1L1 9L9 17"
@@ -397,7 +403,10 @@ export function CompanyDetail({
               <div className="company-detail__hero">
                 <div className="company-detail__hero-logo">
                   {company.company.logo_url ? (
-                    <img src={company.company.logo_url} alt={company.company.name} />
+                    <img
+                      src={company.company.logo_url}
+                      alt={company.company.name}
+                    />
                   ) : (
                     <span className="company-detail__hero-logo-letter">
                       {company.company.name.charAt(0).toUpperCase()}
@@ -416,7 +425,9 @@ export function CompanyDetail({
 
                 <div className="company-detail__hero-stats">
                   <div className="company-detail__hero-stat company-detail__hero-stat--members">
-                    {members.length} Участников
+                    {t("companyDetail.membersCount", {
+                      count: String(members.length),
+                    })}
                   </div>
                   <div
                     className="company-detail__hero-stat company-detail__hero-stat--role"
@@ -427,7 +438,9 @@ export function CompanyDetail({
                       borderColor: company.role
                         ? `${getRoleColor(company.role)}30`
                         : undefined,
-                      color: company.role ? getRoleColor(company.role) : undefined,
+                      color: company.role
+                        ? getRoleColor(company.role)
+                        : undefined,
                     }}
                   >
                     {isOwnerRole(company.role) && "👑 "}
@@ -456,55 +469,58 @@ export function CompanyDetail({
                   </div>
                 )}
 
-                {canManageMembers(company.role) && pendingInvitations.length > 0 && (
-                  <div className="company-detail__members-group">
-                    <span className="company-detail__section-title">
-                      Pending ({pendingInvitations.length})
-                    </span>
-                    <div className="company-detail__members-list">
-                      {pendingInvitations.map((inv) => (
-                        <div key={inv.id} className="company-detail__member-item">
-                          <div className="company-detail__member-row">
-                            <div className="company-detail__member-avatar company-detail__member-avatar--invite">
-                              @
-                            </div>
-                            <div className="company-detail__member-info">
-                              <span className="company-detail__member-name">
-                                {inv.email}
-                              </span>
-                              <Tag
-                                size="sm"
-                                style={{
-                                  backgroundColor: inv.role
-                                    ? `${getRoleColor(inv.role)}15`
-                                    : undefined,
-                                  borderColor: inv.role
-                                    ? getRoleColor(inv.role)
-                                    : undefined,
-                                  color: inv.role
-                                    ? getRoleColor(inv.role)
-                                    : undefined,
-                                }}
+                {canManageMembers(company.role) &&
+                  pendingInvitations.length > 0 && (
+                    <div className="company-detail__members-group">
+                      <span className="company-detail__section-title">
+                        Pending ({pendingInvitations.length})
+                      </span>
+                      <div className="company-detail__members-list">
+                        {pendingInvitations.map((inv) => (
+                          <div
+                            key={inv.id}
+                            className="company-detail__member-item"
+                          >
+                            <div className="company-detail__member-row">
+                              <div className="company-detail__member-avatar company-detail__member-avatar--invite">
+                                @
+                              </div>
+                              <div className="company-detail__member-info">
+                                <span className="company-detail__member-name">
+                                  {inv.email}
+                                </span>
+                                <Tag
+                                  size="sm"
+                                  style={{
+                                    backgroundColor: inv.role
+                                      ? `${getRoleColor(inv.role)}15`
+                                      : undefined,
+                                    borderColor: inv.role
+                                      ? getRoleColor(inv.role)
+                                      : undefined,
+                                    color: inv.role
+                                      ? getRoleColor(inv.role)
+                                      : undefined,
+                                  }}
+                                >
+                                  {getRoleName(inv.role)}
+                                </Tag>
+                              </div>
+                              <button
+                                className="company-detail__member-action company-detail__member-action--cancel"
+                                onClick={() => onCancelInvitation(inv.id)}
+                                title="Cancel invitation"
                               >
-                                {getRoleName(inv.role)}
-                              </Tag>
+                                x
+                              </button>
                             </div>
-                            <button
-                              className="company-detail__member-action company-detail__member-action--cancel"
-                              onClick={() => onCancelInvitation(inv.id)}
-                              title="Cancel invitation"
-                            >
-                              x
-                            </button>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="company-detail__members-group">
-
                   {isLoadingMembers ? (
                     <div className="company-detail__loading">
                       <Loader />
@@ -514,7 +530,10 @@ export function CompanyDetail({
                       {members.map((member) => {
                         const isRoleEditable = canEditMemberRole(member);
                         return (
-                          <div key={member.id} className="company-detail__member-item">
+                          <div
+                            key={member.id}
+                            className="company-detail__member-item"
+                          >
                             <div className="company-detail__member-row">
                               <Avatar
                                 src={member.user.avatar_url || undefined}
@@ -523,10 +542,13 @@ export function CompanyDetail({
                               />
                               <div className="company-detail__member-info">
                                 <span className="company-detail__member-name">
-                                  {member.user.first_name} {member.user.last_name}
+                                  {member.user.first_name}{" "}
+                                  {member.user.last_name}
                                 </span>
                                 <span className="company-detail__member-email">
-                                  {isOwnerRole(member.role) ? "Владелец" : getRoleName(member.role)}
+                                  {isOwnerRole(member.role)
+                                    ? t("companyDetail.owner")
+                                    : getRoleName(member.role)}
                                 </span>
                               </div>
                               <div className="company-detail__member-role">
@@ -534,8 +556,12 @@ export function CompanyDetail({
                                   <button
                                     type="button"
                                     className="company-detail__member-open-role"
-                                    onClick={() => handleOpenMemberRoleSettings(member)}
-                                    aria-label="Открыть настройки роли"
+                                    onClick={() =>
+                                      handleOpenMemberRoleSettings(member)
+                                    }
+                                    aria-label={t(
+                                      "companyDetail.openRoleSettings",
+                                    )}
                                   >
                                     <svg
                                       className="company-detail__member-arrow"
@@ -582,12 +608,12 @@ export function CompanyDetail({
             <div className="company-detail__section">
               <Card className="company-detail__card">
                 <span className="company-detail__card-label">
-                  Информация о компании
+                  {t("companyDetail.companyInfo")}
                 </span>
                 <div className="company-detail__settings-rows">
                   <div className="company-detail__settings-row">
                     <span className="company-detail__settings-label">
-                      Название
+                      {t("companyDetail.name")}
                     </span>
                     <span className="company-detail__settings-value">
                       {company.company.name}
@@ -595,7 +621,7 @@ export function CompanyDetail({
                   </div>
                   <div className="company-detail__settings-row">
                     <span className="company-detail__settings-label">
-                      Домен
+                      {t("companyDetail.domain")}
                     </span>
                     <span className="company-detail__settings-value">
                       @{company.company.email_domain}
@@ -603,7 +629,7 @@ export function CompanyDetail({
                   </div>
                   <div className="company-detail__settings-row">
                     <span className="company-detail__settings-label">
-                      Описание
+                      {t("companyDetail.description")}
                     </span>
                     <span className="company-detail__settings-value">
                       {company.company.description || "—"}
@@ -620,23 +646,23 @@ export function CompanyDetail({
                     setIsEditModalOpen(true);
                   }}
                 >
-                  Редактировать
+                  {t("companyDetail.edit")}
                 </Button>
               </Card>
 
               {canDeleteCompany(company.role) && (
                 <Card className="company-detail__card company-detail__card--danger">
                   <span className="company-detail__card-label company-detail__card-label--danger">
-                    Опасная зона
+                    {t("companyDetail.dangerZone")}
                   </span>
                   <p className="company-detail__card-hint">
-                    Удаление компании необратимо. Все данные будут потеряны.
+                    {t("companyDetail.deleteWarning")}
                   </p>
                   <Button
                     variant="danger"
                     onClick={() => setIsDeleteModalOpen(true)}
                   >
-                    Удалить компанию
+                    {t("companyDetail.deleteCompany")}
                   </Button>
                 </Card>
               )}
@@ -648,7 +674,7 @@ export function CompanyDetail({
         <Modal
           isOpen={isInviteModalOpen}
           onClose={() => setIsInviteModalOpen(false)}
-          title="Пригласить участника"
+          title={t("companyDetail.inviteMember")}
         >
           <div className="invite-form">
             <Input
@@ -661,7 +687,7 @@ export function CompanyDetail({
               placeholder="user@example.com"
             />
             <div className="form-field">
-              <label>Роль для приглашаемого участника</label>
+              <label>{t("companyDetail.roleForInvitee")}</label>
               <RoleSelect
                 roles={availableRoles}
                 selectedRoleId={inviteForm.roleId}
@@ -674,13 +700,15 @@ export function CompanyDetail({
                 variant="ghost"
                 onClick={() => setIsInviteModalOpen(false)}
               >
-                Отмена
+                {t("companyDetail.cancel")}
               </Button>
               <Button
                 onClick={handleInvite}
                 disabled={isSaving || !inviteForm.email.trim()}
               >
-                {isSaving ? "Отправка..." : "Отправить"}
+                {isSaving
+                  ? t("companyDetail.sending")
+                  : t("companyDetail.send")}
               </Button>
             </div>
           </div>
@@ -689,19 +717,19 @@ export function CompanyDetail({
         <Modal
           isOpen={Boolean(selectedMemberForRole)}
           onClose={() => setSelectedMemberForRole(null)}
-          title="Настройка роли участника"
+          title={t("companyDetail.memberRoleSettings")}
         >
           {selectedMemberForRole && (
             <div className="member-role-form">
               <div className="form-field">
-                <label>Участник</label>
+                <label>{t("companyDetail.memberLabel")}</label>
                 <div className="member-role-form__name">
                   {selectedMemberForRole.user.first_name}{" "}
                   {selectedMemberForRole.user.last_name}
                 </div>
               </div>
               <div className="form-field">
-                <label>Роль</label>
+                <label>{t("companyDetail.roleLabel")}</label>
                 <RoleSelect
                   roles={availableRoles.filter((role) => !isOwnerRole(role))}
                   selectedRoleId={selectedMemberForRole.role?.id || ""}
@@ -713,14 +741,16 @@ export function CompanyDetail({
                   variant="ghost"
                   onClick={() => setSelectedMemberForRole(null)}
                 >
-                  Закрыть
+                  {t("companyDetail.close")}
                 </Button>
                 <Button
                   variant="danger"
                   onClick={handleMemberRemove}
                   disabled={isMemberActionLoading}
                 >
-                  {isMemberActionLoading ? "Удаление..." : "Удалить участника"}
+                  {isMemberActionLoading
+                    ? t("companyDetail.removing")
+                    : t("companyDetail.removeMember")}
                 </Button>
               </div>
             </div>
@@ -730,18 +760,18 @@ export function CompanyDetail({
         <Modal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          title="Редактировать компанию"
+          title={t("companyDetail.editCompany")}
         >
           <div className="edit-company-form">
             <Input
-              label="Название компании"
+              label={t("company.companyName")}
               value={editForm.name}
               onChange={(e) =>
                 setEditForm({ ...editForm, name: e.target.value })
               }
             />
             <Input
-              label="Описание"
+              label={t("companyDetail.description")}
               value={editForm.description}
               onChange={(e) =>
                 setEditForm({ ...editForm, description: e.target.value })
@@ -749,10 +779,10 @@ export function CompanyDetail({
             />
             <div className="form-actions">
               <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>
-                Отмена
+                {t("companyDetail.cancel")}
               </Button>
               <Button onClick={handleUpdateCompany} disabled={isSaving}>
-                {isSaving ? "Сохранение..." : "Сохранить"}
+                {isSaving ? t("companyDetail.saving") : t("companyDetail.save")}
               </Button>
             </div>
           </div>
@@ -761,29 +791,30 @@ export function CompanyDetail({
         <Modal
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
-          title="Удалить компанию"
+          title={t("companyDetail.deleteCompanyTitle")}
         >
           <div className="delete-confirm">
             <Typography variant="body">
-              Вы уверены, что хотите удалить компанию{" "}
-              <strong>{company.company.name}</strong>?
+              {t("companyDetail.deleteConfirm", { name: company.company.name })}
             </Typography>
             <Typography variant="small" color="secondary">
-              Это действие необратимо. Все участники будут удалены из компании.
+              {t("companyDetail.deleteIrreversible")}
             </Typography>
             <div className="form-actions">
               <Button
                 variant="ghost"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
-                Отмена
+                {t("companyDetail.cancel")}
               </Button>
               <Button
                 variant="danger"
                 onClick={handleDeleteCompany}
                 disabled={isSaving}
               >
-                {isSaving ? "Удаление..." : "Удалить"}
+                {isSaving
+                  ? t("companyDetail.deleting")
+                  : t("companyDetail.delete")}
               </Button>
             </div>
           </div>
@@ -797,7 +828,7 @@ export function CompanyDetail({
     <div className="company-detail">
       {/* Top Bar */}
       <div className="company-detail__topbar">
-        <IconButton aria-label="Назад" onClick={onBack}>
+        <IconButton aria-label={t("company.back")} onClick={onBack}>
           <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
             <path
               d="M9 1L1 9L9 17"
@@ -813,7 +844,7 @@ export function CompanyDetail({
         </div>
         {canManageMembers(company.role) ? (
           <IconButton
-            aria-label="Настройки"
+            aria-label={t("companyDetail.settings")}
             onClick={() => {
               setEditForm({
                 name: company.company.name,
@@ -864,7 +895,9 @@ export function CompanyDetail({
           {/* Stats */}
           <div className="company-detail__hero-stats">
             <div className="company-detail__hero-stat company-detail__hero-stat--members">
-              {members.length} Участников
+              {t("companyDetail.membersCount", {
+                count: String(members.length),
+              })}
             </div>
             <div
               className="company-detail__hero-stat company-detail__hero-stat--role"
@@ -889,7 +922,9 @@ export function CompanyDetail({
           {/* Description */}
           {company.company.description && (
             <Card className="company-detail__card">
-              <span className="company-detail__card-label">О компании</span>
+              <span className="company-detail__card-label">
+                {t("companyDetail.aboutCompany")}
+              </span>
               <p className="company-detail__card-text">
                 {company.company.description}
               </p>
@@ -900,7 +935,9 @@ export function CompanyDetail({
           <Card className="company-detail__card">
             <div className="company-detail__card-row">
               <div className="company-detail__card-content">
-                <span className="company-detail__card-label">Домен</span>
+                <span className="company-detail__card-label">
+                  {t("companyDetail.domain")}
+                </span>
                 <span className="company-detail__card-value">
                   @{company.company.email_domain}
                 </span>
@@ -911,7 +948,9 @@ export function CompanyDetail({
 
           {/* Join date */}
           <Card className="company-detail__card">
-            <span className="company-detail__card-label">Дата вступления</span>
+            <span className="company-detail__card-label">
+              {t("companyDetail.joinDate")}
+            </span>
             <span className="company-detail__card-value">
               {formatDate(company.joined_at)}
             </span>
@@ -927,10 +966,12 @@ export function CompanyDetail({
               <div className="company-detail__card-row">
                 <div className="company-detail__card-content">
                   <span className="company-detail__card-label">
-                    Моя визитка
+                    {t("companyDetail.myCard")}
                   </span>
                   <span className="company-detail__card-value">
-                    {selectedCard ? `📇 ${selectedCard.title}` : "Не выбрана"}
+                    {selectedCard
+                      ? `📇 ${selectedCard.title}`
+                      : t("companyDetail.notSelected")}
                   </span>
                 </div>
                 <svg
@@ -954,7 +995,9 @@ export function CompanyDetail({
 
           {/* Role & permissions card */}
           <Card className="company-detail__card">
-            <span className="company-detail__card-label">Ваша роль</span>
+            <span className="company-detail__card-label">
+              {t("companyDetail.yourRole")}
+            </span>
             <div className="company-detail__role-badge">
               <span
                 className="company-detail__role-dot"
@@ -968,22 +1011,22 @@ export function CompanyDetail({
             <div className="company-detail__permissions">
               {canInvite(company.role) && (
                 <span className="company-detail__perm-tag company-detail__perm-tag--active">
-                  ✓ Приглашения
+                  ✓ {t("companyDetail.invites")}
                 </span>
               )}
               {canManageMembers(company.role) && (
                 <span className="company-detail__perm-tag company-detail__perm-tag--active">
-                  ✓ Управление
+                  ✓ {t("companyDetail.management")}
                 </span>
               )}
               {canDeleteCompany(company.role) && (
                 <span className="company-detail__perm-tag company-detail__perm-tag--active">
-                  ✓ Удаление
+                  ✓ {t("companyDetail.deletion")}
                 </span>
               )}
               {!canInvite(company.role) && (
                 <span className="company-detail__perm-tag">
-                  Только просмотр
+                  {t("companyDetail.viewOnly")}
                 </span>
               )}
             </div>
@@ -1027,7 +1070,7 @@ export function CompanyDetail({
             className="company-detail__leave-btn"
             onClick={onLeaveCompany}
           >
-            Покинуть компанию
+            {t("companyDetail.leaveCompany")}
           </button>
         )}
       </div>
@@ -1038,7 +1081,7 @@ export function CompanyDetail({
       <Modal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
-        title="Пригласить участника"
+        title={t("companyDetail.inviteMember")}
       >
         <div className="invite-form">
           <Input
@@ -1051,7 +1094,7 @@ export function CompanyDetail({
             placeholder="user@example.com"
           />
           <div className="form-field">
-            <label>Роль для приглашаемого участника</label>
+            <label>{t("companyDetail.roleForInvitee")}</label>
             <RoleSelect
               roles={availableRoles}
               selectedRoleId={inviteForm.roleId}
@@ -1061,13 +1104,13 @@ export function CompanyDetail({
           </div>
           <div className="form-actions">
             <Button variant="ghost" onClick={() => setIsInviteModalOpen(false)}>
-              Отмена
+              {t("companyDetail.cancel")}
             </Button>
             <Button
               onClick={handleInvite}
               disabled={isSaving || !inviteForm.email.trim()}
             >
-              {isSaving ? "Отправка..." : "Отправить"}
+              {isSaving ? t("companyDetail.sending") : t("companyDetail.send")}
             </Button>
           </div>
         </div>
@@ -1077,16 +1120,16 @@ export function CompanyDetail({
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Редактировать компанию"
+        title={t("companyDetail.editCompany")}
       >
         <div className="edit-company-form">
           <Input
-            label="Название компании"
+            label={t("company.companyName")}
             value={editForm.name}
             onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
           />
           <Input
-            label="Описание"
+            label={t("companyDetail.description")}
             value={editForm.description}
             onChange={(e) =>
               setEditForm({ ...editForm, description: e.target.value })
@@ -1094,10 +1137,10 @@ export function CompanyDetail({
           />
           <div className="form-actions">
             <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>
-              Отмена
+              {t("companyDetail.cancel")}
             </Button>
             <Button onClick={handleUpdateCompany} disabled={isSaving}>
-              {isSaving ? "Сохранение..." : "Сохранить"}
+              {isSaving ? t("companyDetail.saving") : t("companyDetail.save")}
             </Button>
           </div>
         </div>
@@ -1107,26 +1150,27 @@ export function CompanyDetail({
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Удалить компанию"
+        title={t("companyDetail.deleteCompanyTitle")}
       >
         <div className="delete-confirm">
           <Typography variant="body">
-            Вы уверены, что хотите удалить компанию{" "}
-            <strong>{company.company.name}</strong>?
+            {t("companyDetail.deleteConfirm", { name: company.company.name })}
           </Typography>
           <Typography variant="small" color="secondary">
-            Это действие необратимо. Все участники будут удалены из компании.
+            {t("companyDetail.deleteIrreversible")}
           </Typography>
           <div className="form-actions">
             <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)}>
-              Отмена
+              {t("companyDetail.cancel")}
             </Button>
             <Button
               variant="danger"
               onClick={handleDeleteCompany}
               disabled={isSaving}
             >
-              {isSaving ? "Удаление..." : "Удалить"}
+              {isSaving
+                ? t("companyDetail.deleting")
+                : t("companyDetail.delete")}
             </Button>
           </div>
         </div>
@@ -1136,12 +1180,11 @@ export function CompanyDetail({
       <Modal
         isOpen={isCardSelectModalOpen}
         onClose={() => setIsCardSelectModalOpen(false)}
-        title="Выберите визитку"
+        title={t("companyDetail.selectCard")}
       >
         <div className="card-select-modal">
           <Typography variant="body" color="secondary">
-            Выберите визитку, которую будут видеть участники компании{" "}
-            <strong>{company.company.name}</strong>
+            {t("companyDetail.selectCardHint", { name: company.company.name })}
           </Typography>
           <div className="card-select-modal__list">
             {userCards.map((card) => (
@@ -1164,7 +1207,9 @@ export function CompanyDetail({
                     )}
                   </span>
                   <span className="card-select-modal__item-bio">
-                    {card.ai_generated_bio || card.bio || "Без описания"}
+                    {card.ai_generated_bio ||
+                      card.bio ||
+                      t("companyDetail.noDescription")}
                   </span>
                 </div>
                 {selectedCardId === card.id && (
@@ -1179,7 +1224,7 @@ export function CompanyDetail({
               onClick={() => handleSelectCard(null)}
               disabled={isSelectingCard}
             >
-              Снять выбор
+              {t("companyDetail.clearSelection")}
             </button>
           )}
         </div>

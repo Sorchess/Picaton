@@ -1,16 +1,21 @@
 import { useState, useEffect, useRef, type FC } from "react";
 import type { BusinessCard } from "@/entities/business-card";
+import { useI18n } from "@/shared/config";
 import "./ShareMenu.scss";
 
 // Типы длительности
 export type DurationOption = "1d" | "1w" | "1m" | "forever";
 
 // Опции длительности
-const DURATION_OPTIONS: { value: DurationOption; label: string }[] = [
-  { value: "1d", label: "1 день" },
-  { value: "1w", label: "1 неделя" },
-  { value: "1m", label: "1 месяц" },
-  { value: "forever", label: "∞" },
+const DURATION_OPTIONS: {
+  value: DurationOption;
+  labelKey: string;
+  fallback: string;
+}[] = [
+  { value: "1d", labelKey: "share.day1", fallback: "1 day" },
+  { value: "1w", labelKey: "share.week1", fallback: "1 week" },
+  { value: "1m", labelKey: "share.month1", fallback: "1 month" },
+  { value: "forever", labelKey: "", fallback: "∞" },
 ];
 
 interface ShareMenuProps {
@@ -211,6 +216,8 @@ export const ShareMenu: FC<ShareMenuProps> = ({
   onShare,
   initialSelectedIds = [],
 }) => {
+  const { t } = useI18n();
+
   const [selectedCardIds, setSelectedCardIds] =
     useState<string[]>(initialSelectedIds);
   const [activeTab, setActiveTab] = useState<ViewTab>("settings");
@@ -348,7 +355,7 @@ export const ShareMenu: FC<ShareMenuProps> = ({
             type="button"
             className="share-menu__back-btn"
             onClick={onClose}
-            aria-label="Назад"
+            aria-label={t("common.back")}
           >
             <BackArrowIcon />
           </button>
@@ -357,7 +364,7 @@ export const ShareMenu: FC<ShareMenuProps> = ({
             className="share-menu__share-btn"
             onClick={handleShare}
             disabled={selectedCardIds.length === 0}
-            aria-label="Поделиться"
+            aria-label={t("common.share")}
           >
             <ShareArrowIcon />
           </button>
@@ -377,19 +384,19 @@ export const ShareMenu: FC<ShareMenuProps> = ({
               className={`share-menu__tab ${activeTab === "settings" ? "share-menu__tab--active" : ""}`}
               onClick={() => setActiveTab("settings")}
             >
-              Настройки
+              {t("share.settings")}
             </button>
             <button
               type="button"
               className={`share-menu__tab ${activeTab === "preview" ? "share-menu__tab--active" : ""}`}
               onClick={() => setActiveTab("preview")}
             >
-              Посмотреть
+              {t("share.preview")}
             </button>
           </div>
 
           {/* Section Label */}
-          <div className="share-menu__section-label">Название ссылки / QR</div>
+          <div className="share-menu__section-label">{t("share.linkName")}</div>
 
           {/* Cards List */}
           <div className="share-menu__cards">
@@ -408,7 +415,7 @@ export const ShareMenu: FC<ShareMenuProps> = ({
                 </div>
                 <div className="share-menu__card-info">
                   <span className="share-menu__card-title">
-                    {card.title || "Визитка"}
+                    {card.title || t("share.cardFallback")}
                   </span>
                 </div>
                 <div className="share-menu__card-arrow">
@@ -420,12 +427,12 @@ export const ShareMenu: FC<ShareMenuProps> = ({
             {/* Add New Card Button */}
             <div className="share-menu__add-card">
               <span className="share-menu__add-card-text">
-                Создать новую визитку
+                {t("share.createNewCard")}
               </span>
               <button
                 type="button"
                 className="share-menu__add-card-btn"
-                aria-label="Создать новую визитку"
+                aria-label={t("share.createNewCard")}
               >
                 <PlusIcon />
               </button>
@@ -434,7 +441,7 @@ export const ShareMenu: FC<ShareMenuProps> = ({
 
           {/* Duration Label */}
           <div className="share-menu__section-label">
-            Ограничение по времени
+            {t("share.timeLimit")}
           </div>
 
           {/* Duration Selector */}
@@ -451,7 +458,7 @@ export const ShareMenu: FC<ShareMenuProps> = ({
                   } ${option.value === "forever" ? "share-menu__duration-option--infinity" : ""}`}
                   onClick={() => setDurationIndex(index)}
                 >
-                  {option.label}
+                  {option.labelKey ? t(option.labelKey) : option.fallback}
                 </button>
               ))}
             </div>

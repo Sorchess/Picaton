@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import { Button, Modal, Loader } from "@/shared";
+import { useI18n } from "@/shared/config";
 import "./CardSelector.scss";
 
 interface CardSelectorProps {
@@ -23,6 +24,7 @@ export function CardSelector({
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n();
 
   const MAX_CARDS = 5;
 
@@ -39,7 +41,7 @@ export function CardSelector({
         onCardSelect(primary);
       }
     } catch {
-      setError("Ошибка загрузки карточек");
+      setError(t("cardSelector.loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +65,7 @@ export function CardSelector({
       onCardCreate?.(newCard);
       onCardSelect(newCard);
     } catch {
-      setError("Ошибка создания карточки");
+      setError(t("cardSelector.createError"));
     } finally {
       setIsCreating(false);
     }
@@ -76,20 +78,20 @@ export function CardSelector({
         cards.map((c) => ({
           ...c,
           is_primary: c.id === cardId,
-        }))
+        })),
       );
     } catch {
-      setError("Ошибка установки основной карточки");
+      setError(t("cardSelector.primaryError"));
     }
   };
 
   const handleDeleteCard = async (cardId: string) => {
     if (cards.length <= 1) {
-      setError("Нельзя удалить последнюю карточку");
+      setError(t("cardSelector.cantDeleteLast"));
       return;
     }
 
-    if (!confirm("Вы уверены, что хотите удалить эту карточку?")) return;
+    if (!confirm(t("cardSelector.deleteConfirm"))) return;
 
     try {
       await businessCardApi.delete(cardId, ownerId);
@@ -101,7 +103,7 @@ export function CardSelector({
         onCardSelect(newCards[0]);
       }
     } catch {
-      setError("Ошибка удаления карточки");
+      setError(t("cardSelector.deleteError"));
     }
   };
 
@@ -139,7 +141,7 @@ export function CardSelector({
                       e.stopPropagation();
                       handleSetPrimary(card.id);
                     }}
-                    title="Сделать основной"
+                    title={t("cardSelector.makePrimary")}
                   >
                     ★
                   </button>
@@ -151,7 +153,7 @@ export function CardSelector({
                       e.stopPropagation();
                       handleDeleteCard(card.id);
                     }}
-                    title="Удалить"
+                    title={t("common.delete")}
                   >
                     ×
                   </button>
@@ -165,7 +167,7 @@ export function CardSelector({
           <button
             className="card-selector__tab card-selector__tab--add"
             onClick={() => setIsModalOpen(true)}
-            title="Добавить карточку"
+            title={t("cardSelector.addCard")}
           >
             +
           </button>
@@ -182,16 +184,16 @@ export function CardSelector({
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Новая визитная карточка"
+        title={t("cardSelector.newCard")}
       >
         <div className="card-selector__modal-content">
           <p className="card-selector__modal-description">
-            Создайте карточку для разных целей: работа, личное, фриланс и т.д.
+            {t("cardSelector.newCardDescription")}
           </p>
           <input
             type="text"
             className="card-selector__input"
-            placeholder="Название карточки (напр. Рабочая)"
+            placeholder={t("cardSelector.cardNamePlaceholder")}
             value={newCardTitle}
             onChange={(e) => setNewCardTitle(e.target.value)}
             maxLength={100}
@@ -203,14 +205,14 @@ export function CardSelector({
               onClick={() => setIsModalOpen(false)}
               disabled={isCreating}
             >
-              Отмена
+              {t("common.cancel")}
             </Button>
             <Button
               variant="primary"
               onClick={handleCreateCard}
               disabled={!newCardTitle.trim() || isCreating}
             >
-              {isCreating ? "Создание..." : "Создать"}
+              {isCreating ? t("common.creating") : t("common.create")}
             </Button>
           </div>
         </div>
