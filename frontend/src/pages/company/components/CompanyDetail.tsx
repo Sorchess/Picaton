@@ -193,10 +193,30 @@ export function CompanyDetail({
     );
   };
 
+  const [isCopyingLink, setIsCopyingLink] = useState(false);
+
   const handleCopyInviteLink = async () => {
-    const token = pendingInvitationWithToken?.token;
+    let token = pendingInvitationWithToken?.token;
+
     if (!token) {
-      window.alert(t("companyDetail.createInviteFirst"));
+      // Автоматически создаём link-приглашение
+      setIsCopyingLink(true);
+      try {
+        const invitation = await companyApi.createInviteLink(
+          company.company.id,
+          defaultRole?.id || undefined,
+        );
+        token = invitation.token ?? null;
+      } catch {
+        window.alert(t("companyDetail.inviteLinkError"));
+        return;
+      } finally {
+        setIsCopyingLink(false);
+      }
+    }
+
+    if (!token) {
+      window.alert(t("companyDetail.inviteLinkError"));
       return;
     }
 
@@ -482,6 +502,7 @@ export function CompanyDetail({
                     <button
                       className="company-detail__invite-btn company-detail__invite-btn"
                       onClick={handleCopyInviteLink}
+                      disabled={isCopyingLink}
                     >
                       <svg
                         width="32"

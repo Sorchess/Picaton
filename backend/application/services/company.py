@@ -720,6 +720,55 @@ class CompanyService:
         logger.info(f"Invitation created for {email} to company {company_id}")
         return invitation
 
+    async def create_link_invitation(
+        self,
+        company_id: UUID,
+        role_id: UUID | None,
+        invited_by_id: UUID,
+    ) -> CompanyInvitation:
+        """
+        Создать приглашение-ссылку (без привязки к email).
+        Любой пользователь с этой ссылкой сможет вступить в компанию.
+
+        Args:
+            company_id: ID компании
+            role_id: ID роли для приглашаемого (None = роль по умолчанию)
+            invited_by_id: ID приглашающего
+
+        Returns:
+            Созданное приглашение
+        """
+        await self.get_company(company_id)
+
+        is_admin = await self._is_admin_or_higher(company_id, invited_by_id)
+        if not is_admin:
+            raise PermissionDeniedError(
+                "Только владелец или администратор может создавать приглашения"
+            )
+
+        token = secrets.token_urlsafe(INVITATION_TOKEN_LENGTH)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=INVITATION_EXPIRE_DAYS)
+
+        if role_id is None:
+            system_roles = await self._role_repo.get_system_roles(company_id)
+            for role in system_roles:
+                if role.name == "Member":
+                    role_id = role.id
+                    break
+
+        invitation = CompanyInvitation(
+            company_id=company_id,
+            email="",
+            role_id=role_id,
+            invited_by_id=invited_by_id,
+            token=token,
+            expires_at=expires_at,
+        )
+        invitation = await self._invitation_repo.create(invitation)
+
+        logger.info(f"Link invitation created for company {company_id}")
+        return invitation
+
     async def get_pending_invitations_for_user(self, email: str) -> list[dict]:
         """
         Получить ожидающие приглашения для пользователя.
@@ -802,8 +851,8 @@ class CompanyService:
             await self._invitation_repo.update(invitation)
             raise InvitationExpiredError("Приглашение истекло")
 
-        # Проверяем email
-        if invitation.email.lower() != user.email.lower():
+        # Проверяем email (пропускаем для link-приглашений без email)
+        if invitation.email and invitation.email.lower() != user.email.lower():
             raise PermissionDeniedError(
                 "Это приглашение предназначено для другого email"
             )

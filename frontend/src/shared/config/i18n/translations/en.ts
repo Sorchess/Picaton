@@ -475,6 +475,7 @@ export const en: TranslationDict = {
   "companyDetail.createInviteFirst":
     "Create an invitation for the member first.",
   "companyDetail.inviteLinkCopied": "Invitation link copied.",
+  "companyDetail.inviteLinkError": "Failed to create invite link.",
   "companyDetail.openRoleSettings": "Open role settings",
   "companyDetail.selectCard": "Select card",
   "companyDetail.selectCardHint":

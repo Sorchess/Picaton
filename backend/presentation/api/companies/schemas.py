@@ -121,6 +121,14 @@ class CreateInvitationRequest(BaseModel):
     )
 
 
+class CreateInviteLinkRequest(BaseModel):
+    """Запрос на создание ссылки-приглашения (без привязки к email)."""
+
+    role_id: UUID | None = Field(
+        None, description="ID роли в компании (None = роль по умолчанию)"
+    )
+
+
 class InvitationResponse(BaseModel):
     """Ответ с данными приглашения."""
 

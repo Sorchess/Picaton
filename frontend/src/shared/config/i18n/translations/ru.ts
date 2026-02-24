@@ -475,6 +475,7 @@ export const ru: TranslationDict = {
   "companyDetail.createInviteFirst":
     "Сначала создайте приглашение для участника.",
   "companyDetail.inviteLinkCopied": "Ссылка приглашения скопирована.",
+  "companyDetail.inviteLinkError": "Не удалось создать ссылку приглашения.",
   "companyDetail.openRoleSettings": "Открыть настройки роли",
   "companyDetail.selectCard": "Выберите визитку",
   "companyDetail.selectCardHint":

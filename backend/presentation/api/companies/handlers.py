@@ -15,6 +15,7 @@ from presentation.api.companies.schemas import (
     MemberUserInfo,
     UpdateMemberRoleRequest,
     CreateInvitationRequest,
+    CreateInviteLinkRequest,
     InvitationResponse,
     InvitationWithCompanyResponse,
     AcceptInvitationRequest,
@@ -714,6 +715,67 @@ async def create_invitation(
     except InvitationAlreadyExistsError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        )
+
+    return InvitationResponse(
+        id=invitation.id,
+        company_id=invitation.company_id,
+        email=invitation.email,
+        role=(
+            CompanyRoleInfo(
+                id=role.id,
+                name=role.name,
+                color=role.color,
+                priority=role.priority,
+                is_system=role.is_system,
+            )
+            if role
+            else None
+        ),
+        invited_by_id=invitation.invited_by_id,
+        token=invitation.token,
+        status=invitation.status,
+        created_at=invitation.created_at,
+        expires_at=invitation.expires_at,
+    )
+
+
+@router.post(
+    "/{company_id}/invite-link",
+    response_model=InvitationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_invite_link(
+    company_id: UUID,
+    data: CreateInviteLinkRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    company_service: CompanyService = Depends(get_company_service),
+    role_repo: CompanyRoleRepositoryInterface = Depends(get_company_role_repository),
+):
+    """Создать ссылку-приглашение в компанию (без привязки к email)."""
+    user = await get_current_user_from_token(credentials, auth_service)
+
+    try:
+        invitation = await company_service.create_link_invitation(
+            company_id=company_id,
+            role_id=data.role_id,
+            invited_by_id=user.id,
+        )
+
+        role = None
+        if invitation.role_id:
+            role = await role_repo.get_by_id(invitation.role_id)
+
+    except CompanyNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Компания не найдена",
+        )
+    except PermissionDeniedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
             detail=str(e),
         )
 

@@ -138,6 +138,14 @@ export const companyApi = {
     api.post<CompanyInvitation>(`/companies/${companyId}/invitations`, data),
 
   /**
+   * Создать ссылку-приглашение (без привязки к email)
+   */
+  createInviteLink: (companyId: string, roleId?: string) =>
+    api.post<CompanyInvitation>(`/companies/${companyId}/invite-link`, {
+      role_id: roleId ?? null,
+    }),
+
+  /**
    * Получить приглашения компании
    */
   getInvitations: (
