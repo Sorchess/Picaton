@@ -249,7 +249,6 @@ export function CompanyDetail({
     }
   };
 
-
   // Build nav items
   const navItems: { id: SubPage; label: string; icon?: React.ReactNode }[] = [
     {
@@ -462,15 +461,45 @@ export function CompanyDetail({
                       className="company-detail__invite-btn"
                       onClick={() => setIsInviteModalOpen(true)}
                     >
-                      <span className="company-detail__invite-btn-icon">+</span>
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 32 32"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M12 25V23C12 21.9391 12.4214 20.9217 13.1716 20.1716C13.9217 19.4214 14.9391 19 16 19H22C23.0609 19 24.0783 19.4214 24.8284 20.1716C25.5786 20.9217 26 21.9391 26 23V25M9 12V18M6 15H12M15 11C15 13.2091 16.7909 15 19 15C21.2091 15 23 13.2091 23 11C23 8.79086 21.2091 7 19 7C16.7909 7 15 8.79086 15 11Z"
+                          stroke="#0081FF"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+
                       <span>Invite member</span>
                     </button>
                     <button
-                      className="company-detail__invite-btn company-detail__invite-btn--link"
+                      className="company-detail__invite-btn company-detail__invite-btn"
                       onClick={handleCopyInviteLink}
                     >
-                      <span>Link</span>
-                      <span>Copy invite link</span>
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 32 32"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M17.4144 21.6565L16.0002 23.0707C15.0625 24.0084 13.7907 24.5352 12.4646 24.5352C11.1385 24.5352 9.86677 24.0084 8.92909 23.0707C7.99141 22.133 7.46462 20.8612 7.46462 19.5352C7.46462 18.2091 7.99141 16.9373 8.92909 15.9996L10.3433 14.5854M14.5859 10.3428L16.0002 8.92855C16.9378 7.99087 18.2096 7.46409 19.5357 7.46409C20.8618 7.46409 22.1335 7.99087 23.0712 8.92855C24.0089 9.86624 24.5357 11.138 24.5357 12.4641C24.5357 13.7902 24.0089 15.0619 23.0712 15.9996L21.657 17.4138M13.1717 18.828L18.8286 13.1712"
+                          stroke="#0081FF"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+
+                      <span>Invite via link</span>
                     </button>
                   </div>
                 )}
