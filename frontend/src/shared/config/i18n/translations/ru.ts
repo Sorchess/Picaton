@@ -460,6 +460,7 @@ export const ru: TranslationDict = {
   "companyDetail.deleting": "Удаление...",
   "companyDetail.delete": "Удалить",
   "companyDetail.aboutCompany": "О компании",
+  "companyDetail.shareLink": "Поделиться ссылкой",
   "companyDetail.joinDate": "Дата вступления",
   "companyDetail.myCard": "Моя визитка",
   "companyDetail.notSelected": "Не выбрана",

@@ -9,6 +9,10 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
+export function CardDivider() {
+  return <div className="section-divider" />;
+}
+
 export function Card(Props: CardProps) {
   const {
     variant = "default",

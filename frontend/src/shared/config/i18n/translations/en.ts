@@ -460,6 +460,7 @@ export const en: TranslationDict = {
   "companyDetail.deleting": "Deleting...",
   "companyDetail.delete": "Delete",
   "companyDetail.aboutCompany": "About company",
+  "companyDetail.shareLink": "Share link",
   "companyDetail.joinDate": "Join date",
   "companyDetail.myCard": "My card",
   "companyDetail.notSelected": "Not selected",

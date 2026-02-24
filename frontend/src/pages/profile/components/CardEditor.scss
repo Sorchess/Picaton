@@ -514,21 +514,6 @@
     margin: 0;
   }
 
-  &__section-description {
-    font-size: 13px;
-    color: var(--color-border);
-    margin: 0 0 12px 6px;
-    line-height: 1.4;
-  }
-
-  &__section-divider {
-    width: 100%;
-    height: 1px;
-    background: var(--color-border, #303030);
-    border-radius: 55px;
-    margin: 0;
-  }
-
   &__username-field {
     display: flex;
     align-items: center;

@@ -10,7 +10,7 @@ export type { ButtonVariant, ButtonSize } from "./Button";
 export { IconButton } from "./IconButton";
 export type { IconButtonVariant, IconButtonSize } from "./IconButton";
 
-export { Card } from "./Card";
+export { Card, CardDivider } from "./Card";
 export type { CardVariant } from "./Card";
 
 export { Input } from "./Input";

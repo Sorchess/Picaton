@@ -15,6 +15,7 @@ import {
   Card,
   Button,
   GlassSelect,
+  CardDivider,
 } from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
 import { useI18n } from "@/shared/config";
@@ -766,7 +767,7 @@ export function CardEditor({
             placeholder={t("cardEditor.firstName")}
             maxLength={50}
           />
-          <div className="card-editor__section-divider" />
+          <CardDivider />
           <div className="card-editor__section-header">
             <h2 className="card-editor__section-title">
               {t("cardEditor.lastName")}
