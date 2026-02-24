@@ -73,6 +73,9 @@ class BusinessCardUpdate(BaseModel):
         default=None, max_length=2000, examples=["Разработчик с 5-летним опытом"]
     )
     is_active: bool | None = None
+    position: str | None = Field(
+        default=None, max_length=100, examples=["Frontend Developer"]
+    )
 
 
 class BusinessCardResponse(BaseModel):
@@ -93,6 +96,7 @@ class BusinessCardResponse(BaseModel):
     random_facts: list[str]
     completeness: int
     emojis: list[str] = []
+    position: str | None = None
 
 
 class BusinessCardPublicResponse(BaseModel):
@@ -110,6 +114,7 @@ class BusinessCardPublicResponse(BaseModel):
     contacts: list[CardContactInfo] = []  # Только is_visible=True
     completeness: int
     emojis: list[str] = []
+    position: str | None = None
 
 
 class BusinessCardListResponse(BaseModel):

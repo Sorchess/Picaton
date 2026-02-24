@@ -118,6 +118,7 @@ class BusinessCardService:
         avatar_url: str | None = None,
         bio: str | None = None,
         is_active: bool | None = None,
+        position: str | None = ...,
     ) -> BusinessCard:
         """Обновить карточку."""
         card = await self.get_card(card_id)
@@ -136,6 +137,8 @@ class BusinessCardService:
             card.update_bio(bio)
         if is_active is not None:
             card.set_active(is_active)
+        if position is not ...:
+            card.update_position(position)
 
         return await self._card_repository.update(card)
 

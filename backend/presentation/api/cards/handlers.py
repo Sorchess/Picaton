@@ -100,6 +100,7 @@ def _card_to_response(card) -> BusinessCardResponse:
         random_facts=card.random_facts,
         completeness=card.completeness,
         emojis=card.emojis,
+        position=card.position,
     )
 
 
@@ -137,6 +138,7 @@ def _card_to_public_response(
         ],
         completeness=card.completeness,
         emojis=card.emojis,
+        position=card.position,
     )
 
 
@@ -257,6 +259,7 @@ async def update_card(
             avatar_url=data.avatar_url,
             bio=data.bio,
             is_active=data.is_active,
+            position=data.position,
         )
         return _card_to_response(card)
     except BusinessCardNotFoundError:

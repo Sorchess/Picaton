@@ -226,6 +226,7 @@ export function ContactProfileView({
             is_primary: cardData.is_primary,
             title: cardData.title,
             emojis: cardData.emojis || [],
+            position: cardData.position ?? null,
           }),
         );
         setCards(publicCards);
@@ -260,6 +261,7 @@ export function ContactProfileView({
           is_primary: cardData.is_primary,
           title: cardData.title,
           emojis: cardData.emojis || [],
+          position: cardData.position ?? null,
         };
         setCards([publicCard]);
         setActiveCardId(initialCardId);
@@ -287,6 +289,7 @@ export function ContactProfileView({
         completeness: card.completeness,
         is_primary: card.is_primary,
         title: card.title,
+        position: card.position ?? null,
       })) as BusinessCardPublic[];
 
       setCards(publicCards);

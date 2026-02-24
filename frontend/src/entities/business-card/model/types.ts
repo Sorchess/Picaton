@@ -30,6 +30,7 @@ export interface BusinessCard {
   random_facts: string[];
   completeness: number;
   emojis: string[];
+  position: string | null;
 }
 
 export interface BusinessCardPublic {
@@ -46,6 +47,7 @@ export interface BusinessCardPublic {
   contacts: CardContactInfo[];
   completeness: number;
   emojis: string[];
+  position: string | null;
 }
 
 export interface BusinessCardCreate {
@@ -60,6 +62,7 @@ export interface BusinessCardUpdate {
   avatar_url?: string | null;
   bio?: string | null;
   is_active?: boolean | null;
+  position?: string | null;
 }
 
 export interface BusinessCardListResponse {

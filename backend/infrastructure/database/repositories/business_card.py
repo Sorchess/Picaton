@@ -28,6 +28,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             "is_active": card.is_active,
             "display_name": card.display_name,
             "avatar_url": card.avatar_url,
+            "position": card.position,
             "tags": [
                 {
                     "id": str(tag.id),
@@ -86,6 +87,7 @@ class MongoBusinessCardRepository(BusinessCardRepositoryInterface):
             is_active=doc.get("is_active", True),
             display_name=doc.get("display_name", ""),
             avatar_url=doc.get("avatar_url"),
+            position=doc.get("position"),
             tags=tags,
             search_tags=doc.get("search_tags", []),
             contacts=contacts,

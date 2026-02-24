@@ -77,6 +77,7 @@ class BusinessCard(Entity):
         default=""
     )  # Отображаемое имя (может отличаться от имени юзера)
     avatar_url: str | None = field(default=None)
+    position: str | None = field(default=None)  # Должность/роль на этой визитке
 
     # Навыки и теги для ассоциативного поиска
     tags: list[Tag] = field(default_factory=list)
@@ -151,6 +152,10 @@ class BusinessCard(Entity):
         """Обновить отображаемое имя."""
         self.display_name = name
         self._recalculate_completeness()
+
+    def update_position(self, position: str | None) -> None:
+        """Обновить должность/роль на визитке."""
+        self.position = position
 
     def update_avatar(self, avatar_url: str | None) -> None:
         """Обновить аватар."""

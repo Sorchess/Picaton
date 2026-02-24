@@ -407,9 +407,10 @@ export function ProfilePage({
   const getCardRoles = (): string[] => {
     const roles: string[] = [];
 
-    // Добавляем должность пользователя
-    if (user.position) {
-      roles.push(user.position);
+    // Добавляем должность из карточки (или пользователя как фолбэк)
+    const position = selectedCard?.position || user.position;
+    if (position) {
+      roles.push(position);
     }
 
     // Добавляем теги из карточки

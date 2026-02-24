@@ -153,8 +153,8 @@ export function CardEditor({
   const [cardTitle, setCardTitle] = useState(card.title || "");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
-  // Role (position) editing state
-  const [roleText, setRoleText] = useState(user.position || "");
+  // Role (position) editing state — per-card
+  const [roleText, setRoleText] = useState(card.position || "");
   const [isEditingRole, setIsEditingRole] = useState(false);
   const [isSavingRole, setIsSavingRole] = useState(false);
   const roleInputRef = useRef<HTMLInputElement>(null);
@@ -171,7 +171,7 @@ export function CardEditor({
     setSelectedCard(card);
     setProfileTags(card.search_tags || []);
     setCardTitle(card.title || "");
-    setRoleText(user.position || "");
+    setRoleText(card.position || "");
     setFirstName(user.first_name || "");
     setLastName(user.last_name || "");
     setUsername(user.username || "");
@@ -369,13 +369,14 @@ export function CardEditor({
   const handleSaveRole = useCallback(
     async (value: string) => {
       const trimmed = value.trim();
-      if (trimmed === (user.position || "")) return;
+      if (trimmed === (selectedCard.position || "")) return;
       setIsSavingRole(true);
       try {
-        const updatedUser = await userApi.update(user.id, {
+        const updated = await businessCardApi.update(selectedCard.id, user.id, {
           position: trimmed || null,
         });
-        onUserUpdate?.(updatedUser);
+        setSelectedCard(updated);
+        onCardUpdate(updated);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : t("cardEditor.saveRoleError"),
@@ -384,7 +385,7 @@ export function CardEditor({
         setIsSavingRole(false);
       }
     },
-    [user.id, user.position, onUserUpdate],
+    [selectedCard.id, selectedCard.position, user.id, onCardUpdate],
   );
 
   const handleRoleBlur = useCallback(() => {
@@ -397,11 +398,11 @@ export function CardEditor({
       if (e.key === "Enter") {
         e.currentTarget.blur();
       } else if (e.key === "Escape") {
-        setRoleText(user.position || "");
+        setRoleText(selectedCard.position || "");
         setIsEditingRole(false);
       }
     },
-    [user.position],
+    [selectedCard.position],
   );
 
   // Name save handlers
@@ -694,7 +695,7 @@ export function CardEditor({
                   className="card-editor__role-chip-button"
                 >
                   <span className="card-editor__role-chip-text">
-                    {user.position || t("common.user")}
+                    {selectedCard.position || t("common.user")}
                   </span>
                 </Button>
                 <IconButton
