@@ -1,11 +1,16 @@
 """WebSocket endpoint для прямых сообщений в реальном времени."""
 
 import asyncio
+import html
 import json
+import logging
+import time
 from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from jose import jwt as jose_jwt
+from jose.exceptions import ExpiredSignatureError, JWTError
 
 from application.services.direct_chat import DirectChatService
 from application.services.privacy_checker import PrivacyChecker
@@ -13,6 +18,10 @@ from infrastructure.dependencies import (
     get_direct_chat_service,
     get_user_service,
 )
+from settings.config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(tags=["websocket"])
@@ -76,13 +85,34 @@ class DMConnectionManager:
 dm_manager = DMConnectionManager()
 
 
-async def get_user_from_token(token: str) -> UUID | None:
-    """Получить user_id из токена (упрощённая версия)."""
-    try:
-        from jose import jwt
-        from settings.config import settings
+# Rate limiter: tracks last message timestamps per user
+_dm_rate_limit_state: dict[UUID, list[float]] = {}
+DM_RATE_LIMIT_MAX_MESSAGES = 30  # max messages per window
+DM_RATE_LIMIT_WINDOW_SECONDS = 60  # window size in seconds
 
-        payload = jwt.decode(
+
+def _check_dm_rate_limit(user_id: UUID) -> bool:
+    """Check if user exceeded rate limit. Returns True if allowed."""
+    now = time.monotonic()
+    timestamps = _dm_rate_limit_state.get(user_id, [])
+    timestamps = [t for t in timestamps if now - t < DM_RATE_LIMIT_WINDOW_SECONDS]
+    if len(timestamps) >= DM_RATE_LIMIT_MAX_MESSAGES:
+        _dm_rate_limit_state[user_id] = timestamps
+        return False
+    timestamps.append(now)
+    _dm_rate_limit_state[user_id] = timestamps
+    return True
+
+
+def sanitize_message_content(content: str) -> str:
+    """Sanitize message content to prevent XSS attacks."""
+    return html.escape(content, quote=True)
+
+
+async def get_user_from_token(token: str) -> UUID | None:
+    """Получить user_id из JWT токена с полноценной проверкой."""
+    try:
+        payload = jose_jwt.decode(
             token,
             settings.jwt.secret_key,
             algorithms=[settings.jwt.algorithm],
@@ -90,14 +120,11 @@ async def get_user_from_token(token: str) -> UUID | None:
         user_id = payload.get("sub")
         if user_id:
             return UUID(user_id)
-    except Exception:
-        pass
-
-    # Fallback: попытка parsing UUID напрямую (для совместимости)
-    try:
-        return UUID(token)
-    except (ValueError, TypeError):
-        return None
+    except ExpiredSignatureError:
+        logger.warning("DM WebSocket auth: expired token")
+    except (JWTError, ValueError, TypeError) as e:
+        logger.warning(f"DM WebSocket auth: invalid token — {e}")
+    return None
 
 
 @router.websocket("/ws/dm")
@@ -174,8 +201,19 @@ async def dm_websocket_endpoint(
             msg_type = data.get("type")
 
             if msg_type == "send_message":
+                # Rate limiting
+                if not _check_dm_rate_limit(user_id):
+                    await websocket.send_json(
+                        {
+                            "type": "error",
+                            "message": "Rate limit exceeded. Please slow down.",
+                            "code": "rate_limit",
+                        }
+                    )
+                    continue
+
                 conversation_id = data.get("conversation_id")
-                content = data.get("content", "").strip()
+                content = sanitize_message_content(data.get("content", "").strip())
                 reply_to_id = data.get("reply_to_id")
 
                 if not conversation_id or not content:
@@ -235,7 +273,10 @@ async def dm_websocket_endpoint(
                     await dm_manager.send_to_user(other_id, msg_data)
 
                 except Exception as e:
-                    await websocket.send_json({"type": "error", "message": str(e)})
+                    logger.error(f"DM send_message error: {e}", exc_info=True)
+                    await websocket.send_json(
+                        {"type": "error", "message": "Failed to send message"}
+                    )
 
             elif msg_type == "typing":
                 conversation_id = data.get("conversation_id")
@@ -266,7 +307,7 @@ async def dm_websocket_endpoint(
 
             elif msg_type == "edit_message":
                 message_id = data.get("message_id")
-                content = data.get("content", "").strip()
+                content = sanitize_message_content(data.get("content", "").strip())
                 conversation_id = data.get("conversation_id")
 
                 if not message_id or not content:
@@ -297,7 +338,10 @@ async def dm_websocket_endpoint(
                     await dm_manager.send_to_user(other_id, edit_data)
 
                 except Exception as e:
-                    await websocket.send_json({"type": "error", "message": str(e)})
+                    logger.error(f"DM edit_message error: {e}", exc_info=True)
+                    await websocket.send_json(
+                        {"type": "error", "message": "Failed to edit message"}
+                    )
 
             elif msg_type == "delete_message":
                 message_id = data.get("message_id")
@@ -336,7 +380,10 @@ async def dm_websocket_endpoint(
                         await dm_manager.send_to_user(other_id, delete_data)
 
                 except Exception as e:
-                    await websocket.send_json({"type": "error", "message": str(e)})
+                    logger.error(f"DM delete_message error: {e}", exc_info=True)
+                    await websocket.send_json(
+                        {"type": "error", "message": "Failed to delete message"}
+                    )
 
             elif msg_type == "forward_message":
                 source_message_id = data.get("source_message_id")
@@ -350,7 +397,9 @@ async def dm_websocket_endpoint(
                     if not source_message or source_message.is_deleted:
                         continue
 
-                    conv = await dm_service.get_conversation(UUID(conversation_id), user_id)
+                    conv = await dm_service.get_conversation(
+                        UUID(conversation_id), user_id
+                    )
                     other_id = conv.get_other_participant(user_id)
                     if not await privacy_checker.can_message(user_id, other_id):
                         await websocket.send_json(
@@ -411,7 +460,10 @@ async def dm_websocket_endpoint(
                     await dm_manager.send_to_user(user_id, msg_data)
                     await dm_manager.send_to_user(other_id, msg_data)
                 except Exception as e:
-                    await websocket.send_json({"type": "error", "message": str(e)})
+                    logger.error(f"DM forward_message error: {e}", exc_info=True)
+                    await websocket.send_json(
+                        {"type": "error", "message": "Failed to forward message"}
+                    )
 
             elif msg_type == "mark_read":
                 conversation_id = data.get("conversation_id")

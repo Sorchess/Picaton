@@ -24,10 +24,21 @@ class DatabaseConfig(BaseSettings):
     username: str
     password: str
     name: str
+    tls: bool = False  # Enable TLS for MongoDB connection
+    tls_ca_file: str = ""  # Path to CA certificate file
+    tls_allow_invalid_certificates: bool = False  # Allow self-signed certs (dev only)
 
     @property
     def url(self) -> str:
-        return f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/"
+        base = f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/"
+        if self.tls:
+            params = ["tls=true"]
+            if self.tls_ca_file:
+                params.append(f"tlsCAFile={self.tls_ca_file}")
+            if self.tls_allow_invalid_certificates:
+                params.append("tlsAllowInvalidCertificates=true")
+            base += "?" + "&".join(params)
+        return base
 
 
 class APIConfig(BaseSettings):
@@ -36,7 +47,10 @@ class APIConfig(BaseSettings):
 
 
 class JWTConfig(BaseSettings):
-    secret_key: str = "super-secret-key-change-in-production"
+    secret_key: str = Field(
+        default=...,
+        description="JWT secret key — MUST be set via JWT__SECRET_KEY env var",
+    )
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
 
@@ -112,7 +126,10 @@ class RabbitMQConfig(BaseSettings):
 class MagicLinkConfig(BaseSettings):
     """Конфигурация magic link авторизации."""
 
-    secret_key: str = "magic-link-secret-change-in-production"
+    secret_key: str = Field(
+        default=...,
+        description="Magic link secret — MUST be set via MAGIC_LINK__SECRET_KEY env var",
+    )
     expire_minutes: int = 15  # Ссылка действует 15 минут
     frontend_url: str = ""  # URL фронтенда для ссылок в QR-кодах и email
 
@@ -141,6 +158,19 @@ class TelegramConfig(BaseSettings):
         return ""
 
 
+class EncryptionConfig(BaseSettings):
+    """Конфигурация шифрования сообщений чата.
+
+    Генерация ключа:
+        python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    """
+
+    chat_key: str = Field(
+        default=...,
+        description="Fernet key for chat message encryption — MUST be set via ENCRYPTION__CHAT_KEY env var",
+    )
+
+
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
@@ -159,6 +189,7 @@ class Config(BaseSettings):
     magic_link: MagicLinkConfig = MagicLinkConfig()
     telegram: TelegramConfig = TelegramConfig()
     yandex_speechkit: YandexSpeechKitConfig = YandexSpeechKitConfig()
+    encryption: EncryptionConfig = EncryptionConfig()
     mongo: DatabaseConfig
     api: APIConfig
 

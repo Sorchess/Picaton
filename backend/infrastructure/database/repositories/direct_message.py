@@ -1,5 +1,6 @@
 """MongoDB реализация репозитория прямых сообщений."""
 
+import re
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -7,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from domain.entities.conversation import DirectMessage
 from domain.repositories.direct_message import DirectMessageRepositoryInterface
+from infrastructure.encryption import get_message_encryption
 
 
 class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
@@ -15,11 +17,12 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
         self._collection = collection
 
     def _to_document(self, msg: DirectMessage) -> dict:
+        encryption = get_message_encryption()
         return {
             "_id": str(msg.id),
             "conversation_id": str(msg.conversation_id),
             "sender_id": str(msg.sender_id),
-            "content": msg.content,
+            "content": encryption.encrypt(msg.content) if msg.content else "",
             "is_read": msg.is_read,
             "read_at": msg.read_at,
             "is_edited": msg.is_edited,
@@ -36,11 +39,13 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
         }
 
     def _from_document(self, doc: dict) -> DirectMessage:
+        encryption = get_message_encryption()
+        raw_content = doc.get("content", "")
         return DirectMessage(
             id=UUID(doc["_id"]),
             conversation_id=UUID(doc["conversation_id"]),
             sender_id=UUID(doc["sender_id"]),
-            content=doc.get("content", ""),
+            content=encryption.decrypt(raw_content) if raw_content else "",
             is_read=doc.get("is_read", False),
             read_at=doc.get("read_at"),
             is_edited=doc.get("is_edited", False),
@@ -166,13 +171,38 @@ class MongoDirectMessageRepository(DirectMessageRepositoryInterface):
     async def search_in_conversation(
         self, conversation_id: UUID, query: str, limit: int = 20
     ) -> list[DirectMessage]:
-        search_query = {
+        """Поиск в зашифрованных сообщениях: дешифровка + фильтрация на стороне приложения."""
+        base_query = {
             "conversation_id": str(conversation_id),
             "is_deleted": False,
-            "content": {"$regex": query, "$options": "i"},
         }
-        cursor = self._collection.find(search_query).sort("created_at", -1).limit(limit)
-        return [self._from_document(doc) async for doc in cursor]
+        pattern = re.compile(re.escape(query), re.IGNORECASE)
+        results: list[DirectMessage] = []
+        batch_size = 200
+        skip = 0
+        max_scan = 5000
+
+        while len(results) < limit and skip < max_scan:
+            cursor = (
+                self._collection.find(base_query)
+                .sort("created_at", -1)
+                .skip(skip)
+                .limit(batch_size)
+            )
+            batch_count = 0
+            async for doc in cursor:
+                batch_count += 1
+                message = self._from_document(doc)
+                if pattern.search(message.content):
+                    results.append(message)
+                    if len(results) >= limit:
+                        break
+
+            if batch_count < batch_size:
+                break
+            skip += batch_size
+
+        return results
 
     async def hide_for_user(self, message_id: UUID, user_id: UUID) -> bool:
         result = await self._collection.update_one(

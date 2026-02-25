@@ -1,5 +1,6 @@
 """MongoDB реализация репозитория сообщений чата."""
 
+import re
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -8,6 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from domain.entities.chat_message import ChatMessage
 from domain.enums.project import MessageType
 from domain.repositories.chat_message import ChatMessageRepositoryInterface
+from infrastructure.encryption import get_message_encryption
 
 
 class MongoChatMessageRepository(ChatMessageRepositoryInterface):
@@ -17,12 +19,13 @@ class MongoChatMessageRepository(ChatMessageRepositoryInterface):
         self._collection = collection
 
     def _to_document(self, message: ChatMessage) -> dict:
-        """Преобразовать сущность в документ MongoDB."""
+        """Преобразовать сущность в документ MongoDB (с шифрованием контента)."""
+        encryption = get_message_encryption()
         return {
             "_id": str(message.id),
             "project_id": str(message.project_id),
             "author_id": str(message.author_id) if message.author_id else None,
-            "content": message.content,
+            "content": encryption.encrypt(message.content) if message.content else "",
             "message_type": message.message_type.value,
             "file_url": message.file_url,
             "file_name": message.file_name,
@@ -37,12 +40,14 @@ class MongoChatMessageRepository(ChatMessageRepositoryInterface):
         }
 
     def _from_document(self, doc: dict) -> ChatMessage:
-        """Преобразовать документ MongoDB в сущность."""
+        """Преобразовать документ MongoDB в сущность (с расшифровкой контента)."""
+        encryption = get_message_encryption()
+        raw_content = doc.get("content", "")
         return ChatMessage(
             id=UUID(doc["_id"]),
             project_id=UUID(doc["project_id"]),
             author_id=UUID(doc["author_id"]) if doc.get("author_id") else None,
-            content=doc.get("content", ""),
+            content=encryption.decrypt(raw_content) if raw_content else "",
             message_type=MessageType(doc.get("message_type", "text")),
             file_url=doc.get("file_url"),
             file_name=doc.get("file_name"),
@@ -215,12 +220,41 @@ class MongoChatMessageRepository(ChatMessageRepositoryInterface):
         query: str,
         limit: int = 20,
     ) -> list[ChatMessage]:
-        """Поиск сообщений в проекте."""
-        search_query = {
+        """Поиск сообщений в проекте.
+
+        Поскольку сообщения зашифрованы, поиск выполняется на стороне приложения
+        после расшифровки контента.
+        """
+        base_query = {
             "project_id": str(project_id),
             "is_deleted": False,
-            "content": {"$regex": query, "$options": "i"},
         }
 
-        cursor = self._collection.find(search_query).sort("created_at", -1).limit(limit)
-        return [self._from_document(doc) async for doc in cursor]
+        # Загружаем последние сообщения батчами и ищем в расшифрованном тексте
+        pattern = re.compile(re.escape(query), re.IGNORECASE)
+        results: list[ChatMessage] = []
+        batch_size = 200
+        skip = 0
+        max_scan = 5000  # Ограничение на максимальное количество проверяемых сообщений
+
+        while len(results) < limit and skip < max_scan:
+            cursor = (
+                self._collection.find(base_query)
+                .sort("created_at", -1)
+                .skip(skip)
+                .limit(batch_size)
+            )
+            batch_count = 0
+            async for doc in cursor:
+                batch_count += 1
+                message = self._from_document(doc)
+                if pattern.search(message.content):
+                    results.append(message)
+                    if len(results) >= limit:
+                        break
+
+            if batch_count < batch_size:
+                break  # Больше сообщений нет
+            skip += batch_size
+
+        return results

@@ -7,6 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from domain.entities.conversation import Conversation
 from domain.repositories.conversation import ConversationRepositoryInterface
+from infrastructure.encryption import get_message_encryption
 
 
 class MongoConversationRepository(ConversationRepositoryInterface):
@@ -15,10 +16,15 @@ class MongoConversationRepository(ConversationRepositoryInterface):
         self._collection = collection
 
     def _to_document(self, conv: Conversation) -> dict:
+        encryption = get_message_encryption()
         return {
             "_id": str(conv.id),
             "participants": [str(p) for p in conv.participants],
-            "last_message_content": conv.last_message_content,
+            "last_message_content": (
+                encryption.encrypt(conv.last_message_content)
+                if conv.last_message_content
+                else None
+            ),
             "last_message_sender_id": (
                 str(conv.last_message_sender_id)
                 if conv.last_message_sender_id
@@ -31,10 +37,14 @@ class MongoConversationRepository(ConversationRepositoryInterface):
         }
 
     def _from_document(self, doc: dict) -> Conversation:
+        encryption = get_message_encryption()
+        raw_last_msg = doc.get("last_message_content")
         return Conversation(
             id=UUID(doc["_id"]),
             participants=[UUID(p) for p in doc.get("participants", [])],
-            last_message_content=doc.get("last_message_content"),
+            last_message_content=(
+                encryption.decrypt(raw_last_msg) if raw_last_msg else None
+            ),
             last_message_sender_id=(
                 UUID(doc["last_message_sender_id"])
                 if doc.get("last_message_sender_id")

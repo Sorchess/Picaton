@@ -1,12 +1,17 @@
 """WebSocket endpoint для чата в реальном времени."""
 
 import asyncio
+import html
 import json
+import logging
+import time
 from datetime import datetime
 from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
+from jose import jwt
+from jose.exceptions import ExpiredSignatureError, JWTError
 
 from application.services.chat import ChatService
 from application.services.project import ProjectService
@@ -24,6 +29,10 @@ from presentation.api.chat.schemas import (
     WSUserLeft,
     WSReadReceipt,
 )
+from settings.config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(tags=["websocket"])
@@ -120,14 +129,47 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+# Rate limiter: tracks last message timestamps per user
+_rate_limit_state: dict[UUID, list[float]] = {}
+RATE_LIMIT_MAX_MESSAGES = 30  # max messages per window
+RATE_LIMIT_WINDOW_SECONDS = 60  # window size in seconds
+
+
+def _check_rate_limit(user_id: UUID) -> bool:
+    """Check if user exceeded rate limit. Returns True if allowed."""
+    now = time.monotonic()
+    timestamps = _rate_limit_state.get(user_id, [])
+    # Remove timestamps outside the window
+    timestamps = [t for t in timestamps if now - t < RATE_LIMIT_WINDOW_SECONDS]
+    if len(timestamps) >= RATE_LIMIT_MAX_MESSAGES:
+        _rate_limit_state[user_id] = timestamps
+        return False
+    timestamps.append(now)
+    _rate_limit_state[user_id] = timestamps
+    return True
+
+
+def sanitize_message_content(content: str) -> str:
+    """Sanitize message content to prevent XSS attacks."""
+    return html.escape(content, quote=True)
+
+
 async def get_user_from_token(token: str) -> UUID | None:
-    """Получить user_id из токена."""
-    # TODO: Реализовать проверку токена
-    # Для демонстрации парсим токен как UUID напрямую
+    """Получить user_id из JWT токена с полноценной проверкой."""
     try:
-        return UUID(token)
-    except (ValueError, TypeError):
-        return None
+        payload = jwt.decode(
+            token,
+            settings.jwt.secret_key,
+            algorithms=[settings.jwt.algorithm],
+        )
+        user_id = payload.get("sub")
+        if user_id:
+            return UUID(user_id)
+    except ExpiredSignatureError:
+        logger.warning("WebSocket auth: expired token")
+    except (JWTError, ValueError, TypeError) as e:
+        logger.warning(f"WebSocket auth: invalid token — {e}")
+    return None
 
 
 @router.websocket("/ws/chat/{project_id}")
@@ -195,8 +237,19 @@ async def websocket_endpoint(
             message_type = data.get("type")
 
             if message_type == "send_message":
+                # Rate limiting
+                if not _check_rate_limit(user_id):
+                    await websocket.send_json(
+                        {
+                            "type": "error",
+                            "message": "Rate limit exceeded. Please slow down.",
+                            "code": "rate_limit",
+                        }
+                    )
+                    continue
+
                 # Отправка сообщения
-                content = data.get("content", "").strip()
+                content = sanitize_message_content(data.get("content", "").strip())
                 reply_to_id = data.get("reply_to_id")
 
                 if not content:
@@ -238,10 +291,11 @@ async def websocket_endpoint(
                         ).model_dump(),
                     )
                 except Exception as e:
+                    logger.error(f"Chat send_message error: {e}", exc_info=True)
                     await websocket.send_json(
                         {
                             "type": "error",
-                            "message": str(e),
+                            "message": "Failed to send message",
                         }
                     )
 
@@ -264,7 +318,7 @@ async def websocket_endpoint(
             elif message_type == "edit_message":
                 # Редактирование сообщения
                 message_id = data.get("message_id")
-                new_content = data.get("content", "").strip()
+                new_content = sanitize_message_content(data.get("content", "").strip())
 
                 if not message_id or not new_content:
                     continue
@@ -290,10 +344,11 @@ async def websocket_endpoint(
                         ).model_dump(),
                     )
                 except Exception as e:
+                    logger.error(f"Chat edit_message error: {e}", exc_info=True)
                     await websocket.send_json(
                         {
                             "type": "error",
-                            "message": str(e),
+                            "message": "Failed to edit message",
                         }
                     )
 
@@ -318,10 +373,11 @@ async def websocket_endpoint(
                         ).model_dump(),
                     )
                 except Exception as e:
+                    logger.error(f"Chat delete_message error: {e}", exc_info=True)
                     await websocket.send_json(
                         {
                             "type": "error",
-                            "message": str(e),
+                            "message": "Failed to delete message",
                         }
                     )
 
