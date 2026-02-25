@@ -2,36 +2,21 @@ import { useState, useCallback } from "react";
 import { useAuth } from "@/features/auth";
 import { userApi } from "@/entities/user";
 import { hashPhones, normalizePhone } from "../lib/hashPhone";
+import { pickContacts, detectBackend } from "../lib/nativeContacts";
 import type { HashedContact } from "../model/types";
 import { useI18n } from "@/shared/config";
 import { Modal, Loader, Button } from "@/shared";
 import "./PhoneBookSyncButton.scss";
 
 /**
- * Contact Picker API type declarations.
+ * Contact Picker API type declarations (kept for fallback detection).
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Contact_Picker_API
  */
-interface ContactAddress {
-  city?: string;
-  country?: string;
-  postalCode?: string;
-  region?: string;
-  streetAddress?: string;
-}
-
-interface ContactInfo {
-  name?: string[];
-  email?: string[];
-  tel?: string[];
-  address?: ContactAddress[];
-  icon?: Blob[];
-}
-
 interface ContactsManager {
   select(
     properties: string[],
     options?: { multiple?: boolean },
-  ): Promise<ContactInfo[]>;
+  ): Promise<Array<{ name?: string[]; email?: string[]; tel?: string[] }>>;
   getProperties(): Promise<string[]>;
 }
 
@@ -70,13 +55,11 @@ export function PhoneBookSyncButton({
   const [savedUserIds, setSavedUserIds] = useState<Set<string>>(new Set());
   const [showInstructions, setShowInstructions] = useState(false);
 
-  const isSupported =
-    typeof navigator !== "undefined" &&
-    "contacts" in navigator &&
-    !!navigator.contacts;
+  const contactsBackend = detectBackend();
+  const isSupported = contactsBackend !== "none";
 
   const handlePickContacts = useCallback(async () => {
-    if (!isSupported || !navigator.contacts) {
+    if (!isSupported) {
       setShowInstructions(true);
       return;
     }
@@ -88,13 +71,8 @@ export function PhoneBookSyncButton({
     setIsProcessing(true);
 
     try {
-      // Request access to the phone book
-      const contacts = await navigator.contacts.select(
-        ["name", "tel", "email"],
-        {
-          multiple: true,
-        },
-      );
+      // Use the unified bridge (Capacitor native or Contact Picker API)
+      const contacts = await pickContacts();
 
       if (!contacts || contacts.length === 0) {
         setIsProcessing(false);
@@ -110,9 +88,9 @@ export function PhoneBookSyncButton({
       }> = [];
 
       for (const contact of contacts) {
-        const name = contact.name?.[0] || t("phoneBookSync.unknownContact");
-        const phones = contact.tel || [];
-        const emails = contact.email || [];
+        const name = contact.name || t("phoneBookSync.unknownContact");
+        const phones = contact.phones || [];
+        const emails = contact.emails || [];
 
         // Collect for phone-hash sync
         for (const phone of phones) {
@@ -172,6 +150,11 @@ export function PhoneBookSyncButton({
     } catch (err) {
       if (err instanceof DOMException && err.name === "NotAllowedError") {
         setError(t("phoneBookSync.permissionDenied"));
+      } else if (
+        err instanceof DOMException &&
+        err.name === "NotSupportedError"
+      ) {
+        setShowInstructions(true);
       } else if (err instanceof DOMException && err.name === "AbortError") {
         // User cancelled picker — not an error
       } else {

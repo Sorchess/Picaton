@@ -5,6 +5,8 @@ export {
   parsePhoneInput,
   normalizePhone,
 } from "./lib/hashPhone";
+export { pickContacts, detectBackend } from "./lib/nativeContacts";
+export type { PickedContact, ContactsBackend } from "./lib/nativeContacts";
 export type {
   PhoneContact,
   ImportStats,
