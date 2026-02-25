@@ -73,7 +73,7 @@ export function UserCard({
           initials={getInitials(fullName)}
           src={displayAvatar}
           alt={fullName}
-          size="lg"
+          size="md"
           gradientColors={user.avatar_gradient}
         />
       </div>
