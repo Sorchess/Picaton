@@ -928,10 +928,8 @@ class CompanyService:
         if not invitation:
             raise InvitationNotFoundError("Приглашение не найдено")
 
-        admin_member = await self._member_repo.get_by_company_and_user(
-            invitation.company_id, admin_user_id
-        )
-        if not admin_member or not admin_member.can_manage_members():
+        is_admin = await self._is_admin_or_higher(invitation.company_id, admin_user_id)
+        if not is_admin:
             raise PermissionDeniedError(
                 "Только владелец или администратор может отменять приглашения"
             )
