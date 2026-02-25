@@ -46,6 +46,8 @@ export interface UnifiedBioEditorProps {
   minLength?: number;
   /** Максимальная длина bio */
   maxLength?: number;
+  /** Показывать заголовок секции (default: true) */
+  showTitle?: boolean;
 }
 
 export function UnifiedBioEditor({
@@ -59,6 +61,7 @@ export function UnifiedBioEditor({
   onBioTextChange,
   minLength = 20,
   maxLength = 2000,
+  showTitle = true,
 }: UnifiedBioEditorProps) {
   const { t } = useI18n();
 
@@ -232,6 +235,36 @@ export function UnifiedBioEditor({
   // Debounced tag update
   const debouncedTagUpdate = useDebouncedCallback(requestTags, 1500);
 
+  // ── Auto-save ──────────────────────────────────────────────
+  const bioRef = useRef(initialBio);
+  bioRef.current = bio;
+
+  const autoSave = useCallback(
+    async (text: string) => {
+      // Don't save during generation or if nothing changed
+      if (isGenerating || text === initialBio) return;
+      setIsSaving(true);
+      setError(null);
+      try {
+        const updatedCard = await businessCardApi.update(cardId, ownerId, {
+          bio: text,
+        });
+        onCardUpdate(updatedCard);
+        requestTagsRef.current(text);
+      } catch (e) {
+        const errorMessage =
+          e instanceof Error ? e.message : t("bio.saveError");
+        setError(errorMessage);
+        onError(errorMessage);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [cardId, ownerId, initialBio, isGenerating, onCardUpdate, onError],
+  );
+
+  const debouncedAutoSave = useDebouncedCallback(autoSave, 1500);
+
   // Handle bio changes
   const handleBioChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -239,12 +272,13 @@ export function UnifiedBioEditor({
       if (newValue.length <= maxLength) {
         setBio(newValue);
         debouncedTagUpdate(newValue);
+        debouncedAutoSave(newValue);
         setError(null);
         // Notify parent about bio text change for quick tag extraction
         onBioTextChange?.(newValue);
       }
     },
-    [setBio, debouncedTagUpdate, maxLength, onBioTextChange],
+    [setBio, debouncedTagUpdate, debouncedAutoSave, maxLength, onBioTextChange],
   );
 
   // ── Document Upload Handlers ──────────────────────────────────
@@ -555,44 +589,11 @@ export function UnifiedBioEditor({
     }
   }, [setBio]);
 
-  // Manual save
-  const handleSave = useCallback(async () => {
-    if (isSaving || isGenerating) return;
-
-    setIsSaving(true);
-    setError(null);
-
-    try {
-      const updatedCard = await businessCardApi.update(cardId, ownerId, {
-        bio,
-      });
-      onCardUpdate(updatedCard);
-      // Request tags after successful save
-      requestTags(bio);
-    } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : t("bio.saveError");
-      setError(errorMessage);
-      onError(errorMessage);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [
-    bio,
-    cardId,
-    ownerId,
-    onCardUpdate,
-    onError,
-    isSaving,
-    isGenerating,
-    requestTags,
-  ]);
-
   // Display text: streaming or current bio
   const displayText = isGenerating ? streamedText : bio;
   const charCount = isGenerating ? streamedText.length : bio.length;
   const canImprove =
     bio.trim().length >= minLength && !isGenerating && !isSaving && wsConnected;
-  const hasUnsavedChanges = bio !== initialBio;
   const isBusy = isGenerating || isTranscribing || isRecognizing;
 
   // Mark isActive as used for potential future styling
@@ -607,7 +608,7 @@ export function UnifiedBioEditor({
       {/* Header */}
       <div className="unified-bio-editor__header">
         <div className="unified-bio-editor__title">
-          <h2>{t("bio.title")}</h2>
+          {showTitle && <h2>{t("bio.title")}</h2>}
           {!wsConnected && (
             <span className="unified-bio-editor__status unified-bio-editor__status--offline">
               {t("common.offline")}
@@ -844,9 +845,9 @@ export function UnifiedBioEditor({
               </span>
             )}
           </span>
-          {hasUnsavedChanges && !isBusy && (
-            <span className="unified-bio-editor__unsaved">
-              {t("common.unsaved")}
+          {isSaving && (
+            <span className="unified-bio-editor__saving">
+              {t("common.saving")}
             </span>
           )}
         </div>
@@ -888,15 +889,6 @@ export function UnifiedBioEditor({
                   <path d="M2 12l10 5 10-5" />
                 </svg>
                 {t("bio.improveWithAi")}
-              </button>
-
-              <button
-                type="button"
-                className="unified-bio-editor__btn unified-bio-editor__btn--save"
-                onClick={handleSave}
-                disabled={isSaving || !hasUnsavedChanges || isTranscribing}
-              >
-                {isSaving ? t("common.saving") : t("common.save")}
               </button>
             </>
           )}

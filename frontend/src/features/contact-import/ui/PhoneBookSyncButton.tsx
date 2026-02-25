@@ -208,10 +208,11 @@ export function PhoneBookSyncButton({
 
   return (
     <>
-      <button
+      <Button
         className="phonebook-sync__btn"
         onClick={handlePickContacts}
         disabled={disabled || isProcessing}
+        variant="secondary"
       >
         {isProcessing ? (
           <div className="phonebook-sync__spinner" />
@@ -233,7 +234,7 @@ export function PhoneBookSyncButton({
           </svg>
         )}
         {t("phoneBookSync.syncContacts")}
-      </button>
+      </Button>
 
       {error && (
         <div className="phonebook-sync__error" onClick={() => setError(null)}>

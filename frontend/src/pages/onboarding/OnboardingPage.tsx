@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/features/auth";
 import { useI18n } from "@/shared/config";
 import { userApi } from "@/entities/user/model/api";
 import { businessCardApi } from "@/entities/business-card/model/api";
+import type { BusinessCard } from "@/entities/business-card";
+import { UnifiedBioEditor } from "@/features/bio-editor";
 import {
   Typography,
   Button,
   Card,
   Input,
-  Textarea,
+  Loader,
   PrivacyOptionList,
 } from "@/shared";
 import type { PrivacyLevel } from "@/shared";
@@ -172,7 +174,39 @@ function ProfileBioStep({
   isSubmitting: boolean;
 }) {
   const { t } = useI18n();
-  const [bio, setBio] = useState("");
+  const { user } = useAuth();
+  const [card, setCard] = useState<BusinessCard | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [bioText, setBioText] = useState("");
+  const [, setError] = useState<string | null>(null);
+
+  // Fetch primary card on mount
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const primaryCard = await businessCardApi.getPrimary(user.id);
+        const fullCard = await businessCardApi.getFull(primaryCard.id);
+        if (!cancelled) {
+          setCard(fullCard);
+          setBioText(fullCard.bio || "");
+        }
+      } catch {
+        // Card may not exist yet — fallback handled below
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const handleCardUpdate = useCallback((updatedCard: BusinessCard) => {
+    setCard(updatedCard);
+    setBioText(updatedCard.bio || "");
+  }, []);
 
   return (
     <>
@@ -186,13 +220,23 @@ function ProfileBioStep({
           </Typography>
 
           <div className="onboarding__profile-fields">
-            <Textarea
-              placeholder={t("onboarding.bioPlaceholder")}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              rows={5}
-              fullWidth
-            />
+            {loading ? (
+              <Loader />
+            ) : card && user ? (
+              <UnifiedBioEditor
+                card={card}
+                userId={user.id}
+                isActive={true}
+                onCardUpdate={handleCardUpdate}
+                onError={setError}
+                onBioTextChange={setBioText}
+                showTitle={false}
+              />
+            ) : (
+              <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+                {t("onboarding.bioDescription")}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -201,7 +245,7 @@ function ProfileBioStep({
         <Button
           variant="primary"
           className="onboarding__continue"
-          onClick={() => onNext(bio.trim())}
+          onClick={() => onNext(bioText.trim())}
           disabled={isSubmitting}
         >
           {isSubmitting ? t("common.saving") : t("onboarding.continue")}
