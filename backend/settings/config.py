@@ -1,14 +1,14 @@
 import logging
 from typing import Literal
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 LOG_DEFAULT_FORMAT = "[%(asctime)s.%(msecs)03d] %(levelname)-3s - %(message)s"
 
 
-class LoggingConfig(BaseSettings):
+class LoggingConfig(BaseModel):
     log_level: Literal["debug", "info", "warning", "error", "critical"] = "info"
     log_format: str = LOG_DEFAULT_FORMAT
     date_format: str = "%Y-%m-%d %H:%M:%S"
@@ -18,7 +18,7 @@ class LoggingConfig(BaseSettings):
         return logging.getLevelNamesMapping()[self.log_level.upper()]
 
 
-class DatabaseConfig(BaseSettings):
+class DatabaseConfig(BaseModel):
     host: str
     port: str
     username: str
@@ -41,12 +41,12 @@ class DatabaseConfig(BaseSettings):
         return base
 
 
-class APIConfig(BaseSettings):
+class APIConfig(BaseModel):
     url: str
     port: str
 
 
-class JWTConfig(BaseSettings):
+class JWTConfig(BaseModel):
     secret_key: str = Field(
         default=...,
         description="JWT secret key — MUST be set via JWT__SECRET_KEY env var",
@@ -55,7 +55,7 @@ class JWTConfig(BaseSettings):
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
 
 
-class GigaChatConfig(BaseSettings):
+class GigaChatConfig(BaseModel):
     """Конфигурация GigaChat API от Сбера."""
 
     credentials: str = ""  # Base64 encoded client_id:client_secret
@@ -66,7 +66,7 @@ class GigaChatConfig(BaseSettings):
     verify_ssl_certs: bool = False  # Для разработки без Russian CA cert
 
 
-class LocalLLMConfig(BaseSettings):
+class LocalLLMConfig(BaseModel):
     """Конфигурация локального LLM (llama.cpp сервер)."""
 
     enabled: bool = False
@@ -77,7 +77,7 @@ class LocalLLMConfig(BaseSettings):
     timeout: float = 120.0  # Увеличенный timeout для локальной модели
 
 
-class EmbeddingConfig(BaseSettings):
+class EmbeddingConfig(BaseModel):
     """Конфигурация сервиса эмбеддингов (USER-bge-m3)."""
 
     enabled: bool = False
@@ -86,7 +86,7 @@ class EmbeddingConfig(BaseSettings):
     normalize: bool = True
 
 
-class CloudinaryConfig(BaseSettings):
+class CloudinaryConfig(BaseModel):
     """Конфигурация Cloudinary для хранения изображений."""
 
     cloud_name: str = ""
@@ -97,7 +97,7 @@ class CloudinaryConfig(BaseSettings):
     allowed_formats: list[str] = ["jpg", "jpeg", "png", "webp"]
 
 
-class EmailConfig(BaseSettings):
+class EmailConfig(BaseModel):
     """Конфигурация отправки email."""
 
     smtp_host: str = "localhost"  # Локальный Postfix на сервере
@@ -110,7 +110,7 @@ class EmailConfig(BaseSettings):
     enabled: bool = False
 
 
-class RabbitMQConfig(BaseSettings):
+class RabbitMQConfig(BaseModel):
     """Конфигурация RabbitMQ."""
 
     host: str = "rabbitmq"
@@ -123,7 +123,7 @@ class RabbitMQConfig(BaseSettings):
         return f"amqp://{self.username}:{self.password}@{self.host}:{self.port}/"
 
 
-class MagicLinkConfig(BaseSettings):
+class MagicLinkConfig(BaseModel):
     """Конфигурация magic link авторизации."""
 
     secret_key: str = Field(
@@ -134,7 +134,7 @@ class MagicLinkConfig(BaseSettings):
     frontend_url: str = ""  # URL фронтенда для ссылок в QR-кодах и email
 
 
-class YandexSpeechKitConfig(BaseSettings):
+class YandexSpeechKitConfig(BaseModel):
     """Конфигурация Yandex SpeechKit для распознавания речи."""
 
     api_key: str = ""  # API-ключ сервисного аккаунта
@@ -143,7 +143,7 @@ class YandexSpeechKitConfig(BaseSettings):
     topic: str = "general"  # Языковая модель
 
 
-class TelegramConfig(BaseSettings):
+class TelegramConfig(BaseModel):
     """Конфигурация Telegram авторизации."""
 
     bot_token: str = ""  # Токен Telegram бота от @BotFather
@@ -158,7 +158,7 @@ class TelegramConfig(BaseSettings):
         return ""
 
 
-class EncryptionConfig(BaseSettings):
+class EncryptionConfig(BaseModel):
     """Конфигурация шифрования сообщений чата.
 
     Генерация ключа:
@@ -179,17 +179,17 @@ class Config(BaseSettings):
         extra="ignore",
     )
     logging: LoggingConfig = LoggingConfig()
-    jwt: JWTConfig = JWTConfig()
+    jwt: JWTConfig
     gigachat: GigaChatConfig = GigaChatConfig()
     local_llm: LocalLLMConfig = LocalLLMConfig()
     embedding: EmbeddingConfig = EmbeddingConfig()
     cloudinary: CloudinaryConfig = CloudinaryConfig()
     email: EmailConfig = EmailConfig()
     rabbitmq: RabbitMQConfig = RabbitMQConfig()
-    magic_link: MagicLinkConfig = MagicLinkConfig()
+    magic_link: MagicLinkConfig
     telegram: TelegramConfig = TelegramConfig()
     yandex_speechkit: YandexSpeechKitConfig = YandexSpeechKitConfig()
-    encryption: EncryptionConfig = EncryptionConfig()
+    encryption: EncryptionConfig
     mongo: DatabaseConfig
     api: APIConfig
 

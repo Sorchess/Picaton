@@ -1,6 +1,4 @@
-export { ContactImportButton } from "./ui/ContactImportButton";
-export { TelegramSyncModal } from "./ui/TelegramSyncModal";
-export { PhoneInputModal } from "./ui/PhoneInputModal";
+export { PhoneBookSyncButton } from "./ui/PhoneBookSyncButton";
 export {
   hashPhone,
   hashPhones,

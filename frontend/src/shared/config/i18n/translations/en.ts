@@ -15,6 +15,7 @@ export const en: TranslationDict = {
   "common.adding": "Adding...",
   "common.close": "Close",
   "common.done": "Done",
+  "common.understood": "Got it",
   "common.loading": "Loading...",
   "common.retry": "Retry",
   "common.send": "Send",
@@ -292,6 +293,31 @@ export const en: TranslationDict = {
   "contactImport.phoneCountMany": "numbers",
   "contactImport.phonePlaceholder":
     "John: +1 555 123 4567\nMary - 15551234567\n+15551234567",
+
+  // ===== Phone Book Sync =====
+  "phoneBookSync.syncContacts": "Sync contacts",
+  "phoneBookSync.resultsTitle": "Sync results",
+  "phoneBookSync.contactsPicked": "contacts picked",
+  "phoneBookSync.foundInPicaton": "found in Picaton",
+  "phoneBookSync.notRegistered": "not registered",
+  "phoneBookSync.foundUsers": "Found users:",
+  "phoneBookSync.saveContact": "Add",
+  "phoneBookSync.saved": "Added",
+  "phoneBookSync.noUsersFound":
+    "None of your contacts are registered in Picaton yet",
+  "phoneBookSync.permissionDenied":
+    "Contacts access denied. Please allow access in browser settings.",
+  "phoneBookSync.syncError": "Contact sync error",
+  "phoneBookSync.unknownContact": "Unknown",
+  "phoneBookSync.unsupportedTitle": "Open in Chrome on Android",
+  "phoneBookSync.unsupportedText":
+    "Phone book sync is only available in Chrome on Android. Open Picaton there to quickly find people you know.",
+  "phoneBookSync.instructionStep1":
+    "Open Picaton in Chrome on your Android phone",
+  "phoneBookSync.instructionStep2":
+    'Tap "Sync contacts" and select your contacts',
+  "phoneBookSync.instructionStep3":
+    "We'll find those already registered on Picaton",
 
   // ===== Telegram Sync =====
   "telegramSync.syncExpired": "Sync time expired. Try again.",

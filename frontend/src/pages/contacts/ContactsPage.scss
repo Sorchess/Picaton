@@ -281,6 +281,8 @@
     margin-top: 16px;
     display: flex;
     justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   // Modal styles
@@ -289,15 +291,6 @@
     flex-direction: column;
     align-items: center;
     padding: 24px 0;
-  }
-
-  &__modal-avatar {
-    margin-bottom: 16px;
-
-    .avatar__inner {
-      width: 80px;
-      height: 80px;
-    }
   }
 
   &__modal-name {

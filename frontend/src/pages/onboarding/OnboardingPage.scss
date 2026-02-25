@@ -1,11 +1,12 @@
 .onboarding {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   padding: 0 16px;
   max-width: 480px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: hidden;
 
   display: flex;
   flex-direction: column;
@@ -35,6 +36,8 @@
     text-align: center;
     padding: 2rem 1.5rem;
     gap: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   &__illustration {

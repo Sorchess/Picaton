@@ -14,7 +14,7 @@ import {
 } from "@/entities/company";
 import { useAuth } from "@/features/auth";
 import { useI18n } from "@/shared/config";
-import { ContactImportButton } from "@/features/contact-import";
+import { PhoneBookSyncButton } from "@/features/contact-import";
 import {
   Tag,
   Loader,
@@ -903,10 +903,10 @@ export function ContactsPage({
         </div>
       )}
 
-      {/* Import button for "my" tab */}
+      {/* Import buttons for "my" tab */}
       {activeTab === "my" && (
         <div className="contacts-page__import">
-          <ContactImportButton onSyncComplete={() => loadContacts()} />
+          <PhoneBookSyncButton onSyncComplete={() => loadContacts()} />
         </div>
       )}
 
@@ -921,7 +921,7 @@ export function ContactsPage({
             <div className="contacts-page__modal-avatar">
               <Avatar
                 initials={getInitials(getContactFullName(selectedContact))}
-                size="xl"
+                size="lg"
               />
             </div>
             <h2 className="contacts-page__modal-name">

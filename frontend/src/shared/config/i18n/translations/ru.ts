@@ -15,6 +15,7 @@ export const ru: TranslationDict = {
   "common.adding": "Добавление...",
   "common.close": "Закрыть",
   "common.done": "Готово",
+  "common.understood": "Понятно",
   "common.loading": "Загрузка...",
   "common.retry": "Повторить",
   "common.send": "Отправить",
@@ -291,6 +292,31 @@ export const ru: TranslationDict = {
   "contactImport.phoneCountMany": "номеров",
   "contactImport.phonePlaceholder":
     "Иван: +7 999 123 45 67\nМария - 89161234567\n+79031234567",
+
+  // ===== Phone Book Sync =====
+  "phoneBookSync.syncContacts": "Синхронизация контактов",
+  "phoneBookSync.resultsTitle": "Результаты синхронизации",
+  "phoneBookSync.contactsPicked": "контактов выбрано",
+  "phoneBookSync.foundInPicaton": "найдено в Picaton",
+  "phoneBookSync.notRegistered": "не зарегистрированы",
+  "phoneBookSync.foundUsers": "Найденные пользователи:",
+  "phoneBookSync.saveContact": "Добавить",
+  "phoneBookSync.saved": "Добавлен",
+  "phoneBookSync.noUsersFound":
+    "Никто из ваших контактов пока не зарегистрирован в Picaton",
+  "phoneBookSync.permissionDenied":
+    "Доступ к контактам запрещён. Разрешите доступ в настройках браузера.",
+  "phoneBookSync.syncError": "Ошибка синхронизации контактов",
+  "phoneBookSync.unknownContact": "Без имени",
+  "phoneBookSync.unsupportedTitle": "Откройте в Chrome на Android",
+  "phoneBookSync.unsupportedText":
+    "Синхронизация телефонной книги доступна только в браузере Chrome на Android. Откройте Picaton там, чтобы быстро найти знакомых.",
+  "phoneBookSync.instructionStep1":
+    "Откройте Picaton в Chrome на Android-телефоне",
+  "phoneBookSync.instructionStep2":
+    "Нажмите «Синхронизация контактов» и выберите контакты",
+  "phoneBookSync.instructionStep3":
+    "Мы найдём тех, кто уже зарегистрирован в Picaton",
 
   // ===== Telegram Sync =====
   "telegramSync.syncExpired":
