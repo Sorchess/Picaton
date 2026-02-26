@@ -179,6 +179,7 @@ services:
     volumes:
       - certbot-www:/var/www/certbot
       - letsencrypt:/etc/letsencrypt
+      - /etc/letsencrypt:/etc/letsencrypt
 
 volumes:
   mongo_data:
