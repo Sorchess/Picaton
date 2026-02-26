@@ -30,8 +30,8 @@ origins = [
     "http://localhost",
     "http://localhost:3000",
     "http://localhost:5173",
-    "http://d.picaton.com",
-    "https://d.picaton.com",
+    "http://picaton.com",
+    "https://picaton.com",
 ]
 
 
@@ -59,7 +59,7 @@ def create_app() -> FastAPI:
         description="Сервис поиска экспертов через ассоциативный поиск",
         version="1.0.0",
         docs_url="/api/docs",
-        debug=True,
+        debug=False,
         lifespan=lifespan,
     )
 
