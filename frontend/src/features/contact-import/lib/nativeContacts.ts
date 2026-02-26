@@ -29,9 +29,13 @@ function isCapacitorNative(): boolean {
   return (
     typeof window !== "undefined" &&
     // Capacitor injects this global on native platforms
-    !!(window as Record<string, unknown>).Capacitor &&
-    ((window as Record<string, unknown>).Capacitor as Record<string, unknown>)
-      ?.isNativePlatform === true
+    !!(window as unknown as Record<string, unknown>).Capacitor &&
+    (
+      (window as unknown as Record<string, unknown>).Capacitor as Record<
+        string,
+        unknown
+      >
+    )?.isNativePlatform === true
   );
 }
 
