@@ -22,8 +22,8 @@ function getInitialLanguage(userLanguage?: string): Language {
       return stored;
     }
   }
-  // 3. Default to Russian
-  return "ru";
+  // 3. Default to English
+  return "en";
 }
 
 interface I18nProviderProps {
@@ -43,7 +43,7 @@ export function I18nProvider({ children, userLanguage }: I18nProviderProps) {
 
   const t = useCallback(
     (key: string, params?: Record<string, string | number>): string => {
-      let text = translations[language][key] ?? translations["ru"][key] ?? key;
+      let text = translations[language][key] ?? translations["en"][key] ?? key;
       if (params) {
         Object.entries(params).forEach(([k, v]) => {
           text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
