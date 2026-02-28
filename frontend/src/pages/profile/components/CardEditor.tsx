@@ -5,9 +5,6 @@ import type { BusinessCard } from "@/entities/business-card";
 import { businessCardApi } from "@/entities/business-card";
 import type { CompanyCardAssignment } from "@/entities/company";
 import {
-  TagInput,
-  useDebounce,
-  extractTagsFromBio,
   IconButton,
   AvatarEmojiButton,
   Avatar,
@@ -18,6 +15,7 @@ import {
   CardDivider,
 } from "@/shared";
 import { UnifiedBioEditor } from "./UnifiedBioEditor";
+import { TagsEditor } from "@/features/tags-editor";
 import { useI18n } from "@/shared/config";
 import "./CardEditor.scss";
 
@@ -70,13 +68,6 @@ const CONTACT_TYPES = [
   },
 ];
 
-interface SuggestedTag {
-  name: string;
-  category: string;
-  confidence: number;
-  reason: string;
-}
-
 type EditStep = 1 | 2 | 3;
 
 interface CardEditorProps {
@@ -104,32 +95,13 @@ export function CardEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // AI states
-  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
-  const [aiTagSuggestions, setAiTagSuggestions] = useState<string[]>([]);
+  // Tag save state
   const [isApplyingTags, setIsApplyingTags] = useState(false);
-  const [hasFetchedSuggestions, setHasFetchedSuggestions] = useState(false);
 
-  // Current bio text being edited (for quick tag extraction)
+  // Current bio text being edited (passed to TagsEditor for fallback suggestions)
   const [currentBioText, setCurrentBioText] = useState<string>(
     card.ai_generated_bio || card.bio || "",
   );
-
-  // Debounce bio text - wait 500ms after user stops typing for quick suggestions
-  const debouncedBioText = useDebounce(currentBioText, 500);
-
-  // Clear AI suggestions when bio text changes (to avoid showing outdated suggestions)
-  useEffect(() => {
-    // Reset AI suggestions when user is actively typing
-    setAiTagSuggestions([]);
-  }, [currentBioText]);
-
-  // Quick local suggestions extracted from debounced bio text (shown after pause in typing)
-  const quickSuggestions = useMemo(() => {
-    const tags = extractTagsFromBio(debouncedBioText, 12);
-    console.log("[CardEditor] Quick suggestions from text:", tags);
-    return tags;
-  }, [debouncedBioText]);
 
   // Tag editing state
   const [profileTags, setProfileTags] = useState<string[]>(
@@ -184,42 +156,11 @@ export function CardEditor({
     return 3;
   }, [selectedCard, profileTags]);
 
-  // Автоматическая загрузка AI-подсказок для тегов
-  useEffect(() => {
-    const bioText = selectedCard.ai_generated_bio || selectedCard.bio || "";
-    if (
-      bioText.trim().length >= 20 &&
-      !hasFetchedSuggestions &&
-      !isGeneratingTags
-    ) {
-      setHasFetchedSuggestions(true);
-      fetchTagSuggestions();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCard.ai_generated_bio, selectedCard.bio, hasFetchedSuggestions]);
-
-  const fetchTagSuggestions = async () => {
-    setIsGeneratingTags(true);
-    try {
-      const result = await businessCardApi.suggestTags(
-        selectedCard.id,
-        user.id,
-      );
-      setAiTagSuggestions(result.suggestions.map((t: SuggestedTag) => t.name));
-    } catch {
-      // Ignore
-    } finally {
-      setIsGeneratingTags(false);
-    }
-  };
-
   // Обработка обновления карточки из UnifiedBioEditor
   const handleBioUpdate = useCallback(
     (updatedCard: BusinessCard) => {
       setSelectedCard(updatedCard);
       onCardUpdate(updatedCard);
-      // Сбросить флаг для обновления тегов
-      setHasFetchedSuggestions(false);
     },
     [onCardUpdate],
   );
@@ -821,8 +762,6 @@ export function CardEditor({
             isActive={currentStep === 1}
             onCardUpdate={handleBioUpdate}
             onError={setError}
-            onTagsUpdate={setAiTagSuggestions}
-            onTagsLoading={setIsGeneratingTags}
             onBioTextChange={setCurrentBioText}
           />
         </Card>
@@ -833,23 +772,15 @@ export function CardEditor({
             <h2 className="card-editor__section-title">
               {t("cardEditor.skillsAndTags")}
             </h2>
-            {isGeneratingTags && (
-              <span className="card-editor__section-action">
-                <span className="card-editor__spinner" />{" "}
-                {t("cardEditor.aiAnalysis")}
-              </span>
-            )}
           </div>
 
-          <TagInput
-            label=""
+          <TagsEditor
+            card={selectedCard}
+            userId={user.id}
             value={profileTags}
             onChange={handleTagsChange}
             placeholder={t("cardEditor.addTag")}
-            suggestions={aiTagSuggestions}
-            fallbackSuggestions={quickSuggestions}
-            isLoadingSuggestions={isGeneratingTags}
-            maxTags={15}
+            bioText={currentBioText}
             disabled={isApplyingTags}
           />
           {isApplyingTags && (

@@ -5,6 +5,7 @@ import { userApi } from "@/entities/user/model/api";
 import { businessCardApi } from "@/entities/business-card/model/api";
 import type { BusinessCard } from "@/entities/business-card";
 import { UnifiedBioEditor } from "@/features/bio-editor";
+import { TagsEditor } from "@/features/tags-editor";
 import {
   Typography,
   Button,
@@ -22,7 +23,7 @@ import Done from "@/shared/assets/Done.webp";
 import "./OnboardingPage.scss";
 
 const SLIDE_COUNT = 4;
-const PROFILE_STEPS = 4; // profile, bio, privacy, done
+const PROFILE_STEPS = 5; // profile, bio, tags, privacy, done
 
 interface SlideData {
   animation: string;
@@ -263,7 +264,97 @@ function ProfileBioStep({
   );
 }
 
-/* ── Step 3: Privacy ── */
+/* ── Step 3: Tags ── */
+function ProfileTagsStep({
+  onNext,
+  isSubmitting,
+}: {
+  onNext: (tags: string[]) => void;
+  isSubmitting: boolean;
+}) {
+  const { t } = useI18n();
+  const { user } = useAuth();
+  const [card, setCard] = useState<BusinessCard | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [profileTags, setProfileTags] = useState<string[]>([]);
+
+  // Fetch primary card and existing tags on mount
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const primaryCard = await businessCardApi.getPrimary(user.id);
+        const fullCard = await businessCardApi.getFull(primaryCard.id);
+        if (!cancelled) {
+          setCard(fullCard);
+          setProfileTags(fullCard.search_tags || []);
+        }
+      } catch {
+        // Card may not exist yet
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const handleTagsChange = useCallback((newTags: string[]) => {
+    setProfileTags(newTags);
+  }, []);
+
+  return (
+    <>
+      <div className="onboarding__center">
+        <div className="onboarding__profile-form">
+          <Typography variant="h1" className="onboarding__profile-heading">
+            {t("onboarding.tagsTitle")}
+          </Typography>
+          <Typography variant="body" className="onboarding__profile-subheading">
+            {t("onboarding.tagsDescription")}
+          </Typography>
+
+          <div className="onboarding__profile-fields">
+            {loading || !card || !user ? (
+              <Loader />
+            ) : (
+              <TagsEditor
+                card={card}
+                userId={user.id}
+                value={profileTags}
+                onChange={handleTagsChange}
+                placeholder={t("onboarding.tagsPlaceholder")}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="onboarding__bottom">
+        <Button
+          variant="primary"
+          className="onboarding__continue"
+          onClick={() => onNext(profileTags)}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? t("common.saving") : t("onboarding.continue")}
+        </Button>
+        <Button
+          variant="ghost"
+          className="onboarding__skip"
+          onClick={() => onNext([])}
+          disabled={isSubmitting}
+        >
+          {t("onboarding.skip")}
+        </Button>
+      </div>
+    </>
+  );
+}
+
+/* ── Step 4: Privacy ── */
 function ProfilePrivacyStep({
   onNext,
   isSubmitting,
@@ -305,7 +396,7 @@ function ProfilePrivacyStep({
   );
 }
 
-/* ── Step 4: Done ── */
+/* ── Step 5: Done ── */
 function DoneStep({ onFinish }: { onFinish: () => void }) {
   const { t } = useI18n();
   return (
@@ -364,7 +455,7 @@ export function OnboardingPage() {
     }
   };
 
-  /* Save bio to primary business card, advance to privacy step */
+  /* Save bio to primary business card, advance to tags step */
   const handleBioNext = async (bio: string) => {
     if (!user) return;
     if (bio) {
@@ -372,6 +463,21 @@ export function OnboardingPage() {
       try {
         const primaryCard = await businessCardApi.getPrimary(user.id);
         await businessCardApi.update(primaryCard.id, user.id, { bio });
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  /* Save tags to primary business card, advance to privacy step */
+  const handleTagsNext = async (tags: string[]) => {
+    if (!user) return;
+    if (tags.length > 0) {
+      setIsSubmitting(true);
+      try {
+        const primaryCard = await businessCardApi.getPrimary(user.id);
+        await businessCardApi.updateSearchTags(primaryCard.id, user.id, tags);
       } finally {
         setIsSubmitting(false);
       }
@@ -432,12 +538,19 @@ export function OnboardingPage() {
         );
       case 2:
         return (
+          <ProfileTagsStep
+            onNext={handleTagsNext}
+            isSubmitting={isSubmitting}
+          />
+        );
+      case 3:
+        return (
           <ProfilePrivacyStep
             onNext={handlePrivacyNext}
             isSubmitting={isSubmitting}
           />
         );
-      case 3:
+      case 4:
         return <DoneStep onFinish={handleFinish} />;
       default:
         return null;
