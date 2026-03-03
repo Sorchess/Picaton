@@ -442,11 +442,17 @@ async def send_magic_link_email(to_email: str, magic_link: str) -> bool:
     try:
         # Создаём сообщение
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = "🔐 Вход в Picaton"
+        msg["Subject"] = "Вход в Picaton"
         msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
         msg["To"] = to_email
+        msg["Reply-To"] = settings.email.from_email
         msg["Message-ID"] = _generate_message_id()
         msg["Date"] = formatdate(localtime=True)
+        msg["MIME-Version"] = "1.0"
+        msg["X-Mailer"] = "Picaton"
+        msg["List-Unsubscribe"] = (
+            f"<mailto:{settings.email.from_email}?subject=unsubscribe>"
+        )
 
         # Добавляем текстовую и HTML версии
         expire_minutes = settings.magic_link.expire_minutes
@@ -494,11 +500,17 @@ async def send_email_verification_code(to_email: str, code: str) -> bool:
     """
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = "🔐 Код подтверждения - Picaton"
+        msg["Subject"] = "Код подтверждения - Picaton"
         msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
         msg["To"] = to_email
+        msg["Reply-To"] = settings.email.from_email
         msg["Message-ID"] = _generate_message_id()
         msg["Date"] = formatdate(localtime=True)
+        msg["MIME-Version"] = "1.0"
+        msg["X-Mailer"] = "Picaton"
+        msg["List-Unsubscribe"] = (
+            f"<mailto:{settings.email.from_email}?subject=unsubscribe>"
+        )
 
         expire_minutes = 15
 
@@ -605,11 +617,17 @@ async def send_welcome_email(to_email: str, user_name: str) -> bool:
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = "🎉 Добро пожаловать в Picaton!"
+        msg["Subject"] = "Добро пожаловать в Picaton!"
         msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
         msg["To"] = to_email
+        msg["Reply-To"] = settings.email.from_email
         msg["Message-ID"] = _generate_message_id()
         msg["Date"] = formatdate(localtime=True)
+        msg["MIME-Version"] = "1.0"
+        msg["X-Mailer"] = "Picaton"
+        msg["List-Unsubscribe"] = (
+            f"<mailto:{settings.email.from_email}?subject=unsubscribe>"
+        )
 
         msg.attach(
             MIMEText(f"Добро пожаловать в Picaton, {user_name}!", "plain", "utf-8")
@@ -869,11 +887,17 @@ async def send_company_invitation_email(
         """
 
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🤝 {inviter_name} приглашает вас в {company_name}"
+        msg["Subject"] = f"{inviter_name} приглашает вас в {company_name} - Picaton"
         msg["From"] = f"{settings.email.from_name} <{settings.email.from_email}>"
         msg["To"] = to_email
+        msg["Reply-To"] = settings.email.from_email
         msg["Message-ID"] = _generate_message_id()
         msg["Date"] = formatdate(localtime=True)
+        msg["MIME-Version"] = "1.0"
+        msg["X-Mailer"] = "Picaton"
+        msg["List-Unsubscribe"] = (
+            f"<mailto:{settings.email.from_email}?subject=unsubscribe>"
+        )
 
         text_part = MIMEText(text.strip(), "plain", "utf-8")
         html_part = MIMEText(html, "html", "utf-8")
