@@ -535,6 +535,13 @@
     }
   }
 
+  &__username-error {
+    color: #ff4757;
+    font-size: 12px;
+    margin: 2px 0 0 6px;
+    font-weight: 500;
+  }
+
   &__section-action {
     display: flex;
     align-items: center;

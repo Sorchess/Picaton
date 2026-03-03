@@ -289,7 +289,15 @@ class User(Entity):
             self.position = position.strip() if position else None
 
         if username is not ...:
-            self.username = username.strip().lstrip("@") if username else None
+            if username:
+                normalized = username.strip().lstrip("@")
+                if len(normalized) < 6:
+                    from domain.exceptions.user import UsernameTooShortError
+
+                    raise UsernameTooShortError(normalized)
+                self.username = normalized
+            else:
+                self.username = None
 
         self._recalculate_completeness()
 

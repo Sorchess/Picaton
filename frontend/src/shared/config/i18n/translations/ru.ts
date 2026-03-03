@@ -133,6 +133,7 @@ export const ru: TranslationDict = {
   "cardEditor.saveRoleError": "Ошибка сохранения роли",
   "cardEditor.saveNameError": "Ошибка сохранения имени",
   "cardEditor.saveUsernameError": "Ошибка сохранения имени пользователя",
+  "cardEditor.usernameTooShort": "Минимум 6 символов для ника",
   "cardEditor.vkontakte": "ВКонтакте",
   "cardEditor.phone": "Телефон",
 

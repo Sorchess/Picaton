@@ -135,6 +135,7 @@ export function CardEditor({
   const [firstName, setFirstName] = useState(user.first_name || "");
   const [lastName, setLastName] = useState(user.last_name || "");
   const [username, setUsername] = useState(user.username || "");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingUsername, setIsSavingUsername] = useState(false);
 
@@ -403,7 +404,15 @@ export function CardEditor({
   // Username save handler
   const handleUsernameBlur = useCallback(async () => {
     const trimmed = username.trim().replace(/^@/, "");
-    if (trimmed === (user.username || "")) return;
+    if (trimmed === (user.username || "")) {
+      setUsernameError(null);
+      return;
+    }
+    if (trimmed && trimmed.length < 6) {
+      setUsernameError(t("cardEditor.usernameTooShort"));
+      return;
+    }
+    setUsernameError(null);
     setIsSavingUsername(true);
     try {
       const updatedUser = await userApi.update(user.id, {
@@ -746,12 +755,23 @@ export function CardEditor({
               variant="transparent"
               className="card-editor__input card-editor__input--username"
               value={username}
-              onChange={(e) => setUsername(e.target.value.replace(/^@/, ""))}
+              onChange={(e) => {
+                const val = e.target.value.replace(/^@/, "");
+                setUsername(val);
+                if (val && val.trim().length > 0 && val.trim().length < 6) {
+                  setUsernameError(t("cardEditor.usernameTooShort"));
+                } else {
+                  setUsernameError(null);
+                }
+              }}
               onBlur={handleUsernameBlur}
               placeholder="username"
               maxLength={50}
             />
           </div>
+          {usernameError && (
+            <p className="card-editor__username-error">{usernameError}</p>
+          )}
         </Card>
 
         {/* Bio Section */}

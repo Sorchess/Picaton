@@ -96,10 +96,12 @@ class UserService:
         language: str | None = None,
     ) -> User:
         """Обновить профиль пользователя."""
-        # Проверка уникальности username
+        # Проверка username
         if username is not ... and username:
             normalized = username.strip().lstrip("@")
             if normalized:
+                if len(normalized) < 6:
+                    raise UsernameTooShortError(normalized)
                 existing = await self._user_repository.find_by_username(normalized)
                 if existing and existing.id != user_id:
                     raise UsernameAlreadyTakenError(normalized)

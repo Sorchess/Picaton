@@ -39,7 +39,9 @@ class UserUpdate(BaseModel):
     )
     location: str | None = Field(default=None, max_length=200, examples=["Москва"])
     position: str | None = Field(default=None, max_length=100, examples=["Разработчик"])
-    username: str | None = Field(default=None, max_length=50, examples=["ivan_dev"])
+    username: str | None = Field(
+        default=None, min_length=6, max_length=50, examples=["ivan_dev"]
+    )
     language: str | None = Field(default=None, pattern="^(ru|en)$", examples=["ru"])
 
 

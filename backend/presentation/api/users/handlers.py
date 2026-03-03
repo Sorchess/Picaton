@@ -71,7 +71,7 @@ from domain.repositories.company import CompanyMemberRepositoryInterface
 from domain.repositories.business_card import BusinessCardRepositoryInterface
 from application.services.email_verification import EmailVerificationError
 from application.services.privacy_checker import PrivacyChecker
-from domain.exceptions.user import UsernameAlreadyTakenError
+from domain.exceptions.user import UsernameAlreadyTakenError, UsernameTooShortError
 from application.services.contact_sync import HashedContact
 from infrastructure.storage import CloudinaryService
 from infrastructure.storage.cloudinary_service import CloudinaryError, InvalidFileError
@@ -196,6 +196,8 @@ async def update_user_profile(
         )
     except UsernameAlreadyTakenError as e:
         raise HTTPException(status_code=409, detail=e.detail)
+    except UsernameTooShortError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
 
     # Если это онбординг - создаём первую карточку автоматически
     if is_onboarding:

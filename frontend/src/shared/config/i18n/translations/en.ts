@@ -134,6 +134,7 @@ export const en: TranslationDict = {
   "cardEditor.saveRoleError": "Error saving role",
   "cardEditor.saveNameError": "Error saving name",
   "cardEditor.saveUsernameError": "Error saving username",
+  "cardEditor.usernameTooShort": "Minimum 6 characters for username",
   "cardEditor.vkontakte": "VKontakte",
   "cardEditor.phone": "Phone",
 

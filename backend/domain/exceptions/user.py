@@ -129,6 +129,18 @@ class UserAlreadyExistsError(UserException):
         super().__init__()
 
 
+class UsernameTooShortError(UserException):
+    """Имя пользователя слишком короткое."""
+
+    detail = "Имя пользователя должно содержать минимум 6 символов"
+    status_code = 400
+
+    def __init__(self, username: str = ""):
+        if username:
+            self.detail = f"Имя @{username} слишком короткое. Минимум 6 символов"
+        super().__init__()
+
+
 class UsernameAlreadyTakenError(UserException):
     """Имя пользователя уже занято."""
 
