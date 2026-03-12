@@ -148,6 +148,9 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
+  // Header QR code for primary card
+  const [headerQrImage, setHeaderQrImage] = useState<string | null>(null);
+
   // QR modal state
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
@@ -203,6 +206,16 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
   // Sync local cards with prop
   useEffect(() => {
     setLocalCards(cards);
+  }, [cards]);
+
+  // Fetch QR code for the primary business card
+  useEffect(() => {
+    const primaryCard = cards.find((c) => c.is_primary);
+    if (!primaryCard) return;
+    businessCardApi
+      .getQRCode(primaryCard.id)
+      .then((qr) => setHeaderQrImage(qr.image_base64))
+      .catch(() => {});
   }, [cards]);
 
   // Set initial selection only once on mount
@@ -321,9 +334,17 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
 
       {/* Content */}
       <div className="share-contact-page__content">
-        {/* QR Code Icons */}
+        {/* QR Code for primary card */}
         <div className="share-contact-page__qr-header">
-          <QRCodeIcon />
+          {headerQrImage ? (
+            <img
+              src={headerQrImage}
+              alt="QR Code"
+              className="share-contact-page__qr-header-image"
+            />
+          ) : (
+            <QRCodeIcon />
+          )}
         </div>
 
         {/* Tab Switcher */}

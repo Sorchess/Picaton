@@ -75,6 +75,12 @@
     }
   }
 
+  &__qr-header-image {
+    width: 220px;
+    height: 220px;
+    border-radius: 12px;
+  }
+
   // Tab switcher - styles are in Tabs component
 
   // Section label
@@ -102,7 +108,7 @@
     .card {
       background: none;
     }
-    
+
     .card__content {
       flex-direction: row;
     }
