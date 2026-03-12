@@ -92,12 +92,6 @@
     color: var(--color-text-primary);
   }
 
-  // Duration label (plain text, not in card)
-  &__duration-label {
-    color: var(--color-text-secondary, #676767);
-    margin-left: 10px;
-  }
-
   // Cards list
   &__cards {
     background: var(--color-bg-secondary);
@@ -187,90 +181,6 @@
 
     &:hover {
       transform: scale(1.1);
-    }
-  }
-
-  // Duration selector
-  &__duration {
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: 25px;
-    padding: 16px 20px;
-  }
-
-  &__duration-options {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    gap: 8px;
-  }
-
-  &__duration-option {
-    border: none;
-    background: transparent;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-
-    &--active {
-      color: var(--color-primary, #0081ff);
-      font-weight: 600;
-    }
-
-    &--infinity {
-      font-size: 18px;
-      line-height: 1;
-    }
-  }
-
-  &__duration-slider {
-    position: relative;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    padding: 0 12px;
-  }
-
-  &__duration-track {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    height: 3px;
-    background: var(--color-primary, #0081ff);
-    border-radius: 1.5px;
-  }
-
-  &__duration-tick {
-    position: absolute;
-    width: 2px;
-    height: 13px;
-    background: var(--color-primary, #0081ff);
-    border-radius: 1px;
-    transform: translateX(-50%);
-    top: -5px;
-  }
-
-  &__duration-handle {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 0 12.9px rgba(0, 0, 0, 0.25);
-    border: none;
-    transform: translate(-50%, -50%);
-    top: 50%;
-    cursor: grab;
-    transition:
-      left 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.2s ease;
-
-    &:active {
-      cursor: grabbing;
-      box-shadow: 0 0 16px rgba(0, 0, 0, 0.3);
-      transition: box-shadow 0.2s ease; // Убираем transition для left при перетаскивании
     }
   }
 

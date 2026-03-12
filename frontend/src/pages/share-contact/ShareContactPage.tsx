@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, type FC } from "react";
+import { useState, useEffect, useRef, type FC } from "react";
 import { IconButton, Modal, Button, Tabs, Card } from "@/shared";
 import { useI18n } from "@/shared/config";
 import type { BusinessCard } from "@/entities/business-card";
@@ -6,9 +6,6 @@ import { businessCardApi } from "@/entities/business-card";
 import { useAuth } from "@/features/auth";
 import { QrModal } from "@/features/qr-modal";
 import "./ShareContactPage.scss";
-
-// Типы длительности
-export type DurationOption = "1d" | "1w" | "1m" | "forever";
 
 interface ShareContactPageProps {
   /** Business cards to display */
@@ -126,22 +123,10 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
   const { user } = useAuth();
   const { t } = useI18n();
 
-  const DURATION_OPTIONS = useMemo<{ value: DurationOption; label: string }[]>(
-    () => [
-      { value: "1d", label: t("share.day1") },
-      { value: "1w", label: t("share.week1") },
-      { value: "1m", label: t("share.month1") },
-      { value: "forever", label: "∞" },
-    ],
-    [t],
-  );
-
   const [localCards, setLocalCards] = useState<BusinessCard[]>(cards);
   const [selectedCardIds, setSelectedCardIds] =
     useState<string[]>(initialSelectedIds);
   const [activeTab, setActiveTab] = useState<ViewTab>("settings");
-  const [durationIndex, setDurationIndex] = useState(1); // Default to "1w" (1 week)
-  const sliderRef = useRef<HTMLDivElement>(null);
 
   // Create card modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -157,51 +142,6 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
   const [qrCardName, setQrCardName] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Calculate duration index from position
-  const SLIDER_PADDING = 12; // Должно соответствовать padding в CSS
-  const calculateIndexFromPosition = (clientX: number) => {
-    if (!sliderRef.current) return durationIndex;
-    const rect = sliderRef.current.getBoundingClientRect();
-    // Учитываем padding слайдера
-    const trackWidth = rect.width - SLIDER_PADDING * 2;
-    const x = clientX - rect.left - SLIDER_PADDING;
-    const percentage = Math.max(0, Math.min(1, x / trackWidth));
-    return Math.round(percentage * (DURATION_OPTIONS.length - 1));
-  };
-
-  // Handle slider track click
-  const handleSliderClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const newIndex = calculateIndexFromPosition(e.clientX);
-    setDurationIndex(newIndex);
-  };
-
-  // Handle drag start
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
-      const clientX =
-        "touches" in moveEvent
-          ? moveEvent.touches[0].clientX
-          : moveEvent.clientX;
-      const newIndex = calculateIndexFromPosition(clientX);
-      setDurationIndex(newIndex);
-    };
-
-    const handleEnd = () => {
-      document.removeEventListener("mousemove", handleMove);
-      document.removeEventListener("mouseup", handleEnd);
-      document.removeEventListener("touchmove", handleMove);
-      document.removeEventListener("touchend", handleEnd);
-    };
-
-    document.addEventListener("mousemove", handleMove);
-    document.addEventListener("mouseup", handleEnd);
-    document.addEventListener("touchmove", handleMove);
-    document.addEventListener("touchend", handleEnd);
-  };
 
   // Sync local cards with prop
   useEffect(() => {
@@ -272,7 +212,6 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
     setError(null);
 
     try {
-      const duration = DURATION_OPTIONS[durationIndex].value;
       // Получаем все выбранные визитки
       const selectedCards = localCards.filter((c) =>
         selectedCardIds.includes(c.id),
@@ -283,7 +222,7 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
         // TODO: когда API будет поддерживать множественный выбор, обновить
         const qr = await businessCardApi.getQRCode(
           selectedCards[0].id,
-          duration,
+          "forever",
         );
         setQrCodeImage(qr.image_base64);
 
@@ -419,56 +358,6 @@ export const ShareContactPage: FC<ShareContactPageProps> = ({
             >
               <PlusIcon />
             </button>
-          </div>
-        </div>
-
-        {/* Duration Label */}
-        <div className="share-contact-page__duration-label">
-          {t("share.timeLimit")}
-        </div>
-
-        {/* Duration Selector */}
-        <div className="share-contact-page__duration">
-          <div className="share-contact-page__duration-options">
-            {DURATION_OPTIONS.map((option, index) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`share-contact-page__duration-option ${
-                  index === durationIndex
-                    ? "share-contact-page__duration-option--active"
-                    : ""
-                } ${option.value === "forever" ? "share-contact-page__duration-option--infinity" : ""}`}
-                onClick={() => setDurationIndex(index)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <div
-            ref={sliderRef}
-            className="share-contact-page__duration-slider"
-            onClick={handleSliderClick}
-          >
-            <div className="share-contact-page__duration-track">
-              {DURATION_OPTIONS.map((_, index) => (
-                <div
-                  key={index}
-                  className="share-contact-page__duration-tick"
-                  style={{
-                    left: `${(index / (DURATION_OPTIONS.length - 1)) * 100}%`,
-                  }}
-                />
-              ))}
-              <div
-                className="share-contact-page__duration-handle"
-                style={{
-                  left: `${(durationIndex / (DURATION_OPTIONS.length - 1)) * 100}%`,
-                }}
-                onMouseDown={handleDragStart}
-                onTouchStart={handleDragStart}
-              />
-            </div>
           </div>
         </div>
 
