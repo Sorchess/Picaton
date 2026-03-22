@@ -183,7 +183,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 # Starlette app with SSE transport
 # ---------------------------------------------------------------------------
 
-sse_transport = SseServerTransport("/messages/")
+sse_transport = SseServerTransport("messages/")
 
 
 async def sse_endpoint(request: Request) -> None:
