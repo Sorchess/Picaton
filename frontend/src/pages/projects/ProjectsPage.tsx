@@ -269,10 +269,7 @@ function ProjectDetailSubPage({
   };
 
   const connectWebSocket = () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-
-    wsRef.current = new ChatWebSocket(projectId, token, {
+    wsRef.current = new ChatWebSocket(projectId, {
       onMessage: (msg) => {
         setMessages((prev) => [...prev, msg]);
         scrollToBottom();

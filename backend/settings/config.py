@@ -52,7 +52,13 @@ class JWTConfig(BaseModel):
         description="JWT secret key — MUST be set via JWT__SECRET_KEY env var",
     )
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 30
+    access_cookie_name: str = "picaton_access_token"
+    refresh_cookie_name: str = "picaton_refresh_token"
+    csrf_cookie_name: str = "picaton_csrf_token"
+    csrf_header_name: str = "X-CSRF-Token"
+    cookie_samesite: str = "lax"
 
 
 class GigaChatConfig(BaseModel):

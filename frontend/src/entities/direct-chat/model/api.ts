@@ -1,4 +1,4 @@
-import { api, tokenStorage } from "@/shared/api";
+import { api } from "@/shared/api";
 import type {
   ConversationListResponse,
   DMListResponse,
@@ -82,13 +82,7 @@ export class DMWebSocket {
   }
 
   connect(): void {
-    const token = tokenStorage.get();
-    if (!token) {
-      console.error("No auth token for DM WebSocket");
-      return;
-    }
-
-    const wsUrl = this.getWebSocketUrl(token);
+    const wsUrl = this.getWebSocketUrl();
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
@@ -206,10 +200,10 @@ export class DMWebSocket {
     });
   }
 
-  private getWebSocketUrl(token: string): string {
+  private getWebSocketUrl(): string {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
-    return `${protocol}//${host}/api/ws/dm?token=${token}`;
+    return `${protocol}//${host}/api/ws/dm`;
   }
 
   private startPing(): void {

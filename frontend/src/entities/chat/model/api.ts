@@ -78,7 +78,6 @@ interface ChatWebSocketCallbacks {
 export class ChatWebSocket {
   private ws: WebSocket | null = null;
   private projectId: string;
-  private token: string;
   private callbacks: ChatWebSocketCallbacks;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -87,11 +86,9 @@ export class ChatWebSocket {
 
   constructor(
     projectId: string,
-    token: string,
     callbacks: ChatWebSocketCallbacks
   ) {
     this.projectId = projectId;
-    this.token = token;
     this.callbacks = callbacks;
   }
 
@@ -223,7 +220,7 @@ export class ChatWebSocket {
   private getWebSocketUrl(): string {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
-    return `${protocol}//${host}/api/ws/chat/${this.projectId}?token=${this.token}`;
+    return `${protocol}//${host}/api/ws/chat/${this.projectId}`;
   }
 
   private startPing(): void {

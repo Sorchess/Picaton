@@ -154,7 +154,7 @@ def sanitize_message_content(content: str) -> str:
     return html.escape(content, quote=True)
 
 
-async def get_user_from_token(token: str) -> UUID | None:
+async def get_user_from_token(token: str | None) -> UUID | None:
     """Получить user_id из JWT токена с полноценной проверкой."""
     try:
         payload = jwt.decode(
@@ -176,11 +176,12 @@ async def get_user_from_token(token: str) -> UUID | None:
 async def websocket_endpoint(
     websocket: WebSocket,
     project_id: UUID,
-    token: str = Query(...),
+    token: str | None = Query(None),
 ):
     """WebSocket endpoint для чата проекта."""
     # Аутентификация
-    user_id = await get_user_from_token(token)
+    effective_token = token or websocket.cookies.get(settings.jwt.access_cookie_name)
+    user_id = await get_user_from_token(effective_token)
     if not user_id:
         await websocket.close(code=4001, reason="Unauthorized")
         return

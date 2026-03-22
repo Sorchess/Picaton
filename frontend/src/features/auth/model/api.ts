@@ -30,8 +30,12 @@ export const authApi = {
     return response;
   },
 
-  logout: (): void => {
-    tokenStorage.remove();
+  logout: async (): Promise<void> => {
+    try {
+      await api.post<{ success: boolean }>("/auth/logout", {});
+    } finally {
+      tokenStorage.remove();
+    }
   },
 
   getMe: async (): Promise<User> => {
@@ -40,6 +44,11 @@ export const authApi = {
 
   isAuthenticated: (): boolean => {
     return !!tokenStorage.get();
+  },
+
+  restoreSession: async (): Promise<boolean> => {
+    const refreshed = await api.refreshAccessToken();
+    return refreshed;
   },
 
   // Magic Link (Passwordless)
@@ -55,7 +64,7 @@ export const authApi = {
     return response;
   },
 
-  // Telegram Widget Р°РІС‚РѕСЂРёР·Р°С†РёСЏ
+  // Telegram Widget авторизация
   getTelegramConfig: async (): Promise<TelegramConfig> => {
     return api.get<TelegramConfig>("/auth/telegram/config");
   },
@@ -66,7 +75,7 @@ export const authApi = {
     return response;
   },
 
-  // Telegram Deep Link Р°РІС‚РѕСЂРёР·Р°С†РёСЏ (РѕС‚РєСЂС‹РІР°РµС‚ РїСЂРёР»РѕР¶РµРЅРёРµ Telegram)
+  // Telegram Deep Link авторизация (открывает приложение Telegram)
   createTelegramDeepLink: async (): Promise<TelegramDeepLinkResponse> => {
     return api.post<TelegramDeepLinkResponse>("/auth/telegram/deeplink", {});
   },
@@ -79,7 +88,7 @@ export const authApi = {
     );
   },
 
-  // РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ РєРѕРЅС‚Р°РєС‚РѕРІ
+  // Синхронизация контактов
   syncTelegramContacts: async (
     contacts: TelegramContact[],
   ): Promise<TelegramContactsSyncResponse> => {
@@ -91,7 +100,7 @@ export const authApi = {
     );
   },
 
-  // РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ РєРѕРЅС‚Р°РєС‚РѕРІ С‡РµСЂРµР· Р±РѕС‚Р° (deep link)
+  // Синхронизация контактов через бота (deep link)
   createContactSyncSession: async (): Promise<ContactSyncSessionResponse> => {
     return api.post<ContactSyncSessionResponse>(
       "/auth/telegram/sync-session",

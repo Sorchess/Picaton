@@ -12,25 +12,25 @@ from settings.config import settings
 
 
 class AuthenticationError(Exception):
-    """Ошибка аутентификации."""
+    """Authentication error."""
 
     pass
 
 
 class InvalidCredentialsError(AuthenticationError):
-    """Неверные учетные данные."""
+    """Invalid credentials."""
 
     pass
 
 
 class InvalidTokenError(AuthenticationError):
-    """Неверный или истёкший токен."""
+    """Invalid or expired token."""
 
     pass
 
 
 class AuthService:
-    """Сервис аутентификации."""
+    """Authentication service."""
 
     def __init__(
         self,
@@ -50,7 +50,6 @@ class AuthService:
         last_name: str = "",
         phone_hash: str | None = None,
     ) -> tuple[User, str]:
-        """Регистрация нового пользователя."""
         user = await self._user_service.create_user(
             email=email,
             password=password,
@@ -58,7 +57,6 @@ class AuthService:
             last_name=last_name,
         )
 
-        # Если у пользователя есть хеш телефона, проверяем pending
         if phone_hash and self._pending_repo:
             await self._process_pending_hash(phone_hash)
 
@@ -66,44 +64,29 @@ class AuthService:
         return user, token
 
     async def _process_pending_hash(self, phone_hash: str) -> list[UUID]:
-        """
-        Обработать pending хеш при регистрации/обновлении пользователя.
-
-        Находит всех пользователей, ожидающих контакт с этим хешем,
-        и удаляет pending записи.
-
-        Returns:
-            Список ID пользователей, которым нужно отправить уведомление
-        """
         if not self._pending_repo:
             return []
 
-        # Найти всех, кто ждёт этот контакт
         owners = await self._pending_repo.find_owners_by_hash(phone_hash)
 
         if owners:
-            # Удалить все pending записи для этого хеша
             await self._pending_repo.remove_all_for_hash(phone_hash)
-            # TODO: Отправить уведомления владельцам (email/push)
-            # Пока просто возвращаем список для логирования
 
         return owners
 
     async def login(self, email: str, password: str) -> tuple[User, str]:
-        """Аутентификация пользователя."""
         try:
             user = await self._user_service.get_user_by_email(email)
         except UserNotFoundError:
-            raise InvalidCredentialsError("Неверный email или пароль")
+            raise InvalidCredentialsError("Invalid email or password")
 
         if not self._user_service.verify_password(password, user.hashed_password):
-            raise InvalidCredentialsError("Неверный email или пароль")
+            raise InvalidCredentialsError("Invalid email or password")
 
         token = self._create_access_token(user.id)
         return user, token
 
     async def get_current_user(self, token: str) -> User:
-        """Получить текущего пользователя по токену."""
         try:
             payload = jwt.decode(
                 token,
@@ -112,20 +95,26 @@ class AuthService:
             )
             user_id: str = payload.get("sub")
             if user_id is None:
-                raise InvalidTokenError("Токен не содержит идентификатор пользователя")
+                raise InvalidTokenError("Token does not contain user identifier")
         except JWTError:
-            raise InvalidTokenError("Невалидный токен")
+            raise InvalidTokenError("Invalid token")
 
         try:
             user = await self._user_service.get_user(UUID(user_id))
         except UserNotFoundError:
-            raise InvalidTokenError("Пользователь не найден")
+            raise InvalidTokenError("User not found")
 
         return user
 
+    async def get_user_by_id(self, user_id: UUID) -> User:
+        """Fetch user by id for refresh flows."""
+        try:
+            return await self._user_service.get_user(user_id)
+        except UserNotFoundError:
+            raise InvalidTokenError("User not found")
+
     @staticmethod
     def _create_access_token(user_id: UUID) -> str:
-        """Создать JWT токен."""
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.jwt.access_token_expire_minutes
         )
@@ -139,3 +128,40 @@ class AuthService:
             settings.jwt.secret_key,
             algorithm=settings.jwt.algorithm,
         )
+
+    @staticmethod
+    def create_access_token(user_id: UUID) -> str:
+        return AuthService._create_access_token(user_id)
+
+    @staticmethod
+    def create_refresh_token(user_id: UUID) -> str:
+        expire = datetime.now(timezone.utc) + timedelta(
+            days=settings.jwt.refresh_token_expire_days
+        )
+        to_encode = {
+            "sub": str(user_id),
+            "exp": expire,
+            "iat": datetime.now(timezone.utc),
+            "type": "refresh",
+        }
+        return jwt.encode(
+            to_encode,
+            settings.jwt.secret_key,
+            algorithm=settings.jwt.algorithm,
+        )
+
+    @staticmethod
+    def verify_refresh_token(token: str) -> UUID:
+        try:
+            payload = jwt.decode(
+                token,
+                settings.jwt.secret_key,
+                algorithms=[settings.jwt.algorithm],
+            )
+            token_type = payload.get("type")
+            user_id = payload.get("sub")
+            if token_type != "refresh" or not user_id:
+                raise InvalidTokenError("Invalid refresh token")
+            return UUID(user_id)
+        except (JWTError, ValueError):
+            raise InvalidTokenError("Invalid refresh token")

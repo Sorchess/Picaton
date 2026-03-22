@@ -10,9 +10,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async (showLoading = false) => {
     if (!authApi.isAuthenticated()) {
-      setUser(null);
-      setIsLoading(false);
-      return;
+      const restored = await authApi.restoreSession();
+      if (!restored) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
     }
 
     // Показываем loading только при явном запросе или если user ещё не загружен
@@ -24,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await authApi.getMe();
       setUser(userData);
     } catch {
-      authApi.logout();
+      await authApi.logout();
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -76,8 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    authApi.logout();
+  const logout = async () => {
+    await authApi.logout();
     setUser(null);
   };
 
