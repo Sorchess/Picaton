@@ -22,6 +22,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _is_allowed_origin(origin: str | None) -> bool:
+    return bool(origin and origin in settings.api.ws_allowed_origins)
+
+
 class ConnectionManager:
     """Manage active WebSocket connections."""
 
@@ -89,6 +93,11 @@ async def websocket_card_ai(
         {"type": "pong"}                          - Response to ping
     """
     client_id = f"{owner_id}_{card_id}"
+
+    origin = websocket.headers.get("origin")
+    if not _is_allowed_origin(origin):
+        await websocket.close(code=4403, reason="Origin not allowed")
+        return
 
     # Validate UUIDs
     try:

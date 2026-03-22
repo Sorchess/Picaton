@@ -44,6 +44,18 @@ class DatabaseConfig(BaseModel):
 class APIConfig(BaseModel):
     url: str
     port: str
+    cors_origins: list[str] = [
+        "http://localhost",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://picaton.com",
+    ]
+    ws_allowed_origins: list[str] = [
+        "http://localhost",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://picaton.com",
+    ]
 
 
 class JWTConfig(BaseModel):

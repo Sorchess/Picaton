@@ -27,6 +27,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["websocket"])
 
 
+def _is_allowed_origin(origin: str | None) -> bool:
+    return bool(origin and origin in settings.api.ws_allowed_origins)
+
+
 class DMConnectionManager:
     """Менеджер WebSocket соединений для прямых сообщений.
 
@@ -141,6 +145,11 @@ async def dm_websocket_endpoint(
     - message_deleted — сообщение удалено
     - read_receipt — сообщения прочитаны
     """
+    origin = websocket.headers.get("origin")
+    if not _is_allowed_origin(origin):
+        await websocket.close(code=4403, reason="Origin not allowed")
+        return
+
     effective_token = token or websocket.cookies.get(settings.jwt.access_cookie_name)
     user_id = await get_user_from_token(effective_token)
     if not user_id:
